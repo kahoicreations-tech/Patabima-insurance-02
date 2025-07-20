@@ -74,10 +74,12 @@ export default function MotorProductSelectionScreen({ navigation, route }) {
   };
 
   const handleCompareProducts = () => {
-    // Navigate to comparison screen or show comparison modal
-    navigation.navigate('ProductComparison', { 
-      products: availableProducts,
-      vehicleCategory 
+    // For now, navigate to quotation with compare mode
+    // Later we can implement a dedicated comparison screen
+    navigation.navigate('MotorQuotation', { 
+      vehicleCategory,
+      compareMode: true,
+      products: availableProducts 
     });
   };
 

@@ -1,11 +1,10 @@
 /**
  * Travel Insurance Quotation Screen
- * 
- * Multi-step form for collecting travel insurance information
- * Based on the claims submission step pattern and XML form structure
+ * Based on AllInsuranceForms.xml - TravelInsurance_Individual
+ * 3-Step Process: Personal Info → Travel Details → Documents & Summary
  */
 
-import React, { useState, useCallback } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -14,283 +13,216 @@ import {
   TouchableOpacity,
   TextInput,
   Alert,
-  KeyboardAvoidingView,
-  Platform,
-  Dimensions
+  SafeAreaView
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { useNavigation } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { StatusBar } from 'expo-status-bar';
+import { Colors, Typography, Spacing } from '../../../constants';
+import { 
+  EnhancedTextInput, 
+  EnhancedEmailInput, 
+  EnhancedPhoneInput, 
+  EnhancedIDInput, 
+  EnhancedDatePicker,
+  EnhancedDepartureDatePicker,
+  EnhancedReturnDatePicker
+} from '../../../components/EnhancedFormComponents';
+import { EnhancedDocumentUpload } from '../../../components/EnhancedDocumentUpload';
 
-// Import travel data
-import {
-  TRAVEL_PURPOSES,
-  TRAVEL_COVER_TYPES,
-  NATIONALITIES,
-  POPULAR_DESTINATIONS,
-  TRAVEL_INSURERS,
-  PAYMENT_METHODS,
-  MEDICAL_COVER_OPTIONS,
-  calculateTravelPremium,
-  validateTravelDates,
-  getRequiredDocuments
-} from './data';
+const TravelQuotationScreen = () => {
+  const navigation = useNavigation();
+  const insets = useSafeAreaInsets();
 
-const { width } = Dimensions.get('window');
-
-// Step definitions matching the XML form structure
-const STEPS = [
-  {
-    id: 1,
-    title: 'Personal Information',
-    subtitle: 'Basic details about the traveler',
-    icon: 'account',
-    fields: ['firstName', 'lastName', 'dateOfBirth', 'nationality', 'idNumber', 'phoneNumber', 'email']
-  },
-  {
-    id: 2,
-    title: 'Travel Details',
-    subtitle: 'Trip information and destination',
-    icon: 'airplane',
-    fields: ['travelPurpose', 'destinationCountry', 'departureDate', 'returnDate', 'numberOfTravelers']
-  },
-  {
-    id: 3,
-    title: 'Coverage Options',
-    subtitle: 'Select your insurance coverage',
-    icon: 'shield-check',
-    fields: ['travelCoverType', 'addMedicalCover', 'medicalCoverType', 'preferredInsurer']
-  },
-  {
-    id: 4,
-    title: 'Premium Calculation',
-    subtitle: 'Review costs and payment method',
-    icon: 'calculator',
-    fields: ['paymentMethod']
-  },
-  {
-    id: 5,
-    title: 'Documents Upload',
-    subtitle: 'Required documents for processing',
-    icon: 'file-document',
-    fields: ['documents']
-  },
-  {
-    id: 6,
-    title: 'Review & Submit',
-    subtitle: 'Confirm all details before submission',
-    icon: 'check-circle',
-    fields: ['confirmation']
-  }
-];
-
-const TravelQuotationScreen = ({ navigation, route }) => {
   const [currentStep, setCurrentStep] = useState(1);
+  const totalSteps = 3;
+
+  // Form Data based on XML structure
   const [formData, setFormData] = useState({
-    // Personal Information
-    firstName: '',
-    lastName: '',
+    // Step 1: Personal Information
+    fullName: '',
+    passportIdNumber: '',
     dateOfBirth: '',
     nationality: '',
-    idNumber: '',
     phoneNumber: '',
-    email: '',
+    emailAddress: '',
     
-    // Travel Details
-    travelPurpose: '',
+    // Step 2: Travel Details
     destinationCountry: '',
+    purposeOfTravel: '',
     departureDate: '',
     returnDate: '',
     numberOfTravelers: '1',
-    
-    // Coverage Options
     travelCoverType: '',
     addMedicalCover: false,
-    medicalCoverType: '',
+    
+    // Step 3: Documents & Summary
     preferredInsurer: '',
-    
-    // Payment
-    paymentMethod: '',
-    
-    // Documents
-    documents: [],
-    
-    // Premium
-    calculatedPremium: 0,
-    premiumBreakdown: null
+    estimatedPremium: 0,
+    uploadPassportCopy: null,
+    uploadVisa: null,
+    uploadItinerary: null,
+    declaration: false
   });
 
-  const [validationErrors, setValidationErrors] = useState({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  // Dropdown options
+  const nationalities = [
+    { id: 'kenya', name: 'Kenyan' },
+    { id: 'uganda', name: 'Ugandan' },
+    { id: 'tanzania', name: 'Tanzanian' },
+    { id: 'other', name: 'Other' }
+  ];
 
-  // Update form data
-  const updateFormData = useCallback((field, value) => {
-    setFormData(prev => {
-      const updated = { ...prev, [field]: value };
-      
-      // Recalculate premium when relevant fields change
-      if (['departureDate', 'returnDate', 'travelCoverType', 'numberOfTravelers', 'preferredInsurer', 'addMedicalCover', 'medicalCoverType'].includes(field)) {
-        const premiumResult = calculateTravelPremium(updated);
-        updated.calculatedPremium = premiumResult.premium;
-        updated.premiumBreakdown = premiumResult.breakdown;
-      }
-      
-      return updated;
-    });
+  const travelPurposes = [
+    { id: 'business', name: 'Business' },
+    { id: 'tourism', name: 'Tourism' },
+    { id: 'education', name: 'Education' },
+    { id: 'medical', name: 'Medical' },
+    { id: 'conference', name: 'Conference' },
+    { id: 'other', name: 'Other' }
+  ];
+
+  const travelCoverTypes = [
+    { id: 'basic', name: 'Basic Cover', premium: 'From KES 2,500' },
+    { id: 'comprehensive', name: 'Comprehensive Cover', premium: 'From KES 5,000' },
+    { id: 'premium', name: 'Premium Cover', premium: 'From KES 8,500' }
+  ];
+
+  const insurers = [
+    { id: 'jubilee', name: 'Jubilee Insurance' },
+    { id: 'aar', name: 'AAR Insurance' },
+    { id: 'madison', name: 'Madison Insurance' },
+    { id: 'britam', name: 'Britam Insurance' }
+  ];
+
+  const updateFormData = (field, value) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const calculatePremium = () => {
+    let basePremium = 2500; // Base premium
     
-    // Clear validation error for this field
-    if (validationErrors[field]) {
-      setValidationErrors(prev => {
-        const updated = { ...prev };
-        delete updated[field];
-        return updated;
-      });
+    // Adjust based on cover type
+    if (formData.travelCoverType === 'comprehensive') basePremium = 5000;
+    if (formData.travelCoverType === 'premium') basePremium = 8500;
+    
+    // Adjust based on number of travelers
+    const travelers = parseInt(formData.numberOfTravelers) || 1;
+    basePremium *= travelers;
+    
+    // Add medical cover if selected
+    if (formData.addMedicalCover) {
+      basePremium += 1500;
     }
-  }, [validationErrors]);
-
-  // Validate current step
-  const validateCurrentStep = () => {
-    const currentStepData = STEPS.find(step => step.id === currentStep);
-    const errors = {};
-
-    currentStepData.fields.forEach(field => {
-      const value = formData[field];
-      
-      switch (field) {
-        case 'firstName':
-        case 'lastName':
-          if (!value?.trim()) {
-            errors[field] = 'This field is required';
-          }
-          break;
-          
-        case 'email':
-          if (!value?.trim()) {
-            errors[field] = 'Email is required';
-          } else if (!/\S+@\S+\.\S+/.test(value)) {
-            errors[field] = 'Please enter a valid email address';
-          }
-          break;
-          
-        case 'phoneNumber':
-          if (!value?.trim()) {
-            errors[field] = 'Phone number is required';
-          } else if (!/^[\+]?[\d\s\-\(\)]{10,}$/.test(value)) {
-            errors[field] = 'Please enter a valid phone number';
-          }
-          break;
-          
-        case 'idNumber':
-          if (!value?.trim()) {
-            errors[field] = 'ID number is required';
-          }
-          break;
-          
-        case 'nationality':
-        case 'travelPurpose':
-        case 'destinationCountry':
-        case 'travelCoverType':
-        case 'preferredInsurer':
-        case 'paymentMethod':
-          if (!value) {
-            errors[field] = 'Please make a selection';
-          }
-          break;
-          
-        case 'departureDate':
-        case 'returnDate':
-          if (!value) {
-            errors[field] = 'Date is required';
-          } else if (field === 'returnDate' && formData.departureDate) {
-            const dateValidation = validateTravelDates(formData.departureDate, formData.returnDate);
-            if (!dateValidation.isValid && dateValidation.errors[field]) {
-              errors[field] = dateValidation.errors[field];
-            }
-          }
-          break;
-          
-        case 'numberOfTravelers':
-          const travelers = parseInt(value);
-          if (!travelers || travelers < 1 || travelers > 20) {
-            errors[field] = 'Number of travelers must be between 1 and 20';
-          }
-          break;
-          
-        case 'medicalCoverType':
-          if (formData.addMedicalCover && !value) {
-            errors[field] = 'Please select medical cover type';
-          }
-          break;
-      }
-    });
-
-    setValidationErrors(errors);
-    return Object.keys(errors).length === 0;
+    
+    return Math.round(basePremium);
   };
 
-  // Navigation handlers
-  const handleNext = () => {
-    if (validateCurrentStep()) {
-      if (currentStep < STEPS.length) {
-        setCurrentStep(prev => prev + 1);
-      }
+  const validateStep = (step) => {
+    const errors = [];
+    
+    switch (step) {
+      case 1: // Personal Information
+        if (!formData.fullName.trim()) errors.push('Full Name is required');
+        if (!formData.passportIdNumber.trim()) errors.push('Passport/ID Number is required');
+        if (!formData.dateOfBirth.trim()) errors.push('Date of Birth is required');
+        if (!formData.nationality) errors.push('Nationality is required');
+        if (!formData.phoneNumber.trim()) errors.push('Phone Number is required');
+        break;
+        
+      case 2: // Travel Details
+        if (!formData.destinationCountry.trim()) errors.push('Destination Country is required');
+        if (!formData.purposeOfTravel) errors.push('Purpose of Travel is required');
+        if (!formData.departureDate.trim()) errors.push('Departure Date is required');
+        if (!formData.returnDate.trim()) errors.push('Return Date is required');
+        if (!formData.numberOfTravelers.trim()) errors.push('Number of Travelers is required');
+        if (!formData.travelCoverType) errors.push('Travel Cover Type is required');
+        break;
+        
+      case 3: // Documents & Summary
+        if (!formData.preferredInsurer) errors.push('Preferred Insurer is required');
+        if (!formData.declaration) errors.push('Declaration must be accepted');
+        break;
     }
+    
+    return errors;
   };
 
-  const handlePrevious = () => {
-    if (currentStep > 1) {
-      setCurrentStep(prev => prev - 1);
-    }
-  };
-
-  const handleSubmit = async () => {
-    if (!validateCurrentStep()) return;
-
-    setIsSubmitting(true);
-    try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
+  const nextStep = () => {
+    const errors = validateStep(currentStep);
+    
+    if (errors.length > 0) {
       Alert.alert(
-        'Quotation Submitted',
-        'Your travel insurance quotation has been submitted successfully. You will receive a confirmation email shortly.',
-        [
-          {
-            text: 'View Quotations',
-            onPress: () => navigation.navigate('Quotations')
-          },
-          {
-            text: 'Go Home',
-            onPress: () => navigation.navigate('Home')
-          }
-        ]
+        'Validation Error',
+        `Please fix the following errors:\n\n${errors.join('\n')}`,
+        [{ text: 'OK' }]
       );
-    } catch (error) {
-      Alert.alert('Error', 'Failed to submit quotation. Please try again.');
-    } finally {
-      setIsSubmitting(false);
+      return;
+    }
+    
+    if (currentStep < totalSteps) {
+      if (currentStep === 2) {
+        const premium = calculatePremium();
+        updateFormData('estimatedPremium', premium);
+      }
+      setCurrentStep(currentStep + 1);
     }
   };
 
-  // Render step indicator
-  const renderStepIndicator = () => (
-    <View style={styles.stepIndicator}>
-      {STEPS.map((step, index) => (
-        <View key={step.id} style={styles.stepContainer}>
+  const prevStep = () => {
+    if (currentStep > 1) {
+      setCurrentStep(currentStep - 1);
+    }
+  };
+
+  const submitQuotation = () => {
+    const errors = validateStep(3); // Final validation
+    
+    if (errors.length > 0) {
+      Alert.alert(
+        'Validation Error',
+        `Please fix the following errors before submitting:\n\n${errors.join('\n')}`,
+        [{ text: 'OK' }]
+      );
+      return;
+    }
+
+    if (!formData.declaration) {
+      Alert.alert('Error', 'Please accept the declaration to proceed.');
+      return;
+    }
+
+    Alert.alert(
+      'Quotation Submitted',
+      `Your travel insurance quotation has been submitted successfully.\n\nEstimated Premium: KES ${formData.estimatedPremium.toLocaleString()}\n\nPataBima will review your application and provide a detailed quote within 24 hours.`,
+      [
+        {
+          text: 'OK',
+          onPress: () => navigation.goBack()
+        }
+      ]
+    );
+  };
+
+  const renderProgressBar = () => (
+    <View style={styles.progressContainer}>
+      {[1, 2, 3].map((step) => (
+        <View key={step} style={styles.progressItem}>
           <View style={[
-            styles.stepCircle,
-            currentStep >= step.id && styles.stepCircleActive,
-            currentStep === step.id && styles.stepCircleCurrent
+            styles.progressCircle,
+            currentStep >= step && styles.progressCircleActive
           ]}>
-            <Icon 
-              name={currentStep > step.id ? 'check' : step.icon} 
-              size={16} 
-              color={currentStep >= step.id ? '#fff' : '#999'} 
-            />
+            <Text style={[
+              styles.progressNumber,
+              currentStep >= step && styles.progressNumberActive
+            ]}>
+              {step}
+            </Text>
           </View>
-          {index < STEPS.length - 1 && (
+          {step < 3 && (
             <View style={[
-              styles.stepLine,
-              currentStep > step.id && styles.stepLineActive
+              styles.progressLine,
+              currentStep > step && styles.progressLineActive
             ]} />
           )}
         </View>
@@ -298,303 +230,716 @@ const TravelQuotationScreen = ({ navigation, route }) => {
     </View>
   );
 
-  // Render form fields based on current step
-  const renderStepContent = () => {
+  const renderStep1 = () => (
+    <View style={styles.stepContainer}>
+      <Text style={styles.stepTitle}>Personal Information</Text>
+      <Text style={styles.stepSubtitle}>Please provide your personal details for travel insurance</Text>
+      
+      <EnhancedTextInput
+        label="Full Name"
+        value={formData.fullName}
+        onChangeText={(text) => updateFormData('fullName', text)}
+        placeholder="Enter your full name"
+        required
+      />
+
+      <EnhancedIDInput
+        label="Passport / ID Number"
+        value={formData.passportIdNumber}
+        onChangeText={(text) => updateFormData('passportIdNumber', text)}
+        placeholder="Enter passport or ID number"
+        required
+      />
+
+      <EnhancedDatePicker
+        label="Date of Birth"
+        value={formData.dateOfBirth}
+        onDateChange={(date) => updateFormData('dateOfBirth', date)}
+        placeholder="Select date of birth"
+        required
+      />
+
+      <View style={styles.inputContainer}>
+        <Text style={styles.inputLabel}>Nationality *</Text>
+        <View style={styles.optionsGrid}>
+          {nationalities.map((nationality) => (
+            <TouchableOpacity
+              key={nationality.id}
+              style={[
+                styles.gridOption,
+                formData.nationality === nationality.id && styles.gridOptionActive
+              ]}
+              onPress={() => updateFormData('nationality', nationality.id)}
+            >
+              <Text style={[
+                styles.gridOptionText,
+                formData.nationality === nationality.id && styles.gridOptionTextActive
+              ]}>
+                {nationality.name}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </View>
+
+      <View style={styles.inputContainer}>
+        <Text style={styles.inputLabel}>Phone Number *</Text>
+        <TextInput
+          style={styles.input}
+          value={formData.phoneNumber}
+          onChangeText={(text) => updateFormData('phoneNumber', text)}
+          placeholder="Enter phone number"
+          keyboardType="phone-pad"
+        />
+      </View>
+
+      <View style={styles.inputContainer}>
+        <Text style={styles.inputLabel}>Email Address</Text>
+        <EnhancedEmailInput
+          value={formData.emailAddress}
+          onChangeText={(text) => updateFormData('emailAddress', text)}
+          placeholder="Enter email address (optional)"
+        />
+      </View>
+    </View>
+  );
+
+  const renderStep2 = () => (
+    <View style={styles.stepContainer}>
+      <Text style={styles.stepTitle}>Travel Details</Text>
+      <Text style={styles.stepSubtitle}>Tell us about your travel plans</Text>
+      
+      <EnhancedTextInput
+        label="Destination Country"
+        value={formData.destinationCountry}
+        onChangeText={(text) => updateFormData('destinationCountry', text)}
+        placeholder="Enter destination country"
+        required
+      />
+
+      <View style={styles.inputContainer}>
+        <Text style={styles.inputLabel}>Purpose of Travel *</Text>
+        <View style={styles.optionsGrid}>
+          {travelPurposes.map((purpose) => (
+            <TouchableOpacity
+              key={purpose.id}
+              style={[
+                styles.gridOption,
+                formData.purposeOfTravel === purpose.id && styles.gridOptionActive
+              ]}
+              onPress={() => updateFormData('purposeOfTravel', purpose.id)}
+            >
+              <Text style={[
+                styles.gridOptionText,
+                formData.purposeOfTravel === purpose.id && styles.gridOptionTextActive
+              ]}>
+                {purpose.name}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </View>
+
+      <EnhancedDepartureDatePicker
+        label="Departure Date"
+        value={formData.departureDate}
+        onDateChange={(date) => updateFormData('departureDate', date)}
+        placeholder="Select departure date"
+        required
+      />
+
+      <EnhancedReturnDatePicker
+        label="Return Date"
+        value={formData.returnDate}
+        onDateChange={(date) => updateFormData('returnDate', date)}
+        placeholder="Select return date"
+        departureDate={formData.departureDate}
+        required
+      />
+
+      <EnhancedTextInput
+        label="Number of Travelers"
+        value={formData.numberOfTravelers}
+        onChangeText={(text) => updateFormData('numberOfTravelers', text)}
+        placeholder="Enter number of travelers"
+        keyboardType="numeric"
+        required
+      />
+
+      <View style={styles.inputContainer}>
+        <Text style={styles.inputLabel}>Travel Cover Type *</Text>
+        {travelCoverTypes.map((cover) => (
+          <TouchableOpacity
+            key={cover.id}
+            style={[
+              styles.coverageCard,
+              formData.travelCoverType === cover.id && styles.coverageCardActive
+            ]}
+            onPress={() => updateFormData('travelCoverType', cover.id)}
+          >
+            <Text style={styles.coverageName}>{cover.name}</Text>
+            <Text style={styles.coveragePrice}>{cover.premium}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
+      <View style={styles.inputContainer}>
+        <Text style={styles.inputLabel}>Add Medical Cover</Text>
+        <TouchableOpacity
+          style={[
+            styles.benefitCard,
+            formData.addMedicalCover && styles.benefitCardActive
+          ]}
+          onPress={() => updateFormData('addMedicalCover', !formData.addMedicalCover)}
+        >
+          <View style={styles.benefitInfo}>
+            <Text style={styles.benefitName}>Enhanced Medical Coverage</Text>
+            <Text style={styles.benefitPrice}>+KES 1,500</Text>
+          </View>
+          <View style={[
+            styles.checkbox,
+            formData.addMedicalCover && styles.checkboxActive
+          ]}>
+            {formData.addMedicalCover && <Text style={styles.checkmark}>✓</Text>}
+          </View>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+
+  const renderStep3 = () => (
+    <View style={styles.stepContainer}>
+      <Text style={styles.stepTitle}>Documents & Summary</Text>
+      <Text style={styles.stepSubtitle}>Review your details and upload documents</Text>
+
+      <View style={styles.summaryCard}>
+        <Text style={styles.summaryTitle}>Travel Insurance Quote Summary</Text>
+        
+        <View style={styles.summaryRow}>
+          <Text style={styles.summaryLabel}>Traveler</Text>
+          <Text style={styles.summaryValue}>{formData.fullName}</Text>
+        </View>
+        
+        <View style={styles.summaryRow}>
+          <Text style={styles.summaryLabel}>Destination</Text>
+          <Text style={styles.summaryValue}>{formData.destinationCountry}</Text>
+        </View>
+        
+        <View style={styles.summaryRow}>
+          <Text style={styles.summaryLabel}>Travel Dates</Text>
+          <Text style={styles.summaryValue}>
+            {formData.departureDate} - {formData.returnDate}
+          </Text>
+        </View>
+        
+        <View style={styles.summaryRow}>
+          <Text style={styles.summaryLabel}>Number of Travelers</Text>
+          <Text style={styles.summaryValue}>{formData.numberOfTravelers}</Text>
+        </View>
+        
+        <View style={styles.summaryRow}>
+          <Text style={styles.summaryLabel}>Cover Type</Text>
+          <Text style={styles.summaryValue}>
+            {travelCoverTypes.find(c => c.id === formData.travelCoverType)?.name || 'Not selected'}
+          </Text>
+        </View>
+        
+        <View style={styles.summaryRow}>
+          <Text style={styles.summaryLabel}>Medical Cover</Text>
+          <Text style={styles.summaryValue}>
+            {formData.addMedicalCover ? 'Included' : 'Not included'}
+          </Text>
+        </View>
+        
+        <View style={styles.divider} />
+        
+        <View style={styles.summaryRow}>
+          <Text style={styles.totalLabel}>Estimated Premium</Text>
+          <Text style={styles.totalValue}>
+            KES {formData.estimatedPremium.toLocaleString()}
+          </Text>
+        </View>
+      </View>
+
+      <EnhancedDocumentUpload
+        label="Passport Copy"
+        documentType="passport copy"
+        onDocumentSelect={(doc) => updateFormData('uploadPassportCopy', doc)}
+        uploadedDocument={formData.uploadPassportCopy}
+        required
+      />
+
+      <EnhancedDocumentUpload
+        label="Visa Document"
+        documentType="visa"
+        onDocumentSelect={(doc) => updateFormData('uploadVisa', doc)}
+        uploadedDocument={formData.uploadVisa}
+      />
+
+      <EnhancedDocumentUpload
+        label="Travel Itinerary"
+        documentType="itinerary"
+        onDocumentSelect={(doc) => updateFormData('uploadItinerary', doc)}
+        uploadedDocument={formData.uploadItinerary}
+      />
+
+      <View style={styles.inputContainer}>
+        <Text style={styles.inputLabel}>Preferred Insurer *</Text>
+        <View style={styles.optionsGrid}>
+          {insurers.map((insurer) => (
+            <TouchableOpacity
+              key={insurer.id}
+              style={[
+                styles.gridOption,
+                formData.preferredInsurer === insurer.id && styles.gridOptionActive
+              ]}
+              onPress={() => updateFormData('preferredInsurer', insurer.id)}
+            >
+              <Text style={[
+                styles.gridOptionText,
+                formData.preferredInsurer === insurer.id && styles.gridOptionTextActive
+              ]}>
+                {insurer.name}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </View>
+
+      <View style={styles.inputContainer}>
+        <Text style={styles.inputLabel}>Declaration *</Text>
+        <TouchableOpacity
+          style={[
+            styles.declarationCard,
+            formData.declaration && styles.declarationCardActive
+          ]}
+          onPress={() => updateFormData('declaration', !formData.declaration)}
+        >
+          <View style={[
+            styles.checkbox,
+            formData.declaration && styles.checkboxActive
+          ]}>
+            {formData.declaration && <Text style={styles.checkmark}>✓</Text>}
+          </View>
+          <Text style={styles.declarationText}>
+            I declare that the information provided is true and accurate. I understand that this is a quotation request and PataBima will provide the final quote and terms.
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      <View style={styles.disclaimerContainer}>
+        <Text style={styles.disclaimerText}>
+          Payment Method: M-Pesa only. Premium payment will be required after quote approval. 
+          PataBima will contact you within 24 hours with your personalized quote.
+        </Text>
+      </View>
+    </View>
+  );
+
+  const renderCurrentStep = () => {
     switch (currentStep) {
-      case 1:
-        return <PersonalInfoStep formData={formData} updateFormData={updateFormData} validationErrors={validationErrors} />;
-      case 2:
-        return <TravelDetailsStep formData={formData} updateFormData={updateFormData} validationErrors={validationErrors} />;
-      case 3:
-        return <CoverageOptionsStep formData={formData} updateFormData={updateFormData} validationErrors={validationErrors} />;
-      case 4:
-        return <PremiumCalculationStep formData={formData} updateFormData={updateFormData} validationErrors={validationErrors} />;
-      case 5:
-        return <DocumentsUploadStep formData={formData} updateFormData={updateFormData} validationErrors={validationErrors} />;
-      case 6:
-        return <ReviewSubmitStep formData={formData} />;
-      default:
-        return null;
+      case 1: return renderStep1();
+      case 2: return renderStep2();
+      case 3: return renderStep3();
+      default: return renderStep1();
     }
   };
 
-  const currentStepData = STEPS.find(step => step.id === currentStep);
-
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { paddingTop: insets.top }]}>
+      <StatusBar style="dark" />
+      
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Icon name="arrow-left" size={24} color="#333" />
+        <TouchableOpacity
+          style={styles.headerBackButton}
+          onPress={() => navigation.goBack()}
+        >
+          <Text style={styles.headerBackText}>← Back</Text>
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Travel Insurance</Text>
         <View style={styles.headerRight} />
       </View>
 
-      {/* Step Indicator */}
-      {renderStepIndicator()}
+      {/* Progress Bar */}
+      {renderProgressBar()}
 
-      {/* Step Title */}
-      <View style={styles.stepHeader}>
-        <Text style={styles.stepTitle}>{currentStepData?.title}</Text>
-        <Text style={styles.stepSubtitle}>{currentStepData?.subtitle}</Text>
-      </View>
-
-      {/* Form Content */}
-      <KeyboardAvoidingView 
-        style={styles.content} 
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      {/* Content */}
+      <ScrollView 
+        style={styles.content}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: 120 }}
       >
-        <ScrollView 
-          style={styles.scrollView}
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
-        >
-          {renderStepContent()}
-        </ScrollView>
+        {renderCurrentStep()}
+      </ScrollView>
 
-        {/* Navigation Buttons */}
-        <View style={styles.buttonContainer}>
-          {currentStep > 1 && (
-            <TouchableOpacity style={styles.secondaryButton} onPress={handlePrevious}>
-              <Text style={styles.secondaryButtonText}>Previous</Text>
-            </TouchableOpacity>
-          )}
-          
-          {currentStep < STEPS.length ? (
-            <TouchableOpacity 
-              style={[styles.primaryButton, currentStep === 1 && styles.fullWidthButton]} 
-              onPress={handleNext}
-            >
-              <Text style={styles.primaryButtonText}>Next</Text>
-            </TouchableOpacity>
-          ) : (
-            <TouchableOpacity 
-              style={[styles.primaryButton, styles.submitButton, isSubmitting && styles.disabledButton]} 
-              onPress={handleSubmit}
-              disabled={isSubmitting}
-            >
-              <Text style={styles.primaryButtonText}>
-                {isSubmitting ? 'Submitting...' : 'Submit Quotation'}
-              </Text>
-            </TouchableOpacity>
-          )}
-        </View>
-      </KeyboardAvoidingView>
+      {/* Navigation Buttons */}
+      <View style={styles.navigationContainer}>
+        {currentStep > 1 && (
+          <TouchableOpacity style={styles.backButton} onPress={prevStep}>
+            <Text style={styles.backButtonText}>Previous</Text>
+          </TouchableOpacity>
+        )}
+        
+        {currentStep < totalSteps ? (
+          <TouchableOpacity style={styles.nextButton} onPress={nextStep}>
+            <Text style={styles.nextButtonText}>Next</Text>
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity style={styles.submitButton} onPress={submitQuotation}>
+            <Text style={styles.submitButtonText}>Submit Quotation</Text>
+          </TouchableOpacity>
+        )}
+      </View>
     </SafeAreaView>
   );
 };
 
-// Individual step components will be created in separate files
-// For now, creating placeholder components
-
-const PersonalInfoStep = ({ formData, updateFormData, validationErrors }) => (
-  <View style={styles.stepContent}>
-    <Text style={styles.sectionTitle}>Personal Information</Text>
-    {/* This will be implemented with proper form fields */}
-    <Text style={styles.placeholder}>Personal info form fields will be implemented here</Text>
-  </View>
-);
-
-const TravelDetailsStep = ({ formData, updateFormData, validationErrors }) => (
-  <View style={styles.stepContent}>
-    <Text style={styles.sectionTitle}>Travel Details</Text>
-    {/* This will be implemented with proper form fields */}
-    <Text style={styles.placeholder}>Travel details form fields will be implemented here</Text>
-  </View>
-);
-
-const CoverageOptionsStep = ({ formData, updateFormData, validationErrors }) => (
-  <View style={styles.stepContent}>
-    <Text style={styles.sectionTitle}>Coverage Options</Text>
-    {/* This will be implemented with proper form fields */}
-    <Text style={styles.placeholder}>Coverage options form fields will be implemented here</Text>
-  </View>
-);
-
-const PremiumCalculationStep = ({ formData, updateFormData, validationErrors }) => (
-  <View style={styles.stepContent}>
-    <Text style={styles.sectionTitle}>Premium Calculation</Text>
-    {/* This will be implemented with premium display */}
-    <Text style={styles.placeholder}>Premium calculation display will be implemented here</Text>
-  </View>
-);
-
-const DocumentsUploadStep = ({ formData, updateFormData, validationErrors }) => (
-  <View style={styles.stepContent}>
-    <Text style={styles.sectionTitle}>Documents Upload</Text>
-    {/* This will be implemented with document upload */}
-    <Text style={styles.placeholder}>Document upload functionality will be implemented here</Text>
-  </View>
-);
-
-const ReviewSubmitStep = ({ formData }) => (
-  <View style={styles.stepContent}>
-    <Text style={styles.sectionTitle}>Review & Submit</Text>
-    {/* This will be implemented with review summary */}
-    <Text style={styles.placeholder}>Review summary will be implemented here</Text>
-  </View>
-);
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
+    backgroundColor: '#FFFFFF',
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 15,
-    backgroundColor: '#fff',
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
     borderBottomWidth: 1,
-    borderBottomColor: '#e9ecef',
+    borderBottomColor: '#E5E7EB',
   },
-  backButton: {
-    padding: 8,
+  headerBackButton: {
+    paddingVertical: Spacing.xs,
+  },
+  headerBackText: {
+    fontSize: Typography.fontSize.md,
+    fontWeight: Typography.fontWeight.medium,
+    color: Colors.primary,
   },
   headerTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#333',
-    fontFamily: 'Poppins-SemiBold',
+    fontSize: Typography.fontSize.lg,
+    fontWeight: Typography.fontWeight.bold,
+    color: Colors.textPrimary,
   },
   headerRight: {
-    width: 40,
+    width: 60,
   },
-  stepIndicator: {
+  progressContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 20,
-    paddingHorizontal: 20,
-    backgroundColor: '#fff',
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.lg,
   },
-  stepContainer: {
+  progressItem: {
     flexDirection: 'row',
     alignItems: 'center',
   },
-  stepCircle: {
+  progressCircle: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: '#e9ecef',
+    backgroundColor: '#E5E7EB',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  stepCircleActive: {
-    backgroundColor: '#D5222B',
+  progressCircleActive: {
+    backgroundColor: Colors.primary,
   },
-  stepCircleCurrent: {
-    backgroundColor: '#D5222B',
-    borderWidth: 3,
-    borderColor: '#fff',
-    shadowColor: '#D5222B',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 5,
+  progressNumber: {
+    fontSize: Typography.fontSize.sm,
+    fontWeight: Typography.fontWeight.medium,
+    color: '#6B7280',
   },
-  stepLine: {
-    width: (width - 120) / 5, // Responsive line width
+  progressNumberActive: {
+    color: '#FFFFFF',
+  },
+  progressLine: {
+    width: 40,
     height: 2,
-    backgroundColor: '#e9ecef',
-    marginHorizontal: 4,
+    backgroundColor: '#E5E7EB',
+    marginHorizontal: Spacing.xs,
   },
-  stepLineActive: {
-    backgroundColor: '#D5222B',
-  },
-  stepHeader: {
-    paddingHorizontal: 20,
-    paddingVertical: 15,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e9ecef',
-  },
-  stepTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#333',
-    fontFamily: 'Poppins-SemiBold',
-    marginBottom: 4,
-  },
-  stepSubtitle: {
-    fontSize: 14,
-    color: '#666',
-    fontFamily: 'Poppins-Regular',
+  progressLineActive: {
+    backgroundColor: Colors.primary,
   },
   content: {
     flex: 1,
   },
-  scrollView: {
-    flex: 1,
+  stepContainer: {
+    padding: Spacing.md,
   },
-  stepContent: {
-    padding: 20,
+  stepTitle: {
+    fontSize: Typography.fontSize.xl,
+    fontWeight: Typography.fontWeight.bold,
+    color: Colors.textPrimary,
+    marginBottom: Spacing.xs,
   },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
-    fontFamily: 'Poppins-SemiBold',
-    marginBottom: 16,
+  stepSubtitle: {
+    fontSize: Typography.fontSize.md,
+    color: Colors.textSecondary,
+    marginBottom: Spacing.lg,
   },
-  placeholder: {
-    fontSize: 14,
-    color: '#999',
-    fontStyle: 'italic',
-    textAlign: 'center',
-    marginTop: 40,
-    fontFamily: 'Poppins-Regular',
+  inputContainer: {
+    marginBottom: Spacing.md,
   },
-  buttonContainer: {
-    flexDirection: 'row',
-    paddingHorizontal: 20,
-    paddingVertical: 20,
-    backgroundColor: '#fff',
-    borderTopWidth: 1,
-    borderTopColor: '#e9ecef',
-    gap: 12,
+  inputLabel: {
+    fontSize: Typography.fontSize.md,
+    fontWeight: Typography.fontWeight.medium,
+    color: Colors.textPrimary,
+    marginBottom: Spacing.xs,
   },
-  primaryButton: {
-    flex: 1,
-    backgroundColor: '#D5222B',
-    paddingVertical: 16,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
+  inputHelper: {
+    fontSize: Typography.fontSize.sm,
+    color: Colors.textSecondary,
+    marginTop: Spacing.xs,
   },
-  fullWidthButton: {
-    flex: 1,
-  },
-  secondaryButton: {
-    flex: 1,
-    backgroundColor: '#fff',
-    paddingVertical: 16,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
+  input: {
     borderWidth: 1,
-    borderColor: '#D5222B',
+    borderColor: '#D1D5DB',
+    borderRadius: Spacing.xs,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    fontSize: Typography.fontSize.md,
+    backgroundColor: '#FFFFFF',
+  },
+  optionsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginTop: Spacing.xs,
+  },
+  gridOption: {
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    backgroundColor: '#F9FAFB',
+    borderRadius: Spacing.xs,
+    marginRight: Spacing.sm,
+    marginBottom: Spacing.sm,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  gridOptionActive: {
+    backgroundColor: Colors.primary,
+    borderColor: Colors.primary,
+  },
+  gridOptionText: {
+    fontSize: Typography.fontSize.sm,
+    fontWeight: Typography.fontWeight.medium,
+    color: Colors.textPrimary,
+  },
+  gridOptionTextActive: {
+    color: '#FFFFFF',
+  },
+  coverageCard: {
+    backgroundColor: '#F9FAFB',
+    borderRadius: Spacing.md,
+    padding: Spacing.md,
+    marginBottom: Spacing.md,
+    borderWidth: 2,
+    borderColor: '#E5E7EB',
+  },
+  coverageCardActive: {
+    borderColor: Colors.primary,
+    backgroundColor: '#FEF2F2',
+  },
+  coverageName: {
+    fontSize: Typography.fontSize.lg,
+    fontWeight: Typography.fontWeight.semibold,
+    color: Colors.textPrimary,
+    marginBottom: Spacing.xs,
+  },
+  coveragePrice: {
+    fontSize: Typography.fontSize.md,
+    fontWeight: Typography.fontWeight.bold,
+    color: Colors.primary,
+  },
+  benefitCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#F9FAFB',
+    borderRadius: Spacing.xs,
+    padding: Spacing.md,
+    marginBottom: Spacing.sm,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  benefitCardActive: {
+    backgroundColor: '#FEF2F2',
+    borderColor: Colors.primary,
+  },
+  benefitInfo: {
+    flex: 1,
+  },
+  benefitName: {
+    fontSize: Typography.fontSize.md,
+    fontWeight: Typography.fontWeight.medium,
+    color: Colors.textPrimary,
+    marginBottom: 2,
+  },
+  benefitPrice: {
+    fontSize: Typography.fontSize.sm,
+    color: Colors.primary,
+    fontWeight: Typography.fontWeight.medium,
+  },
+  checkbox: {
+    width: 24,
+    height: 24,
+    borderRadius: 4,
+    borderWidth: 2,
+    borderColor: '#D1D5DB',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  checkboxActive: {
+    backgroundColor: Colors.primary,
+    borderColor: Colors.primary,
+  },
+  checkmark: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  summaryCard: {
+    backgroundColor: '#F9FAFB',
+    borderRadius: Spacing.md,
+    padding: Spacing.lg,
+    marginBottom: Spacing.lg,
+  },
+  summaryTitle: {
+    fontSize: Typography.fontSize.lg,
+    fontWeight: Typography.fontWeight.bold,
+    color: Colors.textPrimary,
+    marginBottom: Spacing.md,
+  },
+  summaryRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: Spacing.xs,
+  },
+  summaryLabel: {
+    fontSize: Typography.fontSize.md,
+    color: Colors.textSecondary,
+  },
+  summaryValue: {
+    fontSize: Typography.fontSize.md,
+    fontWeight: Typography.fontWeight.medium,
+    color: Colors.textPrimary,
+    textAlign: 'right',
+    flex: 1,
+    marginLeft: Spacing.md,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: '#E5E7EB',
+    marginVertical: Spacing.md,
+  },
+  totalLabel: {
+    fontSize: Typography.fontSize.lg,
+    fontWeight: Typography.fontWeight.bold,
+    color: Colors.textPrimary,
+  },
+  totalValue: {
+    fontSize: Typography.fontSize.xl,
+    fontWeight: Typography.fontWeight.bold,
+    color: Colors.primary,
+  },
+  uploadButton: {
+    borderWidth: 1,
+    borderColor: '#D1D5DB',
+    borderRadius: Spacing.xs,
+    padding: Spacing.md,
+    alignItems: 'center',
+    backgroundColor: '#F9FAFB',
+  },
+  uploadButtonText: {
+    fontSize: Typography.fontSize.md,
+    color: Colors.textSecondary,
+  },
+  declarationCard: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    backgroundColor: '#F9FAFB',
+    borderRadius: Spacing.xs,
+    padding: Spacing.md,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  declarationCardActive: {
+    backgroundColor: '#FEF2F2',
+    borderColor: Colors.primary,
+  },
+  declarationText: {
+    flex: 1,
+    fontSize: Typography.fontSize.sm,
+    color: Colors.textPrimary,
+    marginLeft: Spacing.sm,
+    lineHeight: 20,
+  },
+  disclaimerContainer: {
+    backgroundColor: '#FEF3C7',
+    borderRadius: Spacing.xs,
+    padding: Spacing.md,
+    marginTop: Spacing.lg,
+  },
+  disclaimerText: {
+    fontSize: Typography.fontSize.sm,
+    color: '#92400E',
+    textAlign: 'center',
+    lineHeight: 18,
+  },
+  navigationContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.md,
+    backgroundColor: '#FFFFFF',
+    borderTopWidth: 1,
+    borderTopColor: '#E5E7EB',
+  },
+  backButton: {
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.sm,
+    borderRadius: Spacing.xs,
+    borderWidth: 1,
+    borderColor: '#D1D5DB',
+  },
+  backButtonText: {
+    fontSize: Typography.fontSize.md,
+    fontWeight: Typography.fontWeight.medium,
+    color: Colors.textPrimary,
+  },
+  nextButton: {
+    flex: 1,
+    backgroundColor: Colors.primary,
+    paddingVertical: Spacing.sm,
+    borderRadius: Spacing.xs,
+    alignItems: 'center',
+    marginLeft: Spacing.md,
+  },
+  nextButtonText: {
+    fontSize: Typography.fontSize.md,
+    fontWeight: Typography.fontWeight.medium,
+    color: '#FFFFFF',
   },
   submitButton: {
-    backgroundColor: '#28a745',
+    flex: 1,
+    backgroundColor: Colors.success,
+    paddingVertical: Spacing.sm,
+    borderRadius: Spacing.xs,
+    alignItems: 'center',
   },
-  disabledButton: {
-    backgroundColor: '#999',
-  },
-  primaryButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-    fontFamily: 'Poppins-SemiBold',
-  },
-  secondaryButtonText: {
-    color: '#D5222B',
-    fontSize: 16,
-    fontWeight: '600',
-    fontFamily: 'Poppins-SemiBold',
+  submitButtonText: {
+    fontSize: Typography.fontSize.md,
+    fontWeight: Typography.fontWeight.medium,
+    color: '#FFFFFF',
   },
 });
 

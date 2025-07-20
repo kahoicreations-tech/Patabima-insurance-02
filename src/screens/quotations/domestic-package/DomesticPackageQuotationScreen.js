@@ -1,7 +1,7 @@
 /**
- * Personal Accident Insurance Quotation Screen
- * Based on AllInsuranceForms.xml - PersonalAccidentInsurance_Individual
- * 3-Step Process: Personal Info → Coverage Details → Documents & Summary
+ * Domestic Package Insurance Quotation Screen
+ * Based on AllInsuranceForms.xml structure adapted for Home/Property Insurance
+ * 3-Step Process: Property Details → Coverage Selection → Documents & Summary
  */
 
 import React, { useState } from 'react';
@@ -28,65 +28,70 @@ import {
 } from '../../../components/EnhancedFormComponents';
 import { EnhancedDocumentUpload } from '../../../components/EnhancedDocumentUpload';
 
-const PersonalAccidentQuotationScreen = () => {
+const DomesticPackageQuotationScreen = () => {
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
 
   const [currentStep, setCurrentStep] = useState(1);
   const totalSteps = 3;
 
-  // Form Data based on XML structure
+  // Form Data - Updated structure for consistency
   const [formData, setFormData] = useState({
-    // Step 1: Personal Information
-    fullName: '',
+    // Step 1: Property Details
+    ownerName: '',
     idNumber: '',
-    dateOfBirth: '',
-    gender: '',
     phoneNumber: '',
     emailAddress: '',
-    occupation: '',
+    propertyAddress: '',
+    propertyType: '',
     
-    // Step 2: Coverage Details
-    coverAmount: '',
-    riskLevel: '',
-    duration: '',
-    accidentalDeath: false,
-    permanentDisability: false,
-    medicalExpenses: false,
-    temporaryDisability: false,
+    // Step 2: Coverage Selection
+    propertyValue: '',
+    buildingMaterial: '',
+    occupancyType: '',
+    packageType: '',
+    personalAccident: false,
+    publicLiability: false,
+    allRisks: false,
+    lossOfRent: false,
     
     // Step 3: Documents & Summary
     preferredInsurer: '',
     estimatedPremium: 0,
-    uploadIdCopy: null,
-    uploadMedicalReport: null,
-    uploadOccupationLetter: null,
+    uploadPropertyDocs: null,
+    uploadValuationReport: null,
+    uploadPropertyPhotos: null,
     declaration: false
   });
 
   // Dropdown options
-  const genders = [
-    { id: 'male', name: 'Male' },
-    { id: 'female', name: 'Female' }
+  const propertyTypes = [
+    { id: 'apartment', name: 'Apartment/Flat', riskMultiplier: 1.0 },
+    { id: 'detached_house', name: 'Detached House', riskMultiplier: 1.2 },
+    { id: 'semi_detached', name: 'Semi-Detached House', riskMultiplier: 1.1 },
+    { id: 'townhouse', name: 'Townhouse', riskMultiplier: 1.05 },
+    { id: 'bungalow', name: 'Bungalow', riskMultiplier: 1.15 }
   ];
 
-  const coverAmounts = [
-    { id: '500000', name: 'KES 500,000', premium: 5000 },
-    { id: '1000000', name: 'KES 1,000,000', premium: 8500 },
-    { id: '2000000', name: 'KES 2,000,000', premium: 15000 },
-    { id: '5000000', name: 'KES 5,000,000', premium: 35000 }
+  const buildingMaterials = [
+    { id: 'concrete_stone', name: 'Concrete/Stone', multiplier: 1.0 },
+    { id: 'brick', name: 'Brick', multiplier: 1.1 },
+    { id: 'wood_frame', name: 'Wood Frame', multiplier: 1.3 },
+    { id: 'mixed_materials', name: 'Mixed Materials', multiplier: 1.15 }
   ];
 
-  const riskLevels = [
-    { id: 'low', name: 'Low Risk (Office Work)', multiplier: 1.0 },
-    { id: 'medium', name: 'Medium Risk (Field Work)', multiplier: 1.5 },
-    { id: 'high', name: 'High Risk (Hazardous Work)', multiplier: 2.5 }
+  const occupancyTypes = [
+    { id: 'owner_occupied', name: 'Owner Occupied' },
+    { id: 'tenant_occupied', name: 'Tenant Occupied' },
+    { id: 'vacant', name: 'Vacant' },
+    { id: 'seasonal', name: 'Seasonal Use' }
   ];
 
-  const durations = [
-    { id: '1year', name: '1 Year', multiplier: 1.0 },
-    { id: '2years', name: '2 Years', multiplier: 1.8 },
-    { id: '3years', name: '3 Years', multiplier: 2.5 }
+  const packageTypes = [
+    { id: 'basic', name: 'Basic Package', buildingCover: 2000000, contentsCover: 500000, basePremium: 15000 },
+    { id: 'standard', name: 'Standard Package', buildingCover: 5000000, contentsCover: 1000000, basePremium: 35000 },
+    { id: 'comprehensive', name: 'Comprehensive Package', buildingCover: 10000000, contentsCover: 2000000, basePremium: 65000 },
+    { id: 'premium', name: 'Premium Package', buildingCover: 15000000, contentsCover: 3000000, basePremium: 95000 }
   ];
 
   const insurers = [
@@ -101,46 +106,45 @@ const PersonalAccidentQuotationScreen = () => {
   };
 
   const calculatePremium = () => {
-    const coverAmount = coverAmounts.find(c => c.id === formData.coverAmount);
-    const riskLevel = riskLevels.find(r => r.id === formData.riskLevel);
-    const duration = durations.find(d => d.id === formData.duration);
+    const selectedPackage = packageTypes.find(p => p.id === formData.packageType);
+    const selectedProperty = propertyTypes.find(p => p.id === formData.propertyType);
+    const selectedMaterial = buildingMaterials.find(m => m.id === formData.buildingMaterial);
     
-    if (!coverAmount || !riskLevel || !duration) return 0;
+    if (!selectedPackage || !selectedProperty || !selectedMaterial) return 0;
     
-    let basePremium = coverAmount.premium;
+    let basePremium = selectedPackage.basePremium;
     
-    // Apply risk level multiplier
-    basePremium *= riskLevel.multiplier;
+    // Apply property type and material multipliers
+    basePremium *= selectedProperty.riskMultiplier;
+    basePremium *= selectedMaterial.multiplier;
     
-    // Apply duration multiplier
-    basePremium *= duration.multiplier;
+    // Add optional coverages
+    let optionalCost = 0;
+    if (formData.personalAccident) optionalCost += 5000;
+    if (formData.publicLiability) optionalCost += 8000;
+    if (formData.allRisks) optionalCost += 12000;
+    if (formData.lossOfRent) optionalCost += 6000;
     
-    // Add benefit costs
-    let benefitsCost = 0;
-    if (formData.accidentalDeath) benefitsCost += 2000;
-    if (formData.permanentDisability) benefitsCost += 1500;
-    if (formData.medicalExpenses) benefitsCost += 3000;
-    if (formData.temporaryDisability) benefitsCost += 1000;
-    
-    return Math.round(basePremium + benefitsCost);
+    return Math.round(basePremium + optionalCost);
   };
 
   const validateStep = (step) => {
     const errors = [];
     
     switch (step) {
-      case 1: // Personal Information
-        if (!formData.fullName.trim()) errors.push('Full Name is required');
-        if (!formData.idNumber.trim()) errors.push('National ID Number is required');
+      case 1: // Property Details
+        if (!formData.ownerName.trim()) errors.push('Property Owner Name is required');
+        if (!formData.idNumber.trim()) errors.push('ID Number is required');
         if (!formData.phoneNumber.trim()) errors.push('Phone Number is required');
-        if (!formData.dateOfBirth.trim()) errors.push('Date of Birth is required');
-        if (!formData.occupation.trim()) errors.push('Occupation is required');
+        if (!formData.propertyAddress.trim()) errors.push('Property Address is required');
+        if (!formData.propertyType) errors.push('Property Type is required');
         break;
         
-      case 2: // Coverage Details
-        if (!formData.riskLevel) errors.push('Risk Level is required');
-        if (!formData.coverAmount) errors.push('Cover Amount is required');
-        if (!formData.duration) errors.push('Duration is required');
+      case 2: // Coverage Selection
+        if (!formData.propertyValue.trim()) errors.push('Property Value is required');
+        if (!formData.buildingMaterial) errors.push('Building Material is required');
+        if (!formData.occupancyType) errors.push('Occupancy Type is required');
+        if (!formData.packageType) errors.push('Coverage Package is required');
         break;
         
       case 3: // Documents & Summary
@@ -198,7 +202,7 @@ const PersonalAccidentQuotationScreen = () => {
 
     Alert.alert(
       'Quotation Submitted',
-      `Your personal accident insurance quotation has been submitted successfully.\n\nEstimated Premium: KES ${formData.estimatedPremium.toLocaleString()}\n\nPataBima will review your application and provide a detailed quote within 24 hours.`,
+      `Your domestic package insurance quotation has been submitted successfully.\n\nEstimated Premium: KES ${formData.estimatedPremium.toLocaleString()}\n\nPataBima will review your application and provide a detailed quote within 24 hours.`,
       [
         {
           text: 'OK',
@@ -236,14 +240,14 @@ const PersonalAccidentQuotationScreen = () => {
 
   const renderStep1 = () => (
     <View style={styles.stepContainer}>
-      <Text style={styles.stepTitle}>Personal Information</Text>
-      <Text style={styles.stepSubtitle}>Please provide your personal details for personal accident insurance</Text>
+      <Text style={styles.stepTitle}>Property Details</Text>
+      <Text style={styles.stepSubtitle}>Please provide your property and personal information</Text>
       
       <EnhancedTextInput
-        label="Full Name"
-        value={formData.fullName}
-        onChangeText={(text) => updateFormData('fullName', text)}
-        placeholder="Enter your full name"
+        label="Property Owner Name"
+        value={formData.ownerName}
+        onChangeText={(text) => updateFormData('ownerName', text)}
+        placeholder="Enter property owner name"
         required
       />
 
@@ -254,37 +258,6 @@ const PersonalAccidentQuotationScreen = () => {
         placeholder="Enter your ID number"
         required
       />
-
-      <EnhancedDatePicker
-        label="Date of Birth"
-        value={formData.dateOfBirth}
-        onDateChange={(date) => updateFormData('dateOfBirth', date)}
-        placeholder="Select date of birth"
-        required
-      />
-
-      <View style={styles.inputContainer}>
-        <Text style={styles.inputLabel}>Gender *</Text>
-        <View style={styles.optionsGrid}>
-          {genders.map((gender) => (
-            <TouchableOpacity
-              key={gender.id}
-              style={[
-                styles.gridOption,
-                formData.gender === gender.id && styles.gridOptionActive
-              ]}
-              onPress={() => updateFormData('gender', gender.id)}
-            >
-              <Text style={[
-                styles.gridOptionText,
-                formData.gender === gender.id && styles.gridOptionTextActive
-              ]}>
-                {gender.name}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      </View>
 
       <EnhancedPhoneInput
         label="Phone Number"
@@ -304,147 +277,190 @@ const PersonalAccidentQuotationScreen = () => {
       </View>
 
       <EnhancedTextInput
-        label="Occupation"
-        value={formData.occupation}
-        onChangeText={(text) => updateFormData('occupation', text)}
-        placeholder="Enter your occupation"
+        label="Property Address"
+        value={formData.propertyAddress}
+        onChangeText={(text) => updateFormData('propertyAddress', text)}
+        placeholder="Enter complete property address"
+        multiline
+        numberOfLines={3}
         required
       />
+
+      <View style={styles.inputContainer}>
+        <Text style={styles.inputLabel}>Property Type *</Text>
+        <View style={styles.optionsGrid}>
+          {propertyTypes.map((type) => (
+            <TouchableOpacity
+              key={type.id}
+              style={[
+                styles.gridOption,
+                formData.propertyType === type.id && styles.gridOptionActive
+              ]}
+              onPress={() => updateFormData('propertyType', type.id)}
+            >
+              <Text style={[
+                styles.gridOptionText,
+                formData.propertyType === type.id && styles.gridOptionTextActive
+              ]}>
+                {type.name}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </View>
     </View>
   );
 
   const renderStep2 = () => (
     <View style={styles.stepContainer}>
-      <Text style={styles.stepTitle}>Coverage Details</Text>
-      <Text style={styles.stepSubtitle}>Select your coverage preferences and benefits</Text>
+      <Text style={styles.stepTitle}>Coverage Selection</Text>
+      <Text style={styles.stepSubtitle}>Select your coverage options and additional benefits</Text>
       
+      <EnhancedTextInput
+        label="Estimated Property Value (KES)"
+        value={formData.propertyValue}
+        onChangeText={(text) => updateFormData('propertyValue', text)}
+        placeholder="Enter estimated property value"
+        keyboardType="numeric"
+        required
+      />
+
       <View style={styles.inputContainer}>
-        <Text style={styles.inputLabel}>Cover Amount *</Text>
-        {coverAmounts.map((cover) => (
+        <Text style={styles.inputLabel}>Building Material *</Text>
+        {buildingMaterials.map((material) => (
           <TouchableOpacity
-            key={cover.id}
+            key={material.id}
             style={[
               styles.coverageCard,
-              formData.coverAmount === cover.id && styles.coverageCardActive
+              formData.buildingMaterial === material.id && styles.coverageCardActive
             ]}
-            onPress={() => updateFormData('coverAmount', cover.id)}
+            onPress={() => updateFormData('buildingMaterial', material.id)}
           >
-            <Text style={styles.coverageName}>{cover.name}</Text>
-            <Text style={styles.coveragePrice}>Base: KES {cover.premium.toLocaleString()}</Text>
+            <Text style={styles.coverageName}>{material.name}</Text>
+            <Text style={styles.coveragePrice}>Rate: {material.multiplier}x</Text>
           </TouchableOpacity>
         ))}
       </View>
 
       <View style={styles.inputContainer}>
-        <Text style={styles.inputLabel}>Risk Level *</Text>
-        {riskLevels.map((risk) => (
+        <Text style={styles.inputLabel}>Occupancy Type *</Text>
+        <View style={styles.optionsGrid}>
+          {occupancyTypes.map((occupancy) => (
+            <TouchableOpacity
+              key={occupancy.id}
+              style={[
+                styles.gridOption,
+                formData.occupancyType === occupancy.id && styles.gridOptionActive
+              ]}
+              onPress={() => updateFormData('occupancyType', occupancy.id)}
+            >
+              <Text style={[
+                styles.gridOptionText,
+                formData.occupancyType === occupancy.id && styles.gridOptionTextActive
+              ]}>
+                {occupancy.name}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </View>
+
+      <View style={styles.inputContainer}>
+        <Text style={styles.inputLabel}>Coverage Package *</Text>
+        {packageTypes.map((pkg) => (
           <TouchableOpacity
-            key={risk.id}
+            key={pkg.id}
             style={[
               styles.coverageCard,
-              formData.riskLevel === risk.id && styles.coverageCardActive
+              formData.packageType === pkg.id && styles.coverageCardActive
             ]}
-            onPress={() => updateFormData('riskLevel', risk.id)}
+            onPress={() => updateFormData('packageType', pkg.id)}
           >
-            <Text style={styles.coverageName}>{risk.name}</Text>
-            <Text style={styles.coveragePrice}>Multiplier: {risk.multiplier}x</Text>
+            <Text style={styles.coverageName}>{pkg.name}</Text>
+            <Text style={styles.coverageDetails}>
+              Building: KES {pkg.buildingCover.toLocaleString()} | Contents: KES {pkg.contentsCover.toLocaleString()}
+            </Text>
+            <Text style={styles.coveragePrice}>Base Premium: KES {pkg.basePremium.toLocaleString()}</Text>
           </TouchableOpacity>
         ))}
       </View>
 
       <View style={styles.inputContainer}>
-        <Text style={styles.inputLabel}>Policy Duration *</Text>
-        {durations.map((duration) => (
-          <TouchableOpacity
-            key={duration.id}
-            style={[
-              styles.coverageCard,
-              formData.duration === duration.id && styles.coverageCardActive
-            ]}
-            onPress={() => updateFormData('duration', duration.id)}
-          >
-            <Text style={styles.coverageName}>{duration.name}</Text>
-            <Text style={styles.coveragePrice}>Rate: {duration.multiplier}x</Text>
-          </TouchableOpacity>
-        ))}
-      </View>
-
-      <View style={styles.inputContainer}>
-        <Text style={styles.inputLabel}>Additional Benefits</Text>
+        <Text style={styles.inputLabel}>Additional Coverage</Text>
         
         <TouchableOpacity
           style={[
             styles.benefitCard,
-            formData.accidentalDeath && styles.benefitCardActive
+            formData.personalAccident && styles.benefitCardActive
           ]}
-          onPress={() => updateFormData('accidentalDeath', !formData.accidentalDeath)}
+          onPress={() => updateFormData('personalAccident', !formData.personalAccident)}
         >
           <View style={styles.benefitInfo}>
-            <Text style={styles.benefitName}>Accidental Death Benefit</Text>
-            <Text style={styles.benefitPrice}>+KES 2,000</Text>
+            <Text style={styles.benefitName}>Personal Accident Coverage</Text>
+            <Text style={styles.benefitPrice}>+KES 5,000</Text>
           </View>
           <View style={[
             styles.checkbox,
-            formData.accidentalDeath && styles.checkboxActive
+            formData.personalAccident && styles.checkboxActive
           ]}>
-            {formData.accidentalDeath && <Text style={styles.checkmark}>✓</Text>}
+            {formData.personalAccident && <Text style={styles.checkmark}>✓</Text>}
           </View>
         </TouchableOpacity>
 
         <TouchableOpacity
           style={[
             styles.benefitCard,
-            formData.permanentDisability && styles.benefitCardActive
+            formData.publicLiability && styles.benefitCardActive
           ]}
-          onPress={() => updateFormData('permanentDisability', !formData.permanentDisability)}
+          onPress={() => updateFormData('publicLiability', !formData.publicLiability)}
         >
           <View style={styles.benefitInfo}>
-            <Text style={styles.benefitName}>Permanent Disability Cover</Text>
-            <Text style={styles.benefitPrice}>+KES 1,500</Text>
+            <Text style={styles.benefitName}>Public Liability Coverage</Text>
+            <Text style={styles.benefitPrice}>+KES 8,000</Text>
           </View>
           <View style={[
             styles.checkbox,
-            formData.permanentDisability && styles.checkboxActive
+            formData.publicLiability && styles.checkboxActive
           ]}>
-            {formData.permanentDisability && <Text style={styles.checkmark}>✓</Text>}
+            {formData.publicLiability && <Text style={styles.checkmark}>✓</Text>}
           </View>
         </TouchableOpacity>
 
         <TouchableOpacity
           style={[
             styles.benefitCard,
-            formData.medicalExpenses && styles.benefitCardActive
+            formData.allRisks && styles.benefitCardActive
           ]}
-          onPress={() => updateFormData('medicalExpenses', !formData.medicalExpenses)}
+          onPress={() => updateFormData('allRisks', !formData.allRisks)}
         >
           <View style={styles.benefitInfo}>
-            <Text style={styles.benefitName}>Medical Expenses Cover</Text>
-            <Text style={styles.benefitPrice}>+KES 3,000</Text>
+            <Text style={styles.benefitName}>All Risks Coverage</Text>
+            <Text style={styles.benefitPrice}>+KES 12,000</Text>
           </View>
           <View style={[
             styles.checkbox,
-            formData.medicalExpenses && styles.checkboxActive
+            formData.allRisks && styles.checkboxActive
           ]}>
-            {formData.medicalExpenses && <Text style={styles.checkmark}>✓</Text>}
+            {formData.allRisks && <Text style={styles.checkmark}>✓</Text>}
           </View>
         </TouchableOpacity>
 
         <TouchableOpacity
           style={[
             styles.benefitCard,
-            formData.temporaryDisability && styles.benefitCardActive
+            formData.lossOfRent && styles.benefitCardActive
           ]}
-          onPress={() => updateFormData('temporaryDisability', !formData.temporaryDisability)}
+          onPress={() => updateFormData('lossOfRent', !formData.lossOfRent)}
         >
           <View style={styles.benefitInfo}>
-            <Text style={styles.benefitName}>Temporary Disability Income</Text>
-            <Text style={styles.benefitPrice}>+KES 1,000</Text>
+            <Text style={styles.benefitName}>Loss of Rent Coverage</Text>
+            <Text style={styles.benefitPrice}>+KES 6,000</Text>
           </View>
           <View style={[
             styles.checkbox,
-            formData.temporaryDisability && styles.checkboxActive
+            formData.lossOfRent && styles.checkboxActive
           ]}>
-            {formData.temporaryDisability && <Text style={styles.checkmark}>✓</Text>}
+            {formData.lossOfRent && <Text style={styles.checkmark}>✓</Text>}
           </View>
         </TouchableOpacity>
       </View>
@@ -457,47 +473,47 @@ const PersonalAccidentQuotationScreen = () => {
       <Text style={styles.stepSubtitle}>Review your details and upload documents</Text>
 
       <View style={styles.summaryCard}>
-        <Text style={styles.summaryTitle}>Personal Accident Insurance Quote Summary</Text>
+        <Text style={styles.summaryTitle}>Domestic Package Insurance Quote Summary</Text>
         
         <View style={styles.summaryRow}>
-          <Text style={styles.summaryLabel}>Insured Person</Text>
-          <Text style={styles.summaryValue}>{formData.fullName}</Text>
+          <Text style={styles.summaryLabel}>Property Owner</Text>
+          <Text style={styles.summaryValue}>{formData.ownerName}</Text>
         </View>
         
         <View style={styles.summaryRow}>
-          <Text style={styles.summaryLabel}>Occupation</Text>
-          <Text style={styles.summaryValue}>{formData.occupation}</Text>
-        </View>
-        
-        <View style={styles.summaryRow}>
-          <Text style={styles.summaryLabel}>Cover Amount</Text>
+          <Text style={styles.summaryLabel}>Property Type</Text>
           <Text style={styles.summaryValue}>
-            {coverAmounts.find(c => c.id === formData.coverAmount)?.name || 'Not selected'}
+            {propertyTypes.find(p => p.id === formData.propertyType)?.name || 'Not selected'}
           </Text>
         </View>
         
         <View style={styles.summaryRow}>
-          <Text style={styles.summaryLabel}>Risk Level</Text>
+          <Text style={styles.summaryLabel}>Property Value</Text>
+          <Text style={styles.summaryValue}>KES {formData.propertyValue ? parseInt(formData.propertyValue).toLocaleString() : '0'}</Text>
+        </View>
+        
+        <View style={styles.summaryRow}>
+          <Text style={styles.summaryLabel}>Building Material</Text>
           <Text style={styles.summaryValue}>
-            {riskLevels.find(r => r.id === formData.riskLevel)?.name || 'Not selected'}
+            {buildingMaterials.find(m => m.id === formData.buildingMaterial)?.name || 'Not selected'}
           </Text>
         </View>
         
         <View style={styles.summaryRow}>
-          <Text style={styles.summaryLabel}>Policy Duration</Text>
+          <Text style={styles.summaryLabel}>Coverage Package</Text>
           <Text style={styles.summaryValue}>
-            {durations.find(d => d.id === formData.duration)?.name || 'Not selected'}
+            {packageTypes.find(p => p.id === formData.packageType)?.name || 'Not selected'}
           </Text>
         </View>
         
         <View style={styles.summaryRow}>
-          <Text style={styles.summaryLabel}>Additional Benefits</Text>
+          <Text style={styles.summaryLabel}>Additional Coverage</Text>
           <Text style={styles.summaryValue}>
             {[
-              formData.accidentalDeath && 'Accidental Death',
-              formData.permanentDisability && 'Permanent Disability',
-              formData.medicalExpenses && 'Medical Expenses',
-              formData.temporaryDisability && 'Temporary Disability'
+              formData.personalAccident && 'Personal Accident',
+              formData.publicLiability && 'Public Liability',
+              formData.allRisks && 'All Risks',
+              formData.lossOfRent && 'Loss of Rent'
             ].filter(Boolean).join(', ') || 'None selected'}
           </Text>
         </View>
@@ -513,25 +529,25 @@ const PersonalAccidentQuotationScreen = () => {
       </View>
 
       <EnhancedDocumentUpload
-        label="ID Copy"
-        documentType="national ID"
-        onDocumentSelect={(doc) => updateFormData('uploadIdCopy', doc)}
-        uploadedDocument={formData.uploadIdCopy}
+        label="Property Documents"
+        documentType="property documents"
+        onDocumentSelect={(doc) => updateFormData('uploadPropertyDocs', doc)}
+        uploadedDocument={formData.uploadPropertyDocs}
         required
       />
 
       <EnhancedDocumentUpload
-        label="Medical Report"
-        documentType="medical report"
-        onDocumentSelect={(doc) => updateFormData('uploadMedicalReport', doc)}
-        uploadedDocument={formData.uploadMedicalReport}
+        label="Valuation Report"
+        documentType="valuation report"
+        onDocumentSelect={(doc) => updateFormData('uploadValuationReport', doc)}
+        uploadedDocument={formData.uploadValuationReport}
       />
 
       <EnhancedDocumentUpload
-        label="Occupation Letter"
-        documentType="occupation letter"
-        onDocumentSelect={(doc) => updateFormData('uploadOccupationLetter', doc)}
-        uploadedDocument={formData.uploadOccupationLetter}
+        label="Property Photos"
+        documentType="property photos"
+        onDocumentSelect={(doc) => updateFormData('uploadPropertyPhotos', doc)}
+        uploadedDocument={formData.uploadPropertyPhotos}
       />
 
       <View style={styles.inputContainer}>
@@ -608,7 +624,7 @@ const PersonalAccidentQuotationScreen = () => {
         >
           <Text style={styles.headerBackText}>← Back</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Personal Accident Insurance</Text>
+        <Text style={styles.headerTitle}>Domestic Package Insurance</Text>
         <View style={styles.headerRight} />
       </View>
 
@@ -755,6 +771,10 @@ const styles = StyleSheet.create({
     fontSize: Typography.fontSize.md,
     backgroundColor: '#FFFFFF',
   },
+  textArea: {
+    height: 80,
+    textAlignVertical: 'top',
+  },
   optionsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -798,6 +818,11 @@ const styles = StyleSheet.create({
     fontSize: Typography.fontSize.lg,
     fontWeight: Typography.fontWeight.semibold,
     color: Colors.textPrimary,
+    marginBottom: Spacing.xs,
+  },
+  coverageDetails: {
+    fontSize: Typography.fontSize.sm,
+    color: Colors.textSecondary,
     marginBottom: Spacing.xs,
   },
   coveragePrice: {
@@ -994,4 +1019,5 @@ const styles = StyleSheet.create({
   },
 });
 
-export default PersonalAccidentQuotationScreen;
+export default DomesticPackageQuotationScreen;
+

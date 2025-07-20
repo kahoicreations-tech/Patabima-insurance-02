@@ -17,6 +17,8 @@ import {
   TravelQuotationScreen, 
   PersonalAccidentQuotationScreen, 
   LastExpenseQuotationScreen,
+  ProfessionalIndemnityQuotationScreen,
+  DomesticPackageQuotationScreen,
   RenewalScreen,
   ClaimDetailsScreen,
   ExtensionScreen,
@@ -179,6 +181,8 @@ function HomeStack() {
       <Stack.Screen name="TravelQuotation" component={TravelQuotationScreen} />
       <Stack.Screen name="PersonalAccidentQuotation" component={PersonalAccidentQuotationScreen} />
       <Stack.Screen name="LastExpenseQuotation" component={LastExpenseQuotationScreen} />
+      <Stack.Screen name="ProfessionalIndemnityQuotation" component={ProfessionalIndemnityQuotationScreen} />
+      <Stack.Screen name="DomesticPackageQuotation" component={DomesticPackageQuotationScreen} />
       <Stack.Screen name="Renewal" component={RenewalScreen} />
       <Stack.Screen name="ClaimDetails" component={ClaimDetailsScreen} />
       <Stack.Screen name="Extension" component={ExtensionScreen} />

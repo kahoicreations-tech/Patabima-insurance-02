@@ -44,6 +44,8 @@ export {
   TravelQuotationScreen, 
   PersonalAccidentQuotationScreen, 
   LastExpenseQuotationScreen,
+  ProfessionalIndemnityQuotationScreen,
+  DomesticPackageQuotationScreen,
   QuoteComparisonScreen 
 } from './quotations';
 

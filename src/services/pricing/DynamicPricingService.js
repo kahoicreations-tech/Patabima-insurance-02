@@ -14,6 +14,9 @@ export const DynamicPricingService = {
   getMedicalPricing: async (customerData) => {
     try {
       const config = await AdminPricingService.getCurrentPricingConfig();
+      if (!config || !config.medical) {
+        return null; // Let fallback to static pricing
+      }
       const medicalConfig = config.medical;
       
       const {
@@ -70,6 +73,9 @@ export const DynamicPricingService = {
   getWIBAPricing: async (companyData) => {
     try {
       const config = await AdminPricingService.getCurrentPricingConfig();
+      if (!config || !config.wiba) {
+        return null; // Let fallback to static pricing
+      }
       const wibaConfig = config.wiba;
       
       const {
@@ -121,6 +127,9 @@ export const DynamicPricingService = {
   getMotorPricing: async (vehicleData) => {
     try {
       const config = await AdminPricingService.getCurrentPricingConfig();
+      if (!config || !config.motor) {
+        return null; // Let fallback to static pricing
+      }
       const motorConfig = config.motor;
       
       const {
@@ -162,6 +171,9 @@ export const DynamicPricingService = {
   getTravelPricing: async (travelData) => {
     try {
       const config = await AdminPricingService.getCurrentPricingConfig();
+      if (!config) {
+        return null; // Let fallback to static pricing
+      }
       const travelConfig = config.travel || {
         basePremiums: {
           domestic: { basic: 25, standard: 45, premium: 75 },
@@ -241,6 +253,13 @@ export const DynamicPricingService = {
   getConfigInfo: async () => {
     try {
       const config = await AdminPricingService.getCurrentPricingConfig();
+      if (!config) {
+        return {
+          version: 'fallback',
+          lastUpdated: new Date().toISOString(),
+          updatedBy: 'system'
+        };
+      }
       return {
         version: config.version,
         lastUpdated: config.lastUpdated,

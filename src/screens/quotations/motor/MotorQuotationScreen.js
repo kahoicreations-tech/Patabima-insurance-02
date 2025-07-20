@@ -6,24 +6,33 @@
  * Supports Third Party, Comprehensive, and Commercial vehicle insurance
  */
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  TouchableWithoutFeedback,
   TextInput,
   Alert,
   Platform,
   Dimensions,
   Modal,
-  FlatList
+  FlatList,
+  Keyboard,
+  KeyboardAvoidingView
 } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
+import * as DocumentPicker from 'expo-document-picker';
+import * as FileSystem from 'expo-file-system';
+import { processDocumentOffline, validateOfflineData } from '../../../services/offlineOcrService';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors, Spacing, Typography } from '../../../constants';
-import { SafeScreen, EnhancedCard, CompactCurvedHeader } from '../../../components';
+import SafeScreen from '../../../components/common/SafeScreen';
+import CompactCurvedHeader from '../../../components/common/CompactCurvedHeader';
+import EnhancedCard from '../../../components/common/EnhancedCard';
 
 const { width } = Dimensions.get('window');
 
@@ -68,8 +77,25 @@ export default function MotorQuotationScreen({ navigation, route }) {
   const [showDurationModal, setShowDurationModal] = useState(false);
   const [showInsurerModal, setShowInsurerModal] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [isScanning, setIsScanning] = useState(false);
+  const [showValidationDrawer, setShowValidationDrawer] = useState(false);
+  const [scannedData, setScannedData] = useState({});
+  const [validationMismatches, setValidationMismatches] = useState([]);
   const insets = useSafeAreaInsets();
   const scrollViewRef = useRef(null);
+
+  // Input refs for focus management
+  const inputRefs = {
+    fullName: useRef(null),
+    idNumber: useRef(null),
+    phoneNumber: useRef(null),
+    emailAddress: useRef(null),
+    vehicleRegistrationNumber: useRef(null),
+    yearOfManufacture: useRef(null),
+    vehicleEngineCapacity: useRef(null),
+    nextOfKinName: useRef(null),
+    nextOfKinPhone: useRef(null),
+  };
 
   const totalSteps = 5;
 
@@ -102,9 +128,18 @@ export default function MotorQuotationScreen({ navigation, route }) {
   ];
 
   const insuranceDurationOptions = [
-    { id: 1, name: '90 Days', days: 90, multiplier: 0.3 },
-    { id: 2, name: '180 Days', days: 180, multiplier: 0.6 },
-    { id: 3, name: '365 Days (1 Year)', days: 365, multiplier: 1.0 }
+    { id: 1, name: '1 Month', months: 1, multiplier: 0.12 },
+    { id: 2, name: '2 Months', months: 2, multiplier: 0.22 },
+    { id: 3, name: '3 Months', months: 3, multiplier: 0.30 },
+    { id: 4, name: '4 Months', months: 4, multiplier: 0.38 },
+    { id: 5, name: '5 Months', months: 5, multiplier: 0.45 },
+    { id: 6, name: '6 Months', months: 6, multiplier: 0.52 },
+    { id: 7, name: '7 Months', months: 7, multiplier: 0.58 },
+    { id: 8, name: '8 Months', months: 8, multiplier: 0.65 },
+    { id: 9, name: '9 Months', months: 9, multiplier: 0.72 },
+    { id: 10, name: '10 Months', months: 10, multiplier: 0.80 },
+    { id: 11, name: '11 Months', months: 11, multiplier: 0.88 },
+    { id: 12, name: '12 Months (Annual)', months: 12, multiplier: 1.0 }
   ];
 
   const insurerOptions = [
@@ -119,21 +154,64 @@ export default function MotorQuotationScreen({ navigation, route }) {
   ];
 
   const paymentMethodOptions = [
-    { id: 1, name: 'M-Pesa', description: 'Mobile money payment' },
-    { id: 2, name: 'Bank Transfer', description: 'Direct bank transfer' },
-    { id: 3, name: 'Credit Card', description: 'Visa/Mastercard payment' },
-    { id: 4, name: 'Debit Card', description: 'Bank debit card' },
-    { id: 5, name: 'Airtel Money', description: 'Airtel mobile money' },
-    { id: 6, name: 'Cheque', description: 'Bank cheque payment' }
+    { 
+      id: 1, 
+      name: 'M-Pesa', 
+      description: 'Safe mobile money payment via Daraja API',
+      fee: 0,
+      enabled: true 
+    }
   ];
 
   const documentTypes = [
-    'KRA PIN Certificate',
-    'National ID Copy',
-    'Logbook/Ownership Proof',
-    'Driving License',
-    'Previous Insurance Certificate',
-    'Vehicle Inspection Report'
+    {
+      type: 'National ID Copy',
+      required: true,
+      scannable: true,
+      extractFields: ['fullName', 'idNumber'],
+      icon: '🆔',
+      description: 'Scan your National ID for automatic data extraction'
+    },
+    {
+      type: 'KRA PIN Certificate',
+      required: true,
+      scannable: true,
+      extractFields: ['kraPin', 'fullName'],
+      icon: '📋',
+      description: 'KRA PIN certificate for tax compliance'
+    },
+    {
+      type: 'Vehicle Logbook',
+      required: true,
+      scannable: true,
+      extractFields: ['vehicleRegistrationNumber', 'makeModel', 'yearOfManufacture', 'vehicleEngineCapacity'],
+      icon: '📖',
+      description: 'Vehicle logbook for ownership verification'
+    },
+    {
+      type: 'Driving License',
+      required: false,
+      scannable: true,
+      extractFields: ['fullName', 'licenseNumber'],
+      icon: '🚗',
+      description: 'Valid driving license (optional)'
+    },
+    {
+      type: 'Previous Insurance Certificate',
+      required: false,
+      scannable: false,
+      extractFields: [],
+      icon: '📄',
+      description: 'Previous insurance certificate (optional)'
+    },
+    {
+      type: 'Vehicle Inspection Report',
+      required: false,
+      scannable: false,
+      extractFields: [],
+      icon: '🔍',
+      description: 'Vehicle inspection report (optional)'
+    }
   ];
 
   const validateStep = (step) => {
@@ -177,9 +255,9 @@ export default function MotorQuotationScreen({ navigation, route }) {
       case 4:
         const hasKRAPin = formData.documents.some(doc => doc.type === 'KRA PIN Certificate');
         const hasNationalId = formData.documents.some(doc => doc.type === 'National ID Copy');
-        const hasLogbook = formData.documents.some(doc => doc.type === 'Logbook/Ownership Proof');
+        const hasLogbook = formData.documents.some(doc => doc.type === 'Vehicle Logbook');
         if (!hasKRAPin || !hasNationalId || !hasLogbook) {
-          newErrors.documents = 'KRA PIN, National ID, and Logbook are required';
+          newErrors.documents = 'KRA PIN, National ID, and Vehicle Logbook are required';
         }
         break;
       
@@ -244,19 +322,35 @@ export default function MotorQuotationScreen({ navigation, route }) {
     }
   };
 
-  const updateFormData = (key, value) => {
-    setFormData(prev => ({
-      ...prev,
-      [key]: value
-    }));
+  // Optimized form update to prevent unnecessary re-renders
+  const updateFormData = useCallback((key, value) => {
+    setFormData(prev => {
+      if (prev[key] === value) return prev; // Prevent unnecessary updates
+      return {
+        ...prev,
+        [key]: value
+      };
+    });
     
     // Clear error when user starts typing
-    if (errors[key]) {
-      setErrors(prev => ({
+    setErrors(prev => {
+      if (!prev[key]) return prev; // Prevent unnecessary updates
+      return {
         ...prev,
         [key]: null
-      }));
+      };
+    });
+  }, []); // Remove errors dependency to prevent re-renders
+
+  // Refine onSubmitEditing handlers to avoid unnecessary keyboard dismissal
+  const handleOnSubmitEditing = (currentField, nextField) => {
+    if (nextField && inputRefs[nextField]?.current) {
+      // Add a small delay to ensure the focus works properly
+      setTimeout(() => {
+        inputRefs[nextField].current.focus();
+      }, 50);
     }
+    // Don't dismiss keyboard if there's no next field
   };
 
   const selectMakeModel = (vehicle) => {
@@ -284,13 +378,320 @@ export default function MotorQuotationScreen({ navigation, route }) {
     setShowPaymentModal(false);
   };
 
-  const addDocument = (docType) => {
+  // Document scanning and OCR processing with real data
+  const scanDocument = async (docType) => {
+    try {
+      // Request camera permissions
+      const { status } = await ImagePicker.requestCameraPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission Required', 'Camera permission is needed to scan documents.');
+        return;
+      }
+
+      setIsScanning(true);
+
+      // Present options for document capture
+      Alert.alert(
+        'Scan Document',
+        `How would you like to capture your ${docType.type}?`,
+        [
+          {
+            text: 'Take Photo',
+            onPress: () => captureWithCamera(docType)
+          },
+          {
+            text: 'Choose from Gallery',
+            onPress: () => selectFromGallery(docType)
+          },
+          {
+            text: 'Upload File',
+            onPress: () => selectDocument(docType)
+          },
+          {
+            text: 'Cancel',
+            onPress: () => setIsScanning(false),
+            style: 'cancel'
+          }
+        ]
+      );
+    } catch (error) {
+      console.error('Document scanning error:', error);
+      Alert.alert('Error', 'Failed to initialize document scanning. Please try again.');
+      setIsScanning(false);
+    }
+  };
+
+  const captureWithCamera = async (docType) => {
+    try {
+      const result = await ImagePicker.launchCameraAsync({
+        mediaTypes: ImagePicker.MediaType.Images,
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 0.8,
+        base64: true
+      });
+
+      if (!result.canceled && result.assets[0]) {
+        await processDocumentImage(result.assets[0], docType);
+      } else {
+        setIsScanning(false);
+      }
+    } catch (error) {
+      console.error('Camera capture error:', error);
+      Alert.alert('Error', 'Failed to capture image. Please try again.');
+      setIsScanning(false);
+    }
+  };
+
+  const selectFromGallery = async (docType) => {
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaType.Images,
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 0.8,
+        base64: true
+      });
+
+      if (!result.canceled && result.assets[0]) {
+        await processDocumentImage(result.assets[0], docType);
+      } else {
+        setIsScanning(false);
+      }
+    } catch (error) {
+      console.error('Gallery selection error:', error);
+      Alert.alert('Error', 'Failed to select image. Please try again.');
+      setIsScanning(false);
+    }
+  };
+
+  const selectDocument = async (docType) => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: ['image/*', 'application/pdf'],
+        copyToCacheDirectory: true
+      });
+
+      if (result.type === 'success') {
+        await processDocumentFile(result, docType);
+      } else {
+        setIsScanning(false);
+      }
+    } catch (error) {
+      console.error('Document selection error:', error);
+      Alert.alert('Error', 'Failed to select document. Please try again.');
+      setIsScanning(false);
+    }
+  };
+
+  const processDocumentImage = async (imageAsset, docType) => {
+    try {
+      // Prepare image for offline OCR processing
+      const imageData = {
+        uri: imageAsset.uri,
+        base64: imageAsset.base64,
+        width: imageAsset.width,
+        height: imageAsset.height,
+        type: 'image/jpeg'
+      };
+
+      // Process with FREE offline OCR service
+      const ocrResult = await processDocumentOffline(imageData, docType);
+      
+      if (ocrResult.success && ocrResult.data && Object.keys(ocrResult.data).length > 0) {
+        console.log(`Offline OCR successful, confidence: ${Math.round(ocrResult.confidence * 100)}%`);
+        
+        // Validate extracted data against form inputs
+        const mismatches = validateOfflineData(ocrResult.data, formData, docType);
+        
+        if (mismatches.length > 0) {
+          setScannedData(ocrResult.data);
+          setValidationMismatches(mismatches);
+          setShowValidationDrawer(true);
+        } else {
+          // Auto-populate validated data
+          Object.keys(ocrResult.data).forEach(key => {
+            if (formData[key] !== ocrResult.data[key]) {
+              updateFormData(key, ocrResult.data[key]);
+            }
+          });
+          
+          addDocument(docType, ocrResult.data, imageAsset.uri);
+          Alert.alert(
+            'Success! 🎉', 
+            `Document scanned successfully with FREE offline OCR!\nConfidence: ${Math.round(ocrResult.confidence * 100)}%\n\nData extracted: ${Object.keys(ocrResult.data).join(', ')}`
+          );
+        }
+      } else {
+        // OCR failed or no data extracted
+        const errorMessage = ocrResult.error || 'Could not extract text from document';
+        console.warn('Offline OCR failed:', errorMessage);
+        
+        Alert.alert(
+          'OCR Processing Failed',
+          `${errorMessage}\n\nWould you like to upload the document manually?`,
+          [
+            {
+              text: 'Try Again',
+              onPress: () => setIsScanning(false)
+            },
+            {
+              text: 'Upload Manually',
+              onPress: () => {
+                addDocument(docType, null, imageAsset.uri);
+                Alert.alert('Document Uploaded', 'Document uploaded successfully. Please verify data manually.');
+              }
+            }
+          ]
+        );
+      }
+    } catch (error) {
+      console.error('Document processing error:', error);
+      Alert.alert(
+        'Processing Error',
+        `Failed to process document: ${error.message}\n\nWould you like to upload manually?`,
+        [
+          {
+            text: 'Try Again',
+            onPress: () => setIsScanning(false)
+          },
+          {
+            text: 'Upload Manually',
+            onPress: () => {
+              addDocument(docType, null, imageAsset.uri);
+              Alert.alert('Document Uploaded', 'Document uploaded successfully. Please verify data manually.');
+            }
+          }
+        ]
+      );
+    } finally {
+      setIsScanning(false);
+    }
+  };
+
+  const processDocumentFile = async (documentAsset, docType) => {
+    try {
+      const fileInfo = await FileSystem.getInfoAsync(documentAsset.uri);
+      
+      if (fileInfo.exists) {
+        // For PDF files, inform user about limitations
+        if (documentAsset.mimeType === 'application/pdf') {
+          Alert.alert(
+            'PDF Document Detected',
+            'PDF OCR processing is not supported in offline mode. For best results, please take a photo of the document.',
+            [
+              {
+                text: 'Upload PDF Anyway',
+                onPress: () => {
+                  addDocument(docType, null, documentAsset.uri);
+                  Alert.alert('PDF Uploaded', 'PDF document uploaded. Please verify data manually.');
+                }
+              },
+              {
+                text: 'Take Photo Instead',
+                onPress: () => captureWithCamera(docType)
+              }
+            ]
+          );
+        } else {
+          // Process image documents with FREE offline OCR
+          const imageData = {
+            uri: documentAsset.uri,
+            type: documentAsset.mimeType
+          };
+          
+          const ocrResult = await processDocumentOffline(imageData, docType);
+          
+          if (ocrResult.success && ocrResult.data && Object.keys(ocrResult.data).length > 0) {
+            const mismatches = validateOfflineData(ocrResult.data, formData, docType);
+            
+            if (mismatches.length > 0) {
+              setScannedData(ocrResult.data);
+              setValidationMismatches(mismatches);
+              setShowValidationDrawer(true);
+            } else {
+              Object.keys(ocrResult.data).forEach(key => {
+                if (formData[key] !== ocrResult.data[key]) {
+                  updateFormData(key, ocrResult.data[key]);
+                }
+              });
+              
+              addDocument(docType, ocrResult.data, documentAsset.uri);
+              Alert.alert(
+                'Success! 🎉', 
+                `Document processed successfully with FREE offline OCR!\nConfidence: ${Math.round(ocrResult.confidence * 100)}%`
+              );
+            }
+          } else {
+            addDocument(docType, null, documentAsset.uri);
+            Alert.alert(
+              'OCR Failed',
+              `Could not extract text from document.\nError: ${ocrResult.error || 'Unknown error'}\n\nDocument uploaded for manual verification.`
+            );
+          }
+        }
+      }
+    } catch (error) {
+      console.error('File processing error:', error);
+      Alert.alert('Error', `Failed to process document file: ${error.message}`);
+    } finally {
+      setIsScanning(false);
+    }
+  };
+
+  // Validate extracted data against form inputs using the offline OCR service
+  const validateExtractedData = (extractedData, docType) => {
+    return validateOfflineData(extractedData, formData, docType);
+  };
+
+  // Get user-friendly field labels
+  const getFieldLabel = (field) => {
+    const labels = {
+      fullName: 'Full Name',
+      idNumber: 'ID Number',
+      vehicleRegistrationNumber: 'Vehicle Registration',
+      makeModel: 'Make & Model',
+      yearOfManufacture: 'Year of Manufacture',
+      vehicleEngineCapacity: 'Engine Capacity',
+      kraPin: 'KRA PIN'
+    };
+    return labels[field] || field;
+  };
+
+  // Apply validated data from scanning
+  const applyScannedData = (useExtractedData = true) => {
+    validationMismatches.forEach(mismatch => {
+      const valueToUse = useExtractedData ? mismatch.extractedValue : mismatch.formValue;
+      updateFormData(mismatch.field, valueToUse);
+    });
+    
+    const docType = documentTypes.find(dt => 
+      dt.extractFields.some(field => validationMismatches.some(m => m.field === field))
+    );
+    
+    if (docType) {
+      addDocument(docType, scannedData);
+    }
+    
+    setShowValidationDrawer(false);
+    setValidationMismatches([]);
+    setScannedData({});
+    
+    Alert.alert('Success', 'Document data has been applied successfully!');
+  };
+
+  const addDocument = (docType, extractedData = null, imageUri = null) => {
     const newDoc = {
       id: Date.now(),
-      type: docType,
-      name: `${docType}_${Date.now()}`,
+      type: docType.type || docType,
+      name: `${docType.type || docType}_${Date.now()}`,
       uploaded: true,
-      size: '2.1 MB'
+      scanned: !!extractedData,
+      extractedData: extractedData || null,
+      imageUri: imageUri || null,
+      size: imageUri ? 'Processing...' : '2.1 MB',
+      status: extractedData ? 'verified' : 'uploaded',
+      timestamp: new Date().toISOString()
     };
     
     updateFormData('documents', [...formData.documents, newDoc]);
@@ -315,8 +716,8 @@ export default function MotorQuotationScreen({ navigation, route }) {
     
     if (!usageType || !duration) return 0;
 
-    // Base premium calculation
-    let basePremium = 15000; // Base amount for Kenya motor insurance
+    // Base premium calculation for Kenya motor insurance
+    let basePremium = 15000; // Base annual amount for Kenya motor insurance
     
     // Engine capacity factor
     if (engineCapacity <= 1000) basePremium *= 1.0;
@@ -390,11 +791,18 @@ export default function MotorQuotationScreen({ navigation, route }) {
       <View style={styles.inputContainer}>
         <Text style={styles.inputLabel}>Full Name *</Text>
         <TextInput
+          ref={inputRefs.fullName}
           style={[styles.input, errors.fullName && styles.inputError]}
           value={formData.fullName}
           onChangeText={(text) => updateFormData('fullName', text)}
           placeholder="Enter your full name"
           placeholderTextColor={Colors.textSecondary}
+          returnKeyType="next"
+          onSubmitEditing={() => handleOnSubmitEditing('fullName', 'idNumber')}
+          blurOnSubmit={false}
+          autoCorrect={false}
+          autoComplete="off"
+          textContentType="none"
         />
         {errors.fullName && <Text style={styles.errorText}>{errors.fullName}</Text>}
       </View>
@@ -402,12 +810,19 @@ export default function MotorQuotationScreen({ navigation, route }) {
       <View style={styles.inputContainer}>
         <Text style={styles.inputLabel}>ID Number *</Text>
         <TextInput
+          ref={inputRefs.idNumber}
           style={[styles.input, errors.idNumber && styles.inputError]}
           value={formData.idNumber}
           onChangeText={(text) => updateFormData('idNumber', text)}
           placeholder="Enter your national ID number"
           placeholderTextColor={Colors.textSecondary}
           keyboardType="numeric"
+          returnKeyType="next"
+          onSubmitEditing={() => handleOnSubmitEditing('idNumber', 'phoneNumber')}
+          blurOnSubmit={false}
+          autoCorrect={false}
+          autoComplete="off"
+          textContentType="none"
         />
         {errors.idNumber && <Text style={styles.errorText}>{errors.idNumber}</Text>}
       </View>
@@ -415,12 +830,19 @@ export default function MotorQuotationScreen({ navigation, route }) {
       <View style={styles.inputContainer}>
         <Text style={styles.inputLabel}>Phone Number *</Text>
         <TextInput
+          ref={inputRefs.phoneNumber}
           style={[styles.input, errors.phoneNumber && styles.inputError]}
           value={formData.phoneNumber}
           onChangeText={(text) => updateFormData('phoneNumber', text)}
           placeholder="+254 700 000 000"
           placeholderTextColor={Colors.textSecondary}
           keyboardType="phone-pad"
+          returnKeyType="next"
+          onSubmitEditing={() => handleOnSubmitEditing('phoneNumber', 'emailAddress')}
+          blurOnSubmit={false}
+          autoCorrect={false}
+          autoComplete="off"
+          textContentType="none"
         />
         {errors.phoneNumber && <Text style={styles.errorText}>{errors.phoneNumber}</Text>}
       </View>
@@ -428,6 +850,7 @@ export default function MotorQuotationScreen({ navigation, route }) {
       <View style={styles.inputContainer}>
         <Text style={styles.inputLabel}>Email Address (Optional)</Text>
         <TextInput
+          ref={inputRefs.emailAddress}
           style={[styles.input, errors.emailAddress && styles.inputError]}
           value={formData.emailAddress}
           onChangeText={(text) => updateFormData('emailAddress', text)}
@@ -435,6 +858,12 @@ export default function MotorQuotationScreen({ navigation, route }) {
           placeholderTextColor={Colors.textSecondary}
           keyboardType="email-address"
           autoCapitalize="none"
+          returnKeyType="done"
+          onSubmitEditing={() => handleOnSubmitEditing('emailAddress')}
+          blurOnSubmit={true}
+          autoCorrect={false}
+          autoComplete="off"
+          textContentType="none"
         />
         {errors.emailAddress && <Text style={styles.errorText}>{errors.emailAddress}</Text>}
       </View>
@@ -449,12 +878,19 @@ export default function MotorQuotationScreen({ navigation, route }) {
       <View style={styles.inputContainer}>
         <Text style={styles.inputLabel}>Vehicle Registration Number *</Text>
         <TextInput
+          ref={inputRefs.vehicleRegistrationNumber}
           style={[styles.input, errors.vehicleRegistrationNumber && styles.inputError]}
           value={formData.vehicleRegistrationNumber}
           onChangeText={(text) => updateFormData('vehicleRegistrationNumber', text.toUpperCase())}
           placeholder="e.g., KCB 123A"
           placeholderTextColor={Colors.textSecondary}
           autoCapitalize="characters"
+          returnKeyType="next"
+          onSubmitEditing={() => handleOnSubmitEditing('vehicleRegistrationNumber', 'yearOfManufacture')}
+          blurOnSubmit={false}
+          autoCorrect={false}
+          autoComplete="off"
+          textContentType="none"
         />
         {errors.vehicleRegistrationNumber && <Text style={styles.errorText}>{errors.vehicleRegistrationNumber}</Text>}
       </View>
@@ -474,6 +910,7 @@ export default function MotorQuotationScreen({ navigation, route }) {
       <View style={styles.inputContainer}>
         <Text style={styles.inputLabel}>Year of Manufacture *</Text>
         <TextInput
+          ref={inputRefs.yearOfManufacture}
           style={[styles.input, errors.yearOfManufacture && styles.inputError]}
           value={formData.yearOfManufacture}
           onChangeText={(text) => updateFormData('yearOfManufacture', text)}
@@ -481,6 +918,12 @@ export default function MotorQuotationScreen({ navigation, route }) {
           placeholderTextColor={Colors.textSecondary}
           keyboardType="numeric"
           maxLength={4}
+          returnKeyType="next"
+          onSubmitEditing={() => handleOnSubmitEditing('yearOfManufacture', 'vehicleEngineCapacity')}
+          blurOnSubmit={false}
+          autoCorrect={false}
+          autoComplete="off"
+          textContentType="none"
         />
         {errors.yearOfManufacture && <Text style={styles.errorText}>{errors.yearOfManufacture}</Text>}
       </View>
@@ -488,12 +931,19 @@ export default function MotorQuotationScreen({ navigation, route }) {
       <View style={styles.inputContainer}>
         <Text style={styles.inputLabel}>Vehicle Engine Capacity (cc) *</Text>
         <TextInput
+          ref={inputRefs.vehicleEngineCapacity}
           style={[styles.input, errors.vehicleEngineCapacity && styles.inputError]}
           value={formData.vehicleEngineCapacity}
           onChangeText={(text) => updateFormData('vehicleEngineCapacity', text)}
           placeholder="e.g., 1500"
           placeholderTextColor={Colors.textSecondary}
           keyboardType="numeric"
+          returnKeyType="done"
+          onSubmitEditing={() => handleOnSubmitEditing('vehicleEngineCapacity')}
+          blurOnSubmit={true}
+          autoCorrect={false}
+          autoComplete="off"
+          textContentType="none"
         />
         {errors.vehicleEngineCapacity && <Text style={styles.errorText}>{errors.vehicleEngineCapacity}</Text>}
       </View>
@@ -574,22 +1024,55 @@ export default function MotorQuotationScreen({ navigation, route }) {
   const renderStep4 = () => (
     <View style={styles.stepContent}>
       <Text style={styles.stepTitle}>Supporting Documents</Text>
-      <Text style={styles.stepDescription}>Upload required documents for your motor insurance</Text>
+      <Text style={styles.stepDescription}>Scan or upload required documents for automatic data extraction</Text>
       
       <View style={styles.documentsContainer}>
-        <Text style={styles.documentsLabel}>Add Documents</Text>
+        <Text style={styles.documentsLabel}>Required Documents</Text>
         
         <View style={styles.documentTypeGrid}>
-          {documentTypes.map((docType) => (
+          {documentTypes.map((docType, index) => (
             <TouchableOpacity
-              key={docType}
-              style={styles.documentTypeButton}
-              onPress={() => addDocument(docType)}
+              key={index}
+              style={[
+                styles.documentTypeButton,
+                docType.required && styles.requiredDocumentButton,
+                formData.documents.some(doc => doc.type === docType.type) && styles.completedDocumentButton
+              ]}
+              onPress={() => docType.scannable ? scanDocument(docType) : addDocument(docType)}
+              disabled={isScanning}
             >
-              <Text style={styles.documentTypeText}>{docType}</Text>
+              <Text style={styles.documentIcon}>{docType.icon}</Text>
+              <Text style={[
+                styles.documentTypeText,
+                docType.required && styles.requiredDocumentText
+              ]}>
+                {docType.type}
+                {docType.required && ' *'}
+              </Text>
+              <Text style={styles.documentDescription}>{docType.description}</Text>
+              
+              {docType.scannable && (
+                <View style={styles.scanBadge}>
+                  <Text style={styles.scanBadgeText}>📷 SCAN</Text>
+                </View>
+              )}
+              
+              {formData.documents.some(doc => doc.type === docType.type) && (
+                <View style={styles.completedBadge}>
+                  <Text style={styles.completedBadgeText}>✓ UPLOADED</Text>
+                </View>
+              )}
             </TouchableOpacity>
           ))}
         </View>
+        
+        {isScanning && (
+          <View style={styles.scanningOverlay}>
+            <Text style={styles.scanningText}>📷 Processing Document...</Text>
+            <Text style={styles.scanningSubtext}>Using FREE offline OCR - No internet required!</Text>
+            <Text style={styles.scanningSubtext}>Extracting data from your {documentTypes.find(dt => dt.scannable)?.type}...</Text>
+          </View>
+        )}
         
         {formData.documents.length > 0 && (
           <View style={styles.uploadedDocuments}>
@@ -597,8 +1080,15 @@ export default function MotorQuotationScreen({ navigation, route }) {
             {formData.documents.map((doc) => (
               <View key={doc.id} style={styles.documentItem}>
                 <View style={styles.documentInfo}>
-                  <Text style={styles.documentName}>{doc.name}</Text>
-                  <Text style={styles.documentSize}>{doc.size}</Text>
+                  <Text style={styles.documentName}>{doc.type}</Text>
+                  <Text style={styles.documentSize}>
+                    {doc.size} • {doc.scanned ? 'Scanned & Verified' : 'Uploaded'} • {doc.status}
+                  </Text>
+                  {doc.extractedData && (
+                    <Text style={styles.extractedDataText}>
+                      ✓ Data extracted and verified
+                    </Text>
+                  )}
                 </View>
                 <TouchableOpacity
                   style={styles.removeDocumentButton}
@@ -614,11 +1104,13 @@ export default function MotorQuotationScreen({ navigation, route }) {
         {errors.documents && <Text style={styles.errorText}>{errors.documents}</Text>}
         
         <View style={styles.infoBox}>
-          <Text style={styles.infoBoxTitle}>Required Documents:</Text>
-          <Text style={styles.infoBoxText}>• KRA PIN Certificate (mandatory)</Text>
-          <Text style={styles.infoBoxText}>• National ID Copy (mandatory)</Text>
-          <Text style={styles.infoBoxText}>• Logbook/Ownership Proof (mandatory)</Text>
-          <Text style={styles.infoBoxText}>• Additional supporting documents (optional)</Text>
+          <Text style={styles.infoBoxTitle}>🆓 FREE Smart Document Scanning:</Text>
+          <Text style={styles.infoBoxText}>📷 Scan documents with camera - 100% FREE offline OCR!</Text>
+          <Text style={styles.infoBoxText}>🔍 Advanced pattern recognition for Kenyan documents</Text>
+          <Text style={styles.infoBoxText}>✅ Required: National ID, KRA PIN, Vehicle Logbook</Text>
+          <Text style={styles.infoBoxText}>📋 Optional: Driving License, Previous Insurance, Inspection Report</Text>
+          <Text style={styles.infoBoxText}>🔒 All processing done locally - your data stays private</Text>
+          <Text style={styles.infoBoxText}>📱 No internet required - works completely offline!</Text>
         </View>
       </View>
     </View>
@@ -694,11 +1186,18 @@ export default function MotorQuotationScreen({ navigation, route }) {
       <View style={styles.inputContainer}>
         <Text style={styles.inputLabel}>Next of Kin Name *</Text>
         <TextInput
+          ref={inputRefs.nextOfKinName}
           style={[styles.input, errors.nextOfKinName && styles.inputError]}
           value={formData.nextOfKinName}
           onChangeText={(text) => updateFormData('nextOfKinName', text)}
           placeholder="Enter next of kin name"
           placeholderTextColor={Colors.textSecondary}
+          returnKeyType="next"
+          onSubmitEditing={() => handleOnSubmitEditing('nextOfKinName', 'nextOfKinPhone')}
+          blurOnSubmit={false}
+          autoCorrect={false}
+          autoComplete="off"
+          textContentType="none"
         />
         {errors.nextOfKinName && <Text style={styles.errorText}>{errors.nextOfKinName}</Text>}
       </View>
@@ -706,12 +1205,19 @@ export default function MotorQuotationScreen({ navigation, route }) {
       <View style={styles.inputContainer}>
         <Text style={styles.inputLabel}>Next of Kin Phone Number *</Text>
         <TextInput
+          ref={inputRefs.nextOfKinPhone}
           style={[styles.input, errors.nextOfKinPhone && styles.inputError]}
           value={formData.nextOfKinPhone}
           onChangeText={(text) => updateFormData('nextOfKinPhone', text)}
           placeholder="+254 700 000 000"
           placeholderTextColor={Colors.textSecondary}
           keyboardType="phone-pad"
+          returnKeyType="done"
+          onSubmitEditing={() => handleOnSubmitEditing('nextOfKinPhone')}
+          blurOnSubmit={true}
+          autoCorrect={false}
+          autoComplete="off"
+          textContentType="none"
         />
         {errors.nextOfKinPhone && <Text style={styles.errorText}>{errors.nextOfKinPhone}</Text>}
       </View>
@@ -762,6 +1268,7 @@ export default function MotorQuotationScreen({ navigation, route }) {
           <FlatList
             data={options}
             keyExtractor={(item) => item.id.toString()}
+            keyboardShouldPersistTaps="handled"
             renderItem={({ item }) => (
               <TouchableOpacity
                 style={styles.modalOption}
@@ -787,107 +1294,137 @@ export default function MotorQuotationScreen({ navigation, route }) {
     </Modal>
   );
 
-  return (
-    <SafeScreen>
-      <StatusBar style="light" />
-      
-      {/* Curved Header */}
-      <CompactCurvedHeader 
-        title={vehicleCategory ? `${vehicleCategory.name} Insurance` : 'Motor Insurance'}
-        subtitle="Complete your vehicle insurance quotation"
-        showBackButton={true}
-        onBackPress={() => navigation.goBack()}
-        height={80}
-      />
-      
-      <View style={styles.container}>
-        {/* Header spacing after curved header */}
-        <View style={styles.headerSpacing} />
-
-        {renderProgressBar()}
-        {renderStepIndicator()}
-
-        <ScrollView 
-          ref={scrollViewRef}
-          style={styles.scrollView}
-          showsVerticalScrollIndicator={false}
-        >
-          <EnhancedCard style={styles.formCard}>
-            {currentStep === 1 && renderStep1()}
-            {currentStep === 2 && renderStep2()}
-            {currentStep === 3 && renderStep3()}
-            {currentStep === 4 && renderStep4()}
-            {currentStep === 5 && renderStep5()}
-          </EnhancedCard>
-        </ScrollView>
-
-        <View style={styles.footer}>
-          <View style={styles.buttonRow}>
-            {currentStep > 1 && (
-              <TouchableOpacity 
-                style={styles.secondaryButton}
-                onPress={handlePrevious}
-              >
-                <Text style={styles.secondaryButtonText}>Previous</Text>
-              </TouchableOpacity>
-            )}
-            
-            <TouchableOpacity 
-              style={[
-                styles.primaryButton,
-                currentStep === 1 && styles.primaryButtonFullWidth,
-                isSubmitting && styles.primaryButtonDisabled
-              ]}
-              onPress={handleNext}
-              disabled={isSubmitting}
+  // Validation Drawer for Document Mismatches
+  const renderValidationDrawer = () => (
+    <Modal
+      visible={showValidationDrawer}
+      transparent
+      animationType="slide"
+      onRequestClose={() => setShowValidationDrawer(false)}
+    >
+      <View style={styles.validationOverlay}>
+        <View style={styles.validationDrawer}>
+          <View style={styles.validationHeader}>
+            <Text style={styles.validationTitle}>⚠️ Data Verification Required</Text>
+            <Text style={styles.validationSubtitle}>
+              We found mismatches between your form data and scanned document
+            </Text>
+          </View>
+          
+          <ScrollView style={styles.validationContent}>
+            {validationMismatches.map((mismatch, index) => (
+              <View key={index} style={styles.mismatchItem}>
+                <Text style={styles.mismatchLabel}>{mismatch.fieldLabel}</Text>
+                
+                <View style={styles.mismatchComparison}>
+                  <View style={styles.mismatchOption}>
+                    <Text style={styles.mismatchOptionLabel}>Your Input:</Text>
+                    <Text style={styles.formDataValue}>{mismatch.formValue}</Text>
+                  </View>
+                  
+                  <Text style={styles.mismatchVs}>VS</Text>
+                  
+                  <View style={styles.mismatchOption}>
+                    <Text style={styles.mismatchOptionLabel}>Scanned Data:</Text>
+                    <Text style={styles.scannedDataValue}>{mismatch.extractedValue}</Text>
+                  </View>
+                </View>
+              </View>
+            ))}
+          </ScrollView>
+          
+          <View style={styles.validationActions}>
+            <TouchableOpacity
+              style={styles.validationButton}
+              onPress={() => applyScannedData(false)}
             >
-              <Text style={styles.primaryButtonText}>
-                {isSubmitting ? 'Submitting...' : currentStep === totalSteps ? 'Submit Quotation' : 'Continue'}
+              <Text style={styles.validationButtonText}>Keep My Data</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              style={[styles.validationButton, styles.primaryValidationButton]}
+              onPress={() => applyScannedData(true)}
+            >
+              <Text style={[styles.validationButtonText, styles.primaryValidationButtonText]}>
+                Use Scanned Data
               </Text>
             </TouchableOpacity>
           </View>
         </View>
       </View>
+    </Modal>
+  );
 
-      {renderModalSelector(
-        showMakeModelModal,
-        () => setShowMakeModelModal(false),
-        vehicleMakeModels,
-        selectMakeModel,
-        'Select Vehicle Make & Model'
-      )}
+  return (
+    <SafeScreen>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+      >
+        <StatusBar style="light" />
+        <CompactCurvedHeader 
+          title={vehicleCategory ? `${vehicleCategory.name} Insurance` : 'Motor Insurance'}
+          subtitle="Complete your vehicle insurance quotation"
+          showBackButton={true}
+          onBackPress={() => navigation.goBack()}
+          height={80}
+        />
+        
+        <View style={styles.container}>
+          <View style={styles.headerSpacing} />
+          {renderProgressBar()}
+          {renderStepIndicator()}
+          
+          <ScrollView 
+            ref={scrollViewRef}
+            style={styles.keyboardAvoid}
+            contentContainerStyle={styles.scrollViewContent}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="always"
+            keyboardDismissMode="interactive"
+            removeClippedSubviews={false}
+            automaticallyAdjustKeyboardInsets={true}
+            contentInsetAdjustmentBehavior="automatic"
+            nestedScrollEnabled={true}
+          >
+            <EnhancedCard style={styles.formCard}>
+              {currentStep === 1 && renderStep1()}
+              {currentStep === 2 && renderStep2()}
+              {currentStep === 3 && renderStep3()}
+              {currentStep === 4 && renderStep4()}
+              {currentStep === 5 && renderStep5()}
+            </EnhancedCard>
+          </ScrollView>
 
-      {renderModalSelector(
-        showUsageTypeModal,
-        () => setShowUsageTypeModal(false),
-        usageTypeOptions,
-        selectUsageType,
-        'Select Usage Type'
-      )}
-
-      {renderModalSelector(
-        showDurationModal,
-        () => setShowDurationModal(false),
-        insuranceDurationOptions,
-        selectDuration,
-        'Select Insurance Duration'
-      )}
-
-      {renderModalSelector(
-        showInsurerModal,
-        () => setShowInsurerModal(false),
-        insurerOptions,
-        selectInsurer,
-        'Select Preferred Insurer'
-      )}
-
-      {renderModalSelector(
-        showPaymentModal,
-        () => setShowPaymentModal(false),
-        paymentMethodOptions,
-        selectPaymentMethod,
-        'Select Payment Method'
-      )}
+          <View style={styles.footer}>
+            <View style={styles.buttonRow}>
+              {currentStep > 1 && (
+                <TouchableOpacity 
+                  style={styles.secondaryButton}
+                  onPress={handlePrevious}
+                >
+                  <Text style={styles.secondaryButtonText}>Previous</Text>
+                </TouchableOpacity>
+              )}
+              
+              <TouchableOpacity 
+                style={[
+                  styles.primaryButton,
+                  currentStep === 1 && styles.primaryButtonFullWidth,
+                  isSubmitting && styles.primaryButtonDisabled
+                ]}
+                onPress={handleNext}
+                disabled={isSubmitting}
+              >
+                <Text style={styles.primaryButtonText}>
+                  {isSubmitting ? 'Submitting...' : currentStep === totalSteps ? 'Submit Quotation' : 'Continue'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </KeyboardAvoidingView>
     </SafeScreen>
   );
 }
@@ -897,8 +1434,11 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Colors.background,
   },
+  keyboardAvoid: {
+    flex: 1,
+  },
   headerSpacing: {
-    height: Spacing.md, // Spacing after curved header
+    height: Spacing.xs, // Further reduced for maximum form space
   },
   progressContainer: {
     paddingHorizontal: Spacing.lg,
@@ -906,19 +1446,19 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.white,
   },
   progressBar: {
-    height: 4, // Reduced from 6 for more compact design
+    height: 3, // Reduced from 4 for more compact design
     backgroundColor: Colors.lightGray,
-    borderRadius: 2, // Adjusted to match new height
-    marginBottom: Spacing.xs, // Reduced from sm for tighter spacing
+    borderRadius: 2,
+    marginBottom: Spacing.xs, // Reduced for tighter spacing
   },
   progressFill: {
     height: '100%',
     backgroundColor: Colors.primary,
-    borderRadius: 2, // Adjusted to match new height
+    borderRadius: 2,
   },
   progressText: {
-    fontSize: Typography.fontSize.xs, // Reduced from sm for more compact design
-    fontFamily: Typography.fontFamily.medium,
+    fontSize: Typography.fontSize.xs, // Reduced for more compact design
+    fontWeight: Typography.fontWeight.medium, // Updated from fontFamily
     color: Colors.textSecondary,
     textAlign: 'center',
   },
@@ -926,7 +1466,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.sm, // Reduced from md to sm for more compact design
+    paddingVertical: Spacing.xs, // Reduced from sm for more compact design
     backgroundColor: Colors.white,
     borderBottomWidth: 1,
     borderBottomColor: Colors.border,
@@ -956,7 +1496,7 @@ const styles = StyleSheet.create({
   },
   stepNumber: {
     fontSize: Typography.fontSize.sm,
-    fontFamily: Typography.fontFamily.medium,
+    fontWeight: Typography.fontWeight.medium, // Updated from fontFamily
     color: Colors.textSecondary,
   },
   stepNumberActive: {
@@ -964,79 +1504,83 @@ const styles = StyleSheet.create({
   },
   stepLabel: {
     fontSize: Typography.fontSize.xs,
-    fontFamily: Typography.fontFamily.regular,
+    fontWeight: Typography.fontWeight.regular, // Updated from fontFamily
     color: Colors.textSecondary,
     textAlign: 'center',
   },
   stepLabelActive: {
     color: Colors.primary,
-    fontFamily: Typography.fontFamily.medium,
+    fontWeight: Typography.fontWeight.medium, // Updated from fontFamily
   },
   scrollView: {
     flex: 1,
-    paddingHorizontal: Spacing.md,
+    paddingHorizontal: Spacing.sm, // Reduced from md
+  },
+  scrollViewContent: {
+    flexGrow: 1,
+    paddingBottom: Spacing.sm, // Reduced for minimal spacing
   },
   formCard: {
-    marginVertical: Spacing.lg,
-    marginHorizontal: Spacing.sm,
-    minHeight: width * 1.2, // Ensure minimum height for better form space
+    marginVertical: Spacing.xs, // Reduced from sm
+    marginHorizontal: Spacing.xs, // Keep minimal
+    minHeight: width * 0.4, // Further reduced
   },
   stepContent: {
-    padding: Spacing.xl, // Increased padding for better spacing
-    minHeight: width * 0.8, // Minimum content height
+    padding: Spacing.md, // Reduced from lg for much tighter spacing
+    minHeight: width * 0.3, // Significantly reduced
   },
   stepTitle: {
-    fontSize: Typography.fontSize.xl,
-    fontFamily: Typography.fontFamily.bold,
+    fontSize: Typography.fontSize.lg, // Reduced from xl
+    fontWeight: Typography.fontWeight.bold,
     color: Colors.textPrimary,
-    marginBottom: Spacing.lg,
+    marginBottom: Spacing.sm, // Reduced from md
   },
   stepDescription: {
-    fontSize: Typography.fontSize.md,
-    fontFamily: Typography.fontFamily.regular,
+    fontSize: Typography.fontSize.sm, // Reduced from md
+    fontWeight: Typography.fontWeight.regular,
     color: Colors.textSecondary,
-    marginBottom: Spacing.xl,
-    lineHeight: 22,
+    marginBottom: Spacing.md, // Reduced from lg
+    lineHeight: 20, // Reduced from 22
   },
   inputContainer: {
-    marginBottom: Spacing.xl,
+    marginBottom: Spacing.sm, // Further reduced for minimal spacing
   },
   inputLabel: {
-    fontSize: Typography.fontSize.md,
-    fontFamily: Typography.fontFamily.medium,
+    fontSize: Typography.fontSize.sm, // Reduced from md
+    fontWeight: Typography.fontWeight.medium, // Updated from fontFamily
     color: Colors.textPrimary,
-    marginBottom: Spacing.md,
+    marginBottom: Spacing.xs, // Significantly reduced
   },
   input: {
     borderWidth: 1,
     borderColor: Colors.border,
     borderRadius: 8,
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.lg, // Increased from md for better touch targets
+    paddingHorizontal: Spacing.md, // Reduced from lg
+    paddingVertical: Spacing.md, // Reduced from lg
     fontSize: Typography.fontSize.md,
-    fontFamily: Typography.fontFamily.regular,
+    fontWeight: Typography.fontWeight.regular, // Updated from fontFamily
     color: Colors.textPrimary,
     backgroundColor: Colors.white,
-    minHeight: 52, // Increased minimum touch target size
+    minHeight: 44, // Reduced from 52
   },
   inputError: {
     borderColor: Colors.error,
   },
   errorText: {
-    fontSize: Typography.fontSize.sm,
-    fontFamily: Typography.fontFamily.regular,
+    fontSize: Typography.fontSize.xs, // Reduced from sm
+    fontWeight: Typography.fontWeight.regular, // Updated from fontFamily
     color: Colors.error,
-    marginTop: Spacing.sm,
+    marginTop: Spacing.xs, // Reduced from sm
   },
   selectorButton: {
     borderWidth: 1,
     borderColor: Colors.border,
     borderRadius: 8,
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.xl, // Increased padding for better touch experience
+    paddingHorizontal: Spacing.md, // Reduced from lg
+    paddingVertical: Spacing.md, // Reduced from xl
     backgroundColor: Colors.white,
-    marginBottom: Spacing.lg,
-    minHeight: 64, // Increased height for better touch
+    marginBottom: Spacing.sm, // Reduced from lg
+    minHeight: 44, // Reduced from 64
   },
   selectorLabel: {
     fontSize: Typography.fontSize.sm,
@@ -1090,51 +1634,127 @@ const styles = StyleSheet.create({
     textAlign: 'right',
   },
   documentsContainer: {
-    marginBottom: Spacing.xl,
+    marginBottom: Spacing.md, // Reduced from xl
   },
   documentsLabel: {
-    fontSize: Typography.fontSize.md,
-    fontFamily: Typography.fontFamily.medium,
+    fontSize: Typography.fontSize.sm, // Reduced from md
+    fontWeight: Typography.fontWeight.medium, // Updated from fontFamily
     color: Colors.textPrimary,
-    marginBottom: Spacing.lg,
+    marginBottom: Spacing.sm, // Reduced from lg
   },
   documentTypeGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: Spacing.md,
+    gap: Spacing.sm, // Reduced from md
   },
   documentTypeButton: {
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.md,
-    borderRadius: 8,
+    paddingHorizontal: Spacing.md, // Reduced from lg
+    paddingVertical: Spacing.md, // Increased for more space
+    borderRadius: 12, // More rounded for modern look
     borderWidth: 1,
     borderColor: Colors.border,
     backgroundColor: Colors.white,
-    minWidth: '45%',
+    minWidth: '48%',
     alignItems: 'center',
-    marginBottom: Spacing.sm,
+    marginBottom: Spacing.sm, // Reduced from sm
+    minHeight: 120, // Increased for icon + text + description
+  },
+  requiredDocumentButton: {
+    borderColor: Colors.primary,
+    borderWidth: 2,
+  },
+  completedDocumentButton: {
+    backgroundColor: Colors.lightGray,
+    borderColor: Colors.success,
+  },
+  documentIcon: {
+    fontSize: 24,
+    marginBottom: Spacing.xs,
   },
   documentTypeText: {
-    fontSize: Typography.fontSize.sm,
-    fontFamily: Typography.fontFamily.medium,
+    fontSize: Typography.fontSize.xs, // Reduced from sm
+    fontWeight: Typography.fontWeight.medium, // Updated from fontFamily
     color: Colors.textPrimary,
     textAlign: 'center',
+    marginBottom: Spacing.xs,
+  },
+  requiredDocumentText: {
+    color: Colors.primary,
+    fontWeight: Typography.fontWeight.semibold,
+  },
+  documentDescription: {
+    fontSize: Typography.fontSize.xs,
+    color: Colors.textSecondary,
+    textAlign: 'center',
+    lineHeight: 14,
+  },
+  scanBadge: {
+    position: 'absolute',
+    top: 4,
+    right: 4,
+    backgroundColor: Colors.primary,
+    borderRadius: 8,
+    paddingHorizontal: 4,
+    paddingVertical: 2,
+  },
+  scanBadgeText: {
+    fontSize: 8,
+    color: Colors.white,
+    fontWeight: Typography.fontWeight.bold,
+  },
+  completedBadge: {
+    position: 'absolute',
+    top: 4,
+    right: 4,
+    backgroundColor: Colors.success,
+    borderRadius: 8,
+    paddingHorizontal: 4,
+    paddingVertical: 2,
+  },
+  completedBadgeText: {
+    fontSize: 8,
+    color: Colors.white,
+    fontWeight: Typography.fontWeight.bold,
+  },
+  scanningOverlay: {
+    backgroundColor: Colors.lightGray,
+    padding: Spacing.lg,
+    borderRadius: 12,
+    marginVertical: Spacing.md,
+    alignItems: 'center',
+  },
+  scanningText: {
+    fontSize: Typography.fontSize.md,
+    fontWeight: Typography.fontWeight.semibold,
+    color: Colors.primary,
+    marginBottom: Spacing.xs,
+  },
+  scanningSubtext: {
+    fontSize: Typography.fontSize.sm,
+    color: Colors.textSecondary,
+    textAlign: 'center',
+  },
+  extractedDataText: {
+    fontSize: Typography.fontSize.xs,
+    color: Colors.success,
+    fontWeight: Typography.fontWeight.medium,
+    marginTop: Spacing.xs,
   },
   uploadedDocuments: {
-    marginTop: Spacing.xl,
+    marginTop: Spacing.md, // Reduced from xl
   },
   uploadedDocumentsTitle: {
-    fontSize: Typography.fontSize.md,
-    fontFamily: Typography.fontFamily.medium,
+    fontSize: Typography.fontSize.sm, // Reduced from md
+    fontWeight: Typography.fontWeight.medium, // Updated from fontFamily
     color: Colors.textPrimary,
-    marginBottom: Spacing.lg,
+    marginBottom: Spacing.sm, // Reduced from lg
   },
   documentItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: Spacing.md,
-    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.sm, // Reduced from md
+    paddingHorizontal: Spacing.md, // Reduced from lg
     backgroundColor: Colors.lightGray,
     borderRadius: 8,
     marginBottom: Spacing.md,
@@ -1180,31 +1800,31 @@ const styles = StyleSheet.create({
     marginBottom: Spacing.sm,
   },
   reviewSection: {
-    marginBottom: Spacing.xl,
+    marginBottom: Spacing.md, // Reduced from xl
   },
   reviewSectionTitle: {
-    fontSize: Typography.fontSize.lg,
-    fontFamily: Typography.fontFamily.semiBold,
+    fontSize: Typography.fontSize.md, // Reduced from lg
+    fontWeight: Typography.fontWeight.semibold, // Updated from fontFamily
     color: Colors.textPrimary,
-    marginBottom: Spacing.lg,
+    marginBottom: Spacing.sm, // Reduced from lg
   },
   reviewItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: Spacing.md,
+    paddingVertical: Spacing.xs, // Reduced from md
     borderBottomWidth: 1,
     borderBottomColor: Colors.lightGray,
   },
   reviewLabel: {
-    fontSize: Typography.fontSize.md,
-    fontFamily: Typography.fontFamily.medium,
+    fontSize: Typography.fontSize.sm, // Reduced from md
+    fontWeight: Typography.fontWeight.medium, // Updated from fontFamily
     color: Colors.textSecondary,
     flex: 1,
   },
   reviewValue: {
-    fontSize: Typography.fontSize.md,
-    fontFamily: Typography.fontFamily.regular,
+    fontSize: Typography.fontSize.sm, // Reduced from md
+    fontWeight: Typography.fontWeight.regular, // Updated from fontFamily
     color: Colors.textPrimary,
     flex: 1,
     textAlign: 'right',
@@ -1243,22 +1863,23 @@ const styles = StyleSheet.create({
     lineHeight: 22,
   },
   footer: {
-    padding: Spacing.xl,
+    padding: Spacing.lg, // Reduced from xl
+    paddingBottom: Spacing.md, // Add specific bottom padding
     backgroundColor: Colors.white,
     borderTopWidth: 1,
     borderTopColor: Colors.border,
   },
   buttonRow: {
     flexDirection: 'row',
-    gap: Spacing.lg,
+    gap: Spacing.sm, // Reduced from md
   },
   primaryButton: {
     flex: 1,
     backgroundColor: Colors.primary,
-    paddingVertical: Spacing.lg,
-    borderRadius: 8,
+    paddingVertical: Spacing.sm, // Reduced from md
+    borderRadius: 6, // Reduced from 8
     alignItems: 'center',
-    minHeight: 52,
+    minHeight: 40, // Reduced from 44
   },
   primaryButtonFullWidth: {
     flex: 1,
@@ -1267,8 +1888,8 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.textSecondary,
   },
   primaryButtonText: {
-    fontSize: Typography.fontSize.md,
-    fontFamily: Typography.fontFamily.semiBold,
+    fontSize: Typography.fontSize.sm, // Reduced from md
+    fontWeight: Typography.fontWeight.semibold, // Changed from fontFamily
     color: Colors.white,
   },
   secondaryButton: {
@@ -1276,14 +1897,14 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.white,
     borderWidth: 1,
     borderColor: Colors.border,
-    paddingVertical: Spacing.lg,
-    borderRadius: 8,
+    paddingVertical: Spacing.sm, // Reduced from md
+    borderRadius: 6, // Reduced from 8
     alignItems: 'center',
-    minHeight: 52,
+    minHeight: 40, // Reduced from 44
   },
   secondaryButtonText: {
-    fontSize: Typography.fontSize.md,
-    fontFamily: Typography.fontFamily.medium,
+    fontSize: Typography.fontSize.sm, // Reduced from md
+    fontWeight: Typography.fontWeight.medium, // Changed from fontFamily
     color: Colors.textPrimary,
   },
   modalOverlay: {
@@ -1348,5 +1969,120 @@ const styles = StyleSheet.create({
     fontFamily: Typography.fontFamily.medium,
     color: Colors.warning,
     marginTop: Spacing.xs,
+  },
+  
+  // Validation Drawer Styles
+  validationOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    justifyContent: 'flex-end',
+  },
+  validationDrawer: {
+    backgroundColor: Colors.white,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    maxHeight: '80%',
+    minHeight: '50%',
+  },
+  validationHeader: {
+    padding: Spacing.lg,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border,
+    alignItems: 'center',
+  },
+  validationTitle: {
+    fontSize: Typography.fontSize.lg,
+    fontWeight: Typography.fontWeight.bold,
+    color: Colors.warning,
+    marginBottom: Spacing.xs,
+  },
+  validationSubtitle: {
+    fontSize: Typography.fontSize.sm,
+    color: Colors.textSecondary,
+    textAlign: 'center',
+    lineHeight: 20,
+  },
+  validationContent: {
+    flex: 1,
+    padding: Spacing.lg,
+  },
+  mismatchItem: {
+    marginBottom: Spacing.lg,
+    padding: Spacing.md,
+    backgroundColor: Colors.lightGray,
+    borderRadius: 12,
+  },
+  mismatchLabel: {
+    fontSize: Typography.fontSize.md,
+    fontWeight: Typography.fontWeight.semibold,
+    color: Colors.textPrimary,
+    marginBottom: Spacing.md,
+  },
+  mismatchComparison: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  mismatchOption: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  mismatchOptionLabel: {
+    fontSize: Typography.fontSize.xs,
+    color: Colors.textSecondary,
+    marginBottom: Spacing.xs,
+  },
+  formDataValue: {
+    fontSize: Typography.fontSize.sm,
+    fontWeight: Typography.fontWeight.medium,
+    color: Colors.error,
+    textAlign: 'center',
+    padding: Spacing.sm,
+    backgroundColor: Colors.white,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: Colors.error,
+  },
+  scannedDataValue: {
+    fontSize: Typography.fontSize.sm,
+    fontWeight: Typography.fontWeight.medium,
+    color: Colors.success,
+    textAlign: 'center',
+    padding: Spacing.sm,
+    backgroundColor: Colors.white,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: Colors.success,
+  },
+  mismatchVs: {
+    fontSize: Typography.fontSize.xs,
+    color: Colors.textSecondary,
+    marginHorizontal: Spacing.sm,
+  },
+  validationActions: {
+    flexDirection: 'row',
+    padding: Spacing.lg,
+    gap: Spacing.md,
+  },
+  validationButton: {
+    flex: 1,
+    paddingVertical: Spacing.md,
+    borderRadius: 8,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: Colors.border,
+    backgroundColor: Colors.white,
+  },
+  primaryValidationButton: {
+    backgroundColor: Colors.primary,
+    borderColor: Colors.primary,
+  },
+  validationButtonText: {
+    fontSize: Typography.fontSize.md,
+    fontWeight: Typography.fontWeight.medium,
+    color: Colors.textPrimary,
+  },
+  primaryValidationButtonText: {
+    color: Colors.white,
   },
 });

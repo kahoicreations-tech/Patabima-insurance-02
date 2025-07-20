@@ -251,6 +251,14 @@ export const PricingService = {
       comprehensive: { coverage: 300000, premium: 2800 }
     },
     
+    // Additional benefits pricing
+    additionalBenefits: {
+      funeral_arrangement: 800,
+      repatriation: 1200,
+      grief_counseling: 300,
+      memorial_service: 500
+    },
+    
     // Age factors for pricing calculations
     ageFactors: {
       '18-30': 0.7,

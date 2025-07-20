@@ -5,7 +5,6 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  TextInput,
   Alert,
   SafeAreaView
 } from 'react-native';
@@ -14,6 +13,20 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Colors, Typography, Spacing } from '../../../constants';
 import { PricingService } from '../../../services';
+import { 
+  EnhancedDatePicker, 
+  EnhancedEmailInput, 
+  EnhancedPhoneInput, 
+  EnhancedIDInput, 
+  EnhancedTextInput 
+} from '../../../components/EnhancedFormComponents';
+import { EnhancedDocumentUpload } from '../../../components/EnhancedDocumentUpload';
+import { 
+  validateKenyaID, 
+  validateKenyaPhone, 
+  validateEmail, 
+  validateAge 
+} from '../../../utils/kenyaValidation';
 
 export default function LastExpenseQuotationScreen() {
   const navigation = useNavigation();
@@ -41,35 +54,43 @@ export default function LastExpenseQuotationScreen() {
     beneficiaries: [],
     paymentFrequency: '',
     
-    // Step 4: Premium calculation
+    // Step 4: Documents and Premium
+    documents: {
+      nationalId: null,
+      proofOfIncome: null,
+      medicalReport: null
+    },
     totalPremium: 0
   });
+
+  // Validation errors state
+  const [errors, setErrors] = useState({});
 
   // Coverage Options with PataBima Last Expense Rates
   const coverageOptions = [
     { 
       id: 1, 
-      amount: PricingService.lastExpense.basePremiums.basic.coverage, 
-      premium: PricingService.lastExpense.basePremiums.basic.premium, 
-      name: `Basic Coverage - KES ${PricingService.lastExpense.basePremiums.basic.coverage.toLocaleString()}` 
+      amount: PricingService.lastExpense?.basePremiums?.basic?.coverage || 50000, 
+      premium: PricingService.lastExpense?.basePremiums?.basic?.premium || 600, 
+      name: `Basic Coverage - KES ${(PricingService.lastExpense?.basePremiums?.basic?.coverage || 50000).toLocaleString()}` 
     },
     { 
       id: 2, 
-      amount: PricingService.lastExpense.basePremiums.standard.coverage, 
-      premium: PricingService.lastExpense.basePremiums.standard.premium, 
-      name: `Standard Coverage - KES ${PricingService.lastExpense.basePremiums.standard.coverage.toLocaleString()}` 
+      amount: PricingService.lastExpense?.basePremiums?.standard?.coverage || 100000, 
+      premium: PricingService.lastExpense?.basePremiums?.standard?.premium || 1100, 
+      name: `Standard Coverage - KES ${(PricingService.lastExpense?.basePremiums?.standard?.coverage || 100000).toLocaleString()}` 
     },
     { 
       id: 3, 
-      amount: PricingService.lastExpense.basePremiums.premium.coverage, 
-      premium: PricingService.lastExpense.basePremiums.premium.premium, 
-      name: `Premium Coverage - KES ${PricingService.lastExpense.basePremiums.premium.coverage.toLocaleString()}` 
+      amount: PricingService.lastExpense?.basePremiums?.premium?.coverage || 200000, 
+      premium: PricingService.lastExpense?.basePremiums?.premium?.premium || 2000, 
+      name: `Premium Coverage - KES ${(PricingService.lastExpense?.basePremiums?.premium?.coverage || 200000).toLocaleString()}` 
     },
     { 
       id: 4, 
-      amount: PricingService.lastExpense.basePremiums.comprehensive.coverage, 
-      premium: PricingService.lastExpense.basePremiums.comprehensive.premium, 
-      name: `Comprehensive Coverage - KES ${PricingService.lastExpense.basePremiums.comprehensive.coverage.toLocaleString()}` 
+      amount: PricingService.lastExpense?.basePremiums?.comprehensive?.coverage || 300000, 
+      premium: PricingService.lastExpense?.basePremiums?.comprehensive?.premium || 2800, 
+      name: `Comprehensive Coverage - KES ${(PricingService.lastExpense?.basePremiums?.comprehensive?.coverage || 300000).toLocaleString()}` 
     }
   ];
 
@@ -78,22 +99,22 @@ export default function LastExpenseQuotationScreen() {
     { 
       id: 1, 
       name: 'Funeral Service Arrangement', 
-      premium: PricingService.lastExpense.additionalBenefits.funeral_arrangement 
+      premium: PricingService.lastExpense?.additionalBenefits?.funeral_arrangement || 800
     },
     { 
       id: 2, 
       name: 'Repatriation of Remains', 
-      premium: PricingService.lastExpense.additionalBenefits.repatriation 
+      premium: PricingService.lastExpense?.additionalBenefits?.repatriation || 1200
     },
     { 
       id: 3, 
       name: 'Grief Counseling', 
-      premium: PricingService.lastExpense.additionalBenefits.grief_counseling 
+      premium: PricingService.lastExpense?.additionalBenefits?.grief_counseling || 300
     },
     { 
       id: 4, 
       name: 'Memorial Service Coverage', 
-      premium: PricingService.lastExpense.additionalBenefits.memorial_service 
+      premium: PricingService.lastExpense?.additionalBenefits?.memorial_service || 500
     }
   ];
 
@@ -124,20 +145,33 @@ export default function LastExpenseQuotationScreen() {
     let premium = selectedCoverage.premium;
     
     // Additional benefits (PataBima rates)
-    formData.additionalBenefits.forEach(benefitId => {
-      const benefit = additionalBenefits.find(b => b.id === benefitId);
-      if (benefit) premium += benefit.premium;
-    });
+    if (formData.additionalBenefits && formData.additionalBenefits.length > 0) {
+      formData.additionalBenefits.forEach(benefitId => {
+        const benefit = additionalBenefits.find(b => b.id === benefitId);
+        if (benefit) premium += benefit.premium;
+      });
+    }
     
     // Age factor using PataBima underwriter rates
-    const age = PricingService.calculateAge(formData.dateOfBirth);
-    const ageFactor = PricingService.getAgeGroup(age, PricingService.lastExpense.ageFactors);
-    premium *= ageFactor;
+    if (formData.dateOfBirth) {
+      const age = PricingService.calculateAge(formData.dateOfBirth);
+      const ageFactors = PricingService.lastExpense?.ageFactors || {
+        '18-30': 0.7,
+        '31-40': 1.0,
+        '41-50': 1.4,
+        '51-60': 2.0,
+        '61-70': 3.2,
+        '71+': 4.5
+      };
+      const ageFactor = PricingService.getAgeGroup(age, ageFactors);
+      premium *= ageFactor;
+    }
     
     // Payment frequency discount (PataBima standard)
     const paymentFreq = paymentFrequencies.find(pf => pf.id === formData.paymentFrequency);
     if (paymentFreq) {
-      const discountMultiplier = PricingService.lastExpense.paymentFrequencyDiscounts[formData.paymentFrequency] || paymentFreq.multiplier;
+      // Use default multiplier since paymentFrequencyDiscounts doesn't exist in PricingService
+      const discountMultiplier = paymentFreq.multiplier;
       premium *= discountMultiplier;
     }
 
@@ -156,7 +190,254 @@ export default function LastExpenseQuotationScreen() {
     return age;
   };
 
+  const validateStep = (step) => {
+    const errors = [];
+    
+    switch (step) {
+      case 1: // Personal Information
+        // Name validation
+        if (!formData.firstName || !formData.firstName.trim()) {
+          errors.push('First Name is required');
+        } else if (formData.firstName.trim().length < 2) {
+          errors.push('First Name must be at least 2 characters');
+        }
+        
+        if (!formData.lastName || !formData.lastName.trim()) {
+          errors.push('Last Name is required');
+        } else if (formData.lastName.trim().length < 2) {
+          errors.push('Last Name must be at least 2 characters');
+        }
+        
+        // Email validation
+        if (!formData.email || !formData.email.trim()) {
+          errors.push('Email Address is required');
+        } else {
+          const emailValidation = validateEmail(formData.email);
+          if (!emailValidation.isValid) {
+            errors.push(emailValidation.error);
+          }
+        }
+        
+        // Phone validation
+        if (!formData.phone || !formData.phone.trim()) {
+          errors.push('Phone Number is required');
+        } else {
+          const phoneValidation = validateKenyaPhone(formData.phone);
+          if (!phoneValidation.isValid) {
+            errors.push(phoneValidation.error);
+          }
+        }
+        
+        // ID Number validation
+        if (!formData.idNumber || !formData.idNumber.trim()) {
+          errors.push('ID Number is required');
+        } else {
+          const idValidation = validateKenyaID(formData.idNumber);
+          if (!idValidation.isValid) {
+            errors.push(idValidation.error);
+          }
+        }
+        
+        // Date of Birth validation
+        if (!formData.dateOfBirth) {
+          errors.push('Date of Birth is required');
+        } else {
+          const ageValidation = validateAge(formData.dateOfBirth);
+          if (!ageValidation.isValid) {
+            errors.push(ageValidation.error);
+          }
+        }
+        
+        if (!formData.maritalStatus) errors.push('Marital Status is required');
+        break;
+        
+      case 2: // Coverage Selection
+        if (!formData.coverageAmount) {
+          errors.push('Coverage Amount is required');
+        } else if (formData.coverageAmount < 50000) {
+          errors.push('Minimum coverage amount is KES 50,000');
+        } else if (formData.coverageAmount > 5000000) {
+          errors.push('Maximum coverage amount is KES 5,000,000');
+        }
+        break;
+        
+      case 3: // Beneficiaries & Payment
+        if (!formData.beneficiaries || formData.beneficiaries.length === 0) {
+          errors.push('At least one beneficiary is required');
+        } else {
+          let totalPercentage = 0;
+          formData.beneficiaries.forEach((ben, index) => {
+            if (!ben.name || !ben.name.trim()) {
+              errors.push(`Beneficiary ${index + 1} name is required`);
+            } else if (ben.name.trim().length < 2) {
+              errors.push(`Beneficiary ${index + 1} name must be at least 2 characters`);
+            }
+            
+            if (!ben.relationship || !ben.relationship.trim()) {
+              errors.push(`Beneficiary ${index + 1} relationship is required`);
+            }
+            
+            if (!ben.percentage || !ben.percentage.toString().trim()) {
+              errors.push(`Beneficiary ${index + 1} percentage is required`);
+            } else {
+              const percentage = parseFloat(ben.percentage);
+              if (isNaN(percentage) || percentage <= 0 || percentage > 100) {
+                errors.push(`Beneficiary ${index + 1} percentage must be between 1 and 100`);
+              } else {
+                totalPercentage += percentage;
+              }
+            }
+            
+            // Phone validation for beneficiary if provided
+            if (ben.phone && ben.phone.trim()) {
+              const phoneValidation = validateKenyaPhone(ben.phone);
+              if (!phoneValidation.isValid) {
+                errors.push(`Beneficiary ${index + 1} phone: ${phoneValidation.error}`);
+              }
+            }
+            
+            // ID validation for beneficiary if provided
+            if (ben.idNumber && ben.idNumber.trim()) {
+              const idValidation = validateKenyaID(ben.idNumber);
+              if (!idValidation.isValid) {
+                errors.push(`Beneficiary ${index + 1} ID: ${idValidation.error}`);
+              }
+            }
+          });
+          
+          // Check total percentage
+          if (Math.abs(totalPercentage - 100) > 0.01) {
+            errors.push('Total beneficiary percentages must equal 100%');
+          }
+        }
+        
+        if (!formData.paymentFrequency) errors.push('Payment Frequency is required');
+        break;
+        
+      case 4: // Final submission
+        // Comprehensive validation - recheck all previous steps
+        const personalErrors = [];
+        const coverageErrors = [];
+        const beneficiaryErrors = [];
+        
+        // Personal Information validation
+        if (!formData.firstName || !formData.firstName.trim()) {
+          personalErrors.push('First Name is required');
+        } else if (formData.firstName.trim().length < 2) {
+          personalErrors.push('First Name must be at least 2 characters');
+        }
+        
+        if (!formData.lastName || !formData.lastName.trim()) {
+          personalErrors.push('Last Name is required');
+        } else if (formData.lastName.trim().length < 2) {
+          personalErrors.push('Last Name must be at least 2 characters');
+        }
+        
+        if (!formData.email || !formData.email.trim()) {
+          personalErrors.push('Email Address is required');
+        } else {
+          const emailValidation = validateEmail(formData.email);
+          if (!emailValidation.isValid) {
+            personalErrors.push(emailValidation.error);
+          }
+        }
+        
+        if (!formData.phone || !formData.phone.trim()) {
+          personalErrors.push('Phone Number is required');
+        } else {
+          const phoneValidation = validateKenyaPhone(formData.phone);
+          if (!phoneValidation.isValid) {
+            personalErrors.push(phoneValidation.error);
+          }
+        }
+        
+        if (!formData.idNumber || !formData.idNumber.trim()) {
+          personalErrors.push('ID Number is required');
+        } else {
+          const idValidation = validateKenyaID(formData.idNumber);
+          if (!idValidation.isValid) {
+            personalErrors.push(idValidation.error);
+          }
+        }
+        
+        if (!formData.dateOfBirth) {
+          personalErrors.push('Date of Birth is required');
+        } else {
+          const ageValidation = validateAge(formData.dateOfBirth);
+          if (!ageValidation.isValid) {
+            personalErrors.push(ageValidation.error);
+          }
+        }
+        
+        if (!formData.maritalStatus) personalErrors.push('Marital Status is required');
+        
+        // Coverage validation
+        if (!formData.coverageAmount) {
+          coverageErrors.push('Coverage Amount is required');
+        } else if (formData.coverageAmount < 50000) {
+          coverageErrors.push('Minimum coverage amount is KES 50,000');
+        } else if (formData.coverageAmount > 5000000) {
+          coverageErrors.push('Maximum coverage amount is KES 5,000,000');
+        }
+        
+        // Beneficiary validation
+        if (!formData.beneficiaries || formData.beneficiaries.length === 0) {
+          beneficiaryErrors.push('At least one beneficiary is required');
+        } else {
+          let totalPercentage = 0;
+          formData.beneficiaries.forEach((ben, index) => {
+            if (!ben.name || !ben.name.trim()) {
+              beneficiaryErrors.push(`Beneficiary ${index + 1} name is required`);
+            }
+            if (!ben.relationship || !ben.relationship.trim()) {
+              beneficiaryErrors.push(`Beneficiary ${index + 1} relationship is required`);
+            }
+            if (!ben.percentage || !ben.percentage.toString().trim()) {
+              beneficiaryErrors.push(`Beneficiary ${index + 1} percentage is required`);
+            } else {
+              const percentage = parseFloat(ben.percentage);
+              if (!isNaN(percentage)) {
+                totalPercentage += percentage;
+              }
+            }
+          });
+          
+          if (Math.abs(totalPercentage - 100) > 0.01) {
+            beneficiaryErrors.push('Total beneficiary percentages must equal 100%');
+          }
+        }
+        
+        if (!formData.paymentFrequency) beneficiaryErrors.push('Payment Frequency is required');
+        
+        errors.push(...personalErrors, ...coverageErrors, ...beneficiaryErrors);
+        
+        // Additional document validation
+        if (!formData.documents.idDocument) {
+          errors.push('ID document is required');
+        }
+        
+        // Terms and conditions
+        if (!formData.termsAccepted) {
+          errors.push('You must accept the terms and conditions');
+        }
+        break;
+    }
+    
+    return errors;
+  };
+
   const nextStep = () => {
+    const errors = validateStep(currentStep);
+    
+    if (errors.length > 0) {
+      Alert.alert(
+        'Validation Error',
+        `Please fix the following errors:\n\n${errors.join('\n')}`,
+        [{ text: 'OK' }]
+      );
+      return;
+    }
+    
     if (currentStep < totalSteps) {
       if (currentStep === 3) {
         const premium = calculatePremium();
@@ -173,6 +454,17 @@ export default function LastExpenseQuotationScreen() {
   };
 
   const submitQuotation = () => {
+    const errors = validateStep(4); // Final validation
+    
+    if (errors.length > 0) {
+      Alert.alert(
+        'Validation Error',
+        `Please fix the following errors before submitting:\n\n${errors.join('\n')}`,
+        [{ text: 'OK' }]
+      );
+      return;
+    }
+
     Alert.alert(
       'Quotation Submitted',
       `Your last expense insurance quotation has been submitted successfully. Premium: KES ${formData.totalPremium.toLocaleString()}`,
@@ -245,67 +537,65 @@ export default function LastExpenseQuotationScreen() {
       <Text style={styles.stepTitle}>Personal Information</Text>
       <Text style={styles.stepSubtitle}>Please provide your personal details</Text>
       
-      <View style={styles.inputContainer}>
-        <Text style={styles.inputLabel}>First Name</Text>
-        <TextInput
-          style={styles.input}
-          value={formData.firstName}
-          onChangeText={(text) => updateFormData('firstName', text)}
-          placeholder="Enter first name"
-        />
-      </View>
+      <EnhancedTextInput
+        label="First Name"
+        value={formData.firstName}
+        onChangeText={(text) => updateFormData('firstName', text)}
+        placeholder="Enter first name"
+        required
+        validation={(text) => {
+          if (!text || !text.trim()) return { isValid: false, error: 'First name is required' };
+          if (text.trim().length < 2) return { isValid: false, error: 'First name must be at least 2 characters' };
+          return { isValid: true };
+        }}
+      />
 
-      <View style={styles.inputContainer}>
-        <Text style={styles.inputLabel}>Last Name</Text>
-        <TextInput
-          style={styles.input}
-          value={formData.lastName}
-          onChangeText={(text) => updateFormData('lastName', text)}
-          placeholder="Enter last name"
-        />
-      </View>
+      <EnhancedTextInput
+        label="Last Name"
+        value={formData.lastName}
+        onChangeText={(text) => updateFormData('lastName', text)}
+        placeholder="Enter last name"
+        required
+        validation={(text) => {
+          if (!text || !text.trim()) return { isValid: false, error: 'Last name is required' };
+          if (text.trim().length < 2) return { isValid: false, error: 'Last name must be at least 2 characters' };
+          return { isValid: true };
+        }}
+      />
 
-      <View style={styles.inputContainer}>
-        <Text style={styles.inputLabel}>Email Address</Text>
-        <TextInput
-          style={styles.input}
-          value={formData.email}
-          onChangeText={(text) => updateFormData('email', text)}
-          placeholder="Enter email address"
-          keyboardType="email-address"
-        />
-      </View>
+      <EnhancedEmailInput
+        label="Email Address"
+        value={formData.email}
+        onChangeText={(text) => updateFormData('email', text)}
+        placeholder="Enter email address"
+        required
+      />
 
-      <View style={styles.inputContainer}>
-        <Text style={styles.inputLabel}>Phone Number</Text>
-        <TextInput
-          style={styles.input}
-          value={formData.phone}
-          onChangeText={(text) => updateFormData('phone', text)}
-          placeholder="Enter phone number"
-          keyboardType="phone-pad"
-        />
-      </View>
+      <EnhancedPhoneInput
+        label="Phone Number"
+        value={formData.phone}
+        onChangeText={(text) => updateFormData('phone', text)}
+        placeholder="Enter phone number"
+        required
+      />
 
-      <View style={styles.inputContainer}>
-        <Text style={styles.inputLabel}>ID Number</Text>
-        <TextInput
-          style={styles.input}
-          value={formData.idNumber}
-          onChangeText={(text) => updateFormData('idNumber', text)}
-          placeholder="Enter ID number"
-        />
-      </View>
+      <EnhancedIDInput
+        label="ID Number"
+        value={formData.idNumber}
+        onChangeText={(text) => updateFormData('idNumber', text)}
+        placeholder="Enter ID number"
+        required
+      />
 
-      <View style={styles.inputContainer}>
-        <Text style={styles.inputLabel}>Date of Birth</Text>
-        <TextInput
-          style={styles.input}
-          value={formData.dateOfBirth}
-          onChangeText={(text) => updateFormData('dateOfBirth', text)}
-          placeholder="DD/MM/YYYY"
-        />
-      </View>
+      <EnhancedDatePicker
+        label="Date of Birth"
+        value={formData.dateOfBirth}
+        onDateChange={(date) => updateFormData('dateOfBirth', date)}
+        placeholder="Select date of birth"
+        minAge={18}
+        maxAge={100}
+        required
+      />
 
       <View style={styles.inputContainer}>
         <Text style={styles.inputLabel}>Marital Status</Text>
@@ -399,26 +689,60 @@ export default function LastExpenseQuotationScreen() {
               </TouchableOpacity>
             </View>
             
-            <TextInput
-              style={styles.input}
+            <EnhancedTextInput
+              label="Full Name"
               value={beneficiary.name}
               onChangeText={(text) => updateBeneficiary(beneficiary.id, 'name', text)}
-              placeholder="Full name"
+              placeholder="Enter full name"
+              required
+              validation={(text) => {
+                if (!text || !text.trim()) return { isValid: false, error: 'Name is required' };
+                if (text.trim().length < 2) return { isValid: false, error: 'Name must be at least 2 characters' };
+                return { isValid: true };
+              }}
             />
             
-            <TextInput
-              style={styles.input}
+            <EnhancedTextInput
+              label="Relationship"
               value={beneficiary.relationship}
               onChangeText={(text) => updateBeneficiary(beneficiary.id, 'relationship', text)}
-              placeholder="Relationship (e.g., Spouse, Child)"
+              placeholder="e.g., Spouse, Child, Parent"
+              required
+              validation={(text) => {
+                if (!text || !text.trim()) return { isValid: false, error: 'Relationship is required' };
+                return { isValid: true };
+              }}
             />
             
-            <TextInput
-              style={styles.input}
+            <EnhancedTextInput
+              label="Percentage Share (%)"
               value={beneficiary.percentage}
               onChangeText={(text) => updateBeneficiary(beneficiary.id, 'percentage', text)}
-              placeholder="Percentage (%)"
+              placeholder="e.g., 50"
               keyboardType="numeric"
+              required
+              validation={(text) => {
+                if (!text || !text.trim()) return { isValid: false, error: 'Percentage is required' };
+                const percentage = parseFloat(text);
+                if (isNaN(percentage) || percentage <= 0 || percentage > 100) {
+                  return { isValid: false, error: 'Percentage must be between 1 and 100' };
+                }
+                return { isValid: true };
+              }}
+            />
+            
+            <EnhancedPhoneInput
+              label="Phone Number (Optional)"
+              value={beneficiary.phone || ''}
+              onChangeText={(text) => updateBeneficiary(beneficiary.id, 'phone', text)}
+              placeholder="Enter phone number"
+            />
+            
+            <EnhancedIDInput
+              label="ID Number (Optional)"
+              value={beneficiary.idNumber || ''}
+              onChangeText={(text) => updateBeneficiary(beneficiary.id, 'idNumber', text)}
+              placeholder="Enter ID number"
             />
           </View>
         ))}
@@ -494,6 +818,62 @@ export default function LastExpenseQuotationScreen() {
             <Text style={styles.summaryValue}>KES {Math.round(formData.totalPremium / 12).toLocaleString()}</Text>
           </View>
         )}
+      </View>
+
+      {/* Document Upload Section */}
+      <View style={styles.documentSection}>
+        <Text style={styles.sectionTitle}>Required Documents</Text>
+        <Text style={styles.sectionSubtitle}>Please upload the following documents to complete your application</Text>
+        
+        <View style={styles.documentContainer}>
+          <Text style={styles.documentLabel}>ID Document (Required)</Text>
+          <EnhancedDocumentUpload
+            onDocumentSelected={(document) => {
+              updateFormData('documents', {
+                ...formData.documents,
+                idDocument: document
+              });
+            }}
+            selectedDocument={formData.documents.idDocument}
+            documentType="ID Document"
+            acceptedTypes={['image/*', 'application/pdf']}
+            maxSizeInMB={5}
+          />
+        </View>
+        
+        <View style={styles.documentContainer}>
+          <Text style={styles.documentLabel}>Proof of Income (Optional)</Text>
+          <EnhancedDocumentUpload
+            onDocumentSelected={(document) => {
+              updateFormData('documents', {
+                ...formData.documents,
+                incomeProof: document
+              });
+            }}
+            selectedDocument={formData.documents.incomeProof}
+            documentType="Income Proof"
+            acceptedTypes={['image/*', 'application/pdf']}
+            maxSizeInMB={5}
+          />
+        </View>
+      </View>
+
+      {/* Terms and Conditions */}
+      <View style={styles.termsContainer}>
+        <TouchableOpacity
+          style={styles.checkboxContainer}
+          onPress={() => updateFormData('termsAccepted', !formData.termsAccepted)}
+        >
+          <View style={[styles.checkbox, formData.termsAccepted && styles.checkboxActive]}>
+            {formData.termsAccepted && <Text style={styles.checkmark}>✓</Text>}
+          </View>
+          <Text style={styles.termsText}>
+            I accept the{' '}
+            <Text style={styles.termsLink}>Terms and Conditions</Text>
+            {' '}and{' '}
+            <Text style={styles.termsLink}>Privacy Policy</Text>
+          </Text>
+        </TouchableOpacity>
       </View>
 
       <View style={styles.disclaimerContainer}>
@@ -945,5 +1325,80 @@ const styles = StyleSheet.create({
     fontSize: Typography.fontSize.md,
     fontWeight: Typography.fontWeight.medium,
     color: '#FFFFFF',
+  },
+  // Enhanced form component styles
+  beneficiaryInputContainer: {
+    marginBottom: Spacing.sm,
+  },
+  beneficiaryInputLabel: {
+    fontSize: Typography.fontSize.sm,
+    fontWeight: Typography.fontWeight.medium,
+    color: Colors.textSecondary,
+    marginBottom: Spacing.xs,
+  },
+  // Document upload styles
+  documentSection: {
+    marginTop: Spacing.lg,
+    paddingHorizontal: Spacing.md,
+  },
+  sectionTitle: {
+    fontSize: Typography.fontSize.lg,
+    fontWeight: Typography.fontWeight.semibold,
+    color: Colors.textPrimary,
+    marginBottom: Spacing.xs,
+  },
+  sectionSubtitle: {
+    fontSize: Typography.fontSize.sm,
+    color: Colors.textSecondary,
+    marginBottom: Spacing.md,
+  },
+  documentContainer: {
+    marginBottom: Spacing.md,
+  },
+  documentLabel: {
+    fontSize: Typography.fontSize.md,
+    fontWeight: Typography.fontWeight.medium,
+    color: Colors.textPrimary,
+    marginBottom: Spacing.sm,
+  },
+  // Terms and conditions styles
+  termsContainer: {
+    paddingHorizontal: Spacing.md,
+    marginTop: Spacing.md,
+    marginBottom: Spacing.lg,
+  },
+  checkboxContainer: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+  },
+  checkbox: {
+    width: 20,
+    height: 20,
+    borderRadius: 4,
+    borderWidth: 2,
+    borderColor: '#D1D5DB',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: Spacing.sm,
+    marginTop: 2,
+  },
+  checkboxActive: {
+    backgroundColor: Colors.primary,
+    borderColor: Colors.primary,
+  },
+  checkmark: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  termsText: {
+    flex: 1,
+    fontSize: Typography.fontSize.sm,
+    color: Colors.textSecondary,
+    lineHeight: 20,
+  },
+  termsLink: {
+    color: Colors.primary,
+    textDecorationLine: 'underline',
   },
 });

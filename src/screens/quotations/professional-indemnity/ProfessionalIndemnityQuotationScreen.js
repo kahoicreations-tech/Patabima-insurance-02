@@ -1,7 +1,6 @@
 /**
- * Personal Accident Insurance Quotation Screen
- * Based on AllInsuranceForms.xml - PersonalAccidentInsurance_Individual
- * 3-Step Process: Personal Info → Coverage Details → Documents & Summary
+ * Professional Indemnity Insurance Quotation Screen
+ * Custom 4-Step Process: Business Info → Professional Details → Coverage Selection → Documents & Summary
  */
 
 import React, { useState } from 'react';
@@ -28,65 +27,91 @@ import {
 } from '../../../components/EnhancedFormComponents';
 import { EnhancedDocumentUpload } from '../../../components/EnhancedDocumentUpload';
 
-const PersonalAccidentQuotationScreen = () => {
+const ProfessionalIndemnityQuotationScreen = () => {
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
 
   const [currentStep, setCurrentStep] = useState(1);
-  const totalSteps = 3;
+  const totalSteps = 4;
 
-  // Form Data based on XML structure
+  // Form Data - Custom structure for Professional Indemnity
   const [formData, setFormData] = useState({
-    // Step 1: Personal Information
-    fullName: '',
-    idNumber: '',
-    dateOfBirth: '',
-    gender: '',
+    // Step 1: Business Information
+    businessName: '',
+    businessRegistrationNumber: '',
+    businessType: '',
+    principalContactName: '',
     phoneNumber: '',
     emailAddress: '',
-    occupation: '',
+    physicalAddress: '',
     
-    // Step 2: Coverage Details
-    coverAmount: '',
-    riskLevel: '',
-    duration: '',
-    accidentalDeath: false,
-    permanentDisability: false,
-    medicalExpenses: false,
-    temporaryDisability: false,
+    // Step 2: Professional Details
+    profession: '',
+    yearsInBusiness: '',
+    numberOfEmployees: '',
+    annualTurnover: '',
+    professionalQualifications: '',
+    professionalBodies: '',
     
-    // Step 3: Documents & Summary
+    // Step 3: Coverage Selection
+    indemnityLimit: '',
+    excessAmount: '',
+    territory: '',
+    retroactiveDate: '',
+    includeCyberLiability: false,
+    includeEmploymentPractices: false,
+    includeDirectorsOfficers: false,
+    
+    // Step 4: Documents & Summary
     preferredInsurer: '',
     estimatedPremium: 0,
-    uploadIdCopy: null,
-    uploadMedicalReport: null,
-    uploadOccupationLetter: null,
+    uploadBusinessCertificate: null,
+    uploadProfessionalCertificate: null,
+    uploadFinancialStatements: null,
+    uploadInsuranceHistory: null,
     declaration: false
   });
 
   // Dropdown options
-  const genders = [
-    { id: 'male', name: 'Male' },
-    { id: 'female', name: 'Female' }
+  const businessTypes = [
+    { id: 'sole_proprietorship', name: 'Sole Proprietorship' },
+    { id: 'partnership', name: 'Partnership' },
+    { id: 'limited_company', name: 'Limited Company' },
+    { id: 'public_company', name: 'Public Company' }
   ];
 
-  const coverAmounts = [
-    { id: '500000', name: 'KES 500,000', premium: 5000 },
-    { id: '1000000', name: 'KES 1,000,000', premium: 8500 },
-    { id: '2000000', name: 'KES 2,000,000', premium: 15000 },
-    { id: '5000000', name: 'KES 5,000,000', premium: 35000 }
+  const professions = [
+    { id: 'accountant', name: 'Accountant/Auditor', riskMultiplier: 1.2 },
+    { id: 'lawyer', name: 'Lawyer/Advocate', riskMultiplier: 1.8 },
+    { id: 'doctor', name: 'Medical Doctor', riskMultiplier: 2.5 },
+    { id: 'architect', name: 'Architect', riskMultiplier: 1.5 },
+    { id: 'engineer', name: 'Engineer', riskMultiplier: 1.4 },
+    { id: 'consultant', name: 'Management Consultant', riskMultiplier: 1.3 },
+    { id: 'it_professional', name: 'IT Professional', riskMultiplier: 1.6 },
+    { id: 'financial_advisor', name: 'Financial Advisor', riskMultiplier: 2.0 },
+    { id: 'other', name: 'Other Professional', riskMultiplier: 1.0 }
   ];
 
-  const riskLevels = [
-    { id: 'low', name: 'Low Risk (Office Work)', multiplier: 1.0 },
-    { id: 'medium', name: 'Medium Risk (Field Work)', multiplier: 1.5 },
-    { id: 'high', name: 'High Risk (Hazardous Work)', multiplier: 2.5 }
+  const indemnityLimits = [
+    { id: '1million', name: 'KES 1 Million', amount: 1000000, basePremium: 25000 },
+    { id: '5million', name: 'KES 5 Million', amount: 5000000, basePremium: 75000 },
+    { id: '10million', name: 'KES 10 Million', amount: 10000000, basePremium: 120000 },
+    { id: '25million', name: 'KES 25 Million', amount: 25000000, basePremium: 250000 },
+    { id: '50million', name: 'KES 50 Million', amount: 50000000, basePremium: 450000 }
   ];
 
-  const durations = [
-    { id: '1year', name: '1 Year', multiplier: 1.0 },
-    { id: '2years', name: '2 Years', multiplier: 1.8 },
-    { id: '3years', name: '3 Years', multiplier: 2.5 }
+  const excessAmounts = [
+    { id: '50000', name: 'KES 50,000', amount: 50000, discount: 0 },
+    { id: '100000', name: 'KES 100,000', amount: 100000, discount: 0.05 },
+    { id: '250000', name: 'KES 250,000', amount: 250000, discount: 0.1 },
+    { id: '500000', name: 'KES 500,000', amount: 500000, discount: 0.15 }
+  ];
+
+  const territories = [
+    { id: 'kenya', name: 'Kenya Only', multiplier: 1.0 },
+    { id: 'east_africa', name: 'East Africa', multiplier: 1.3 },
+    { id: 'africa', name: 'Africa', multiplier: 1.6 },
+    { id: 'worldwide', name: 'Worldwide', multiplier: 2.0 }
   ];
 
   const insurers = [
@@ -101,49 +126,65 @@ const PersonalAccidentQuotationScreen = () => {
   };
 
   const calculatePremium = () => {
-    const coverAmount = coverAmounts.find(c => c.id === formData.coverAmount);
-    const riskLevel = riskLevels.find(r => r.id === formData.riskLevel);
-    const duration = durations.find(d => d.id === formData.duration);
+    const indemnityLimit = indemnityLimits.find(l => l.id === formData.indemnityLimit);
+    const profession = professions.find(p => p.id === formData.profession);
+    const excess = excessAmounts.find(e => e.id === formData.excessAmount);
+    const territory = territories.find(t => t.id === formData.territory);
     
-    if (!coverAmount || !riskLevel || !duration) return 0;
+    if (!indemnityLimit || !profession || !excess || !territory) return 0;
     
-    let basePremium = coverAmount.premium;
+    let basePremium = indemnityLimit.basePremium;
     
-    // Apply risk level multiplier
-    basePremium *= riskLevel.multiplier;
+    // Apply profession risk multiplier
+    basePremium *= profession.riskMultiplier;
     
-    // Apply duration multiplier
-    basePremium *= duration.multiplier;
+    // Apply territory multiplier
+    basePremium *= territory.multiplier;
     
-    // Add benefit costs
-    let benefitsCost = 0;
-    if (formData.accidentalDeath) benefitsCost += 2000;
-    if (formData.permanentDisability) benefitsCost += 1500;
-    if (formData.medicalExpenses) benefitsCost += 3000;
-    if (formData.temporaryDisability) benefitsCost += 1000;
+    // Apply excess discount
+    basePremium *= (1 - excess.discount);
     
-    return Math.round(basePremium + benefitsCost);
+    // Business size adjustments
+    const employees = parseInt(formData.numberOfEmployees) || 1;
+    if (employees > 50) basePremium *= 1.5;
+    else if (employees > 10) basePremium *= 1.2;
+    
+    // Add optional coverages
+    let optionalCost = 0;
+    if (formData.includeCyberLiability) optionalCost += 15000;
+    if (formData.includeEmploymentPractices) optionalCost += 12000;
+    if (formData.includeDirectorsOfficers) optionalCost += 25000;
+    
+    return Math.round(basePremium + optionalCost);
   };
 
   const validateStep = (step) => {
     const errors = [];
     
     switch (step) {
-      case 1: // Personal Information
-        if (!formData.fullName.trim()) errors.push('Full Name is required');
-        if (!formData.idNumber.trim()) errors.push('National ID Number is required');
-        if (!formData.phoneNumber.trim()) errors.push('Phone Number is required');
-        if (!formData.dateOfBirth.trim()) errors.push('Date of Birth is required');
-        if (!formData.occupation.trim()) errors.push('Occupation is required');
+      case 1: // Business Information
+        if (!formData.businessName?.trim()) errors.push('Business Name is required');
+        if (!formData.principalContactName?.trim()) errors.push('Principal Contact Name is required');
+        if (!formData.phoneNumber?.trim()) errors.push('Phone Number is required');
+        if (!formData.emailAddress?.trim()) errors.push('Email Address is required');
+        if (!formData.physicalAddress?.trim()) errors.push('Physical Address is required');
         break;
         
-      case 2: // Coverage Details
-        if (!formData.riskLevel) errors.push('Risk Level is required');
-        if (!formData.coverAmount) errors.push('Cover Amount is required');
-        if (!formData.duration) errors.push('Duration is required');
+      case 2: // Professional Details
+        if (!formData.profession) errors.push('Profession is required');
+        if (!formData.yearsInBusiness?.trim()) errors.push('Years in Business is required');
+        if (!formData.numberOfEmployees?.trim()) errors.push('Number of Employees is required');
+        if (!formData.annualTurnover?.trim()) errors.push('Annual Turnover is required');
+        if (!formData.professionalQualifications?.trim()) errors.push('Professional Qualifications is required');
         break;
         
-      case 3: // Documents & Summary
+      case 3: // Coverage Selection
+        if (!formData.indemnityLimit) errors.push('Indemnity Limit is required');
+        if (!formData.excessAmount) errors.push('Excess Amount is required');
+        if (!formData.territory) errors.push('Territorial Coverage is required');
+        break;
+        
+      case 4: // Documents & Summary
         if (!formData.preferredInsurer) errors.push('Preferred Insurer is required');
         if (!formData.declaration) errors.push('Declaration must be accepted');
         break;
@@ -165,7 +206,7 @@ const PersonalAccidentQuotationScreen = () => {
     }
     
     if (currentStep < totalSteps) {
-      if (currentStep === 2) {
+      if (currentStep === 3) {
         const premium = calculatePremium();
         updateFormData('estimatedPremium', premium);
       }
@@ -180,7 +221,7 @@ const PersonalAccidentQuotationScreen = () => {
   };
 
   const submitQuotation = () => {
-    const errors = validateStep(3); // Final validation
+    const errors = validateStep(4); // Final validation
     
     if (errors.length > 0) {
       Alert.alert(
@@ -198,7 +239,7 @@ const PersonalAccidentQuotationScreen = () => {
 
     Alert.alert(
       'Quotation Submitted',
-      `Your personal accident insurance quotation has been submitted successfully.\n\nEstimated Premium: KES ${formData.estimatedPremium.toLocaleString()}\n\nPataBima will review your application and provide a detailed quote within 24 hours.`,
+      `Your professional indemnity insurance quotation has been submitted successfully.\n\nEstimated Premium: KES ${formData.estimatedPremium.toLocaleString()}\n\nPataBima will review your application and provide a detailed quote within 24 hours.`,
       [
         {
           text: 'OK',
@@ -210,7 +251,7 @@ const PersonalAccidentQuotationScreen = () => {
 
   const renderProgressBar = () => (
     <View style={styles.progressContainer}>
-      {[1, 2, 3].map((step) => (
+      {[1, 2, 3, 4].map((step) => (
         <View key={step} style={styles.progressItem}>
           <View style={[
             styles.progressCircle,
@@ -223,7 +264,7 @@ const PersonalAccidentQuotationScreen = () => {
               {step}
             </Text>
           </View>
-          {step < 3 && (
+          {step < 4 && (
             <View style={[
               styles.progressLine,
               currentStep > step && styles.progressLineActive
@@ -236,55 +277,54 @@ const PersonalAccidentQuotationScreen = () => {
 
   const renderStep1 = () => (
     <View style={styles.stepContainer}>
-      <Text style={styles.stepTitle}>Personal Information</Text>
-      <Text style={styles.stepSubtitle}>Please provide your personal details for personal accident insurance</Text>
+      <Text style={styles.stepTitle}>Business Information</Text>
+      <Text style={styles.stepSubtitle}>Tell us about your business</Text>
       
       <EnhancedTextInput
-        label="Full Name"
-        value={formData.fullName}
-        onChangeText={(text) => updateFormData('fullName', text)}
-        placeholder="Enter your full name"
+        label="Business/Practice Name"
+        value={formData.businessName}
+        onChangeText={(text) => updateFormData('businessName', text)}
+        placeholder="Enter business or practice name"
         required
       />
 
-      <EnhancedIDInput
-        label="ID Number"
-        value={formData.idNumber}
-        onChangeText={(text) => updateFormData('idNumber', text)}
-        placeholder="Enter your ID number"
-        required
-      />
-
-      <EnhancedDatePicker
-        label="Date of Birth"
-        value={formData.dateOfBirth}
-        onDateChange={(date) => updateFormData('dateOfBirth', date)}
-        placeholder="Select date of birth"
-        required
+      <EnhancedTextInput
+        label="Business Registration Number"
+        value={formData.businessRegistrationNumber}
+        onChangeText={(text) => updateFormData('businessRegistrationNumber', text)}
+        placeholder="Enter registration number (if applicable)"
       />
 
       <View style={styles.inputContainer}>
-        <Text style={styles.inputLabel}>Gender *</Text>
+        <Text style={styles.inputLabel}>Business Type *</Text>
         <View style={styles.optionsGrid}>
-          {genders.map((gender) => (
+          {businessTypes.map((type) => (
             <TouchableOpacity
-              key={gender.id}
+              key={type.id}
               style={[
                 styles.gridOption,
-                formData.gender === gender.id && styles.gridOptionActive
+                formData.businessType === type.id && styles.gridOptionActive
               ]}
-              onPress={() => updateFormData('gender', gender.id)}
+              onPress={() => updateFormData('businessType', type.id)}
             >
               <Text style={[
                 styles.gridOptionText,
-                formData.gender === gender.id && styles.gridOptionTextActive
+                formData.businessType === type.id && styles.gridOptionTextActive
               ]}>
-                {gender.name}
+                {type.name}
               </Text>
             </TouchableOpacity>
           ))}
         </View>
       </View>
+
+      <EnhancedTextInput
+        label="Principal Contact Name"
+        value={formData.principalContactName}
+        onChangeText={(text) => updateFormData('principalContactName', text)}
+        placeholder="Enter principal contact name"
+        required
+      />
 
       <EnhancedPhoneInput
         label="Phone Number"
@@ -294,20 +334,21 @@ const PersonalAccidentQuotationScreen = () => {
         required
       />
 
-      <View style={styles.inputContainer}>
-        <Text style={styles.inputLabel}>Email Address</Text>
-        <EnhancedEmailInput
-          value={formData.emailAddress}
-          onChangeText={(text) => updateFormData('emailAddress', text)}
-          placeholder="Enter email address (optional)"
-        />
-      </View>
+      <EnhancedEmailInput
+        label="Email Address"
+        value={formData.emailAddress}
+        onChangeText={(text) => updateFormData('emailAddress', text)}
+        placeholder="Enter email address"
+        required
+      />
 
       <EnhancedTextInput
-        label="Occupation"
-        value={formData.occupation}
-        onChangeText={(text) => updateFormData('occupation', text)}
-        placeholder="Enter your occupation"
+        label="Physical Address"
+        value={formData.physicalAddress}
+        onChangeText={(text) => updateFormData('physicalAddress', text)}
+        placeholder="Enter business physical address"
+        multiline
+        numberOfLines={3}
         required
       />
     </View>
@@ -315,189 +356,253 @@ const PersonalAccidentQuotationScreen = () => {
 
   const renderStep2 = () => (
     <View style={styles.stepContainer}>
-      <Text style={styles.stepTitle}>Coverage Details</Text>
-      <Text style={styles.stepSubtitle}>Select your coverage preferences and benefits</Text>
+      <Text style={styles.stepTitle}>Professional Details</Text>
+      <Text style={styles.stepSubtitle}>Information about your professional practice</Text>
       
       <View style={styles.inputContainer}>
-        <Text style={styles.inputLabel}>Cover Amount *</Text>
-        {coverAmounts.map((cover) => (
+        <Text style={styles.inputLabel}>Profession/Field *</Text>
+        {professions.map((profession) => (
           <TouchableOpacity
-            key={cover.id}
+            key={profession.id}
             style={[
               styles.coverageCard,
-              formData.coverAmount === cover.id && styles.coverageCardActive
+              formData.profession === profession.id && styles.coverageCardActive
             ]}
-            onPress={() => updateFormData('coverAmount', cover.id)}
+            onPress={() => updateFormData('profession', profession.id)}
           >
-            <Text style={styles.coverageName}>{cover.name}</Text>
-            <Text style={styles.coveragePrice}>Base: KES {cover.premium.toLocaleString()}</Text>
+            <Text style={styles.coverageName}>{profession.name}</Text>
+            <Text style={styles.coveragePrice}>Risk Level: {profession.riskMultiplier}x</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
+      <EnhancedTextInput
+        label="Years in Business/Practice"
+        value={formData.yearsInBusiness}
+        onChangeText={(text) => updateFormData('yearsInBusiness', text)}
+        placeholder="Enter years in business"
+        keyboardType="numeric"
+        required
+      />
+
+      <EnhancedTextInput
+        label="Number of Employees"
+        value={formData.numberOfEmployees}
+        onChangeText={(text) => updateFormData('numberOfEmployees', text)}
+        placeholder="Enter number of employees"
+        keyboardType="numeric"
+        required
+      />
+
+      <EnhancedTextInput
+        label="Annual Turnover (KES)"
+        value={formData.annualTurnover}
+        onChangeText={(text) => updateFormData('annualTurnover', text)}
+        placeholder="Enter annual turnover"
+        keyboardType="numeric"
+        required
+      />
+
+      <EnhancedTextInput
+        label="Professional Qualifications"
+        value={formData.professionalQualifications}
+        onChangeText={(text) => updateFormData('professionalQualifications', text)}
+        placeholder="List your professional qualifications"
+        multiline
+        numberOfLines={3}
+        required
+      />
+
+      <EnhancedTextInput
+        label="Professional Bodies/Associations"
+        value={formData.professionalBodies}
+        onChangeText={(text) => updateFormData('professionalBodies', text)}
+        placeholder="List professional bodies you belong to (optional)"
+        multiline
+        numberOfLines={2}
+      />
+    </View>
+  );
+
+  const renderStep3 = () => (
+    <View style={styles.stepContainer}>
+      <Text style={styles.stepTitle}>Coverage Selection</Text>
+      <Text style={styles.stepSubtitle}>Choose your coverage preferences</Text>
+      
+      <View style={styles.inputContainer}>
+        <Text style={styles.inputLabel}>Indemnity Limit *</Text>
+        {indemnityLimits.map((limit) => (
+          <TouchableOpacity
+            key={limit.id}
+            style={[
+              styles.coverageCard,
+              formData.indemnityLimit === limit.id && styles.coverageCardActive
+            ]}
+            onPress={() => updateFormData('indemnityLimit', limit.id)}
+          >
+            <Text style={styles.coverageName}>{limit.name}</Text>
+            <Text style={styles.coveragePrice}>Base: KES {limit.basePremium.toLocaleString()}</Text>
           </TouchableOpacity>
         ))}
       </View>
 
       <View style={styles.inputContainer}>
-        <Text style={styles.inputLabel}>Risk Level *</Text>
-        {riskLevels.map((risk) => (
+        <Text style={styles.inputLabel}>Excess Amount *</Text>
+        {excessAmounts.map((excess) => (
           <TouchableOpacity
-            key={risk.id}
+            key={excess.id}
             style={[
               styles.coverageCard,
-              formData.riskLevel === risk.id && styles.coverageCardActive
+              formData.excessAmount === excess.id && styles.coverageCardActive
             ]}
-            onPress={() => updateFormData('riskLevel', risk.id)}
+            onPress={() => updateFormData('excessAmount', excess.id)}
           >
-            <Text style={styles.coverageName}>{risk.name}</Text>
-            <Text style={styles.coveragePrice}>Multiplier: {risk.multiplier}x</Text>
+            <Text style={styles.coverageName}>{excess.name}</Text>
+            <Text style={styles.coveragePrice}>
+              {excess.discount > 0 ? `${(excess.discount * 100)}% discount` : 'Standard rate'}
+            </Text>
           </TouchableOpacity>
         ))}
       </View>
 
       <View style={styles.inputContainer}>
-        <Text style={styles.inputLabel}>Policy Duration *</Text>
-        {durations.map((duration) => (
+        <Text style={styles.inputLabel}>Territorial Coverage *</Text>
+        {territories.map((territory) => (
           <TouchableOpacity
-            key={duration.id}
+            key={territory.id}
             style={[
               styles.coverageCard,
-              formData.duration === duration.id && styles.coverageCardActive
+              formData.territory === territory.id && styles.coverageCardActive
             ]}
-            onPress={() => updateFormData('duration', duration.id)}
+            onPress={() => updateFormData('territory', territory.id)}
           >
-            <Text style={styles.coverageName}>{duration.name}</Text>
-            <Text style={styles.coveragePrice}>Rate: {duration.multiplier}x</Text>
+            <Text style={styles.coverageName}>{territory.name}</Text>
+            <Text style={styles.coveragePrice}>Rate: {territory.multiplier}x</Text>
           </TouchableOpacity>
         ))}
       </View>
 
       <View style={styles.inputContainer}>
-        <Text style={styles.inputLabel}>Additional Benefits</Text>
+        <Text style={styles.inputLabel}>Retroactive Date</Text>
+        <EnhancedDatePicker
+          value={formData.retroactiveDate}
+          onDateChange={(date) => updateFormData('retroactiveDate', date)}
+          placeholder="Select retroactive date (optional)"
+        />
+        <Text style={styles.inputHelper}>Coverage for claims arising from acts before this date</Text>
+      </View>
+
+      <View style={styles.inputContainer}>
+        <Text style={styles.inputLabel}>Additional Coverage Extensions</Text>
         
         <TouchableOpacity
           style={[
             styles.benefitCard,
-            formData.accidentalDeath && styles.benefitCardActive
+            formData.includeCyberLiability && styles.benefitCardActive
           ]}
-          onPress={() => updateFormData('accidentalDeath', !formData.accidentalDeath)}
+          onPress={() => updateFormData('includeCyberLiability', !formData.includeCyberLiability)}
         >
           <View style={styles.benefitInfo}>
-            <Text style={styles.benefitName}>Accidental Death Benefit</Text>
-            <Text style={styles.benefitPrice}>+KES 2,000</Text>
+            <Text style={styles.benefitName}>Cyber Liability Coverage</Text>
+            <Text style={styles.benefitPrice}>+KES 15,000</Text>
           </View>
           <View style={[
             styles.checkbox,
-            formData.accidentalDeath && styles.checkboxActive
+            formData.includeCyberLiability && styles.checkboxActive
           ]}>
-            {formData.accidentalDeath && <Text style={styles.checkmark}>✓</Text>}
+            {formData.includeCyberLiability && <Text style={styles.checkmark}>✓</Text>}
           </View>
         </TouchableOpacity>
 
         <TouchableOpacity
           style={[
             styles.benefitCard,
-            formData.permanentDisability && styles.benefitCardActive
+            formData.includeEmploymentPractices && styles.benefitCardActive
           ]}
-          onPress={() => updateFormData('permanentDisability', !formData.permanentDisability)}
+          onPress={() => updateFormData('includeEmploymentPractices', !formData.includeEmploymentPractices)}
         >
           <View style={styles.benefitInfo}>
-            <Text style={styles.benefitName}>Permanent Disability Cover</Text>
-            <Text style={styles.benefitPrice}>+KES 1,500</Text>
+            <Text style={styles.benefitName}>Employment Practices Liability</Text>
+            <Text style={styles.benefitPrice}>+KES 12,000</Text>
           </View>
           <View style={[
             styles.checkbox,
-            formData.permanentDisability && styles.checkboxActive
+            formData.includeEmploymentPractices && styles.checkboxActive
           ]}>
-            {formData.permanentDisability && <Text style={styles.checkmark}>✓</Text>}
+            {formData.includeEmploymentPractices && <Text style={styles.checkmark}>✓</Text>}
           </View>
         </TouchableOpacity>
 
         <TouchableOpacity
           style={[
             styles.benefitCard,
-            formData.medicalExpenses && styles.benefitCardActive
+            formData.includeDirectorsOfficers && styles.benefitCardActive
           ]}
-          onPress={() => updateFormData('medicalExpenses', !formData.medicalExpenses)}
+          onPress={() => updateFormData('includeDirectorsOfficers', !formData.includeDirectorsOfficers)}
         >
           <View style={styles.benefitInfo}>
-            <Text style={styles.benefitName}>Medical Expenses Cover</Text>
-            <Text style={styles.benefitPrice}>+KES 3,000</Text>
+            <Text style={styles.benefitName}>Directors & Officers Liability</Text>
+            <Text style={styles.benefitPrice}>+KES 25,000</Text>
           </View>
           <View style={[
             styles.checkbox,
-            formData.medicalExpenses && styles.checkboxActive
+            formData.includeDirectorsOfficers && styles.checkboxActive
           ]}>
-            {formData.medicalExpenses && <Text style={styles.checkmark}>✓</Text>}
-          </View>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[
-            styles.benefitCard,
-            formData.temporaryDisability && styles.benefitCardActive
-          ]}
-          onPress={() => updateFormData('temporaryDisability', !formData.temporaryDisability)}
-        >
-          <View style={styles.benefitInfo}>
-            <Text style={styles.benefitName}>Temporary Disability Income</Text>
-            <Text style={styles.benefitPrice}>+KES 1,000</Text>
-          </View>
-          <View style={[
-            styles.checkbox,
-            formData.temporaryDisability && styles.checkboxActive
-          ]}>
-            {formData.temporaryDisability && <Text style={styles.checkmark}>✓</Text>}
+            {formData.includeDirectorsOfficers && <Text style={styles.checkmark}>✓</Text>}
           </View>
         </TouchableOpacity>
       </View>
     </View>
   );
 
-  const renderStep3 = () => (
+  const renderStep4 = () => (
     <View style={styles.stepContainer}>
       <Text style={styles.stepTitle}>Documents & Summary</Text>
       <Text style={styles.stepSubtitle}>Review your details and upload documents</Text>
 
       <View style={styles.summaryCard}>
-        <Text style={styles.summaryTitle}>Personal Accident Insurance Quote Summary</Text>
+        <Text style={styles.summaryTitle}>Professional Indemnity Insurance Quote Summary</Text>
         
         <View style={styles.summaryRow}>
-          <Text style={styles.summaryLabel}>Insured Person</Text>
-          <Text style={styles.summaryValue}>{formData.fullName}</Text>
+          <Text style={styles.summaryLabel}>Business Name</Text>
+          <Text style={styles.summaryValue}>{formData.businessName}</Text>
         </View>
         
         <View style={styles.summaryRow}>
-          <Text style={styles.summaryLabel}>Occupation</Text>
-          <Text style={styles.summaryValue}>{formData.occupation}</Text>
-        </View>
-        
-        <View style={styles.summaryRow}>
-          <Text style={styles.summaryLabel}>Cover Amount</Text>
+          <Text style={styles.summaryLabel}>Profession</Text>
           <Text style={styles.summaryValue}>
-            {coverAmounts.find(c => c.id === formData.coverAmount)?.name || 'Not selected'}
+            {professions.find(p => p.id === formData.profession)?.name || 'Not selected'}
           </Text>
         </View>
         
         <View style={styles.summaryRow}>
-          <Text style={styles.summaryLabel}>Risk Level</Text>
+          <Text style={styles.summaryLabel}>Indemnity Limit</Text>
           <Text style={styles.summaryValue}>
-            {riskLevels.find(r => r.id === formData.riskLevel)?.name || 'Not selected'}
+            {indemnityLimits.find(l => l.id === formData.indemnityLimit)?.name || 'Not selected'}
           </Text>
         </View>
         
         <View style={styles.summaryRow}>
-          <Text style={styles.summaryLabel}>Policy Duration</Text>
+          <Text style={styles.summaryLabel}>Excess Amount</Text>
           <Text style={styles.summaryValue}>
-            {durations.find(d => d.id === formData.duration)?.name || 'Not selected'}
+            {excessAmounts.find(e => e.id === formData.excessAmount)?.name || 'Not selected'}
           </Text>
         </View>
         
         <View style={styles.summaryRow}>
-          <Text style={styles.summaryLabel}>Additional Benefits</Text>
+          <Text style={styles.summaryLabel}>Territory</Text>
+          <Text style={styles.summaryValue}>
+            {territories.find(t => t.id === formData.territory)?.name || 'Not selected'}
+          </Text>
+        </View>
+        
+        <View style={styles.summaryRow}>
+          <Text style={styles.summaryLabel}>Additional Coverage</Text>
           <Text style={styles.summaryValue}>
             {[
-              formData.accidentalDeath && 'Accidental Death',
-              formData.permanentDisability && 'Permanent Disability',
-              formData.medicalExpenses && 'Medical Expenses',
-              formData.temporaryDisability && 'Temporary Disability'
+              formData.includeCyberLiability && 'Cyber Liability',
+              formData.includeEmploymentPractices && 'Employment Practices',
+              formData.includeDirectorsOfficers && 'Directors & Officers'
             ].filter(Boolean).join(', ') || 'None selected'}
           </Text>
         </View>
@@ -513,25 +618,33 @@ const PersonalAccidentQuotationScreen = () => {
       </View>
 
       <EnhancedDocumentUpload
-        label="ID Copy"
-        documentType="national ID"
-        onDocumentSelect={(doc) => updateFormData('uploadIdCopy', doc)}
-        uploadedDocument={formData.uploadIdCopy}
+        label="Business Certificate"
+        documentType="business certificate"
+        onDocumentSelect={(doc) => updateFormData('uploadBusinessCertificate', doc)}
+        uploadedDocument={formData.uploadBusinessCertificate}
         required
       />
 
       <EnhancedDocumentUpload
-        label="Medical Report"
-        documentType="medical report"
-        onDocumentSelect={(doc) => updateFormData('uploadMedicalReport', doc)}
-        uploadedDocument={formData.uploadMedicalReport}
+        label="Professional Certificate"
+        documentType="professional certificate"
+        onDocumentSelect={(doc) => updateFormData('uploadProfessionalCertificate', doc)}
+        uploadedDocument={formData.uploadProfessionalCertificate}
+        required
       />
 
       <EnhancedDocumentUpload
-        label="Occupation Letter"
-        documentType="occupation letter"
-        onDocumentSelect={(doc) => updateFormData('uploadOccupationLetter', doc)}
-        uploadedDocument={formData.uploadOccupationLetter}
+        label="Financial Statements"
+        documentType="financial statements"
+        onDocumentSelect={(doc) => updateFormData('uploadFinancialStatements', doc)}
+        uploadedDocument={formData.uploadFinancialStatements}
+      />
+
+      <EnhancedDocumentUpload
+        label="Insurance History"
+        documentType="insurance history"
+        onDocumentSelect={(doc) => updateFormData('uploadInsuranceHistory', doc)}
+        uploadedDocument={formData.uploadInsuranceHistory}
       />
 
       <View style={styles.inputContainer}>
@@ -592,6 +705,7 @@ const PersonalAccidentQuotationScreen = () => {
       case 1: return renderStep1();
       case 2: return renderStep2();
       case 3: return renderStep3();
+      case 4: return renderStep4();
       default: return renderStep1();
     }
   };
@@ -608,7 +722,7 @@ const PersonalAccidentQuotationScreen = () => {
         >
           <Text style={styles.headerBackText}>← Back</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Personal Accident Insurance</Text>
+        <Text style={styles.headerTitle}>Professional Indemnity</Text>
         <View style={styles.headerRight} />
       </View>
 
@@ -707,7 +821,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
   },
   progressLine: {
-    width: 40,
+    width: 30,
     height: 2,
     backgroundColor: '#E5E7EB',
     marginHorizontal: Spacing.xs,
@@ -754,6 +868,10 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.sm,
     fontSize: Typography.fontSize.md,
     backgroundColor: '#FFFFFF',
+  },
+  textArea: {
+    height: 80,
+    textAlignVertical: 'top',
   },
   optionsGrid: {
     flexDirection: 'row',
@@ -994,4 +1112,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default PersonalAccidentQuotationScreen;
+export default ProfessionalIndemnityQuotationScreen;

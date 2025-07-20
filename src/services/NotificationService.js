@@ -1,19 +1,35 @@
 // Push Notification Service for PataBima App
 // Handles scheduling and managing reminders for quotes and renewals
 
-import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
 import { Platform, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Constants from 'expo-constants';
 
-// Configure notification behavior
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: true,
-    shouldSetBadge: true,
-  }),
-});
+// Check if we're running in Expo Go on Android with SDK 53+
+// This combination has issues with expo-notifications
+const isExpoGo = Constants.appOwnership === 'expo';
+const isAndroid = Platform.OS === 'android';
+const isUnsupportedEnvironment = isExpoGo && isAndroid;
+
+// Only import notifications if not in unsupported environment
+let Notifications;
+try {
+  if (Platform.OS !== 'web' && !isUnsupportedEnvironment) {
+    Notifications = require('expo-notifications');
+    
+    // Configure notification behavior
+    Notifications.setNotificationHandler({
+      handleNotification: async () => ({
+        shouldShowAlert: true,
+        shouldPlaySound: true,
+        shouldSetBadge: true,
+      }),
+    });
+  }
+} catch (error) {
+  console.log('expo-notifications not available or not supported in this environment');
+}
 
 export class NotificationService {
   
@@ -22,10 +38,34 @@ export class NotificationService {
     SCHEDULED_NOTIFICATIONS: '@PataBima:scheduled_notifications',
     NOTIFICATION_SETTINGS: '@PataBima:notification_settings'
   };
+  
+  // Helper method to check if notifications are available
+  static isNotificationsAvailable() {
+    return !isExpoGo && !!Notifications;
+  }
 
   // Initialize notification service
   static async initialize() {
     try {
+      if (isUnsupportedEnvironment) {
+        console.log('Push notifications not supported in Expo Go on Android SDK 53+');
+        return null;
+      }
+      
+      if (!Device.isDevice) {
+        Alert.alert(
+          'Notifications not available',
+          'Notifications require a physical device to function properly.',
+          [{ text: 'OK' }]
+        );
+        return null;
+      }
+      
+      if (!Notifications) {
+        console.log('Notifications not supported in this environment');
+        return null;
+      }
+
       await this.requestPermissions();
       const token = await this.registerForPushNotifications();
       
@@ -47,6 +87,10 @@ export class NotificationService {
   // Request notification permissions
   static async requestPermissions() {
     try {
+      if (isUnsupportedEnvironment || !Notifications) {
+        return false;
+      }
+      
       if (Device.isDevice) {
         const { status: existingStatus } = await Notifications.getPermissionsAsync();
         let finalStatus = existingStatus;
@@ -58,27 +102,31 @@ export class NotificationService {
         
         if (finalStatus !== 'granted') {
           Alert.alert(
-            'Notification Permission',
-            'Please enable notifications to receive important reminders about your insurance quotes and renewals.',
+            'Permission required', 
+            'Push notifications require permission. You can enable them in your device settings.',
             [{ text: 'OK' }]
           );
           return false;
         }
         
         return true;
-      } else {
-        Alert.alert('Error', 'Must use physical device for Push Notifications');
-        return false;
       }
+      
+      return false;
     } catch (error) {
-      console.error('Error requesting permissions:', error);
+      console.error('Error requesting notification permissions:', error);
       return false;
     }
   }
 
-  // Register for push notifications
+  // Register for push notifications and get token
   static async registerForPushNotifications() {
     try {
+      if (isUnsupportedEnvironment || !Device.isDevice || !Notifications) {
+        return null;
+      }
+      
+      // Android-specific channel creation
       if (Platform.OS === 'android') {
         await Notifications.setNotificationChannelAsync('default', {
           name: 'PataBima Reminders',
@@ -87,20 +135,24 @@ export class NotificationService {
           lightColor: '#D5222B',
         });
       }
-
+      
       const token = await Notifications.getExpoPushTokenAsync({
         projectId: 'your-expo-project-id', // Replace with your Expo project ID
       });
-
+      
       return token.data;
     } catch (error) {
-      console.error('Error getting push token:', error);
+      console.error('Error registering for push notifications:', error);
       return null;
     }
   }
 
   // Set up notification listeners
   static setupNotificationListeners() {
+    if (isUnsupportedEnvironment || !Notifications) {
+      return;
+    }
+    
     // Handle notification received while app is foregrounded
     Notifications.addNotificationReceivedListener(notification => {
       console.log('Notification received:', notification);
@@ -138,6 +190,24 @@ export class NotificationService {
   // Schedule quote follow-up reminder
   static async scheduleQuoteReminder(quote, reminderType = 'followup', delayHours = 24) {
     try {
+      // Handle case where notifications aren't available (in Expo Go on Android)
+      if (isUnsupportedEnvironment || !Notifications) {
+        // Create mock notification ID for tracking purposes
+        const mockId = `mock-${Date.now()}-${Math.random().toString(36).substring(2, 10)}`;
+        
+        // Still store notification data for app consistency
+        await this.storeScheduledNotification(mockId, {
+          type: 'quote_reminder',
+          quoteId: quote.id,
+          reminderType: reminderType,
+          scheduledAt: new Date().toISOString(),
+          triggerAt: new Date(Date.now() + delayHours * 3600 * 1000).toISOString(),
+          isMock: true
+        });
+        
+        return mockId;
+      }
+      
       const notificationId = await Notifications.scheduleNotificationAsync({
         content: {
           title: '📋 PataBima Quote Reminder',
@@ -184,6 +254,24 @@ export class NotificationService {
         return null;
       }
 
+      // Handle case where notifications aren't available (in Expo Go on Android)
+      if (isUnsupportedEnvironment || !Notifications) {
+        // Create mock notification ID for tracking purposes
+        const mockId = `mock-${Date.now()}-${Math.random().toString(36).substring(2, 10)}`;
+        
+        // Still store notification data for app consistency
+        await this.storeScheduledNotification(mockId, {
+          type: 'payment_reminder',
+          quoteId: quote.id,
+          scheduledAt: new Date().toISOString(),
+          triggerAt: reminderDate.toISOString(),
+          expiryDate: expiryDate.toISOString(),
+          isMock: true
+        });
+        
+        return mockId;
+      }
+
       const notificationId = await Notifications.scheduleNotificationAsync({
         content: {
           title: '💳 Payment Reminder',
@@ -225,6 +313,24 @@ export class NotificationService {
         console.log('Renewal reminder date has passed');
         return null;
       }
+      
+      // Handle case where notifications aren't available (in Expo Go on Android)
+      if (isUnsupportedEnvironment || !Notifications) {
+        // Create mock notification ID for tracking purposes
+        const mockId = `mock-${Date.now()}-${Math.random().toString(36).substring(2, 10)}`;
+        
+        // Still store notification data for app consistency
+        await this.storeScheduledNotification(mockId, {
+          type: 'renewal_reminder',
+          policyId: policy.id,
+          scheduledAt: new Date().toISOString(),
+          triggerAt: renewalDate.toISOString(),
+          expiryDate: policy.expiryDate,
+          isMock: true
+        });
+        
+        return mockId;
+      }
 
       const notificationId = await Notifications.scheduleNotificationAsync({
         content: {
@@ -260,6 +366,15 @@ export class NotificationService {
   // Send immediate notification
   static async sendImmediateNotification(title, body, data = {}) {
     try {
+      if (isUnsupportedEnvironment || !Notifications) {
+        // If notifications aren't available, show an alert instead
+        if (Platform.OS !== 'web') {
+          Alert.alert(title, body);
+        }
+        console.log('Notification would have shown:', { title, body, data });
+        return false;
+      }
+      
       await Notifications.scheduleNotificationAsync({
         content: {
           title: title,
@@ -269,18 +384,28 @@ export class NotificationService {
         },
         trigger: null, // Send immediately
       });
+      return true;
     } catch (error) {
       console.error('Error sending immediate notification:', error);
+      return false;
     }
   }
 
   // Cancel scheduled notification
   static async cancelNotification(notificationId) {
     try {
+      // For mock notifications (created in unsupported environments), just remove from storage
+      if (notificationId?.startsWith('mock-') || isUnsupportedEnvironment || !Notifications) {
+        await this.removeStoredNotification(notificationId);
+        return true;
+      }
+      
       await Notifications.cancelScheduledNotificationAsync(notificationId);
       await this.removeStoredNotification(notificationId);
+      return true;
     } catch (error) {
       console.error('Error canceling notification:', error);
+      return false;
     }
   }
 

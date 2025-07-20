@@ -1,19 +1,35 @@
 // Push Notification Service for PataBima App
 // Handles scheduling and managing reminders for quotes and renewals
 
-import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
 import { Platform, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Constants from 'expo-constants';
 
-// Configure notification behavior
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: true,
-    shouldSetBadge: true,
-  }),
-});
+// Check if we're running in Expo Go on Android with SDK 53+
+// This combination has issues with expo-notifications
+const isExpoGo = Constants.appOwnership === 'expo';
+const isAndroid = Platform.OS === 'android';
+const isUnsupportedEnvironment = isExpoGo && isAndroid;
+
+// Only import notifications if not in unsupported environment
+let Notifications;
+try {
+  if (Platform.OS !== 'web' && !isUnsupportedEnvironment) {
+    Notifications = require('expo-notifications');
+    
+    // Configure notification behavior
+    Notifications.setNotificationHandler({
+      handleNotification: async () => ({
+        shouldShowAlert: true,
+        shouldPlaySound: true,
+        shouldSetBadge: true,
+      }),
+    });
+  }
+} catch (error) {
+  console.log('expo-notifications not available or not supported in this environment');
+}
 
 export class NotificationService {
   
