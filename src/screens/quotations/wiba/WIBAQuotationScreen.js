@@ -1,68 +1,83 @@
 /**
- * WIBA Insurance Quotation Screen
- * 
- * Multi-step form for collecting WIBA (Workmen's Injury Benefits Act) insurance information
- * Based on the claims submission step pattern and XML form structure
- * Focused on employer/company coverage for workplace injuries
+ * WIBA (Work Injury Benefits Act) Insurance Quotation Screen
+ * Based on Travel Insurance structure with Enhanced Form Components
+ * 3-Step Process: Personal Info → Employment & Coverage Details → Documents & Summary
  */
 
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  TextInput,
   Alert,
-  Platform,
-  Dimensions,
-  Modal,
-  FlatList
+  SafeAreaView
 } from 'react-native';
-import { StatusBar } from 'expo-status-bar';
+import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Colors, Spacing, Typography } from '../../../constants';
-import { SafeScreen, EnhancedCard } from '../../../components';
+import { StatusBar } from 'expo-status-bar';
+import { Colors, Typography, Spacing } from '../../../constants';
+import { 
+  EnhancedTextInput, 
+  EnhancedEmailInput, 
+  EnhancedPhoneInput, 
+  EnhancedIDInput, 
+  EnhancedDatePicker
+} from '../../../components/EnhancedFormComponents';
+import { EnhancedDocumentUpload } from '../../../components/EnhancedDocumentUpload';
 
 const { width } = Dimensions.get('window');
 
 export default function WIBAQuotationScreen({ navigation, route }) {
+  // Using props navigation instead of hook
+  // const navigation = useNavigation();
+  // const insets = useSafeAreaInsets(); // Commented out to avoid duplicate declaration
+
   const [currentStep, setCurrentStep] = useState(1);
+  const totalSteps = 3; // Keep this for internal use in this function
+
+  // Form Data for WIBA Insurance
   const [formData, setFormData] = useState({
-    // Step 1: Company Information
-    employerCompanyName: '',
-    natureOfBusiness: '',
-    businessRegistrationNo: '',
-    locationOfOperation: '',
-    
-    // Step 2: Contact Details
-    contactPersonName: '',
-    contactPhone: '',
+    // Step 1: Personal Information
+    fullName: '',
+    idNumber: '',
+    dateOfBirth: '',
+    phoneNumber: '',
     emailAddress: '',
     
-    // Step 3: Employee & Business Details
-    numberOfEmployees: '',
-    averageMonthlySalary: '',
-    industryClassification: '',
+    // Step 2: Employment & Coverage Details
+    employerName: '',
+    employerAddress: '',
+    jobTitle: '',
+    monthlySalary: '',
+    employmentStartDate: '',
+    contractType: '', // permanent, temporary, casual
+    riskCategory: '', // office, manual, hazardous
+    coverageAmount: '',
+    beneficiaryName: '',
+    beneficiaryRelationship: '',
+    beneficiaryPhone: '',
     
-    // Step 4: Document Upload
-    documents: [],
-    
-    // Step 5: Declaration & Review
-    declaration: false,
-    preferredPaymentMethod: '',
-    additionalComments: ''
+    // Step 3: Documents & Summary
+    preferredInsurer: '',
+    estimatedPremium: 0,
+    uploadEmploymentLetter: null,
+    uploadIdCopy: null,
+    uploadPayslip: null,
+    uploadMedicalCert: null,
+    declaration: false
   });
 
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showIndustryModal, setShowIndustryModal] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
-  const insets = useSafeAreaInsets();
+  // Using safeAreaInsets from props instead of hook to avoid duplicate declaration
+  // const insets = useSafeAreaInsets();
   const scrollViewRef = useRef(null);
 
-  const totalSteps = 5;
+  const steps = 5; // Renamed to avoid conflict
 
   // Sample data - in real app, this would come from API
   const industryClassificationOptions = [
@@ -141,7 +156,7 @@ export default function WIBAQuotationScreen({ navigation, route }) {
 
   const handleNext = () => {
     if (validateStep(currentStep)) {
-      if (currentStep < totalSteps) {
+      if (currentStep < steps) {
         setCurrentStep(currentStep + 1);
         scrollViewRef.current?.scrollTo({ y: 0, animated: true });
       } else {
@@ -248,9 +263,9 @@ export default function WIBAQuotationScreen({ navigation, route }) {
   const renderProgressBar = () => (
     <View style={styles.progressContainer}>
       <View style={styles.progressBar}>
-        <View style={[styles.progressFill, { width: `${(currentStep / totalSteps) * 100}%` }]} />
+        <View style={[styles.progressFill, { width: `${(currentStep / steps) * 100}%` }]} />
       </View>
-      <Text style={styles.progressText}>Step {currentStep} of {totalSteps}</Text>
+      <Text style={styles.progressText}>Step {currentStep} of {steps}</Text>
     </View>
   );
 
@@ -708,7 +723,7 @@ export default function WIBAQuotationScreen({ navigation, route }) {
               disabled={isSubmitting}
             >
               <Text style={styles.primaryButtonText}>
-                {isSubmitting ? 'Submitting...' : currentStep === totalSteps ? 'Submit Quotation' : 'Continue'}
+                {isSubmitting ? 'Submitting...' : currentStep === steps ? 'Submit Quotation' : 'Continue'}
               </Text>
             </TouchableOpacity>
           </View>

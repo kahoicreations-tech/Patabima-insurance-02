@@ -39,7 +39,6 @@ export {
   MotorQuotationScreen, 
   MotorCategorySelectionScreen,
   MotorProductSelectionScreen,
-  MedicalQuotationScreen, 
   WIBAQuotationScreen, 
   TravelQuotationScreen, 
   PersonalAccidentQuotationScreen, 

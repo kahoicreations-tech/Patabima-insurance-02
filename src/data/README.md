@@ -16,19 +16,24 @@ src/data/
 ## Key Features
 
 ### 1. **Centralized Data Management**
+
 - All category information in one file
 - Consistent data structure across the app
 - Easy to update and maintain
 
 ### 2. **Status-Aware System**
+
 Categories now have status management:
+
 - `ACTIVE`: Fully functional with navigation
 - `MAINTENANCE`: Temporarily unavailable
 - `COMING_SOON`: Planned features
 - `DISABLED`: Completely unavailable
 
 ### 3. **Enhanced Category Information**
+
 Each category now includes:
+
 - Basic info (id, name, description)
 - Visual elements (icon, image, color)
 - Business data (commission rates, minimum premiums)
@@ -37,59 +42,64 @@ Each category now includes:
 - Type classification
 
 ### 4. **Utility Functions**
+
 Powerful helper functions for category management:
+
 ```javascript
-import { 
+import {
   getActiveCategories,
   getPopularCategories,
   getCategoriesByType,
-  searchCategories 
-} from '../../data';
+  searchCategories,
+} from "../../data";
 ```
 
 ## Usage Examples
 
 ### Basic Import and Usage
+
 ```javascript
-import { INSURANCE_CATEGORIES, CATEGORY_STATUS } from '../../data';
+import { INSURANCE_CATEGORIES, CATEGORY_STATUS } from "../../data";
 
 // Get all categories
 const allCategories = INSURANCE_CATEGORIES;
 
 // Filter active categories
 const activeCategories = INSURANCE_CATEGORIES.filter(
-  cat => cat.status === CATEGORY_STATUS.ACTIVE
+  (cat) => cat.status === CATEGORY_STATUS.ACTIVE
 );
 ```
 
 ### Using Utility Functions
+
 ```javascript
-import { 
+import {
   getActiveCategories,
   getCategoryById,
-  searchCategories 
-} from '../../data';
+  searchCategories,
+} from "../../data";
 
 // Get only active categories
 const activeCategories = getActiveCategories();
 
 // Find specific category
-const motorCategory = getCategoryById('motor-vehicle');
+const motorCategory = getCategoryById("motor-vehicle");
 
 // Search categories
-const searchResults = searchCategories('motor');
+const searchResults = searchCategories("motor");
 ```
 
 ### Status-Based Navigation
+
 ```javascript
-import { getCategoryStatusMessage, CATEGORY_STATUS } from '../../data';
+import { getCategoryStatusMessage, CATEGORY_STATUS } from "../../data";
 
 const handleCategoryPress = (category) => {
   if (category.status === CATEGORY_STATUS.ACTIVE && category.screen) {
     navigation.navigate(category.screen);
   } else {
     const message = getCategoryStatusMessage(category);
-    Alert.alert('Status', message);
+    Alert.alert("Status", message);
   }
 };
 ```
@@ -97,13 +107,16 @@ const handleCategoryPress = (category) => {
 ## Category Configuration
 
 ### Adding New Categories
+
 1. Add to `INSURANCE_CATEGORIES` array in `insuranceCategories.js`
 2. Include all required fields
 3. Add appropriate images to assets folder
 4. Create navigation screen if applicable
 
 ### Updating Category Status
+
 Simply change the `status` field in the category object:
+
 ```javascript
 {
   id: 'travel',
@@ -114,7 +127,9 @@ Simply change the `status` field in the category object:
 ```
 
 ### Commission and Business Rules
+
 Configure business logic per category:
+
 ```javascript
 {
   commissionRate: 0.15, // 15% commission
@@ -127,6 +142,7 @@ Configure business logic per category:
 ## Migration Guide
 
 ### From Old System
+
 The old numeric ID system is still supported through the `getLegacyCategories()` function:
 
 ```javascript
@@ -138,6 +154,7 @@ const categories = INSURANCE_CATEGORIES;
 ```
 
 ### Component Updates
+
 Update existing components to use the new structure:
 
 ```javascript
@@ -164,8 +181,9 @@ Update existing components to use the new structure:
 ## TypeScript Support
 
 Full TypeScript interfaces are available:
+
 ```typescript
-import { InsuranceCategory, CategoryStatus } from '../../types';
+import { InsuranceCategory, CategoryStatus } from "../../types";
 
 const category: InsuranceCategory = {
   // ... properly typed category object
@@ -175,6 +193,7 @@ const category: InsuranceCategory = {
 ## Future Enhancements
 
 The centralized system enables:
+
 - Remote category management via API
 - A/B testing different category sets
 - Dynamic pricing and commission updates
@@ -184,8 +203,9 @@ The centralized system enables:
 ## API Integration
 
 The system is designed to work with the existing API layer:
+
 ```javascript
-import { categoriesAPI } from '../../services/core';
+import { categoriesAPI } from "../../services/core";
 
 // Future: Load categories from API
 const remoteCategories = await categoriesAPI.getCategories();

@@ -85,7 +85,7 @@ export const INSURANCE_CATEGORIES = [
     color: Colors.success,
     type: CATEGORY_TYPES.HEALTH,
     status: CATEGORY_STATUS.ACTIVE,
-    screen: 'MedicalQuotation',
+    screen: 'EnhancedMedicalCategory',
     isPopular: true,
     commissionRate: 0.12, // 12%
     minimumPremium: 25000,

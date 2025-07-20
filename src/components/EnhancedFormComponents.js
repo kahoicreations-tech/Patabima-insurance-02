@@ -250,6 +250,80 @@ export const EnhancedDepartureDatePicker = ({
   );
 };
 
+// EMPLOYMENT START DATE PICKER - Reasonable range for employment (within last 40 years to today)
+export const EnhancedEmploymentDatePicker = ({
+  label = 'Employment Start Date',
+  value,
+  onDateChange,
+  placeholder = 'Select employment start date',
+  required = false
+}) => {
+  const [showPicker, setShowPicker] = useState(false);
+
+  const { selectedDate, maxDate, minDate } = useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    // Employment date can be in the past (reasonable: up to 40 years ago)
+    const pastDate = new Date(today);
+    pastDate.setFullYear(today.getFullYear() - 40);
+    
+    // Default to 1 year ago for employment start
+    const defaultDate = new Date(today);
+    defaultDate.setFullYear(today.getFullYear() - 1);
+    
+    return {
+      selectedDate: value ? new Date(value) : defaultDate,
+      maxDate: today, // Can't start employment in the future
+      minDate: pastDate // Reasonable limit for past employment
+    };
+  }, [value]);
+
+  const handleDateChange = useCallback((event, date) => {
+    if (Platform.OS === 'android') {
+      setShowPicker(false);
+    }
+    
+    if (date && event.type === 'set') {
+      const formattedDate = date.toISOString().split('T')[0];
+      onDateChange(formattedDate);
+      
+      if (Platform.OS === 'ios') {
+        setShowPicker(false);
+      }
+    } else if (event.type === 'dismissed') {
+      setShowPicker(false);
+    }
+  }, [onDateChange]);
+
+  const formatDate = useCallback((date) => {
+    if (!date) return '';
+    return new Date(date).toLocaleDateString('en-GB');
+  }, []);
+
+  return (
+    <View style={styles.inputContainer}>
+      <Text style={styles.label}>{label}{required && <Text style={styles.required}> *</Text>}</Text>
+      <TouchableOpacity style={styles.dateInput} onPress={() => setShowPicker(true)} activeOpacity={0.7}>
+        <Text style={[styles.dateText, !value && styles.placeholder]}>
+          {value ? formatDate(value) : placeholder}
+        </Text>
+        <Ionicons name="briefcase-outline" size={20} color={Colors.primary} />
+      </TouchableOpacity>
+      {showPicker && (
+        <DateTimePicker
+          value={selectedDate}
+          mode="date"
+          display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+          onChange={handleDateChange}
+          maximumDate={maxDate}
+          minimumDate={minDate}
+        />
+      )}
+    </View>
+  );
+};
+
 // RETURN DATE PICKER - Can't be before departure date
 export const EnhancedReturnDatePicker = ({
   label = 'Return Date',

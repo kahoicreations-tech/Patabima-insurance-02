@@ -2,8 +2,13 @@
 export { default as MotorQuotationScreen } from './motor/MotorQuotationScreen';
 export { default as MotorCategorySelectionScreen } from './motor/MotorCategorySelectionScreen';
 export { default as MotorProductSelectionScreen } from './motor/MotorProductSelectionScreen';
-export { default as MedicalQuotationScreen } from './medical/MedicalQuotationScreen';
-export { default as WIBAQuotationScreen } from './wiba/WIBAQuotationScreen';
+// Medical Insurance Exports - Enhanced screens imported directly in AppNavigator to avoid conflicts
+// export { 
+//   EnhancedMedicalCategoryScreen, 
+//   EnhancedIndividualMedicalQuotation, 
+//   EnhancedCorporateMedicalQuotation 
+// } from './medical';
+export { default as WIBAQuotationScreen } from './wiba';
 export { default as TravelQuotationScreen } from './travel/TravelQuotationScreen';
 export { default as PersonalAccidentQuotationScreen } from './personal-accident/PersonalAccidentQuotationScreen';
 export { default as LastExpenseQuotationScreen } from './last-expense/LastExpenseQuotationScreen';

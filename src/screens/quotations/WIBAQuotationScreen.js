@@ -1,9 +1,9 @@
 /**
- * Motor Vehicle Insurance Quotation Screen
+ * WIBA Insurance Quotation Screen
  * 
- * Multi-step form for collecting motor vehicle insurance information
+ * Multi-step form for collecting WIBA (Workmen's Injury Benefits Act) insurance information
  * Based on the claims submission step pattern and XML form structure
- * Supports Third Party, Comprehensive, and Commercial vehicle insurance
+ * Focused on employer/company coverage for workplace injuries
  */
 
 import React, { useState, useRef } from 'react';
@@ -22,114 +22,77 @@ import {
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Colors, Spacing, Typography } from '../../../constants';
-import { SafeScreen, EnhancedCard } from '../../../components';
+import { Colors, Spacing, Typography } from '../../constants';
+import { SafeScreen, EnhancedCard } from '../../components';
 
 const { width } = Dimensions.get('window');
 
-export default function MotorQuotationScreen({ navigation, route }) {
+export default function WIBAQuotationScreen({ navigation, route }) {
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState({
-    // Step 1: Personal Information
-    fullName: '',
-    idNumber: '',
-    phoneNumber: '',
+    // Step 1: Company Information
+    employerCompanyName: '',
+    natureOfBusiness: '',
+    businessRegistrationNo: '',
+    locationOfOperation: '',
+    
+    // Step 2: Contact Details
+    contactPersonName: '',
+    contactPhone: '',
     emailAddress: '',
     
-    // Step 2: Vehicle Details
-    vehicleRegistrationNumber: '',
-    makeModel: '',
-    yearOfManufacture: '',
-    vehicleEngineCapacity: '',
-    usageType: '',
+    // Step 3: Employee & Business Details
+    numberOfEmployees: '',
+    averageMonthlySalary: '',
+    industryClassification: '',
     
-    // Step 3: Insurance Configuration
-    insuranceDuration: '',
-    preferredInsurer: '',
-    
-    // Step 4: Supporting Documents
+    // Step 4: Document Upload
     documents: [],
     
-    // Step 5: Additional Information & Declaration
-    nextOfKinName: '',
-    nextOfKinPhone: '',
+    // Step 5: Declaration & Review
     declaration: false,
-    paymentMethod: ''
+    preferredPaymentMethod: '',
+    additionalComments: ''
   });
 
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showMakeModelModal, setShowMakeModelModal] = useState(false);
-  const [showUsageTypeModal, setShowUsageTypeModal] = useState(false);
-  const [showDurationModal, setShowDurationModal] = useState(false);
-  const [showInsurerModal, setShowInsurerModal] = useState(false);
+  const [showIndustryModal, setShowIndustryModal] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const insets = useSafeAreaInsets();
   const scrollViewRef = useRef(null);
 
   const totalSteps = 5;
 
-  // Vehicle makes and models data
-  const vehicleMakeModels = [
-    { id: 1, name: 'Toyota Corolla', make: 'Toyota', category: 'Sedan' },
-    { id: 2, name: 'Toyota Vitz', make: 'Toyota', category: 'Hatchback' },
-    { id: 3, name: 'Toyota Fielder', make: 'Toyota', category: 'Station Wagon' },
-    { id: 4, name: 'Toyota Prado', make: 'Toyota', category: 'SUV' },
-    { id: 5, name: 'Toyota Hilux', make: 'Toyota', category: 'Pickup' },
-    { id: 6, name: 'Nissan Note', make: 'Nissan', category: 'Hatchback' },
-    { id: 7, name: 'Nissan Tiida', make: 'Nissan', category: 'Sedan' },
-    { id: 8, name: 'Nissan X-Trail', make: 'Nissan', category: 'SUV' },
-    { id: 9, name: 'Honda Fit', make: 'Honda', category: 'Hatchback' },
-    { id: 10, name: 'Honda Vezel', make: 'Honda', category: 'SUV' },
-    { id: 11, name: 'Subaru Forester', make: 'Subaru', category: 'SUV' },
-    { id: 12, name: 'Subaru Impreza', make: 'Subaru', category: 'Sedan' },
-    { id: 13, name: 'Mazda Axela', make: 'Mazda', category: 'Sedan' },
-    { id: 14, name: 'Mazda Demio', make: 'Mazda', category: 'Hatchback' },
-    { id: 15, name: 'Mitsubishi Outlander', make: 'Mitsubishi', category: 'SUV' }
-  ];
-
-  const usageTypeOptions = [
-    { id: 1, name: 'Private', description: 'Personal and family use', multiplier: 1.0 },
-    { id: 2, name: 'Commercial', description: 'Business and commercial use', multiplier: 1.8 },
-    { id: 3, name: 'Taxi/Cab', description: 'Licensed taxi operations', multiplier: 2.2 },
-    { id: 4, name: 'Uber/Bolt', description: 'Ride-sharing services', multiplier: 2.0 },
-    { id: 5, name: 'Delivery', description: 'Package and food delivery', multiplier: 1.9 },
-    { id: 6, name: 'Government', description: 'Government vehicle', multiplier: 1.1 }
-  ];
-
-  const insuranceDurationOptions = [
-    { id: 1, name: '90 Days', days: 90, multiplier: 0.3 },
-    { id: 2, name: '180 Days', days: 180, multiplier: 0.6 },
-    { id: 3, name: '365 Days (1 Year)', days: 365, multiplier: 1.0 }
-  ];
-
-  const insurerOptions = [
-    { id: 1, name: 'Jubilee Insurance', rating: 4.5 },
-    { id: 2, name: 'CIC Insurance', rating: 4.3 },
-    { id: 3, name: 'APA Insurance', rating: 4.2 },
-    { id: 4, name: 'ICEA Lion', rating: 4.4 },
-    { id: 5, name: 'Heritage Insurance', rating: 4.1 },
-    { id: 6, name: 'GA Insurance', rating: 4.0 },
-    { id: 7, name: 'Takaful Insurance', rating: 4.2 },
-    { id: 8, name: 'Kenindia Insurance', rating: 3.9 }
+  // Sample data - in real app, this would come from API
+  const industryClassificationOptions = [
+    { id: 1, name: 'Manufacturing', riskLevel: 'High', multiplier: 1.5 },
+    { id: 2, name: 'Construction', riskLevel: 'Very High', multiplier: 2.0 },
+    { id: 3, name: 'Mining', riskLevel: 'Very High', multiplier: 2.2 },
+    { id: 4, name: 'Agriculture', riskLevel: 'Medium', multiplier: 1.2 },
+    { id: 5, name: 'Transportation', riskLevel: 'High', multiplier: 1.6 },
+    { id: 6, name: 'Healthcare', riskLevel: 'Medium', multiplier: 1.1 },
+    { id: 7, name: 'Education', riskLevel: 'Low', multiplier: 0.8 },
+    { id: 8, name: 'Finance/Banking', riskLevel: 'Low', multiplier: 0.7 },
+    { id: 9, name: 'Information Technology', riskLevel: 'Low', multiplier: 0.6 },
+    { id: 10, name: 'Retail/Trade', riskLevel: 'Medium', multiplier: 1.0 }
   ];
 
   const paymentMethodOptions = [
-    { id: 1, name: 'M-Pesa', description: 'Mobile money payment' },
-    { id: 2, name: 'Bank Transfer', description: 'Direct bank transfer' },
-    { id: 3, name: 'Credit Card', description: 'Visa/Mastercard payment' },
-    { id: 4, name: 'Debit Card', description: 'Bank debit card' },
-    { id: 5, name: 'Airtel Money', description: 'Airtel mobile money' },
-    { id: 6, name: 'Cheque', description: 'Bank cheque payment' }
+    { id: 1, name: 'Bank Transfer', description: 'Direct bank transfer' },
+    { id: 2, name: 'Cheque', description: 'Company cheque payment' },
+    { id: 3, name: 'Mobile Money', description: 'M-Pesa, Airtel Money' },
+    { id: 4, name: 'Credit Card', description: 'Corporate credit card' },
+    { id: 5, name: 'Direct Debit', description: 'Monthly direct debit' }
   ];
 
   const documentTypes = [
+    'Employee List',
+    'Registration Certificate',
     'KRA PIN Certificate',
-    'National ID Copy',
-    'Logbook/Ownership Proof',
-    'Driving License',
-    'Previous Insurance Certificate',
-    'Vehicle Inspection Report'
+    'Business License',
+    'Incorporation Certificate',
+    'Other Documents'
   ];
 
   const validateStep = (step) => {
@@ -137,53 +100,38 @@ export default function MotorQuotationScreen({ navigation, route }) {
     
     switch (step) {
       case 1:
-        if (!formData.fullName?.trim()) newErrors.fullName = 'Full name is required';
-        if (!formData.idNumber?.trim()) newErrors.idNumber = 'ID number is required';
-        if (!formData.phoneNumber?.trim()) newErrors.phoneNumber = 'Phone number is required';
+        if (!formData.employerCompanyName?.trim()) newErrors.employerCompanyName = 'Company name is required';
+        if (!formData.natureOfBusiness?.trim()) newErrors.natureOfBusiness = 'Nature of business is required';
+        if (!formData.businessRegistrationNo?.trim()) newErrors.businessRegistrationNo = 'Business registration number is required';
+        if (!formData.locationOfOperation?.trim()) newErrors.locationOfOperation = 'Location of operation is required';
+        break;
+      
+      case 2:
+        if (!formData.contactPersonName?.trim()) newErrors.contactPersonName = 'Contact person name is required';
+        if (!formData.contactPhone?.trim()) newErrors.contactPhone = 'Contact phone is required';
+        if (!formData.emailAddress?.trim()) newErrors.emailAddress = 'Email address is required';
         if (formData.emailAddress?.trim() && !/\S+@\S+\.\S+/.test(formData.emailAddress)) {
           newErrors.emailAddress = 'Please enter a valid email address';
         }
         break;
       
-      case 2:
-        if (!formData.vehicleRegistrationNumber?.trim()) newErrors.vehicleRegistrationNumber = 'Vehicle registration is required';
-        if (!formData.makeModel) newErrors.makeModel = 'Vehicle make & model is required';
-        if (!formData.yearOfManufacture?.trim()) newErrors.yearOfManufacture = 'Year of manufacture is required';
-        if (!formData.vehicleEngineCapacity?.trim()) newErrors.vehicleEngineCapacity = 'Engine capacity is required';
-        if (!formData.usageType) newErrors.usageType = 'Usage type is required';
-        
-        // Additional validations
-        const currentYear = new Date().getFullYear();
-        const year = parseInt(formData.yearOfManufacture);
-        if (year && (year < 1980 || year > currentYear)) {
-          newErrors.yearOfManufacture = `Year must be between 1980 and ${currentYear}`;
-        }
-        
-        const engineCapacity = parseInt(formData.vehicleEngineCapacity);
-        if (engineCapacity && (engineCapacity < 50 || engineCapacity > 8000)) {
-          newErrors.vehicleEngineCapacity = 'Engine capacity must be between 50cc and 8000cc';
-        }
-        break;
-      
       case 3:
-        if (!formData.insuranceDuration) newErrors.insuranceDuration = 'Insurance duration is required';
-        if (!formData.preferredInsurer) newErrors.preferredInsurer = 'Preferred insurer is required';
+        if (!formData.numberOfEmployees?.trim()) newErrors.numberOfEmployees = 'Number of employees is required';
+        if (!formData.averageMonthlySalary?.trim()) newErrors.averageMonthlySalary = 'Average monthly salary is required';
+        if (!formData.industryClassification) newErrors.industryClassification = 'Industry classification is required';
         break;
       
       case 4:
-        const hasKRAPin = formData.documents.some(doc => doc.type === 'KRA PIN Certificate');
-        const hasNationalId = formData.documents.some(doc => doc.type === 'National ID Copy');
-        const hasLogbook = formData.documents.some(doc => doc.type === 'Logbook/Ownership Proof');
-        if (!hasKRAPin || !hasNationalId || !hasLogbook) {
-          newErrors.documents = 'KRA PIN, National ID, and Logbook are required';
+        const hasEmployeeList = formData.documents.some(doc => doc.type === 'Employee List');
+        const hasRegistrationCert = formData.documents.some(doc => doc.type === 'Registration Certificate');
+        if (!hasEmployeeList || !hasRegistrationCert) {
+          newErrors.documents = 'Employee List and Registration Certificate are required';
         }
         break;
       
       case 5:
-        if (!formData.nextOfKinName?.trim()) newErrors.nextOfKinName = 'Next of kin name is required';
-        if (!formData.nextOfKinPhone?.trim()) newErrors.nextOfKinPhone = 'Next of kin phone is required';
         if (!formData.declaration) newErrors.declaration = 'Declaration must be accepted';
-        if (!formData.paymentMethod) newErrors.paymentMethod = 'Payment method is required';
+        if (!formData.preferredPaymentMethod) newErrors.preferredPaymentMethod = 'Payment method is required';
         break;
     }
     
@@ -217,11 +165,11 @@ export default function MotorQuotationScreen({ navigation, route }) {
       await new Promise(resolve => setTimeout(resolve, 2000));
       
       // Generate quotation number
-      const quotationNumber = `QUO-MOTOR-${Date.now().toString().slice(-6)}`;
+      const quotationNumber = `QUO-WIBA-${Date.now().toString().slice(-6)}`;
       
       Alert.alert(
-        'Motor Insurance Quotation Submitted Successfully',
-        `Your motor vehicle insurance quotation has been submitted with reference number: ${quotationNumber}\n\nYou will receive a confirmation email shortly.`,
+        'WIBA Quotation Submitted Successfully',
+        `Your WIBA insurance quotation has been submitted with reference number: ${quotationNumber}\n\nYou will receive a confirmation email shortly.`,
         [
           {
             text: 'View Quotations',
@@ -255,28 +203,13 @@ export default function MotorQuotationScreen({ navigation, route }) {
     }
   };
 
-  const selectMakeModel = (vehicle) => {
-    updateFormData('makeModel', vehicle.name);
-    setShowMakeModelModal(false);
-  };
-
-  const selectUsageType = (usage) => {
-    updateFormData('usageType', usage.name);
-    setShowUsageTypeModal(false);
-  };
-
-  const selectDuration = (duration) => {
-    updateFormData('insuranceDuration', duration.name);
-    setShowDurationModal(false);
-  };
-
-  const selectInsurer = (insurer) => {
-    updateFormData('preferredInsurer', insurer.name);
-    setShowInsurerModal(false);
+  const selectIndustry = (industry) => {
+    updateFormData('industryClassification', industry.name);
+    setShowIndustryModal(false);
   };
 
   const selectPaymentMethod = (method) => {
-    updateFormData('paymentMethod', method.name);
+    updateFormData('preferredPaymentMethod', method.name);
     setShowPaymentModal(false);
   };
 
@@ -286,7 +219,7 @@ export default function MotorQuotationScreen({ navigation, route }) {
       type: docType,
       name: `${docType}_${Date.now()}`,
       uploaded: true,
-      size: '2.1 MB'
+      size: '2.5 MB'
     };
     
     updateFormData('documents', [...formData.documents, newDoc]);
@@ -297,45 +230,19 @@ export default function MotorQuotationScreen({ navigation, route }) {
   };
 
   const calculatePremiumEstimate = () => {
-    if (!formData.vehicleEngineCapacity || !formData.yearOfManufacture || !formData.usageType || !formData.insuranceDuration) {
+    if (!formData.numberOfEmployees || !formData.averageMonthlySalary || !formData.industryClassification) {
       return 0;
     }
 
-    const engineCapacity = parseInt(formData.vehicleEngineCapacity);
-    const year = parseInt(formData.yearOfManufacture);
-    const currentYear = new Date().getFullYear();
-    const vehicleAge = currentYear - year;
+    const employees = parseInt(formData.numberOfEmployees);
+    const salary = parseInt(formData.averageMonthlySalary);
+    const industry = industryClassificationOptions.find(ind => ind.name === formData.industryClassification);
     
-    const usageType = usageTypeOptions.find(usage => usage.name === formData.usageType);
-    const duration = insuranceDurationOptions.find(dur => dur.name === formData.insuranceDuration);
-    
-    if (!usageType || !duration) return 0;
+    if (!industry) return 0;
 
-    // Base premium calculation
-    let basePremium = 15000; // Base amount for Kenya motor insurance
-    
-    // Engine capacity factor
-    if (engineCapacity <= 1000) basePremium *= 1.0;
-    else if (engineCapacity <= 1500) basePremium *= 1.2;
-    else if (engineCapacity <= 2000) basePremium *= 1.5;
-    else basePremium *= 1.8;
-    
-    // Vehicle age factor (newer cars cost more to insure)
-    if (vehicleAge <= 3) basePremium *= 1.3;
-    else if (vehicleAge <= 7) basePremium *= 1.1;
-    else if (vehicleAge <= 15) basePremium *= 1.0;
-    else basePremium *= 0.8;
-    
-    // Usage type multiplier
-    basePremium *= usageType.multiplier;
-    
-    // Duration multiplier
-    basePremium *= duration.multiplier;
-    
-    // Add government levies (Training Levy 0.2%, Stamp Duty, etc.)
-    const levies = basePremium * 0.002 + 50; // Training levy + stamp duty
-    
-    return Math.round(basePremium + levies);
+    // Base calculation: (Number of employees × Average salary × Risk multiplier × 0.02)
+    const basePremium = employees * salary * industry.multiplier * 0.02;
+    return Math.round(basePremium);
   };
 
   const renderProgressBar = () => (
@@ -367,9 +274,9 @@ export default function MotorQuotationScreen({ navigation, route }) {
             styles.stepLabel,
             step <= currentStep && styles.stepLabelActive
           ]}>
-            {step === 1 && 'Personal'}
-            {step === 2 && 'Vehicle'}
-            {step === 3 && 'Insurance'}
+            {step === 1 && 'Company'}
+            {step === 2 && 'Contact'}
+            {step === 3 && 'Business'}
             {step === 4 && 'Documents'}
             {step === 5 && 'Review'}
           </Text>
@@ -380,54 +287,96 @@ export default function MotorQuotationScreen({ navigation, route }) {
 
   const renderStep1 = () => (
     <View style={styles.stepContent}>
-      <Text style={styles.stepTitle}>Personal Information</Text>
-      <Text style={styles.stepDescription}>Please provide your personal details for the insurance policy</Text>
+      <Text style={styles.stepTitle}>Company Information</Text>
+      <Text style={styles.stepDescription}>Please provide your company details</Text>
       
       <View style={styles.inputContainer}>
-        <Text style={styles.inputLabel}>Full Name *</Text>
+        <Text style={styles.inputLabel}>Employer/Company Name *</Text>
         <TextInput
-          style={[styles.input, errors.fullName && styles.inputError]}
-          value={formData.fullName}
-          onChangeText={(text) => updateFormData('fullName', text)}
-          placeholder="Enter your full name"
+          style={[styles.input, errors.employerCompanyName && styles.inputError]}
+          value={formData.employerCompanyName}
+          onChangeText={(text) => updateFormData('employerCompanyName', text)}
+          placeholder="Enter company name"
           placeholderTextColor={Colors.textSecondary}
         />
-        {errors.fullName && <Text style={styles.errorText}>{errors.fullName}</Text>}
+        {errors.employerCompanyName && <Text style={styles.errorText}>{errors.employerCompanyName}</Text>}
       </View>
       
       <View style={styles.inputContainer}>
-        <Text style={styles.inputLabel}>ID Number *</Text>
+        <Text style={styles.inputLabel}>Nature of Business *</Text>
         <TextInput
-          style={[styles.input, errors.idNumber && styles.inputError]}
-          value={formData.idNumber}
-          onChangeText={(text) => updateFormData('idNumber', text)}
-          placeholder="Enter your national ID number"
+          style={[styles.input, errors.natureOfBusiness && styles.inputError]}
+          value={formData.natureOfBusiness}
+          onChangeText={(text) => updateFormData('natureOfBusiness', text)}
+          placeholder="Describe your business activities"
           placeholderTextColor={Colors.textSecondary}
-          keyboardType="numeric"
         />
-        {errors.idNumber && <Text style={styles.errorText}>{errors.idNumber}</Text>}
+        {errors.natureOfBusiness && <Text style={styles.errorText}>{errors.natureOfBusiness}</Text>}
       </View>
       
       <View style={styles.inputContainer}>
-        <Text style={styles.inputLabel}>Phone Number *</Text>
+        <Text style={styles.inputLabel}>Business Registration No. *</Text>
         <TextInput
-          style={[styles.input, errors.phoneNumber && styles.inputError]}
-          value={formData.phoneNumber}
-          onChangeText={(text) => updateFormData('phoneNumber', text)}
+          style={[styles.input, errors.businessRegistrationNo && styles.inputError]}
+          value={formData.businessRegistrationNo}
+          onChangeText={(text) => updateFormData('businessRegistrationNo', text)}
+          placeholder="Enter registration number"
+          placeholderTextColor={Colors.textSecondary}
+        />
+        {errors.businessRegistrationNo && <Text style={styles.errorText}>{errors.businessRegistrationNo}</Text>}
+      </View>
+      
+      <View style={styles.inputContainer}>
+        <Text style={styles.inputLabel}>Location of Operation *</Text>
+        <TextInput
+          style={[styles.input, errors.locationOfOperation && styles.inputError]}
+          value={formData.locationOfOperation}
+          onChangeText={(text) => updateFormData('locationOfOperation', text)}
+          placeholder="Primary business location"
+          placeholderTextColor={Colors.textSecondary}
+        />
+        {errors.locationOfOperation && <Text style={styles.errorText}>{errors.locationOfOperation}</Text>}
+      </View>
+    </View>
+  );
+
+  const renderStep2 = () => (
+    <View style={styles.stepContent}>
+      <Text style={styles.stepTitle}>Contact Details</Text>
+      <Text style={styles.stepDescription}>Contact person information for this policy</Text>
+      
+      <View style={styles.inputContainer}>
+        <Text style={styles.inputLabel}>Contact Person Name *</Text>
+        <TextInput
+          style={[styles.input, errors.contactPersonName && styles.inputError]}
+          value={formData.contactPersonName}
+          onChangeText={(text) => updateFormData('contactPersonName', text)}
+          placeholder="Enter contact person name"
+          placeholderTextColor={Colors.textSecondary}
+        />
+        {errors.contactPersonName && <Text style={styles.errorText}>{errors.contactPersonName}</Text>}
+      </View>
+      
+      <View style={styles.inputContainer}>
+        <Text style={styles.inputLabel}>Contact Phone *</Text>
+        <TextInput
+          style={[styles.input, errors.contactPhone && styles.inputError]}
+          value={formData.contactPhone}
+          onChangeText={(text) => updateFormData('contactPhone', text)}
           placeholder="+254 700 000 000"
           placeholderTextColor={Colors.textSecondary}
           keyboardType="phone-pad"
         />
-        {errors.phoneNumber && <Text style={styles.errorText}>{errors.phoneNumber}</Text>}
+        {errors.contactPhone && <Text style={styles.errorText}>{errors.contactPhone}</Text>}
       </View>
       
       <View style={styles.inputContainer}>
-        <Text style={styles.inputLabel}>Email Address (Optional)</Text>
+        <Text style={styles.inputLabel}>Email Address *</Text>
         <TextInput
           style={[styles.input, errors.emailAddress && styles.inputError]}
           value={formData.emailAddress}
           onChangeText={(text) => updateFormData('emailAddress', text)}
-          placeholder="your.email@example.com"
+          placeholder="company@example.com"
           placeholderTextColor={Colors.textSecondary}
           keyboardType="email-address"
           autoCapitalize="none"
@@ -437,128 +386,69 @@ export default function MotorQuotationScreen({ navigation, route }) {
     </View>
   );
 
-  const renderStep2 = () => (
-    <View style={styles.stepContent}>
-      <Text style={styles.stepTitle}>Vehicle Details</Text>
-      <Text style={styles.stepDescription}>Information about the vehicle to be insured</Text>
-      
-      <View style={styles.inputContainer}>
-        <Text style={styles.inputLabel}>Vehicle Registration Number *</Text>
-        <TextInput
-          style={[styles.input, errors.vehicleRegistrationNumber && styles.inputError]}
-          value={formData.vehicleRegistrationNumber}
-          onChangeText={(text) => updateFormData('vehicleRegistrationNumber', text.toUpperCase())}
-          placeholder="e.g., KCB 123A"
-          placeholderTextColor={Colors.textSecondary}
-          autoCapitalize="characters"
-        />
-        {errors.vehicleRegistrationNumber && <Text style={styles.errorText}>{errors.vehicleRegistrationNumber}</Text>}
-      </View>
-      
-      <TouchableOpacity 
-        style={styles.selectorButton}
-        onPress={() => setShowMakeModelModal(true)}
-      >
-        <Text style={styles.selectorLabel}>Make & Model *</Text>
-        <Text style={styles.selectorValue}>
-          {formData.makeModel || 'Select vehicle make & model'}
-        </Text>
-        <Text style={styles.selectorIcon}>▼</Text>
-      </TouchableOpacity>
-      {errors.makeModel && <Text style={styles.errorText}>{errors.makeModel}</Text>}
-      
-      <View style={styles.inputContainer}>
-        <Text style={styles.inputLabel}>Year of Manufacture *</Text>
-        <TextInput
-          style={[styles.input, errors.yearOfManufacture && styles.inputError]}
-          value={formData.yearOfManufacture}
-          onChangeText={(text) => updateFormData('yearOfManufacture', text)}
-          placeholder="e.g., 2018"
-          placeholderTextColor={Colors.textSecondary}
-          keyboardType="numeric"
-          maxLength={4}
-        />
-        {errors.yearOfManufacture && <Text style={styles.errorText}>{errors.yearOfManufacture}</Text>}
-      </View>
-      
-      <View style={styles.inputContainer}>
-        <Text style={styles.inputLabel}>Vehicle Engine Capacity (cc) *</Text>
-        <TextInput
-          style={[styles.input, errors.vehicleEngineCapacity && styles.inputError]}
-          value={formData.vehicleEngineCapacity}
-          onChangeText={(text) => updateFormData('vehicleEngineCapacity', text)}
-          placeholder="e.g., 1500"
-          placeholderTextColor={Colors.textSecondary}
-          keyboardType="numeric"
-        />
-        {errors.vehicleEngineCapacity && <Text style={styles.errorText}>{errors.vehicleEngineCapacity}</Text>}
-      </View>
-      
-      <TouchableOpacity 
-        style={styles.selectorButton}
-        onPress={() => setShowUsageTypeModal(true)}
-      >
-        <Text style={styles.selectorLabel}>Usage Type *</Text>
-        <Text style={styles.selectorValue}>
-          {formData.usageType || 'Select vehicle usage type'}
-        </Text>
-        <Text style={styles.selectorIcon}>▼</Text>
-      </TouchableOpacity>
-      {errors.usageType && <Text style={styles.errorText}>{errors.usageType}</Text>}
-    </View>
-  );
-
   const renderStep3 = () => (
     <View style={styles.stepContent}>
-      <Text style={styles.stepTitle}>Insurance Configuration</Text>
-      <Text style={styles.stepDescription}>Choose your insurance duration and preferred insurer</Text>
+      <Text style={styles.stepTitle}>Employee & Business Details</Text>
+      <Text style={styles.stepDescription}>Information about your workforce and operations</Text>
+      
+      <View style={styles.inputContainer}>
+        <Text style={styles.inputLabel}>Number of Employees *</Text>
+        <TextInput
+          style={[styles.input, errors.numberOfEmployees && styles.inputError]}
+          value={formData.numberOfEmployees}
+          onChangeText={(text) => updateFormData('numberOfEmployees', text)}
+          placeholder="Enter total number of employees"
+          placeholderTextColor={Colors.textSecondary}
+          keyboardType="numeric"
+        />
+        {errors.numberOfEmployees && <Text style={styles.errorText}>{errors.numberOfEmployees}</Text>}
+      </View>
+      
+      <View style={styles.inputContainer}>
+        <Text style={styles.inputLabel}>Average Monthly Salary (KES) *</Text>
+        <TextInput
+          style={[styles.input, errors.averageMonthlySalary && styles.inputError]}
+          value={formData.averageMonthlySalary}
+          onChangeText={(text) => updateFormData('averageMonthlySalary', text)}
+          placeholder="e.g., 50000"
+          placeholderTextColor={Colors.textSecondary}
+          keyboardType="numeric"
+        />
+        {errors.averageMonthlySalary && <Text style={styles.errorText}>{errors.averageMonthlySalary}</Text>}
+      </View>
       
       <TouchableOpacity 
-        style={styles.selectorButton}
-        onPress={() => setShowDurationModal(true)}
+        style={styles.claimTypeSelector}
+        onPress={() => setShowIndustryModal(true)}
       >
-        <Text style={styles.selectorLabel}>Insurance Duration *</Text>
-        <Text style={styles.selectorValue}>
-          {formData.insuranceDuration || 'Select insurance duration'}
+        <Text style={styles.claimTypeSelectorLabel}>Industry Classification *</Text>
+        <Text style={styles.claimTypeSelectorValue}>
+          {formData.industryClassification || 'Select industry type'}
         </Text>
-        <Text style={styles.selectorIcon}>▼</Text>
+        <Text style={styles.claimTypeSelectorIcon}>▼</Text>
       </TouchableOpacity>
-      {errors.insuranceDuration && <Text style={styles.errorText}>{errors.insuranceDuration}</Text>}
+      {errors.industryClassification && <Text style={styles.errorText}>{errors.industryClassification}</Text>}
       
-      <TouchableOpacity 
-        style={styles.selectorButton}
-        onPress={() => setShowInsurerModal(true)}
-      >
-        <Text style={styles.selectorLabel}>Preferred Insurer *</Text>
-        <Text style={styles.selectorValue}>
-          {formData.preferredInsurer || 'Select preferred insurer'}
-        </Text>
-        <Text style={styles.selectorIcon}>▼</Text>
-      </TouchableOpacity>
-      {errors.preferredInsurer && <Text style={styles.errorText}>{errors.preferredInsurer}</Text>}
-      
-      {formData.insuranceDuration && formData.usageType && formData.vehicleEngineCapacity && (
-        <View style={styles.premiumSection}>
-          <Text style={styles.premiumSectionTitle}>Premium Estimate</Text>
-          <View style={styles.premiumItem}>
-            <Text style={styles.premiumLabel}>Vehicle:</Text>
-            <Text style={styles.premiumValue}>{formData.makeModel || 'Not selected'}</Text>
+      {formData.industryClassification && (
+        <View style={styles.reviewSection}>
+          <Text style={styles.reviewSectionTitle}>Premium Estimate</Text>
+          <View style={styles.reviewItem}>
+            <Text style={styles.reviewLabel}>Employees:</Text>
+            <Text style={styles.reviewValue}>{formData.numberOfEmployees || 0}</Text>
           </View>
-          <View style={styles.premiumItem}>
-            <Text style={styles.premiumLabel}>Engine Capacity:</Text>
-            <Text style={styles.premiumValue}>{formData.vehicleEngineCapacity || 0}cc</Text>
+          <View style={styles.reviewItem}>
+            <Text style={styles.reviewLabel}>Average Salary:</Text>
+            <Text style={styles.reviewValue}>KES {parseInt(formData.averageMonthlySalary || 0).toLocaleString()}</Text>
           </View>
-          <View style={styles.premiumItem}>
-            <Text style={styles.premiumLabel}>Usage Type:</Text>
-            <Text style={styles.premiumValue}>{formData.usageType || 'Not selected'}</Text>
+          <View style={styles.reviewItem}>
+            <Text style={styles.reviewLabel}>Industry Risk:</Text>
+            <Text style={styles.reviewValue}>
+              {industryClassificationOptions.find(ind => ind.name === formData.industryClassification)?.riskLevel || 'N/A'}
+            </Text>
           </View>
-          <View style={styles.premiumItem}>
-            <Text style={styles.premiumLabel}>Duration:</Text>
-            <Text style={styles.premiumValue}>{formData.insuranceDuration || 'Not selected'}</Text>
-          </View>
-          <View style={styles.premiumItem}>
-            <Text style={styles.premiumLabel}>Estimated Premium:</Text>
-            <Text style={[styles.premiumValue, { fontWeight: 'bold', color: Colors.primary }]}>
+          <View style={styles.reviewItem}>
+            <Text style={styles.reviewLabel}>Estimated Annual Premium:</Text>
+            <Text style={[styles.reviewValue, { fontWeight: 'bold', color: Colors.primary }]}>
               KES {calculatePremiumEstimate().toLocaleString()}
             </Text>
           </View>
@@ -570,7 +460,7 @@ export default function MotorQuotationScreen({ navigation, route }) {
   const renderStep4 = () => (
     <View style={styles.stepContent}>
       <Text style={styles.stepTitle}>Supporting Documents</Text>
-      <Text style={styles.stepDescription}>Upload required documents for your motor insurance</Text>
+      <Text style={styles.stepDescription}>Upload required business documents</Text>
       
       <View style={styles.documentsContainer}>
         <Text style={styles.documentsLabel}>Add Documents</Text>
@@ -611,9 +501,8 @@ export default function MotorQuotationScreen({ navigation, route }) {
         
         <View style={styles.infoBox}>
           <Text style={styles.infoBoxTitle}>Required Documents:</Text>
-          <Text style={styles.infoBoxText}>• KRA PIN Certificate (mandatory)</Text>
-          <Text style={styles.infoBoxText}>• National ID Copy (mandatory)</Text>
-          <Text style={styles.infoBoxText}>• Logbook/Ownership Proof (mandatory)</Text>
+          <Text style={styles.infoBoxText}>• Employee List (mandatory)</Text>
+          <Text style={styles.infoBoxText}>• Registration Certificate (mandatory)</Text>
           <Text style={styles.infoBoxText}>• Additional supporting documents (optional)</Text>
         </View>
       </View>
@@ -623,106 +512,86 @@ export default function MotorQuotationScreen({ navigation, route }) {
   const renderStep5 = () => (
     <View style={styles.stepContent}>
       <Text style={styles.stepTitle}>Review & Declaration</Text>
-      <Text style={styles.stepDescription}>Please review your information and provide additional details</Text>
+      <Text style={styles.stepDescription}>Please review your information and declare</Text>
       
       <View style={styles.reviewSection}>
-        <Text style={styles.reviewSectionTitle}>Personal Information</Text>
+        <Text style={styles.reviewSectionTitle}>Company Information</Text>
         <View style={styles.reviewItem}>
-          <Text style={styles.reviewLabel}>Full Name:</Text>
-          <Text style={styles.reviewValue}>{formData.fullName}</Text>
+          <Text style={styles.reviewLabel}>Company Name:</Text>
+          <Text style={styles.reviewValue}>{formData.employerCompanyName}</Text>
         </View>
         <View style={styles.reviewItem}>
-          <Text style={styles.reviewLabel}>ID Number:</Text>
-          <Text style={styles.reviewValue}>{formData.idNumber}</Text>
+          <Text style={styles.reviewLabel}>Business Nature:</Text>
+          <Text style={styles.reviewValue}>{formData.natureOfBusiness}</Text>
         </View>
         <View style={styles.reviewItem}>
-          <Text style={styles.reviewLabel}>Phone:</Text>
-          <Text style={styles.reviewValue}>{formData.phoneNumber}</Text>
+          <Text style={styles.reviewLabel}>Registration No:</Text>
+          <Text style={styles.reviewValue}>{formData.businessRegistrationNo}</Text>
         </View>
         <View style={styles.reviewItem}>
-          <Text style={styles.reviewLabel}>Email:</Text>
-          <Text style={styles.reviewValue}>{formData.emailAddress || 'Not provided'}</Text>
+          <Text style={styles.reviewLabel}>Location:</Text>
+          <Text style={styles.reviewValue}>{formData.locationOfOperation}</Text>
         </View>
       </View>
       
       <View style={styles.reviewSection}>
-        <Text style={styles.reviewSectionTitle}>Vehicle & Insurance Details</Text>
+        <Text style={styles.reviewSectionTitle}>Contact & Business Details</Text>
         <View style={styles.reviewItem}>
-          <Text style={styles.reviewLabel}>Registration:</Text>
-          <Text style={styles.reviewValue}>{formData.vehicleRegistrationNumber}</Text>
+          <Text style={styles.reviewLabel}>Contact Person:</Text>
+          <Text style={styles.reviewValue}>{formData.contactPersonName}</Text>
         </View>
         <View style={styles.reviewItem}>
-          <Text style={styles.reviewLabel}>Vehicle:</Text>
-          <Text style={styles.reviewValue}>{formData.makeModel}</Text>
+          <Text style={styles.reviewLabel}>Phone:</Text>
+          <Text style={styles.reviewValue}>{formData.contactPhone}</Text>
         </View>
         <View style={styles.reviewItem}>
-          <Text style={styles.reviewLabel}>Year:</Text>
-          <Text style={styles.reviewValue}>{formData.yearOfManufacture}</Text>
+          <Text style={styles.reviewLabel}>Email:</Text>
+          <Text style={styles.reviewValue}>{formData.emailAddress}</Text>
         </View>
         <View style={styles.reviewItem}>
-          <Text style={styles.reviewLabel}>Engine:</Text>
-          <Text style={styles.reviewValue}>{formData.vehicleEngineCapacity}cc</Text>
+          <Text style={styles.reviewLabel}>Employees:</Text>
+          <Text style={styles.reviewValue}>{formData.numberOfEmployees}</Text>
         </View>
         <View style={styles.reviewItem}>
-          <Text style={styles.reviewLabel}>Usage:</Text>
-          <Text style={styles.reviewValue}>{formData.usageType}</Text>
-        </View>
-        <View style={styles.reviewItem}>
-          <Text style={styles.reviewLabel}>Duration:</Text>
-          <Text style={styles.reviewValue}>{formData.insuranceDuration}</Text>
-        </View>
-        <View style={styles.reviewItem}>
-          <Text style={styles.reviewLabel}>Insurer:</Text>
-          <Text style={styles.reviewValue}>{formData.preferredInsurer}</Text>
+          <Text style={styles.reviewLabel}>Industry:</Text>
+          <Text style={styles.reviewValue}>{formData.industryClassification}</Text>
         </View>
         <View style={styles.reviewItem}>
           <Text style={styles.reviewLabel}>Documents:</Text>
           <Text style={styles.reviewValue}>{formData.documents.length} uploaded</Text>
         </View>
         <View style={styles.reviewItem}>
-          <Text style={styles.reviewLabel}>Premium:</Text>
+          <Text style={styles.reviewLabel}>Estimated Premium:</Text>
           <Text style={[styles.reviewValue, { fontWeight: 'bold', color: Colors.primary }]}>
-            KES {calculatePremiumEstimate().toLocaleString()}
+            KES {calculatePremiumEstimate().toLocaleString()} / year
           </Text>
         </View>
       </View>
       
-      <View style={styles.inputContainer}>
-        <Text style={styles.inputLabel}>Next of Kin Name *</Text>
-        <TextInput
-          style={[styles.input, errors.nextOfKinName && styles.inputError]}
-          value={formData.nextOfKinName}
-          onChangeText={(text) => updateFormData('nextOfKinName', text)}
-          placeholder="Enter next of kin name"
-          placeholderTextColor={Colors.textSecondary}
-        />
-        {errors.nextOfKinName && <Text style={styles.errorText}>{errors.nextOfKinName}</Text>}
-      </View>
-      
-      <View style={styles.inputContainer}>
-        <Text style={styles.inputLabel}>Next of Kin Phone Number *</Text>
-        <TextInput
-          style={[styles.input, errors.nextOfKinPhone && styles.inputError]}
-          value={formData.nextOfKinPhone}
-          onChangeText={(text) => updateFormData('nextOfKinPhone', text)}
-          placeholder="+254 700 000 000"
-          placeholderTextColor={Colors.textSecondary}
-          keyboardType="phone-pad"
-        />
-        {errors.nextOfKinPhone && <Text style={styles.errorText}>{errors.nextOfKinPhone}</Text>}
-      </View>
-      
       <TouchableOpacity 
-        style={styles.selectorButton}
+        style={styles.claimTypeSelector}
         onPress={() => setShowPaymentModal(true)}
       >
-        <Text style={styles.selectorLabel}>Payment Method *</Text>
-        <Text style={styles.selectorValue}>
-          {formData.paymentMethod || 'Select payment method'}
+        <Text style={styles.claimTypeSelectorLabel}>Preferred Payment Method *</Text>
+        <Text style={styles.claimTypeSelectorValue}>
+          {formData.preferredPaymentMethod || 'Select payment method'}
         </Text>
-        <Text style={styles.selectorIcon}>▼</Text>
+        <Text style={styles.claimTypeSelectorIcon}>▼</Text>
       </TouchableOpacity>
-      {errors.paymentMethod && <Text style={styles.errorText}>{errors.paymentMethod}</Text>}
+      {errors.preferredPaymentMethod && <Text style={styles.errorText}>{errors.preferredPaymentMethod}</Text>}
+      
+      <View style={styles.inputContainer}>
+        <Text style={styles.inputLabel}>Additional Comments (Optional)</Text>
+        <TextInput
+          style={[styles.input, styles.textArea]}
+          value={formData.additionalComments}
+          onChangeText={(text) => updateFormData('additionalComments', text)}
+          placeholder="Any additional information or special requests..."
+          placeholderTextColor={Colors.textSecondary}
+          multiline
+          numberOfLines={4}
+        />
+      </View>
       
       <TouchableOpacity
         style={styles.declarationContainer}
@@ -732,14 +601,14 @@ export default function MotorQuotationScreen({ navigation, route }) {
           {formData.declaration && <Text style={styles.checkboxTick}>✓</Text>}
         </View>
         <Text style={styles.declarationText}>
-          I declare that the information provided is true and accurate. I understand the terms and conditions of the motor vehicle insurance policy.
+          I declare that the information provided is true and accurate. I understand this is for WIBA insurance coverage for workplace injuries and accidents.
         </Text>
       </TouchableOpacity>
       {errors.declaration && <Text style={styles.errorText}>{errors.declaration}</Text>}
     </View>
   );
 
-  const renderModalSelector = (visible, onClose, options, onSelect, title) => (
+  const renderModalSelector = (visible, onClose, options, onSelect, title, showRating = false) => (
     <Modal
       visible={visible}
       transparent
@@ -768,11 +637,13 @@ export default function MotorQuotationScreen({ navigation, route }) {
                   {item.description && (
                     <Text style={styles.modalOptionDescription}>{item.description}</Text>
                   )}
-                  {item.category && (
-                    <Text style={styles.modalOptionCategory}>Category: {item.category}</Text>
-                  )}
-                  {item.rating && (
-                    <Text style={styles.modalOptionRating}>Rating: {item.rating}/5</Text>
+                  {item.riskLevel && (
+                    <Text style={[styles.modalOptionRisk, { 
+                      color: item.riskLevel === 'Low' ? Colors.success : 
+                            item.riskLevel === 'Medium' ? Colors.warning : Colors.error 
+                    }]}>
+                      Risk: {item.riskLevel}
+                    </Text>
                   )}
                 </View>
               </TouchableOpacity>
@@ -795,7 +666,7 @@ export default function MotorQuotationScreen({ navigation, route }) {
           >
             <Text style={styles.backButtonText}>←</Text>
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Motor Insurance</Text>
+          <Text style={styles.headerTitle}>WIBA Insurance</Text>
           <View style={styles.headerSpacer} />
         </View>
 
@@ -845,35 +716,11 @@ export default function MotorQuotationScreen({ navigation, route }) {
       </View>
 
       {renderModalSelector(
-        showMakeModelModal,
-        () => setShowMakeModelModal(false),
-        vehicleMakeModels,
-        selectMakeModel,
-        'Select Vehicle Make & Model'
-      )}
-
-      {renderModalSelector(
-        showUsageTypeModal,
-        () => setShowUsageTypeModal(false),
-        usageTypeOptions,
-        selectUsageType,
-        'Select Usage Type'
-      )}
-
-      {renderModalSelector(
-        showDurationModal,
-        () => setShowDurationModal(false),
-        insuranceDurationOptions,
-        selectDuration,
-        'Select Insurance Duration'
-      )}
-
-      {renderModalSelector(
-        showInsurerModal,
-        () => setShowInsurerModal(false),
-        insurerOptions,
-        selectInsurer,
-        'Select Preferred Insurer'
+        showIndustryModal,
+        () => setShowIndustryModal(false),
+        industryClassificationOptions,
+        selectIndustry,
+        'Select Industry Classification'
       )}
 
       {renderModalSelector(
@@ -1037,13 +884,17 @@ const styles = StyleSheet.create({
   inputError: {
     borderColor: Colors.error,
   },
+  textArea: {
+    height: 100,
+    textAlignVertical: 'top',
+  },
   errorText: {
     fontSize: Typography.fontSize.sm,
     fontFamily: Typography.fontFamily.regular,
     color: Colors.error,
     marginTop: Spacing.xs,
   },
-  selectorButton: {
+  claimTypeSelector: {
     borderWidth: 1,
     borderColor: Colors.border,
     borderRadius: 8,
@@ -1052,65 +903,23 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.white,
     marginBottom: Spacing.md,
   },
-  selectorLabel: {
+  claimTypeSelectorLabel: {
     fontSize: Typography.fontSize.sm,
     fontFamily: Typography.fontFamily.medium,
     color: Colors.textSecondary,
     marginBottom: Spacing.xs,
   },
-  selectorValue: {
+  claimTypeSelectorValue: {
     fontSize: Typography.fontSize.md,
     fontFamily: Typography.fontFamily.regular,
     color: Colors.textPrimary,
   },
-  selectorIcon: {
+  claimTypeSelectorIcon: {
     position: 'absolute',
     right: Spacing.md,
     top: '50%',
     fontSize: Typography.fontSize.lg,
     color: Colors.textSecondary,
-  },
-  premiumSection: {
-    marginTop: Spacing.lg,
-    padding: Spacing.md,
-    backgroundColor: Colors.lightGray,
-    borderRadius: 8,
-  },
-  premiumSectionTitle: {
-    fontSize: Typography.fontSize.lg,
-    fontFamily: Typography.fontFamily.semiBold,
-    color: Colors.textPrimary,
-    marginBottom: Spacing.md,
-  },
-  premiumItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: Spacing.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
-  },
-  premiumLabel: {
-    fontSize: Typography.fontSize.md,
-    fontFamily: Typography.fontFamily.medium,
-    color: Colors.textSecondary,
-    flex: 1,
-  },
-  premiumValue: {
-    fontSize: Typography.fontSize.md,
-    fontFamily: Typography.fontFamily.regular,
-    color: Colors.textPrimary,
-    flex: 1,
-    textAlign: 'right',
-  },
-  documentsContainer: {
-    marginBottom: Spacing.lg,
-  },
-  documentsLabel: {
-    fontSize: Typography.fontSize.md,
-    fontFamily: Typography.fontFamily.medium,
-    color: Colors.textPrimary,
-    marginBottom: Spacing.md,
   },
   documentTypeGrid: {
     flexDirection: 'row',
@@ -1132,6 +941,15 @@ const styles = StyleSheet.create({
     fontFamily: Typography.fontFamily.medium,
     color: Colors.textPrimary,
     textAlign: 'center',
+  },
+  documentsContainer: {
+    marginBottom: Spacing.lg,
+  },
+  documentsLabel: {
+    fontSize: Typography.fontSize.md,
+    fontFamily: Typography.fontFamily.medium,
+    color: Colors.textPrimary,
+    marginBottom: Spacing.md,
   },
   uploadedDocuments: {
     marginTop: Spacing.lg,
@@ -1347,16 +1165,9 @@ const styles = StyleSheet.create({
     fontFamily: Typography.fontFamily.regular,
     color: Colors.textSecondary,
   },
-  modalOptionCategory: {
+  modalOptionRisk: {
     fontSize: Typography.fontSize.sm,
     fontFamily: Typography.fontFamily.medium,
-    color: Colors.primary,
-    marginTop: Spacing.xs,
-  },
-  modalOptionRating: {
-    fontSize: Typography.fontSize.sm,
-    fontFamily: Typography.fontFamily.medium,
-    color: Colors.warning,
     marginTop: Spacing.xs,
   },
 });
