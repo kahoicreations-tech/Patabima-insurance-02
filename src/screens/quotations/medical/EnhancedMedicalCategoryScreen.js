@@ -10,6 +10,7 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
+  Image,
   ScrollView,
   SafeAreaView
 } from 'react-native';
@@ -57,48 +58,81 @@ const EnhancedMedicalCategoryScreen = ({ navigation }) => {
             Choose the appropriate insurance category for your needs
           </Text>
           
-          {/* Simple Selection Options */}
-          <View style={styles.selectionContainer}>
-            {/* Individual/Family Option */}
-            <TouchableOpacity
-              style={styles.selectionItem}
-              onPress={() => handleCategorySelect('individual')}
-              activeOpacity={0.7}
-            >
-              <View style={styles.selectionContent}>
-                <View style={styles.selectionIcon}>
-                  <Ionicons name="person" size={24} color={Colors.primary} />
-                </View>
-                <View style={styles.selectionText}>
-                  <Text style={styles.selectionTitle}>Individual & Family</Text>
-                  <Text style={styles.selectionDescription}>
-                    Personal medical coverage for you and dependents
-                  </Text>
-                </View>
-                <Ionicons name="chevron-forward" size={20} color={Colors.textSecondary} />
+          {/* Individual/Family Card */}
+          <TouchableOpacity
+            style={styles.categoryCard}
+            onPress={() => handleCategorySelect('individual')}
+            activeOpacity={0.7}
+          >
+            <View style={styles.categoryImageContainer}>
+              <Image 
+                source={require('../../../../assets/images/health.png')}
+                style={styles.categoryImage}
+                resizeMode="contain"
+              />
+            </View>
+            <View style={styles.categoryContent}>
+              <View style={styles.categoryHeader}>
+                <Text style={styles.categoryTitle}>Individual & Family</Text>
+                <Ionicons name="chevron-forward" size={24} color={Colors.primary} />
               </View>
-            </TouchableOpacity>
-            
-            {/* Corporate Option */}
-            <TouchableOpacity
-              style={styles.selectionItem}
-              onPress={() => handleCategorySelect('corporate')}
-              activeOpacity={0.7}
-            >
-              <View style={styles.selectionContent}>
-                <View style={styles.selectionIcon}>
-                  <Ionicons name="business" size={24} color={Colors.primary} />
+              <Text style={styles.categoryDescription}>
+                Comprehensive medical coverage for individuals and families with flexible benefits
+              </Text>
+              <View style={styles.featureContainer}>
+                <View style={styles.feature}>
+                  <Ionicons name="checkmark-circle" size={16} color={Colors.success} />
+                  <Text style={styles.featureText}>In-patient & Out-patient</Text>
                 </View>
-                <View style={styles.selectionText}>
-                  <Text style={styles.selectionTitle}>Corporate</Text>
-                  <Text style={styles.selectionDescription}>
-                    Group medical cover for company employees
-                  </Text>
+                <View style={styles.feature}>
+                  <Ionicons name="checkmark-circle" size={16} color={Colors.success} />
+                  <Text style={styles.featureText}>Family options available</Text>
                 </View>
-                <Ionicons name="chevron-forward" size={20} color={Colors.textSecondary} />
+                <View style={styles.feature}>
+                  <Ionicons name="checkmark-circle" size={16} color={Colors.success} />
+                  <Text style={styles.featureText}>Dental & Optical options</Text>
+                </View>
               </View>
-            </TouchableOpacity>
-          </View>
+            </View>
+          </TouchableOpacity>
+          
+          {/* Corporate Card */}
+          <TouchableOpacity
+            style={styles.categoryCard}
+            onPress={() => handleCategorySelect('corporate')}
+            activeOpacity={0.7}
+          >
+            <View style={styles.categoryImageContainer}>
+              <Image 
+                source={require('../../../../assets/images/health.png')}
+                style={styles.categoryImage}
+                resizeMode="contain"
+              />
+            </View>
+            <View style={styles.categoryContent}>
+              <View style={styles.categoryHeader}>
+                <Text style={styles.categoryTitle}>Corporate</Text>
+                <Ionicons name="chevron-forward" size={24} color={Colors.primary} />
+              </View>
+              <Text style={styles.categoryDescription}>
+                Group medical cover for companies with customized benefits for employees
+              </Text>
+              <View style={styles.featureContainer}>
+                <View style={styles.feature}>
+                  <Ionicons name="checkmark-circle" size={16} color={Colors.success} />
+                  <Text style={styles.featureText}>Employee medical cover</Text>
+                </View>
+                <View style={styles.feature}>
+                  <Ionicons name="checkmark-circle" size={16} color={Colors.success} />
+                  <Text style={styles.featureText}>Customized group benefits</Text>
+                </View>
+                <View style={styles.feature}>
+                  <Ionicons name="checkmark-circle" size={16} color={Colors.success} />
+                  <Text style={styles.featureText}>Simplified administration</Text>
+                </View>
+              </View>
+            </View>
+          </TouchableOpacity>
 
           {/* Information Card */}
           <View style={styles.infoCard}>
@@ -157,46 +191,56 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
     marginBottom: Spacing.lg,
   },
-  selectionContainer: {
-    marginTop: Spacing.md,
-  },
-  selectionItem: {
+  categoryCard: {
     backgroundColor: Colors.white,
     borderRadius: 12,
-    marginBottom: Spacing.md,
-    padding: Spacing.md,
+    marginBottom: Spacing.lg,
+    overflow: 'hidden',
     elevation: 2,
     shadowColor: Colors.shadow,
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
   },
-  selectionContent: {
+  categoryImageContainer: {
+    height: 160,
+    backgroundColor: Colors.backgroundLight,
+  },
+  categoryImage: {
+    width: '100%',
+    height: '100%',
+  },
+  categoryContent: {
+    padding: Spacing.md,
+  },
+  categoryHeader: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
+    marginBottom: Spacing.sm,
   },
-  selectionIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: Colors.backgroundLightPrimary,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: Spacing.md,
-  },
-  selectionText: {
-    flex: 1,
-    marginRight: Spacing.sm,
-  },
-  selectionTitle: {
+  categoryTitle: {
     fontSize: Typography.fontSize.lg,
     fontWeight: Typography.fontWeight.bold,
     color: Colors.textPrimary,
-    marginBottom: Spacing.xs,
   },
-  selectionDescription: {
-    fontSize: Typography.fontSize.sm,
+  categoryDescription: {
+    fontSize: Typography.fontSize.md,
     color: Colors.textSecondary,
+    marginBottom: Spacing.md,
+  },
+  featureContainer: {
+    marginTop: Spacing.sm,
+  },
+  feature: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: Spacing.sm,
+  },
+  featureText: {
+    marginLeft: Spacing.xs,
+    fontSize: Typography.fontSize.sm,
+    color: Colors.textPrimary,
   },
   infoCard: {
     backgroundColor: Colors.backgroundLightBlue,

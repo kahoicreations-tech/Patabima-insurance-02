@@ -16,6 +16,7 @@ import {
   Platform,
   FlatList
 } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
@@ -29,7 +30,8 @@ import {
 } from '../../../components/EnhancedFormComponents';
 import { EnhancedDocumentUpload } from '../../../components/EnhancedDocumentUpload';
 
-const EnhancedIndividualMedicalQuotation = ({ navigation }) => {
+const EnhancedIndividualMedicalQuotation = () => {
+  const navigation = useNavigation();
   const insets = useSafeAreaInsets();
 
   const [currentStep, setCurrentStep] = useState(1);
@@ -63,6 +65,7 @@ const EnhancedIndividualMedicalQuotation = ({ navigation }) => {
     preferredInsurer: '',
     estimatedPremium: 0,
     uploadIDCopy: null,
+    uploadPhoto: null,
     uploadMedicalReports: null,
     uploadDependentDocs: null,
     declaration: false
@@ -76,18 +79,9 @@ const EnhancedIndividualMedicalQuotation = ({ navigation }) => {
   ];
 
   const coverTypeOptions = [
-    { 
-      id: 'individual', 
-      name: 'Individual Cover', 
-      description: 'For yourself only',
-      icon: 'person'
-    },
-    { 
-      id: 'family', 
-      name: 'Family Cover', 
-      description: 'For you and dependents',
-      icon: 'people'
-    }
+    { id: 'individual', name: 'Individual Cover', description: 'Coverage for yourself only' },
+    { id: 'couple', name: 'Couple Cover', description: 'Coverage for you and your spouse' },
+    { id: 'family', name: 'Family Cover', description: 'Coverage for you, spouse and children' }
   ];
 
   const coverLimitOptions = [
@@ -163,8 +157,8 @@ const EnhancedIndividualMedicalQuotation = ({ navigation }) => {
             maternity: false
           };
         }
-        // Default dependent count for family
-        if (value === 'family') {
+        // Default dependent count for couple
+        if (value === 'couple') {
           return { ...prev, [field]: value, dependentsCount: '1' };
         }
       }
@@ -214,7 +208,8 @@ const EnhancedIndividualMedicalQuotation = ({ navigation }) => {
   const calculatePremium = useCallback(() => {
     const basePremiums = {
       individual: 30000, // KES 30,000 base annual premium
-      family: 55000     // KES 55,000 for family (includes primary + 1 dependent)
+      couple: 55000,    // KES 55,000 for couples
+      family: 70000     // KES 70,000 base for family
     };
     
     // Get base premium based on cover type
@@ -559,50 +554,31 @@ const EnhancedIndividualMedicalQuotation = ({ navigation }) => {
       {/* Cover Type Selection */}
       <View style={styles.inputContainer}>
         <Text style={styles.label}>Cover Type <Text style={styles.required}>*</Text></Text>
-        <View style={styles.simpleSelectionContainer}>
-          {coverTypeOptions.map((option) => (
-            <TouchableOpacity
-              key={option.id}
-              style={[
-                styles.simpleSelectionItem,
-                formData.coverType === option.id && styles.selectedSimpleItem
-              ]}
-              onPress={() => handleCoverTypeSelect(option)}
-            >
-              <View style={styles.simpleSelectionContent}>
-                <View style={styles.simpleSelectionIcon}>
-                  <Ionicons 
-                    name={option.icon} 
-                    size={24} 
-                    color={formData.coverType === option.id ? '#D5222B' : '#646767'} 
-                  />
-                </View>
-                <View style={styles.simpleSelectionText}>
-                  <Text style={[
-                    styles.simpleSelectionTitle,
-                    formData.coverType === option.id && styles.selectedSimpleTitle
-                  ]}>
-                    {option.name}
-                  </Text>
-                  <Text style={[
-                    styles.simpleSelectionDescription,
-                    formData.coverType === option.id && styles.selectedSimpleDescription
-                  ]}>
-                    {option.description}
-                  </Text>
-                </View>
-                <View style={[
-                  styles.radioButton,
-                  formData.coverType === option.id && styles.radioButtonSelected
-                ]}>
-                  {formData.coverType === option.id && (
-                    <View style={styles.radioButtonInner} />
-                  )}
-                </View>
+        {coverTypeOptions.map((option) => (
+          <TouchableOpacity
+            key={option.id}
+            style={[
+              styles.selectionCard,
+              formData.coverType === option.id && styles.selectedCard
+            ]}
+            onPress={() => handleCoverTypeSelect(option)}
+          >
+            <View style={styles.selectionCardContent}>
+              <View>
+                <Text style={styles.selectionCardTitle}>{option.name}</Text>
+                <Text style={styles.selectionCardDescription}>{option.description}</Text>
               </View>
-            </TouchableOpacity>
-          ))}
-        </View>
+              <View style={[
+                styles.radioButton,
+                formData.coverType === option.id && styles.radioButtonSelected
+              ]}>
+                {formData.coverType === option.id && (
+                  <View style={styles.radioButtonInner} />
+                )}
+              </View>
+            </View>
+          </TouchableOpacity>
+        ))}
       </View>
       
       {/* Cover Limit Selection */}
@@ -1183,52 +1159,6 @@ const styles = StyleSheet.create({
   },
   selectedOptionText: {
     color: Colors.white,
-  },
-  simpleSelectionContainer: {
-    marginTop: Spacing.sm,
-  },
-  simpleSelectionItem: {
-    backgroundColor: Colors.white,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    marginBottom: Spacing.sm,
-    paddingVertical: Spacing.md,
-    paddingHorizontal: Spacing.md,
-  },
-  selectedSimpleItem: {
-    borderColor: Colors.primary,
-    backgroundColor: Colors.backgroundLightPrimary,
-  },
-  simpleSelectionContent: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  simpleSelectionIcon: {
-    marginRight: Spacing.md,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  simpleSelectionText: {
-    flex: 1,
-    marginRight: Spacing.sm,
-  },
-  simpleSelectionTitle: {
-    fontSize: Typography.fontSize.md,
-    fontWeight: Typography.fontWeight.semibold,
-    color: Colors.textPrimary,
-    marginBottom: Spacing.xs,
-  },
-  selectedSimpleTitle: {
-    color: Colors.primary,
-  },
-  simpleSelectionDescription: {
-    fontSize: Typography.fontSize.sm,
-    color: Colors.textSecondary,
-  },
-  selectedSimpleDescription: {
-    color: Colors.primary,
   },
   selectionCard: {
     backgroundColor: Colors.white,

@@ -30,9 +30,9 @@ import LoginScreen from '../screens/auth/LoginScreen';
 import SignupScreen from '../screens/auth/SignupScreen';
 import ForgotPasswordScreen from '../screens/auth/ForgotPasswordScreen';
 // Direct imports for enhanced medical insurance screens only
-import EnhancedMedicalCategoryScreen from '../screens/quotations/medical/EnhancedMedicalCategoryScreen';
-import EnhancedIndividualMedicalQuotation from '../screens/quotations/medical/EnhancedIndividualMedicalQuotation';
-import EnhancedCorporateMedicalQuotation from '../screens/quotations/medical/EnhancedCorporateMedicalQuotation';
+import EnhancedMedicalCategoryScreenDirect from '../screens/quotations/medical/EnhancedMedicalCategoryScreen';
+import EnhancedIndividualMedicalQuotationDirect from '../screens/quotations/medical/EnhancedIndividualMedicalQuotation';
+import EnhancedCorporateMedicalQuotationDirect from '../screens/quotations/medical/EnhancedCorporateMedicalQuotation';
 import { Colors, Typography, Spacing } from '../constants';
 import { AuthProvider, useAuth } from '../contexts/AuthContext';
 
@@ -181,9 +181,9 @@ function HomeStack() {
       <Stack.Screen name="MotorProductSelection" component={MotorProductSelectionScreen} />
       <Stack.Screen name="MotorQuotation" component={MotorQuotationScreen} />
       {/* Original MedicalQuotation screen removed - using enhanced flow only */}
-      <Stack.Screen name="EnhancedMedicalCategory" component={EnhancedMedicalCategoryScreen} />
-      <Stack.Screen name="EnhancedIndividualMedicalQuotation" component={EnhancedIndividualMedicalQuotation} />
-      <Stack.Screen name="EnhancedCorporateMedicalQuotation" component={EnhancedCorporateMedicalQuotation} />
+      <Stack.Screen name="EnhancedMedicalCategory" component={EnhancedMedicalCategoryScreenDirect} />
+      <Stack.Screen name="EnhancedIndividualMedicalQuotation" component={EnhancedIndividualMedicalQuotationDirect} />
+      <Stack.Screen name="EnhancedCorporateMedicalQuotation" component={EnhancedCorporateMedicalQuotationDirect} />
       <Stack.Screen name="WIBAQuotation" component={WIBAQuotationScreen} />
       <Stack.Screen name="TravelQuotation" component={TravelQuotationScreen} />
       <Stack.Screen name="PersonalAccidentQuotation" component={PersonalAccidentQuotationScreen} />

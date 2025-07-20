@@ -5,11 +5,15 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  Platform
+  Platform,
+  Alert,
+  Image
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Typography, Spacing } from '../constants';
+import * as ImagePicker from 'expo-image-picker';
+import * as DocumentPicker from 'expo-document-picker';
 
 // ENHANCED FORM COMPONENTS FOR ALL INSURANCE CATEGORIES
 
@@ -22,13 +26,14 @@ export const EnhancedTextInput = ({
   keyboardType = 'default',
   multiline = false,
   numberOfLines = 1,
+  error,
   ...otherProps 
 }) => {
   const [isFocused, setIsFocused] = useState(false);
   return (
     <View style={styles.inputContainer}>
       {label && <Text style={styles.label}>{label}{required && <Text style={styles.required}> *</Text>}</Text>}
-      <View style={[styles.inputWrapper, multiline && styles.multilineWrapper]}>
+      <View style={[styles.inputWrapper, multiline && styles.multilineWrapper, error && styles.errorInput]}>
         <TextInput
           style={[styles.textInput, multiline && styles.multilineInput]}
           value={value}
@@ -44,6 +49,34 @@ export const EnhancedTextInput = ({
           {...otherProps}
         />
       </View>
+      {error && <Text style={styles.errorText}>{error}</Text>}
+    </View>
+  );
+};
+
+export const EnhancedSelectInput = ({ 
+  label, 
+  value, 
+  placeholder = "Select an option", 
+  onPress, 
+  required = false, 
+  error,
+  ...otherProps 
+}) => {
+  return (
+    <View style={styles.inputContainer}>
+      {label && <Text style={styles.label}>{label}{required && <Text style={styles.required}> *</Text>}</Text>}
+      <TouchableOpacity 
+        style={[styles.selectWrapper, error && styles.errorInput]} 
+        onPress={onPress}
+        {...otherProps}
+      >
+        <Text style={[styles.selectText, !value && styles.selectPlaceholder]}>
+          {value || placeholder}
+        </Text>
+        <Ionicons name="chevron-down" size={20} color={Colors.textSecondary} />
+      </TouchableOpacity>
+      {error && <Text style={styles.errorText}>{error}</Text>}
     </View>
   );
 };
@@ -406,6 +439,259 @@ export const EnhancedReturnDatePicker = ({
   );
 };
 
+// Enhanced File Upload Component with OCR Integration
+export const EnhancedFileUpload = ({
+  label,
+  required = false,
+  documentType,
+  onFileSelect,
+  onOCRProcess,
+  existingDocument = null,
+  extractedData = null,
+  isProcessing = false,
+  error = null,
+  ...otherProps
+}) => {
+  const [isUploading, setIsUploading] = useState(false);
+
+  const handleFileUpload = useCallback(async () => {
+    try {
+      setIsUploading(true);
+      
+      Alert.alert(
+        "Select Document",
+        `Choose how to upload your ${documentType?.type || 'document'}`,
+        [
+          {
+            text: "Camera",
+            onPress: async () => {
+              const permission = await ImagePicker.requestCameraPermissionsAsync();
+              if (permission.granted) {
+                const result = await ImagePicker.launchCameraAsync({
+                  mediaTypes: ImagePicker.MediaTypeOptions.Images,
+                  allowsEditing: true,
+                  aspect: [4, 3],
+                  quality: 0.8,
+                });
+                
+                if (!result.canceled && result.assets[0]) {
+                  const file = {
+                    uri: result.assets[0].uri,
+                    type: 'image',
+                    name: `${documentType?.type || 'document'}_${Date.now()}.jpg`,
+                    size: result.assets[0].fileSize || 'Unknown size'
+                  };
+                  
+                  if (onFileSelect) onFileSelect(file);
+                  if (onOCRProcess && documentType?.scannable) {
+                    onOCRProcess(file, documentType);
+                  }
+                }
+              }
+            }
+          },
+          {
+            text: "Gallery",
+            onPress: async () => {
+              const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+              if (permission.granted) {
+                const result = await ImagePicker.launchImageLibraryAsync({
+                  mediaTypes: ImagePicker.MediaTypeOptions.Images,
+                  allowsEditing: true,
+                  aspect: [4, 3],
+                  quality: 0.8,
+                });
+                
+                if (!result.canceled && result.assets[0]) {
+                  const file = {
+                    uri: result.assets[0].uri,
+                    type: 'image',
+                    name: `${documentType?.type || 'document'}_${Date.now()}.jpg`,
+                    size: result.assets[0].fileSize || 'Unknown size'
+                  };
+                  
+                  if (onFileSelect) onFileSelect(file);
+                  if (onOCRProcess && documentType?.scannable) {
+                    onOCRProcess(file, documentType);
+                  }
+                }
+              }
+            }
+          },
+          {
+            text: "Files",
+            onPress: async () => {
+              const result = await DocumentPicker.getDocumentAsync({
+                type: ['image/*', 'application/pdf'],
+                copyToCacheDirectory: true,
+              });
+              
+              if (!result.canceled && result.assets[0]) {
+                const file = {
+                  uri: result.assets[0].uri,
+                  type: result.assets[0].mimeType?.includes('pdf') ? 'pdf' : 'image',
+                  name: result.assets[0].name,
+                  size: result.assets[0].size || 'Unknown size'
+                };
+                
+                if (onFileSelect) onFileSelect(file);
+                if (onOCRProcess && documentType?.scannable && file.type === 'image') {
+                  onOCRProcess(file, documentType);
+                }
+              }
+            }
+          },
+          { text: "Cancel", style: "cancel" }
+        ]
+      );
+    } catch (error) {
+      console.error('File upload error:', error);
+      Alert.alert('Error', 'Failed to select file. Please try again.');
+    } finally {
+      setIsUploading(false);
+    }
+  }, [documentType, onFileSelect, onOCRProcess]);
+
+  const getFileIcon = () => {
+    if (existingDocument) {
+      if (existingDocument.type === 'pdf') return 'document-text';
+      if (existingDocument.type === 'image') return 'image';
+      return 'attach';
+    }
+    return documentType?.icon === '📸' ? 'camera' : 'cloud-upload';
+  };
+
+  const getStatusColor = () => {
+    if (error) return Colors.error;
+    if (existingDocument) return Colors.success;
+    if (isProcessing || isUploading) return Colors.warning;
+    return Colors.textSecondary;
+  };
+
+  const getStatusText = () => {
+    if (isProcessing) return 'Processing with OCR...';
+    if (isUploading) return 'Uploading...';
+    if (existingDocument && extractedData) return 'Uploaded & Data Extracted';
+    if (existingDocument) return 'Uploaded Successfully';
+    return `Tap to upload ${documentType?.type || 'document'}`;
+  };
+
+  return (
+    <View style={styles.fileUploadContainer}>
+      {label && (
+        <Text style={styles.label}>
+          {label}
+          {required && <Text style={styles.required}> *</Text>}
+        </Text>
+      )}
+      
+      <TouchableOpacity
+        style={[
+          styles.fileUploadWrapper,
+          error && styles.errorInput,
+          existingDocument && styles.successInput,
+          (isProcessing || isUploading) && styles.processingInput
+        ]}
+        onPress={handleFileUpload}
+        disabled={isProcessing || isUploading}
+      >
+        <View style={styles.fileUploadContent}>
+          <View style={styles.fileUploadIconSection}>
+            <Ionicons 
+              name={getFileIcon()} 
+              size={24} 
+              color={getStatusColor()} 
+            />
+          </View>
+          
+          <View style={styles.fileUploadTextSection}>
+            <Text style={[styles.fileUploadText, { color: getStatusColor() }]}>
+              {existingDocument ? existingDocument.name : (documentType?.type || 'Document')}
+            </Text>
+            <Text style={[styles.fileUploadStatus, { color: getStatusColor() }]}>
+              {getStatusText()}
+            </Text>
+          </View>
+          
+          <View style={styles.fileUploadActionSection}>
+            {(isProcessing || isUploading) ? (
+              <Ionicons name="hourglass" size={20} color={Colors.warning} />
+            ) : existingDocument ? (
+              <Ionicons name="checkmark-circle" size={20} color={Colors.success} />
+            ) : (
+              <Ionicons name="add-circle-outline" size={20} color={Colors.primary} />
+            )}
+          </View>
+        </View>
+      </TouchableOpacity>
+
+      {/* Show extracted data if available */}
+      {extractedData && Object.keys(extractedData).length > 0 && (
+        <View style={styles.extractedDataContainer}>
+          <Text style={styles.extractedDataTitle}>📄 Extracted Data:</Text>
+          {Object.entries(extractedData).map(([key, value]) => (
+            <View key={key} style={styles.extractedDataItem}>
+              <Text style={styles.extractedDataLabel}>{key}:</Text>
+              <Text style={styles.extractedDataValue}>{value}</Text>
+            </View>
+          ))}
+        </View>
+      )}
+
+      {error && <Text style={styles.errorText}>{error}</Text>}
+      
+      {documentType?.description && (
+        <Text style={styles.fileUploadDescription}>
+          {documentType.description}
+        </Text>
+      )}
+    </View>
+  );
+};
+
+// Enhanced Document List Component
+export const EnhancedDocumentList = ({ 
+  documents = [], 
+  onRemoveDocument,
+  title = "Uploaded Documents" 
+}) => {
+  if (!documents || documents.length === 0) return null;
+
+  return (
+    <View style={styles.documentListContainer}>
+      <Text style={styles.documentListTitle}>{title}</Text>
+      {documents.map((doc, index) => (
+        <View key={doc.id || index} style={styles.documentListItem}>
+          <View style={styles.documentListIconSection}>
+            <Ionicons 
+              name={doc.type === 'pdf' ? 'document-text' : 'image'} 
+              size={20} 
+              color={Colors.primary} 
+            />
+          </View>
+          
+          <View style={styles.documentListContent}>
+            <Text style={styles.documentListName}>{doc.name || doc.type}</Text>
+            <Text style={styles.documentListMeta}>
+              {doc.size} • {doc.scanned ? 'OCR Processed' : 'Uploaded'}
+              {doc.extractedData && ' • Data Extracted'}
+            </Text>
+          </View>
+          
+          {onRemoveDocument && (
+            <TouchableOpacity
+              style={styles.documentListRemove}
+              onPress={() => onRemoveDocument(doc.id || index)}
+            >
+              <Ionicons name="close-circle" size={20} color={Colors.error} />
+            </TouchableOpacity>
+          )}
+        </View>
+      ))}
+    </View>
+  );
+};
+
 const styles = StyleSheet.create({
   inputContainer: {
     marginBottom: Spacing.md,
@@ -462,5 +748,155 @@ const styles = StyleSheet.create({
   },
   placeholder: {
     color: Colors.textLight,
+  },
+  selectWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderRadius: 8,
+    backgroundColor: Colors.white,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.md,
+    minHeight: 48,
+  },
+  selectText: {
+    fontSize: Typography.fontSize.md,
+    color: Colors.textPrimary,
+    flex: 1,
+  },
+  selectPlaceholder: {
+    color: Colors.textLight,
+  },
+  errorInput: {
+    borderColor: Colors.error,
+  },
+  errorText: {
+    fontSize: Typography.fontSize.sm,
+    color: Colors.error,
+    marginTop: Spacing.xs,
+  },
+  
+  // File Upload Styles
+  fileUploadContainer: {
+    marginBottom: Spacing.lg,
+  },
+  fileUploadWrapper: {
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderRadius: 8,
+    backgroundColor: Colors.white,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.md,
+    minHeight: 60,
+  },
+  successInput: {
+    borderColor: Colors.success,
+    backgroundColor: Colors.success + '05',
+  },
+  processingInput: {
+    borderColor: Colors.warning,
+    backgroundColor: Colors.warning + '05',
+  },
+  fileUploadContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  fileUploadIconSection: {
+    marginRight: Spacing.md,
+  },
+  fileUploadTextSection: {
+    flex: 1,
+  },
+  fileUploadText: {
+    fontSize: Typography.fontSize.md,
+    fontFamily: Typography.fontFamily.medium,
+    color: Colors.textPrimary,
+  },
+  fileUploadStatus: {
+    fontSize: Typography.fontSize.sm,
+    color: Colors.textSecondary,
+    marginTop: 2,
+  },
+  fileUploadActionSection: {
+    marginLeft: Spacing.sm,
+  },
+  fileUploadDescription: {
+    fontSize: Typography.fontSize.sm,
+    color: Colors.textLight,
+    marginTop: Spacing.xs,
+    fontStyle: 'italic',
+  },
+  
+  // Extracted Data Styles
+  extractedDataContainer: {
+    marginTop: Spacing.md,
+    padding: Spacing.md,
+    backgroundColor: Colors.success + '10',
+    borderRadius: 6,
+    borderLeftWidth: 3,
+    borderLeftColor: Colors.success,
+  },
+  extractedDataTitle: {
+    fontSize: Typography.fontSize.sm,
+    fontFamily: Typography.fontFamily.semiBold,
+    color: Colors.success,
+    marginBottom: Spacing.sm,
+  },
+  extractedDataItem: {
+    flexDirection: 'row',
+    marginBottom: Spacing.xs,
+  },
+  extractedDataLabel: {
+    fontSize: Typography.fontSize.sm,
+    fontFamily: Typography.fontFamily.medium,
+    color: Colors.textPrimary,
+    minWidth: 80,
+  },
+  extractedDataValue: {
+    fontSize: Typography.fontSize.sm,
+    color: Colors.textPrimary,
+    flex: 1,
+  },
+  
+  // Document List Styles
+  documentListContainer: {
+    marginTop: Spacing.lg,
+  },
+  documentListTitle: {
+    fontSize: Typography.fontSize.md,
+    fontFamily: Typography.fontFamily.semiBold,
+    color: Colors.textPrimary,
+    marginBottom: Spacing.md,
+  },
+  documentListItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: Spacing.md,
+    backgroundColor: Colors.white,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    marginBottom: Spacing.sm,
+  },
+  documentListIconSection: {
+    marginRight: Spacing.md,
+  },
+  documentListContent: {
+    flex: 1,
+  },
+  documentListName: {
+    fontSize: Typography.fontSize.md,
+    fontFamily: Typography.fontFamily.medium,
+    color: Colors.textPrimary,
+  },
+  documentListMeta: {
+    fontSize: Typography.fontSize.sm,
+    color: Colors.textSecondary,
+    marginTop: 2,
+  },
+  documentListRemove: {
+    padding: Spacing.xs,
   },
 });
