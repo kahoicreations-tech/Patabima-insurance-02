@@ -39,6 +39,17 @@ export {
   VEHICLE_AGE_CATEGORIES
 } from './motorUnderwriters';
 
+// Motor Products Data - Brief Coverage Types
+export {
+  MOTOR_PRODUCTS,
+  getMotorInsuranceProducts,
+  getMotorInsuranceProductById,
+  calculateBasePremium,
+  getPremiumFactors,
+  getProductVehicleCompatibility,
+  getRecommendedProduct
+} from './motorProductsBrief';
+
 // Category Management Examples
 export { default as categoryManagementExamples } from './categoryManagementExamples';
 

@@ -10,6 +10,7 @@ export { default as CheckInsuranceStatusScreen } from './CheckInsuranceStatusScr
 
 // Enhanced Motor Screens
 export { default as EnhancedMotorCategorySelectionScreen } from './EnhancedMotorCategorySelectionScreen';
+export { default as EnhancedMotorProductSelectionScreen } from './EnhancedMotorProductSelectionScreen';
 
 // Export data
 export * from './data';

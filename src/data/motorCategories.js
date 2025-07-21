@@ -31,7 +31,7 @@ export const ENHANCED_VEHICLE_CATEGORIES = [
     ],
     color: Colors.primary,
     commissionRate: 0.15, // 15%
-    path: 'MotorQuotation',
+    path: 'MotorProductSelection',
     params: { vehicleCategory: 'private' }
   },
   { 
@@ -48,7 +48,7 @@ export const ENHANCED_VEHICLE_CATEGORIES = [
     ],
     color: Colors.info,
     commissionRate: 0.18, // 18%
-    path: 'MotorQuotation',
+    path: 'MotorProductSelection',
     params: { vehicleCategory: 'commercial' }
   },
   { 
@@ -65,7 +65,7 @@ export const ENHANCED_VEHICLE_CATEGORIES = [
     ],
     color: Colors.warning,
     commissionRate: 0.12, // 12%
-    path: 'MotorQuotation',
+    path: 'MotorProductSelection',
     params: { vehicleCategory: 'motorcycle' }
   },
   { 
@@ -82,7 +82,7 @@ export const ENHANCED_VEHICLE_CATEGORIES = [
     ],
     color: Colors.secondary,
     commissionRate: 0.20, // 20%
-    path: 'MotorQuotation',
+    path: 'MotorProductSelection',
     params: { vehicleCategory: 'psv_matatu' }
   },
   { 
@@ -99,7 +99,7 @@ export const ENHANCED_VEHICLE_CATEGORIES = [
     ],
     color: Colors.success,
     commissionRate: 0.14, // 14%
-    path: 'MotorQuotation',
+    path: 'MotorProductSelection',
     params: { vehicleCategory: 'tuktuk' }
   },
   { 
@@ -116,7 +116,7 @@ export const ENHANCED_VEHICLE_CATEGORIES = [
     ],
     color: Colors.purple,
     commissionRate: 0.22, // 22%
-    path: 'MotorQuotation',
+    path: 'MotorProductSelection',
     params: { vehicleCategory: 'special' }
   }
 ];

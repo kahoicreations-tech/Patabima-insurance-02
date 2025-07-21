@@ -11,7 +11,6 @@ import {
   MyAccountScreen, 
   MotorQuotationScreen, 
   MotorCategorySelectionScreen,
-  MotorProductSelectionScreen,
   // Medical screens removed from bulk import to avoid conflicts - using direct imports instead
   WIBAQuotationScreen, 
   TravelQuotationScreen, 
@@ -34,6 +33,7 @@ import EnhancedMedicalCategoryScreenDirect from '../screens/quotations/medical/E
 import EnhancedIndividualMedicalQuotationDirect from '../screens/quotations/medical/EnhancedIndividualMedicalQuotation';
 import EnhancedCorporateMedicalQuotationDirect from '../screens/quotations/medical/EnhancedCorporateMedicalQuotation';
 import EnhancedMotorCategorySelectionScreen from '../screens/quotations/motor/EnhancedMotorCategorySelectionScreen';
+import EnhancedMotorProductSelectionScreen from '../screens/quotations/motor/EnhancedMotorProductSelectionScreen';
 import { Colors, Typography, Spacing } from '../constants';
 import { AuthProvider, useAuth } from '../contexts/AuthContext';
 
@@ -179,7 +179,7 @@ function HomeStack() {
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="HomeMain" component={HomeScreen} />
       <Stack.Screen name="MotorCategorySelection" component={EnhancedMotorCategorySelectionScreen} />
-      <Stack.Screen name="MotorProductSelection" component={MotorProductSelectionScreen} />
+      <Stack.Screen name="MotorProductSelection" component={EnhancedMotorProductSelectionScreen} />
       <Stack.Screen name="MotorQuotation" component={MotorQuotationScreen} />
       {/* Original MedicalQuotation screen removed - using enhanced flow only */}
       <Stack.Screen name="EnhancedMedicalCategory" component={EnhancedMedicalCategoryScreenDirect} />
