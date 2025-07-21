@@ -266,6 +266,8 @@ const EnhancedIndividualMedicalQuotation = () => {
   };
 
   const handlePreExistingConditionSelect = (condition) => {
+    if (!condition || !condition.id) return; // Add safety check
+    
     const currentConditions = [...formData.preExistingConditions];
     
     // Check if condition is already selected
@@ -327,12 +329,12 @@ const EnhancedIndividualMedicalQuotation = () => {
         }
         
         // If dependents exist, validate each dependent's information
-        if (dependentCount > 0) {
+        if (dependentCount > 0 && formData.dependents) {
           formData.dependents.forEach((dependent, index) => {
-            if (!dependent.name.trim()) {
+            if (!dependent?.name?.trim()) {
               errors.push(`Dependent ${index + 1} name is required`);
             }
-            if (!dependent.dateOfBirth) {
+            if (!dependent?.dateOfBirth) {
               errors.push(`Dependent ${index + 1} date of birth is required`);
             }
           });
@@ -535,7 +537,7 @@ const EnhancedIndividualMedicalQuotation = () => {
                   formData.gender === option.id && styles.selectedOptionText
                 ]}
               >
-                {option.name}
+                {option?.name || 'Unknown Option'}
               </Text>
             </TouchableOpacity>
           ))}
@@ -565,8 +567,8 @@ const EnhancedIndividualMedicalQuotation = () => {
           >
             <View style={styles.selectionCardContent}>
               <View>
-                <Text style={styles.selectionCardTitle}>{option.name}</Text>
-                <Text style={styles.selectionCardDescription}>{option.description}</Text>
+                <Text style={styles.selectionCardTitle}>{option?.name || 'Unknown Option'}</Text>
+                <Text style={styles.selectionCardDescription}>{option?.description || ''}</Text>
               </View>
               <View style={[
                 styles.radioButton,
@@ -604,7 +606,7 @@ const EnhancedIndividualMedicalQuotation = () => {
                   formData.coverLimit === option.id && styles.selectedCoverLimitText
                 ]}
               >
-                {option.name}
+                {option?.name || 'Unknown Option'}
               </Text>
             </TouchableOpacity>
           ))}
@@ -724,19 +726,19 @@ const EnhancedIndividualMedicalQuotation = () => {
         <View style={styles.conditionsContainer}>
           {preExistingConditionsOptions.map((condition) => (
             <TouchableOpacity 
-              key={condition.id}
+              key={condition?.id || Math.random()}
               style={styles.conditionOption}
               onPress={() => handlePreExistingConditionSelect(condition)}
             >
               <View style={[
                 styles.checkbox,
-                formData.preExistingConditions.some(c => c.id === condition.id) && styles.checkboxSelected
+                formData.preExistingConditions.some(c => c.id === condition?.id) && styles.checkboxSelected
               ]}>
-                {formData.preExistingConditions.some(c => c.id === condition.id) && (
+                {formData.preExistingConditions.some(c => c.id === condition?.id) && (
                   <Ionicons name="checkmark" size={16} color="#fff" />
                 )}
               </View>
-              <Text style={styles.conditionText}>{condition.name}</Text>
+              <Text style={styles.conditionText}>{condition?.name || 'Unknown Condition'}</Text>
             </TouchableOpacity>
           ))}
         </View>
@@ -773,19 +775,21 @@ const EnhancedIndividualMedicalQuotation = () => {
               </Text>
               
               {/* Display form fields for each dependent */}
-              {formData.dependents.map((dependent, index) => (
-                <View key={dependent.id} style={styles.dependentCard}>
+              {(formData.dependents || []).map((dependent, index) => (
+                <View key={dependent?.id || index} style={styles.dependentCard}>
                   <Text style={styles.dependentTitle}>
                     {formData.coverType === 'couple' ? 'Spouse' : `Dependent ${index + 1}`}
                   </Text>
                   
                   <EnhancedTextInput
                     label="Full Name"
-                    value={dependent.name}
+                    value={dependent?.name || ''}
                     onChangeText={(text) => {
                       const updatedDependents = [...formData.dependents];
-                      updatedDependents[index].name = text;
-                      updateFormData('dependents', updatedDependents);
+                      if (updatedDependents[index]) {
+                        updatedDependents[index].name = text;
+                        updateFormData('dependents', updatedDependents);
+                      }
                     }}
                     placeholder="Enter full name"
                     required
@@ -892,7 +896,7 @@ const EnhancedIndividualMedicalQuotation = () => {
                     <View style={styles.uploadedFile}>
                       <Ionicons name="document-text" size={16} color={Colors.success} />
                       <Text style={styles.uploadedFileName}>
-                        {formData[fieldName].name} ({Math.round(formData[fieldName].size / 1024)} KB)
+                        {formData[fieldName]?.name || 'Uploaded File'} ({Math.round((formData[fieldName]?.size || 0) / 1024)} KB)
                       </Text>
                       <TouchableOpacity
                         onPress={() => updateFormData(fieldName, null)}
@@ -936,10 +940,10 @@ const EnhancedIndividualMedicalQuotation = () => {
               ]}
               onPress={() => handleInsurerSelect(insurer)}
             >
-              <Text style={styles.insurerName}>{insurer.name}</Text>
+              <Text style={styles.insurerName}>{insurer?.name || 'Unknown Insurer'}</Text>
               <View style={styles.ratingContainer}>
                 <Ionicons name="star" size={14} color="#FFD700" />
-                <Text style={styles.ratingText}>{insurer.rating.toFixed(1)}</Text>
+                <Text style={styles.ratingText}>{(insurer?.rating || 0).toFixed(1)}</Text>
               </View>
             </TouchableOpacity>
           ))}

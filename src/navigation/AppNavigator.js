@@ -34,6 +34,7 @@ import EnhancedIndividualMedicalQuotationDirect from '../screens/quotations/medi
 import EnhancedCorporateMedicalQuotationDirect from '../screens/quotations/medical/EnhancedCorporateMedicalQuotation';
 import EnhancedMotorCategorySelectionScreen from '../screens/quotations/motor/EnhancedMotorCategorySelectionScreen';
 import EnhancedMotorProductSelectionScreen from '../screens/quotations/motor/EnhancedMotorProductSelectionScreen';
+import TORQuotationFlowScreen from '../screens/quotations/motor/TORQuotationFlowScreen';
 import { Colors, Typography, Spacing } from '../constants';
 import { AuthProvider, useAuth } from '../contexts/AuthContext';
 
@@ -180,6 +181,7 @@ function HomeStack() {
       <Stack.Screen name="HomeMain" component={HomeScreen} />
       <Stack.Screen name="MotorCategorySelection" component={EnhancedMotorCategorySelectionScreen} />
       <Stack.Screen name="MotorProductSelection" component={EnhancedMotorProductSelectionScreen} />
+      <Stack.Screen name="TORQuotationFlow" component={TORQuotationFlowScreen} />
       <Stack.Screen name="MotorQuotation" component={MotorQuotationScreen} />
       {/* Original MedicalQuotation screen removed - using enhanced flow only */}
       <Stack.Screen name="EnhancedMedicalCategory" component={EnhancedMedicalCategoryScreenDirect} />

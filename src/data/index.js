@@ -50,6 +50,14 @@ export {
   getRecommendedProduct
 } from './motorProductsBrief';
 
+// TOR Motor Insurance Data
+export {
+  TOR_UNDERWRITERS,
+  TOR_CALCULATION_FACTORS,
+  TOR_REQUIRED_DOCUMENTS,
+  calculateTORPremium
+} from './torMotorData';
+
 // Category Management Examples
 export { default as categoryManagementExamples } from './categoryManagementExamples';
 

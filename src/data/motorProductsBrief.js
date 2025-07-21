@@ -6,7 +6,7 @@
 
 export const MOTOR_PRODUCTS = [
   {
-    id: 'tor',
+    id: 'tor_private',
     name: 'TOR FOR Private',
     shortName: 'TOR',
     icon: '🔴',

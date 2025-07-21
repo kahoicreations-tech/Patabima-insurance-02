@@ -321,7 +321,7 @@ const EnhancedCorporateMedicalQuotation = ({ navigation }) => {
     // Create a new employee category with default values
     const newCategory = {
       type: categoryType,
-      name: typeInfo.name,
+      name: typeInfo?.name || 'Unknown Category',
       count: '',
       coverLimit: formData.coverLimitPerEmployee || '1m'
     };
@@ -374,15 +374,15 @@ const EnhancedCorporateMedicalQuotation = ({ navigation }) => {
         if (formData.employeeCategories.length > 0) {
           let totalCount = 0;
           
-          formData.employeeCategories.forEach((category, index) => {
-            if (!category.count.trim() || parseInt(category.count) <= 0) {
-              errors.push(`Valid Employee Count for ${category.name} is required`);
+          (formData.employeeCategories || []).forEach((category, index) => {
+            if (!category?.count?.trim() || parseInt(category.count) <= 0) {
+              errors.push(`Valid Employee Count for ${category?.name || 'Category'} is required`);
             } else {
               totalCount += parseInt(category.count);
             }
             
-            if (!category.coverLimit) {
-              errors.push(`Cover Limit for ${category.name} is required`);
+            if (!category?.coverLimit) {
+              errors.push(`Cover Limit for ${category?.name || 'Category'} is required`);
             }
           });
           
@@ -621,7 +621,7 @@ const EnhancedCorporateMedicalQuotation = ({ navigation }) => {
                   formData.industry === option.id && styles.selectedIndustryText
                 ]}
               >
-                {option.name}
+                {option?.name || 'Unknown Option'}
               </Text>
             </TouchableOpacity>
           ))}
@@ -658,12 +658,12 @@ const EnhancedCorporateMedicalQuotation = ({ navigation }) => {
         </Text>
         
         {/* Display existing categories */}
-        {formData.employeeCategories.length > 0 && (
+        {formData.employeeCategories && formData.employeeCategories.length > 0 && (
           <View style={styles.categoriesContainer}>
             {formData.employeeCategories.map((category, index) => (
-              <View key={category.id} style={styles.categoryCard}>
+              <View key={category?.id || index} style={styles.categoryCard}>
                 <View style={styles.categoryHeader}>
-                  <Text style={styles.categoryTitle}>{category.name}</Text>
+                  <Text style={styles.categoryTitle}>{category?.name || 'Unknown Category'}</Text>
                   <TouchableOpacity
                     onPress={() => removeEmployeeCategory(category.id)}
                     style={styles.removeButton}
@@ -706,7 +706,7 @@ const EnhancedCorporateMedicalQuotation = ({ navigation }) => {
                             category.coverLimit === option.id && styles.selectedCoverLimitText
                           ]}
                         >
-                          {option.name}
+                          {option?.name || 'Unknown Option'}
                         </Text>
                       </TouchableOpacity>
                     ))}
@@ -728,7 +728,7 @@ const EnhancedCorporateMedicalQuotation = ({ navigation }) => {
                 onPress={() => addEmployeeCategory(type.id)}
               >
                 <Ionicons name="add-circle" size={16} color={Colors.primary} />
-                <Text style={styles.addCategoryText}>{type.name}</Text>
+                <Text style={styles.addCategoryText}>{type?.name || 'Unknown Type'}</Text>
               </TouchableOpacity>
             ))}
           </View>
@@ -759,7 +759,7 @@ const EnhancedCorporateMedicalQuotation = ({ navigation }) => {
                     formData.coverLimitPerEmployee === option.id && styles.selectedCoverLimitText
                   ]}
                 >
-                  {option.name}
+                  {option?.name || 'Unknown Option'}
                 </Text>
               </TouchableOpacity>
             ))}
@@ -970,7 +970,7 @@ const EnhancedCorporateMedicalQuotation = ({ navigation }) => {
                     <View style={styles.uploadedFile}>
                       <Ionicons name="document-text" size={16} color={Colors.success} />
                       <Text style={styles.uploadedFileName}>
-                        {formData[fieldName].name} ({Math.round(formData[fieldName].size / 1024)} KB)
+                        {formData[fieldName]?.name || 'Uploaded File'} ({Math.round((formData[fieldName]?.size || 0) / 1024)} KB)
                       </Text>
                       <TouchableOpacity
                         onPress={() => updateFormData(fieldName, null)}
@@ -1014,10 +1014,10 @@ const EnhancedCorporateMedicalQuotation = ({ navigation }) => {
               ]}
               onPress={() => handleInsurerSelect(insurer)}
             >
-              <Text style={styles.insurerName}>{insurer.name}</Text>
+              <Text style={styles.insurerName}>{insurer?.name || 'Unknown Insurer'}</Text>
               <View style={styles.ratingContainer}>
                 <Ionicons name="star" size={14} color="#FFD700" />
-                <Text style={styles.ratingText}>{insurer.rating.toFixed(1)}</Text>
+                <Text style={styles.ratingText}>{(insurer?.rating || 0).toFixed(1)}</Text>
               </View>
             </TouchableOpacity>
           ))}
