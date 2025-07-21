@@ -1,46 +1,18 @@
 /**
  * Data for motor insurance quotation
+ * @deprecated Use centralized data from src/data/motorCategories.js instead
  */
 
-// Vehicle Categories (Step 1)
-export const vehicleCategories = [
-  { 
-    id: 'private', 
-    name: 'Private', 
-    icon: '🚗',
-    description: 'Personal vehicles for private use'
-  },
-  { 
-    id: 'commercial', 
-    name: 'Commercial', 
-    icon: '🚚',
-    description: 'Commercial vehicles for business use'
-  },
-  { 
-    id: 'psv', 
-    name: 'PSV', 
-    icon: '🚌',
-    description: 'Public Service Vehicles'
-  },
-  { 
-    id: 'motorcycle', 
-    name: 'Motorcycle', 
-    icon: '🏍️',
-    description: 'Motorcycles and scooters'
-  },
-  { 
-    id: 'tuktuk', 
-    name: 'TukTuk', 
-    icon: '🛺',
-    description: 'Three-wheelers and auto-rickshaws'
-  },
-  { 
-    id: 'special', 
-    name: 'Special Classes', 
-    icon: '🚛',
-    description: 'Special and heavy vehicles'
-  }
-];
+import { ENHANCED_VEHICLE_CATEGORIES } from '../../../data/motorCategories';
+
+// Vehicle Categories (Step 1) - Now imported from centralized data
+export const vehicleCategories = ENHANCED_VEHICLE_CATEGORIES.map(category => ({
+  id: category.id,
+  name: category.shortName || category.name,
+  icon: category.icon,
+  description: category.description,
+  animation: category.animation
+}));
 
 // Insurance Products by Category (Step 2)
 export const insuranceProducts = {

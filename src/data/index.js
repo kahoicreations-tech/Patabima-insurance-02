@@ -21,6 +21,24 @@ export {
   getLegacyCategories
 } from './insuranceCategories';
 
+// Motor Vehicle Insurance Categories and Products
+export {
+  ENHANCED_VEHICLE_CATEGORIES,
+  ENHANCED_MOTOR_PRODUCTS,
+  getVehicleCategories,
+  getMotorProducts,
+  getVehicleCategoryById,
+  getMotorProductById
+} from './motorCategories';
+
+// Motor Underwriters Data
+export {
+  MOTOR_UNDERWRITERS,
+  MOTOR_PRODUCT_TYPES,
+  VEHICLE_CATEGORIES,
+  VEHICLE_AGE_CATEGORIES
+} from './motorUnderwriters';
+
 // Category Management Examples
 export { default as categoryManagementExamples } from './categoryManagementExamples';
 

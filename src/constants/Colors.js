@@ -30,6 +30,7 @@ export const Colors = {
   white: '#FFFFFF',
   backgroundGray: '#F5F5F5',
   backgroundLight: '#FAFAFA',
+  backgroundLightBlue: '#E3F2FD',
   backgroundCard: '#FFFFFF',
   backgroundSecondary: '#F8F9FA',
   

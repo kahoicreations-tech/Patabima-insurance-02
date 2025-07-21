@@ -2,6 +2,7 @@
 export { default as MotorQuotationScreen } from './motor/MotorQuotationScreen';
 export { default as MotorCategorySelectionScreen } from './motor/MotorCategorySelectionScreen';
 export { default as MotorProductSelectionScreen } from './motor/MotorProductSelectionScreen';
+export { default as EnhancedMotorCategorySelectionScreen } from './motor/EnhancedMotorCategorySelectionScreen';
 // Medical Insurance Exports - Enhanced screens imported directly in AppNavigator to avoid conflicts
 // export { 
 //   EnhancedMedicalCategoryScreen, 

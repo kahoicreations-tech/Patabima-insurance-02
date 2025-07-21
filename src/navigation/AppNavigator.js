@@ -29,10 +29,11 @@ import InsuranceWelcomeScreen from '../screens/auth/InsuranceWelcomeScreen';
 import LoginScreen from '../screens/auth/LoginScreen';
 import SignupScreen from '../screens/auth/SignupScreen';
 import ForgotPasswordScreen from '../screens/auth/ForgotPasswordScreen';
-// Direct imports for enhanced medical insurance screens only
+// Direct imports for enhanced insurance screens
 import EnhancedMedicalCategoryScreenDirect from '../screens/quotations/medical/EnhancedMedicalCategoryScreen';
 import EnhancedIndividualMedicalQuotationDirect from '../screens/quotations/medical/EnhancedIndividualMedicalQuotation';
 import EnhancedCorporateMedicalQuotationDirect from '../screens/quotations/medical/EnhancedCorporateMedicalQuotation';
+import EnhancedMotorCategorySelectionScreen from '../screens/quotations/motor/EnhancedMotorCategorySelectionScreen';
 import { Colors, Typography, Spacing } from '../constants';
 import { AuthProvider, useAuth } from '../contexts/AuthContext';
 
@@ -177,7 +178,7 @@ function HomeStack() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="HomeMain" component={HomeScreen} />
-      <Stack.Screen name="MotorCategorySelection" component={MotorCategorySelectionScreen} />
+      <Stack.Screen name="MotorCategorySelection" component={EnhancedMotorCategorySelectionScreen} />
       <Stack.Screen name="MotorProductSelection" component={MotorProductSelectionScreen} />
       <Stack.Screen name="MotorQuotation" component={MotorQuotationScreen} />
       {/* Original MedicalQuotation screen removed - using enhanced flow only */}
