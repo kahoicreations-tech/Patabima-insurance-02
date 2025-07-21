@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, FlatList, TextInp
 import { StatusBar } from 'expo-status-bar';
 import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import { Colors, Spacing, Typography } from '../../constants';
 import { SafeScreen, EnhancedCard, StatCard, StatusBadge, CompactCurvedHeader } from '../../components';
 import { INSURANCE_CATEGORIES, getCategoryStatusMessage, CATEGORY_STATUS } from '../../data';
@@ -151,6 +152,21 @@ export default function HomeScreen() {
       </View>
     </View>
   );
+
+  // WhatsApp chat handler
+  const handleWhatsAppPress = () => {
+    console.log('WhatsApp button pressed!');
+    Alert.alert(
+      'WhatsApp Support',
+      'Coming Soon! We\'re working on integrating WhatsApp support for instant customer assistance.',
+      [
+        {
+          text: 'OK',
+          style: 'default'
+        }
+      ]
+    );
+  };
 
   return (
     <SafeScreen>
@@ -376,6 +392,16 @@ export default function HomeScreen() {
         </View>
 
       </ScrollView>
+
+      {/* Floating WhatsApp Chat Button */}
+      <TouchableOpacity
+        style={styles.whatsappButton}
+        onPress={handleWhatsAppPress}
+        activeOpacity={0.8}
+      >
+        <Ionicons name="logo-whatsapp" size={30} color="#ffffff" />
+      </TouchableOpacity>
+
     </SafeScreen>
   );
 }
@@ -837,5 +863,25 @@ const styles = StyleSheet.create({
   activeCategoryName: {
     color: Colors.primary,
     fontFamily: Typography.fontFamily.bold,
+  },
+  whatsappButton: {
+    position: 'absolute',
+    bottom: 120, // Even higher to be sure it's visible
+    right: 20,
+    width: 70,
+    height: 70,
+    borderRadius: 35,
+    backgroundColor: '#FF0000', // Bright red for testing visibility
+    alignItems: 'center',
+    justifyContent: 'center',
+    elevation: 10,
+    shadowColor: '#000000',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.5,
+    shadowRadius: 6,
+    zIndex: 9999,
   },
 });

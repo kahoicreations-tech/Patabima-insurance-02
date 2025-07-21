@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, ScrollView, TouchableOpacity, FlatList, Alert, 
 import { StatusBar } from 'expo-status-bar';
 import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import { Colors, Spacing, Typography } from '../../constants';
 import { SafeScreen, EnhancedCard, StatCard, StatusBadge, CompactCurvedHeader } from '../../components';
 import { MOCK_AGENT, MOCK_RENEWALS, MOCK_EXTENSIONS, MOCK_CLAIMS } from '../../data/mockData';
@@ -162,6 +163,20 @@ export default function HomeScreen() {
       </View>
     </TouchableOpacity>
   );
+
+  // WhatsApp chat handler
+  const handleWhatsAppPress = () => {
+    Alert.alert(
+      'WhatsApp Support',
+      'Coming Soon! We\'re working on integrating WhatsApp support for instant customer assistance.',
+      [
+        {
+          text: 'OK',
+          style: 'default'
+        }
+      ]
+    );
+  };
 
   return (
     <SafeScreen>
@@ -428,6 +443,16 @@ export default function HomeScreen() {
           })()}
         </View>
       </ScrollView>
+
+      {/* Floating WhatsApp Chat Button */}
+      <TouchableOpacity
+        style={styles.whatsappButton}
+        onPress={handleWhatsAppPress}
+        activeOpacity={0.8}
+      >
+        <Ionicons name="logo-whatsapp" size={28} color="#ffffff" />
+      </TouchableOpacity>
+
     </SafeScreen>
   );
 }
@@ -796,5 +821,25 @@ const styles = StyleSheet.create({
   },
   extensionButtonText: {
     color: Colors.warning,
+  },
+  whatsappButton: {
+    position: 'absolute',
+    bottom: 25, // Positioned right above the bottom navigation
+    right: 20,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: '#25D366', // WhatsApp green color
+    alignItems: 'center',
+    justifyContent: 'center',
+    elevation: 8,
+    shadowColor: '#000000',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    zIndex: 1000,
   },
 });
