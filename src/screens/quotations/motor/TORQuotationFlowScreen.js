@@ -17,14 +17,24 @@ import {
   Modal,
   FlatList,
   KeyboardAvoidingView,
-  Platform
+  Platform,
+  Image
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import * as ImagePicker from 'expo-image-picker';
+import * as DocumentPicker from 'expo-document-picker';
+import * as FileSystem from 'expo-file-system';
 import { Colors, Typography, Spacing } from '../../../constants';
-import { TOR_UNDERWRITERS, TOR_REQUIRED_DOCUMENTS, calculateTORPremium } from '../../../data/torMotorData';
+import { 
+  TOR_UNDERWRITERS, 
+  TOR_REQUIRED_DOCUMENTS, 
+  TOR_DOCUMENT_STATUS, 
+  TOR_VALIDATION_MESSAGES, 
+  calculateTORPremium 
+} from '../../../data/torMotorData';
 
 const TORQuotationFlowScreen = ({ navigation, route }) => {
   const insets = useSafeAreaInsets();
@@ -70,6 +80,10 @@ const TORQuotationFlowScreen = ({ navigation, route }) => {
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [datePickerType, setDatePickerType] = useState(''); // 'dob' or 'policyStart'
   const [tempDate, setTempDate] = useState(new Date());
+  
+  // Document preview states
+  const [previewDocument, setPreviewDocument] = useState(null);
+  const [showDocumentPreview, setShowDocumentPreview] = useState(false);
 
   const totalSteps = 5;
 
@@ -256,16 +270,226 @@ const TORQuotationFlowScreen = ({ navigation, route }) => {
     scrollViewRef.current?.scrollTo({ y: 0, animated: true });
   };
 
-  const addDocument = (docType) => {
+  const addDocument = async (docType) => {
+    // Find document type details from the requirements
+    const docTypeDetails = TOR_REQUIRED_DOCUMENTS.find(doc => doc.name === docType);
+    
+    if (!docTypeDetails) {
+      Alert.alert('Error', 'Invalid document type');
+      return;
+    }
+    
+    // Create action sheet with camera and document options
+    Alert.alert(
+      `Upload ${docType}`,
+      'Choose upload method',
+      [
+        {
+          text: 'Take Photo',
+          onPress: () => captureDocument(docTypeDetails),
+        },
+        {
+          text: 'Choose from Gallery',
+          onPress: () => pickImageFromGallery(docTypeDetails),
+        },
+        {
+          text: 'Select Document',
+          onPress: () => pickDocument(docTypeDetails),
+        },
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+      ],
+      { cancelable: true }
+    );
+  };
+  
+  const captureDocument = async (docTypeDetails) => {
+    try {
+      // Request camera permissions
+      const { status } = await ImagePicker.requestCameraPermissionsAsync();
+      
+      if (status !== 'granted') {
+        Alert.alert('Permission Denied', 'Camera permission is required to capture documents');
+        return;
+      }
+      
+      // Launch camera
+      const result = await ImagePicker.launchCameraAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 0.8,
+      });
+      
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        const asset = result.assets[0];
+        const fileSize = await calculateFileSize(asset.uri);
+        
+        // Process captured image
+        processDocumentUpload(docTypeDetails, {
+          uri: asset.uri,
+          name: `${docTypeDetails.name.replace(/\s+/g, '_')}_${Date.now()}.jpg`,
+          type: 'image/jpeg',
+          size: fileSize,
+        });
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Failed to capture image: ' + error.message);
+    }
+  };
+  
+  const pickImageFromGallery = async (docTypeDetails) => {
+    try {
+      // Request media library permissions
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      
+      if (status !== 'granted') {
+        Alert.alert('Permission Denied', 'Media library permission is required to pick documents');
+        return;
+      }
+      
+      // Launch image picker
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [4, 3],
+        quality: 0.8,
+      });
+      
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        const asset = result.assets[0];
+        const fileSize = await calculateFileSize(asset.uri);
+        
+        // Process selected image
+        processDocumentUpload(docTypeDetails, {
+          uri: asset.uri,
+          name: `${docTypeDetails.name.replace(/\s+/g, '_')}_${Date.now()}.jpg`,
+          type: 'image/jpeg',
+          size: fileSize,
+        });
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Failed to pick image: ' + error.message);
+    }
+  };
+  
+  const pickDocument = async (docTypeDetails) => {
+    try {
+      // Launch document picker
+      const result = await DocumentPicker.getDocumentAsync({
+        type: ['image/*', 'application/pdf'],
+        copyToCacheDirectory: true,
+      });
+      
+      if (result.assets && result.assets.length > 0) {
+        const asset = result.assets[0];
+        
+        // Check if file format is supported
+        const fileExtension = asset.name.split('.').pop().toLowerCase();
+        const supportedFormats = docTypeDetails.formats.map(f => f.toLowerCase());
+        
+        if (!supportedFormats.includes(fileExtension)) {
+          Alert.alert('Invalid Format', `This document only supports ${docTypeDetails.formats.join(', ')} formats`);
+          return;
+        }
+        
+        // Process selected document
+        processDocumentUpload(docTypeDetails, {
+          uri: asset.uri,
+          name: asset.name,
+          type: asset.mimeType,
+          size: asset.size,
+        });
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Failed to pick document: ' + error.message);
+    }
+  };
+  
+  const calculateFileSize = async (uri) => {
+    try {
+      const fileInfo = await FileSystem.getInfoAsync(uri);
+      return fileInfo.size;
+    } catch (error) {
+      console.log('Error getting file size:', error);
+      return 0;
+    }
+  };
+  
+  const processDocumentUpload = (docTypeDetails, fileInfo) => {
+    // Convert bytes to MB for display
+    const fileSizeMB = (fileInfo.size / (1024 * 1024)).toFixed(2);
+    
+    // Check if file size exceeds maximum
+    const maxSizeMB = parseFloat(docTypeDetails.maxSize.replace('MB', ''));
+    if (fileSizeMB > maxSizeMB) {
+      Alert.alert('File Too Large', `Maximum file size is ${docTypeDetails.maxSize}`);
+      return;
+    }
+    
+    // Create document object
     const newDoc = {
       id: Date.now(),
-      type: docType,
-      name: `${docType.replace(/\s+/g, '_')}_${Date.now()}.jpg`,
+      type: docTypeDetails.name,
+      name: fileInfo.name,
+      uri: fileInfo.uri,
+      fileType: fileInfo.type,
+      size: `${fileSizeMB} MB`,
       uploaded: true,
-      size: '2.1 MB'
+      status: 'completed',
+      timestamp: new Date().toISOString()
     };
     
+    // Update form data with new document
     updateFormData('documents', [...formData.documents, newDoc]);
+    
+    // Show success message
+    Alert.alert('Upload Successful', `${docTypeDetails.name} uploaded successfully`);
+    
+    // If scannable, simulate OCR processing (in a real app this would call an OCR service)
+    if (docTypeDetails.scannable) {
+      simulateOCRProcessing(docTypeDetails, newDoc);
+    }
+  };
+  
+  const simulateOCRProcessing = (docTypeDetails, document) => {
+    // In a real app, this would send the document to an OCR service
+    // For now, we'll simulate extracting data based on the document type
+    
+    // Example extracted data based on document type
+    let extractedData = {};
+    
+    if (docTypeDetails.id === 'national_id') {
+      // Simulate extracting data from National ID
+      extractedData = {
+        fullName: formData.fullName || 'John Doe',
+        idNumber: formData.idNumber || '12345678',
+        dateOfBirth: '01/01/1980'
+      };
+    } else if (docTypeDetails.id === 'driving_license') {
+      // Simulate extracting data from Driving License
+      extractedData = {
+        fullName: formData.fullName || 'John Doe',
+        licenseNumber: 'DL' + Math.floor(Math.random() * 1000000),
+        expiryDate: '31/12/2028'
+      };
+    } else if (docTypeDetails.id === 'logbook') {
+      // Simulate extracting data from Vehicle Logbook
+      extractedData = {
+        registrationNumber: formData.registrationNumber || 'KAB123C',
+        makeModel: `${formData.make || 'Toyota'} ${formData.model || 'Corolla'}`,
+        yearOfManufacture: formData.yearOfManufacture || '2018',
+        engineCapacity: formData.engineCapacity || '1500',
+        chassisNumber: 'CH' + Math.floor(Math.random() * 1000000000)
+      };
+    }
+    
+    console.log(`OCR Extracted Data for ${document.type}:`, extractedData);
+    
+    // In a real app, you would update the form with extracted data
+    // and validate it against the form data
   };
 
   const removeDocument = (docId) => {
@@ -616,25 +840,91 @@ const TORQuotationFlowScreen = ({ navigation, route }) => {
               </View>
               
               {uploaded ? (
-                <View style={styles.uploadedContainer}>
-                  <View style={styles.uploadedInfo}>
-                    <Ionicons name="document-text" size={20} color={Colors.success} />
-                    <Text style={styles.uploadedText}>{uploaded.name}</Text>
+                <View>
+                  <View style={styles.uploadedContainer}>
+                    <View style={styles.uploadedInfo}>
+                      {uploaded.fileType?.includes('image') ? (
+                        <Ionicons name="image" size={20} color={Colors.success} />
+                      ) : uploaded.fileType?.includes('pdf') ? (
+                        <Ionicons name="document-text" size={20} color={Colors.success} />
+                      ) : (
+                        <Ionicons name="document" size={20} color={Colors.success} />
+                      )}
+                      <Text style={styles.uploadedText}>
+                        {uploaded.name.length > 25 ? uploaded.name.substring(0, 22) + '...' : uploaded.name}
+                      </Text>
+                    </View>
+                    <TouchableOpacity
+                      style={styles.removeButton}
+                      onPress={() => removeDocument(uploaded.id)}
+                    >
+                      <Ionicons name="trash" size={18} color={Colors.error} />
+                    </TouchableOpacity>
                   </View>
-                  <TouchableOpacity
-                    style={styles.removeButton}
-                    onPress={() => removeDocument(uploaded.id)}
-                  >
-                    <Ionicons name="trash" size={18} color={Colors.error} />
-                  </TouchableOpacity>
+                  
+                  {/* Document Preview */}
+                  {uploaded.uri && uploaded.fileType?.includes('image') && (
+                    <View style={styles.documentPreviewContainer}>
+                      <Image 
+                        source={{ uri: uploaded.uri }} 
+                        style={styles.documentPreview}
+                        resizeMode="cover"
+                      />
+                      <TouchableOpacity 
+                        style={styles.previewOverlay}
+                        onPress={() => {
+                          setPreviewDocument(uploaded);
+                          setShowDocumentPreview(true);
+                        }}
+                      >
+                        <Ionicons name="eye" size={24} color={Colors.white} />
+                        <Text style={styles.previewText}>Preview</Text>
+                      </TouchableOpacity>
+                    </View>
+                  )}
+                  
+                  {/* PDF document indicator */}
+                  {uploaded.uri && uploaded.fileType?.includes('pdf') && (
+                    <TouchableOpacity 
+                      style={styles.pdfPreviewContainer}
+                      onPress={() => {
+                        setPreviewDocument(uploaded);
+                        setShowDocumentPreview(true);
+                      }}
+                    >
+                      <Ionicons name="document-text" size={32} color={Colors.error} />
+                      <Text style={styles.pdfText}>PDF Document</Text>
+                      <Text style={styles.pdfSize}>{uploaded.size}</Text>
+                    </TouchableOpacity>
+                  )}
+                  
+                  <Text style={styles.uploadTimeText}>
+                    Uploaded: {new Date(uploaded.timestamp || Date.now()).toLocaleTimeString()}
+                  </Text>
                 </View>
               ) : (
                 <TouchableOpacity
                   style={styles.uploadButton}
                   onPress={() => addDocument(docType.name)}
                 >
-                  <Ionicons name="camera" size={20} color={Colors.primary} />
-                  <Text style={styles.uploadButtonText}>Upload {docType.name}</Text>
+                  <View style={styles.uploadButtonContent}>
+                    <Ionicons name="cloud-upload" size={24} color={Colors.primary} />
+                    <Text style={styles.uploadButtonText}>Upload {docType.name}</Text>
+                  </View>
+                  <View style={styles.uploadOptionsRow}>
+                    <View style={styles.uploadOption}>
+                      <Ionicons name="camera" size={16} color={Colors.primary} />
+                      <Text style={styles.uploadOptionText}>Camera</Text>
+                    </View>
+                    <View style={styles.uploadOption}>
+                      <Ionicons name="image" size={16} color={Colors.primary} />
+                      <Text style={styles.uploadOptionText}>Gallery</Text>
+                    </View>
+                    <View style={styles.uploadOption}>
+                      <Ionicons name="document" size={16} color={Colors.primary} />
+                      <Text style={styles.uploadOptionText}>Files</Text>
+                    </View>
+                  </View>
                 </TouchableOpacity>
               )}
             </View>
@@ -802,6 +1092,71 @@ const TORQuotationFlowScreen = ({ navigation, route }) => {
                 onChange={handleDateChange}
                 minimumDate={new Date()} // Only future dates for policy start
               />
+            </View>
+          </View>
+        </Modal>
+      )}
+
+      {/* Document Preview Modal */}
+      {showDocumentPreview && previewDocument && (
+        <Modal
+          transparent={true}
+          animationType="fade"
+          visible={showDocumentPreview}
+          onRequestClose={() => setShowDocumentPreview(false)}
+        >
+          <View style={styles.documentPreviewOverlay}>
+            <View style={styles.documentPreviewModalContainer}>
+              <View style={styles.documentPreviewHeader}>
+                <Text style={styles.documentPreviewTitle}>
+                  {previewDocument.type}
+                </Text>
+                <TouchableOpacity 
+                  style={styles.documentPreviewClose}
+                  onPress={() => setShowDocumentPreview(false)}
+                >
+                  <Ionicons name="close" size={24} color={Colors.textPrimary} />
+                </TouchableOpacity>
+              </View>
+              
+              {previewDocument.fileType?.includes('image') ? (
+                <Image 
+                  source={{ uri: previewDocument.uri }}
+                  style={styles.documentPreviewImage}
+                  resizeMode="contain"
+                />
+              ) : previewDocument.fileType?.includes('pdf') ? (
+                <View style={styles.pdfPreviewFull}>
+                  <Ionicons name="document-text" size={64} color={Colors.error} />
+                  <Text style={styles.pdfPreviewText}>
+                    PDF Document Preview
+                  </Text>
+                  <Text style={styles.pdfPreviewNote}>
+                    In a full implementation, this would use a PDF viewer component
+                  </Text>
+                </View>
+              ) : (
+                <View style={styles.genericPreview}>
+                  <Ionicons name="document" size={64} color={Colors.primary} />
+                  <Text style={styles.genericPreviewText}>
+                    Document Preview
+                  </Text>
+                </View>
+              )}
+              
+              <View style={styles.documentPreviewDetails}>
+                <Text style={styles.documentPreviewFilename}>
+                  {previewDocument.name}
+                </Text>
+                <Text style={styles.documentPreviewSize}>
+                  Size: {previewDocument.size}
+                </Text>
+                {previewDocument.timestamp && (
+                  <Text style={styles.documentPreviewTime}>
+                    Uploaded: {new Date(previewDocument.timestamp).toLocaleString()}
+                  </Text>
+                )}
+              </View>
             </View>
           </View>
         </Modal>
@@ -1142,9 +1497,6 @@ const styles = StyleSheet.create({
     padding: Spacing.xs,
   },
   uploadButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
     backgroundColor: Colors.backgroundLightBlue,
     borderRadius: 8,
     padding: Spacing.md,
@@ -1152,11 +1504,86 @@ const styles = StyleSheet.create({
     borderColor: Colors.primary,
     borderStyle: 'dashed',
   },
+  uploadButtonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: Spacing.sm,
+  },
   uploadButtonText: {
     fontSize: Typography.fontSize.md,
     color: Colors.primary,
     marginLeft: Spacing.xs,
     fontWeight: Typography.fontWeight.medium,
+  },
+  uploadOptionsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(0, 0, 0, 0.05)',
+    paddingTop: Spacing.sm,
+  },
+  uploadOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  uploadOptionText: {
+    fontSize: Typography.fontSize.xs,
+    color: Colors.primary,
+    marginLeft: 4,
+  },
+  documentPreviewContainer: {
+    height: 120,
+    borderRadius: 8,
+    marginTop: Spacing.sm,
+    overflow: 'hidden',
+    position: 'relative',
+  },
+  documentPreview: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 8,
+  },
+  previewOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  previewText: {
+    color: Colors.white,
+    marginTop: 4,
+    fontSize: Typography.fontSize.sm,
+    fontWeight: Typography.fontWeight.medium,
+  },
+  pdfPreviewContainer: {
+    height: 80,
+    borderRadius: 8,
+    marginTop: Spacing.sm,
+    backgroundColor: 'rgba(220,220,220,0.3)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  pdfText: {
+    fontSize: Typography.fontSize.sm,
+    color: Colors.textPrimary,
+    marginTop: 4,
+  },
+  pdfSize: {
+    fontSize: Typography.fontSize.xs,
+    color: Colors.textSecondary,
+    marginTop: 2,
+  },
+  uploadTimeText: {
+    fontSize: Typography.fontSize.xs,
+    color: Colors.textSecondary,
+    marginTop: Spacing.sm,
+    textAlign: 'right',
+    fontStyle: 'italic',
   },
   summaryContainer: {
     backgroundColor: Colors.white,
@@ -1335,6 +1762,93 @@ const styles = StyleSheet.create({
     fontSize: Typography.fontSize.xs,
     color: Colors.textPrimary,
     fontWeight: Typography.fontWeight.medium,
+  },
+  
+  // Document preview modal styles
+  documentPreviewOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  documentPreviewModalContainer: {
+    width: '90%',
+    maxHeight: '80%',
+    backgroundColor: Colors.white,
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  documentPreviewHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: Spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border,
+  },
+  documentPreviewTitle: {
+    fontSize: Typography.fontSize.lg,
+    fontWeight: Typography.fontWeight.bold,
+    color: Colors.textPrimary,
+  },
+  documentPreviewClose: {
+    padding: Spacing.xs,
+  },
+  documentPreviewImage: {
+    width: '100%',
+    height: 400,
+    backgroundColor: '#f0f0f0',
+  },
+  pdfPreviewFull: {
+    height: 300,
+    width: '100%',
+    backgroundColor: '#f9f9f9',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: Spacing.lg,
+  },
+  pdfPreviewText: {
+    fontSize: Typography.fontSize.lg,
+    fontWeight: Typography.fontWeight.bold,
+    color: Colors.textPrimary,
+    marginTop: Spacing.md,
+  },
+  pdfPreviewNote: {
+    fontSize: Typography.fontSize.sm,
+    color: Colors.textSecondary,
+    textAlign: 'center',
+    marginTop: Spacing.sm,
+  },
+  genericPreview: {
+    height: 300,
+    width: '100%',
+    backgroundColor: '#f9f9f9',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  genericPreviewText: {
+    fontSize: Typography.fontSize.lg,
+    fontWeight: Typography.fontWeight.bold,
+    color: Colors.textPrimary,
+    marginTop: Spacing.md,
+  },
+  documentPreviewDetails: {
+    padding: Spacing.md,
+  },
+  documentPreviewFilename: {
+    fontSize: Typography.fontSize.md,
+    fontWeight: Typography.fontWeight.medium,
+    color: Colors.textPrimary,
+    marginBottom: Spacing.xs,
+  },
+  documentPreviewSize: {
+    fontSize: Typography.fontSize.sm,
+    color: Colors.textSecondary,
+  },
+  documentPreviewTime: {
+    fontSize: Typography.fontSize.sm,
+    color: Colors.textSecondary,
+    marginTop: Spacing.xs,
   },
 });
 

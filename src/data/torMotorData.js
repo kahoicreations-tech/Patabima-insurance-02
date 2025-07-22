@@ -323,32 +323,115 @@ export const TOR_REQUIRED_DOCUMENTS = [
   {
     id: 'national_id',
     name: 'National ID Copy',
-    description: 'Clear copy of Kenyan National ID',
+    description: 'Clear copy of Kenyan National ID (both sides)',
     required: true,
-    formats: ['jpg', 'png', 'pdf']
+    formats: ['jpg', 'png', 'pdf'],
+    maxSize: '5MB',
+    scannable: true,
+    extractFields: ['fullName', 'idNumber', 'dateOfBirth'],
+    icon: '🆔',
+    validationRules: {
+      idNumber: /^\d{7,8}$/,
+      mustMatch: ['ownerIdNumber']
+    }
   },
   {
     id: 'driving_license',
     name: 'Driving License',
     description: 'Valid Kenyan driving license',
     required: true,
-    formats: ['jpg', 'png', 'pdf']
+    formats: ['jpg', 'png', 'pdf'],
+    maxSize: '5MB',
+    scannable: true,
+    extractFields: ['fullName', 'licenseNumber', 'expiryDate'],
+    icon: '🚗',
+    validationRules: {
+      licenseNumber: /^[A-Z0-9]{8,12}$/,
+      expiryDate: 'future',
+      mustMatch: ['ownerName']
+    }
   },
   {
     id: 'logbook',
     name: 'Vehicle Logbook',
-    description: 'Vehicle registration document',
+    description: 'Vehicle registration document (Logbook)',
     required: true,
-    formats: ['jpg', 'png', 'pdf']
+    formats: ['jpg', 'png', 'pdf'],
+    maxSize: '10MB',
+    scannable: true,
+    extractFields: ['registrationNumber', 'makeModel', 'yearOfManufacture', 'engineCapacity', 'chassisNumber'],
+    icon: '📖',
+    validationRules: {
+      registrationNumber: /^K[A-Z]{2,3}\s?\d{3}[A-Z]$/,
+      yearOfManufacture: /^\d{4}$/,
+      engineCapacity: /^\d+$/,
+      mustMatch: ['vehicleRegistrationNumber', 'makeModel', 'yearOfManufacture']
+    }
   },
   {
     id: 'kra_pin',
     name: 'KRA PIN Certificate',
-    description: 'Tax identification document',
+    description: 'Kenya Revenue Authority PIN certificate',
     required: false,
-    formats: ['jpg', 'png', 'pdf']
+    formats: ['jpg', 'png', 'pdf'],
+    maxSize: '5MB',
+    scannable: true,
+    extractFields: ['fullName', 'pinNumber'],
+    icon: '🏛️',
+    validationRules: {
+      pinNumber: /^[A-Z]\d{9}[A-Z]$/,
+      mustMatch: ['ownerName']
+    }
+  },
+  {
+    id: 'previous_insurance',
+    name: 'Previous Insurance Certificate',
+    description: 'Previous motor insurance certificate (if any)',
+    required: false,
+    formats: ['jpg', 'png', 'pdf'],
+    maxSize: '10MB',
+    scannable: false,
+    extractFields: [],
+    icon: '📄',
+    validationRules: {}
+  },
+  {
+    id: 'valuation_report',
+    name: 'Vehicle Valuation Report',
+    description: 'Professional vehicle valuation (for vehicles above KES 3M)',
+    required: false,
+    formats: ['jpg', 'png', 'pdf'],
+    maxSize: '10MB',
+    scannable: false,
+    extractFields: ['vehicleValue', 'valuationDate'],
+    icon: '💰',
+    validationRules: {
+      vehicleValue: /^\d+$/,
+      valuationDate: 'recent'
+    }
   }
 ];
+
+// TOR Document Upload Status Types
+export const TOR_DOCUMENT_STATUS = {
+  PENDING: 'pending',
+  UPLOADING: 'uploading',
+  PROCESSING: 'processing',
+  COMPLETED: 'completed',
+  FAILED: 'failed',
+  VALIDATION_ERROR: 'validation_error'
+};
+
+// TOR Document Validation Messages
+export const TOR_VALIDATION_MESSAGES = {
+  REQUIRED_MISSING: 'This document is required for TOR insurance',
+  FORMAT_INVALID: 'Please upload a valid image (JPG, PNG) or PDF file',
+  SIZE_EXCEEDED: 'File size must be less than the maximum allowed size',
+  SCAN_FAILED: 'Could not extract data from document. Please ensure image is clear',
+  DATA_MISMATCH: 'Document data does not match form information',
+  EXPIRED_DOCUMENT: 'Document has expired. Please provide a valid document',
+  INVALID_FORMAT: 'Document format is not valid for this document type'
+};
 
 // TOR premium calculation function
 export const calculateTORPremium = (vehicleValue, underwriterId, factors = {}) => {
