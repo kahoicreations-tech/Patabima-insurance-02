@@ -1,7 +1,8 @@
 /**
- * Private Comprehensive Insurance Screen
- * Offers full coverage including own damage, theft, third party liability,
- * and optional add-ons for private vehicle owners
+ * Private Motorcycle Insurance Screen
+ * 
+ * This screen handles the Private motorcycle insurance 
+ * quotation flow for private individual motorcycle owners
  */
 
 import React, { useState, useEffect } from 'react';
@@ -34,10 +35,10 @@ import {
   validateVehicleEligibility
 } from './components';
 
-// Import third party underwriters data (we'll use this for comprehensive too)
+// Import motorcycle insurer data (using third party for now)
 import { THIRD_PARTY_UNDERWRITERS } from '../../../../data/thirdPartyMotorData';
 
-const PrivateComprehensiveScreen = ({ navigation, route }) => {
+const PrivateMotorcycleScreen = ({ navigation, route }) => {
   const insets = useSafeAreaInsets();
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -54,11 +55,13 @@ const PrivateComprehensiveScreen = ({ navigation, route }) => {
     email: '',
     kraPin: '',
     
-    // Step 2: Vehicle Details
+    // Step 2: Vehicle Details (motorcycle specific)
     vehicleMake: '',
     vehicleModel: '',
     vehicleYear: '',
     registrationNumber: '',
+    engineCapacity: '', // CC for motorcycles
+    motorcycleType: '', // Standard, Sports, Cruiser, etc.
     
     // Step 3: Vehicle Value
     vehicleValue: '',
@@ -82,13 +85,12 @@ const PrivateComprehensiveScreen = ({ navigation, route }) => {
     existingPolicyCheck: null,
     insuranceStartDate: new Date(Date.now() + 24 * 60 * 60 * 1000), // Default to tomorrow
     
-    // Comprehensive specific fields
-    selectedCoverageLevel: 'basic', // basic, enhanced, premium
-    selectedAddons: [], // Additional coverage add-ons
-    hasTracking: false,
-    hasDashcam: false,
+    // Motorcycle specific fields
+    selectedCoverageType: 'third_party', // third_party, comprehensive
+    hasHelmet: false,
     hasAntiTheft: false,
-    hasImmobilizer: false,
+    hasPillion: false, // Carries passengers
+    useType: 'personal', // personal, commercial
   });
 
   // Payment state
@@ -111,121 +113,75 @@ const PrivateComprehensiveScreen = ({ navigation, route }) => {
 
   const TOTAL_STEPS = 5;
   
-  // Comprehensive coverage levels
-  const COMPREHENSIVE_COVERAGE_LEVELS = [
+  // Motorcycle types for selection
+  const MOTORCYCLE_TYPES = [
+    { id: 'standard', name: 'Standard', description: 'Regular commuter motorcycle' },
+    { id: 'sports', name: 'Sports', description: 'High-performance sports bike' },
+    { id: 'cruiser', name: 'Cruiser', description: 'Comfortable touring motorcycle' },
+    { id: 'scooter', name: 'Scooter', description: 'Automatic transmission scooter' },
+    { id: 'dirt_bike', name: 'Dirt Bike', description: 'Off-road motorcycle' },
+    { id: 'moped', name: 'Moped', description: 'Low-power urban transport' }
+  ];
+
+  // Motorcycle coverage types
+  const MOTORCYCLE_COVERAGE_TYPES = [
     {
-      id: 'basic',
-      name: 'Basic Comprehensive',
-      rate: 4.0,
-      description: 'Essential comprehensive coverage with standard benefits',
+      id: 'third_party',
+      name: 'Third Party Only',
+      rate: 2.5,
+      description: 'Mandatory third party liability coverage only',
       features: [
-        'Own damage cover',
-        'Third party liability (unlimited)',
-        'Theft & fire coverage',
-        'Basic windscreen cover (KSh 50,000)',
-        'Towing services'
+        'Third party injury cover',
+        'Third party property damage',
+        'Legal liability protection',
+        'Basic towing service'
       ]
     },
     {
-      id: 'enhanced',
-      name: 'Enhanced Comprehensive',
+      id: 'comprehensive',
+      name: 'Comprehensive',
       rate: 4.5,
-      description: 'Comprehensive coverage with additional benefits',
+      description: 'Full protection including own damage and theft',
       features: [
-        'All Basic features',
-        'Enhanced windscreen cover (KSh 100,000)',
-        'Free towing & recovery',
-        'Courtesy car (7 days)',
-        'Personal accident cover (KSh 500,000)'
-      ]
-    },
-    {
-      id: 'premium',
-      name: 'Premium Comprehensive',
-      rate: 5.0,
-      description: 'Maximum comprehensive protection with all benefits',
-      features: [
-        'All Enhanced features',
-        'Zero excess for glass damage',
-        'Natural disaster coverage',
-        'Extended courtesy car (14 days)',
-        'Medical expenses cover (KSh 200,000)',
-        'Personal effects cover (KSh 100,000)'
+        'All Third Party features',
+        'Own damage coverage',
+        'Theft and fire protection',
+        'Personal accident cover',
+        'Helmet replacement'
       ]
     }
   ];
 
-  // Comprehensive add-ons
-  const COMPREHENSIVE_ADDONS = [
-    {
-      id: 'excess_protector',
-      name: 'Excess Protector',
-      premium: 5000,
-      description: 'Covers your excess payment in case of a claim',
-      limit: 'Up to policy excess amount'
-    },
-    {
-      id: 'political_violence',
-      name: 'Political Violence & Terrorism',
-      premium: 3000,
-      description: 'Coverage against riot, strike, malicious damage and terrorism',
-      limit: 'Up to vehicle value'
-    },
-    {
-      id: 'loss_of_use',
-      name: 'Loss of Use',
-      premium: 7500,
-      description: 'Daily allowance while your car is being repaired',
-      limit: 'KSh 2,500 per day (max 30 days)'
-    },
-    {
-      id: 'new_for_old',
-      name: 'New for Old',
-      premium: 10000,
-      description: 'Replacement with new parts for vehicles under 3 years',
-      limit: 'Applicable for vehicles under 3 years only'
-    },
-    {
-      id: 'enhanced_audio',
-      name: 'Enhanced Audio Equipment',
-      premium: 4000,
-      description: 'Extended cover for upgraded audio systems',
-      limit: 'Up to KSh 200,000'
-    }
-  ];
-
-  // Fixed comprehensive coverage amounts
-  const COMPREHENSIVE_COVERAGE = {
+  // Fixed motorcycle coverage amounts
+  const MOTORCYCLE_COVERAGE = {
     thirdPartyLiability: 'Unlimited as per law',
-    ownDamage: 'Up to vehicle value',
-    theft: 'Up to vehicle value',
-    fire: 'Up to vehicle value',
-    windscreen: 'Varies by coverage level',
-    personalAccident: 'Varies by coverage level',
-    medicalExpenses: 'Varies by coverage level'
+    ownDamage: 'Up to motorcycle value',
+    theft: 'Up to motorcycle value',
+    personalAccident: 'KSh 500,000',
+    helmetReplacement: 'KSh 10,000'
   };
 
-  // Create comprehensive insurers from third party data
-  const comprehensiveInsurers = THIRD_PARTY_UNDERWRITERS?.map(underwriter => ({
-    id: underwriter.id + '_comp',
+  // Create motorcycle insurers from existing data
+  const motorcycleInsurers = THIRD_PARTY_UNDERWRITERS?.map(underwriter => ({
+    id: underwriter.id + '_mc',
     name: underwriter.name,
     logo: underwriter.logo,
-    rate: 4.0, // Standard comprehensive rate
-    baseMinimum: 35000, // Higher minimum for comprehensive
-    maxVehicleAge: 15, // Age limit for comprehensive
+    rate: 2.5, // Lower rate for motorcycles
+    baseMinimum: 15000, // Lower minimum for motorcycles
+    maxVehicleAge: 20, // Higher age limit for motorcycles
     features: [
-      'Comprehensive Coverage',
-      'Own Damage Protection',
-      'Theft & Fire Coverage',
+      'Motorcycle Coverage',
       'Third Party Liability',
-      'Windscreen Protection',
-      'Personal Accident Cover'
+      'Own Damage (if comprehensive)',
+      'Personal Accident Cover',
+      'Theft Protection',
+      'Emergency Assistance'
     ],
     color: getInsurerColor(underwriter.id),
     pricingLogic: underwriter.pricingLogic,
     statutoryLevies: underwriter.statutoryLevies,
     isOfficial: true,
-    supportsComprehensive: true
+    supportsMotorcycle: true
   })) || [];
 
   // Helper function to assign colors to insurers
@@ -263,12 +219,12 @@ const PrivateComprehensiveScreen = ({ navigation, route }) => {
       // Simulate API call to check existing policies
       const mockExistingPolicies = [
         {
-          id: 'POL789012',
-          registrationNumber: 'KBA456C',
-          insurerName: 'Madison Insurance',
-          policyType: 'Comprehensive',
-          startDate: '2024-03-10',
-          endDate: '2025-03-09',
+          id: 'POL345678',
+          registrationNumber: 'KCB789D',
+          insurerName: 'Britam Insurance',
+          policyType: 'Motorcycle Third Party',
+          startDate: '2024-02-20',
+          endDate: '2025-02-19',
           status: 'active'
         }
       ];
@@ -289,7 +245,7 @@ const PrivateComprehensiveScreen = ({ navigation, route }) => {
           isChecking: false,
           hasExistingPolicy: true,
           existingPolicyDetails: existingPolicy,
-          validationMessage: `Vehicle is currently insured with ${existingPolicy.insurerName} until ${endDate.toLocaleDateString()}`,
+          validationMessage: `Motorcycle is currently insured with ${existingPolicy.insurerName} until ${endDate.toLocaleDateString()}`,
           suggestedStartDate: suggestedStart
         });
         
@@ -302,7 +258,7 @@ const PrivateComprehensiveScreen = ({ navigation, route }) => {
           isChecking: false,
           hasExistingPolicy: false,
           existingPolicyDetails: null,
-          validationMessage: 'No active insurance found for this vehicle',
+          validationMessage: 'No active insurance found for this motorcycle',
           suggestedStartDate: null
         });
       }
@@ -319,12 +275,18 @@ const PrivateComprehensiveScreen = ({ navigation, route }) => {
     }
   };
 
-  // Calculate comprehensive premium
-  const calculateComprehensivePremium = (insurer) => {
+  // Calculate motorcycle premium
+  const calculateMotorcyclePremium = (insurer) => {
     try {
       const vehicleValue = formData.vehicleValue ? 
         parseFloat(formData.vehicleValue.replace(/[^0-9.]/g, '')) : 
-        500000; // Minimum value for comprehensive
+        100000; // Lower minimum value for motorcycles
+
+      // Base rate depends on coverage type
+      let baseRate = insurer.rate;
+      if (formData.selectedCoverageType === 'comprehensive') {
+        baseRate = 4.5; // Higher rate for comprehensive
+      }
 
       // Calculate base premium using motor premium calculator
       const calculation = calculateMotorPremium({
@@ -333,7 +295,7 @@ const PrivateComprehensiveScreen = ({ navigation, route }) => {
         insurer: {
           id: insurer.id,
           name: insurer.name,
-          rate: insurer.rate,
+          rate: baseRate,
           baseMinimum: insurer.baseMinimum,
           maxVehicleAge: insurer.maxVehicleAge,
           statutoryLevies: insurer.statutoryLevies || {
@@ -342,49 +304,43 @@ const PrivateComprehensiveScreen = ({ navigation, route }) => {
             stampDuty: 40
           }
         },
-        insuranceType: 'Comprehensive',
-        vehicleCategory: 'Private'
+        insuranceType: formData.selectedCoverageType === 'comprehensive' ? 'Comprehensive' : 'ThirdParty',
+        vehicleCategory: 'Motorcycle'
       });
 
-      // Apply coverage level adjustments
-      let coverageMultiplier = 1.0;
-      if (formData.selectedCoverageLevel === 'enhanced') {
-        coverageMultiplier = 1.15;
-      } else if (formData.selectedCoverageLevel === 'premium') {
-        coverageMultiplier = 1.25;
+      // Apply motorcycle-specific factors
+      let adjustmentFactor = 1.0;
+      
+      // Engine capacity adjustment
+      const engineCC = parseInt(formData.engineCapacity) || 150;
+      if (engineCC > 500) {
+        adjustmentFactor += 0.3; // 30% increase for large bikes
+      } else if (engineCC > 250) {
+        adjustmentFactor += 0.15; // 15% increase for mid-size bikes
       }
 
-      // Add addon premiums
-      let addonPremium = 0;
-      formData.selectedAddons?.forEach(addonId => {
-        const addon = COMPREHENSIVE_ADDONS.find(add => add.id === addonId);
-        if (addon) {
-          addonPremium += addon.premium;
-        }
-      });
+      // Usage type adjustment
+      if (formData.useType === 'commercial') {
+        adjustmentFactor += 0.5; // 50% increase for commercial use
+      }
 
-      // Apply security feature discounts
-      let securityDiscount = 0;
-      if (formData.hasTracking) securityDiscount += 0.05; // 5% discount
-      if (formData.hasDashcam) securityDiscount += 0.02; // 2% discount
-      if (formData.hasAntiTheft) securityDiscount += 0.03; // 3% discount
-      if (formData.hasImmobilizer) securityDiscount += 0.02; // 2% discount
+      // Safety feature discounts
+      if (formData.hasHelmet) adjustmentFactor -= 0.05; // 5% discount for helmet
+      if (formData.hasAntiTheft) adjustmentFactor -= 0.1; // 10% discount for anti-theft
 
-      const adjustedPremium = calculation.totalPremium * coverageMultiplier * (1 - securityDiscount);
+      const adjustedPremium = calculation.totalPremium * adjustmentFactor;
 
       return {
         isEligible: true,
-        totalPremium: adjustedPremium + addonPremium,
+        totalPremium: adjustedPremium,
         basePremium: calculation.finalBasePremium,
-        coverageAdjustment: (calculation.totalPremium * coverageMultiplier) - calculation.totalPremium,
-        addonPremium: addonPremium,
-        securityDiscount: calculation.totalPremium * securityDiscount,
+        adjustmentFactor: adjustmentFactor,
         levies: calculation.levies,
         vehicleValue: vehicleValue,
         message: ''
       };
     } catch (error) {
-      console.error('Comprehensive premium calculation error:', error);
+      console.error('Motorcycle premium calculation error:', error);
       return {
         isEligible: false,
         totalPremium: 0,
@@ -398,7 +354,7 @@ const PrivateComprehensiveScreen = ({ navigation, route }) => {
     const eligibility = validateVehicleEligibility(
       vehicleAge,
       insurer,
-      'Comprehensive'
+      formData.selectedCoverageType === 'comprehensive' ? 'Comprehensive' : 'ThirdParty'
     );
 
     if (!eligibility.isEligible) {
@@ -409,7 +365,7 @@ const PrivateComprehensiveScreen = ({ navigation, route }) => {
       };
     }
 
-    return calculateComprehensivePremium(insurer);
+    return calculateMotorcyclePremium(insurer);
   };
 
   // Handle insurer selection and premium calculation
@@ -417,39 +373,36 @@ const PrivateComprehensiveScreen = ({ navigation, route }) => {
     updateFormData(updates);
     
     if (updates.selectedInsurer) {
-      const selectedInsurer = comprehensiveInsurers.find(i => i.id === updates.selectedInsurer);
+      const selectedInsurer = motorcycleInsurers.find(i => i.id === updates.selectedInsurer);
       if (selectedInsurer) {
-        const calculation = calculateComprehensivePremium(selectedInsurer);
+        const calculation = calculateMotorcyclePremium(selectedInsurer);
         
         const quote = {
           basePremium: calculation.basePremium,
-          coverageAdjustment: calculation.coverageAdjustment,
-          addonPremium: calculation.addonPremium,
-          securityDiscount: calculation.securityDiscount,
+          adjustmentFactor: calculation.adjustmentFactor,
           policyholdersFund: calculation.levies?.policyholdersFund || 0,
           trainingLevy: calculation.levies?.trainingLevy || 0,
           stampDuty: calculation.levies?.stampDuty || 40,
           totalPremium: calculation.totalPremium,
           vehicleValue: calculation.vehicleValue,
-          coverageType: 'Comprehensive',
-          coverageLevel: formData.selectedCoverageLevel,
-          coverageAmounts: COMPREHENSIVE_COVERAGE,
-          selectedAddons: formData.selectedAddons || [],
-          securityFeatures: {
-            hasTracking: formData.hasTracking,
-            hasDashcam: formData.hasDashcam,
+          coverageType: formData.selectedCoverageType === 'comprehensive' ? 'Comprehensive' : 'Third Party',
+          coverageAmounts: MOTORCYCLE_COVERAGE,
+          engineCapacity: formData.engineCapacity,
+          useType: formData.useType,
+          safetyFeatures: {
+            hasHelmet: formData.hasHelmet,
             hasAntiTheft: formData.hasAntiTheft,
-            hasImmobilizer: formData.hasImmobilizer
+            hasPillion: formData.hasPillion
           },
           underwriterRef: selectedInsurer.id,
           calculationDate: new Date().toISOString(),
-          rateSource: 'Official Comprehensive Underwriter Rates'
+          rateSource: 'Official Motorcycle Underwriter Rates'
         };
 
         updateFormData({ 
           selectedQuote: quote, 
           totalPremium: quote.totalPremium,
-          paymentAmount: quote.totalPremium + 50 // Add service fee
+          paymentAmount: quote.totalPremium + 25 // Lower service fee for motorcycles
         });
       }
     }
@@ -460,9 +413,9 @@ const PrivateComprehensiveScreen = ({ navigation, route }) => {
       case 1:
         return formData.fullName && formData.idNumber && formData.phoneNumber;
       case 2:
-        return formData.vehicleMake && formData.vehicleModel && formData.vehicleYear && formData.registrationNumber;
+        return formData.vehicleMake && formData.vehicleModel && formData.vehicleYear && formData.registrationNumber && formData.engineCapacity;
       case 3:
-        return formData.vehicleValue && parseFloat(formData.vehicleValue.replace(/[^0-9.]/g, '')) >= 500000;
+        return formData.vehicleValue && parseFloat(formData.vehicleValue.replace(/[^0-9.]/g, '')) >= 50000;
       case 4:
         return formData.selectedInsurer;
       case 5:
@@ -500,7 +453,7 @@ const PrivateComprehensiveScreen = ({ navigation, route }) => {
     try {
       await new Promise(resolve => setTimeout(resolve, 2000));
       
-      const transactionId = `COMP${Date.now()}${Math.floor(Math.random() * 1000)}`;
+      const transactionId = `MC${Date.now()}${Math.floor(Math.random() * 1000)}`;
       
       updateFormData({ 
         transactionId,
@@ -558,7 +511,7 @@ const PrivateComprehensiveScreen = ({ navigation, route }) => {
       
       Alert.alert(
         'Payment Successful!',
-        `Your Comprehensive insurance payment of KSh ${formData.paymentAmount?.toLocaleString()} has been confirmed.\n\nTransaction ID: ${formData.transactionId}`,
+        `Your Motorcycle insurance payment of KSh ${formData.paymentAmount?.toLocaleString()} has been confirmed.\n\nTransaction ID: ${formData.transactionId}`,
         [{ text: 'Continue' }]
       );
     } else {
@@ -587,8 +540,8 @@ const PrivateComprehensiveScreen = ({ navigation, route }) => {
       await new Promise(resolve => setTimeout(resolve, 2000));
       
       Alert.alert(
-        'Comprehensive Insurance Policy Issued',
-        `Your Comprehensive insurance policy has been successfully issued.\n\nPolicy ID: COMP${Date.now()}\nTotal Premium: KSh ${formData.totalPremium?.toLocaleString()}\nTransaction ID: ${formData.transactionId}\n\nCoverage: Full Comprehensive with ${formData.selectedCoverageLevel} level\nValid for 1 year from policy start date.`,
+        'Motorcycle Insurance Policy Issued',
+        `Your Motorcycle insurance policy has been successfully issued.\n\nPolicy ID: MC${Date.now()}\nTotal Premium: KSh ${formData.totalPremium?.toLocaleString()}\nTransaction ID: ${formData.transactionId}\n\nCoverage: ${formData.selectedCoverageType === 'comprehensive' ? 'Comprehensive' : 'Third Party'}\nValid for 1 year from policy start date.`,
         [
           {
             text: 'OK',
@@ -625,6 +578,61 @@ const PrivateComprehensiveScreen = ({ navigation, route }) => {
             enableInsuranceDate={false}
             onRegistrationChange={checkExistingInsurance}
             policyValidation={policyValidation}
+            customFields={
+              <View style={styles.motorcycleFields}>
+                <Text style={styles.fieldLabel}>Engine Capacity (CC) *</Text>
+                <TouchableOpacity
+                  style={[styles.inputField, !formData.engineCapacity && styles.inputError]}
+                  onPress={() => {
+                    Alert.prompt(
+                      'Engine Capacity',
+                      'Enter your motorcycle\'s engine capacity in CC:',
+                      [
+                        { text: 'Cancel', style: 'cancel' },
+                        { 
+                          text: 'OK', 
+                          onPress: (value) => {
+                            if (value && !isNaN(value) && parseInt(value) > 0) {
+                              updateFormData({ engineCapacity: value });
+                            }
+                          }
+                        }
+                      ],
+                      'plain-text',
+                      formData.engineCapacity
+                    );
+                  }}
+                >
+                  <Text style={[styles.inputText, !formData.engineCapacity && styles.placeholderText]}>
+                    {formData.engineCapacity ? `${formData.engineCapacity} CC` : 'Select engine capacity'}
+                  </Text>
+                  <Ionicons name="chevron-down" size={20} color={Colors.textMuted} />
+                </TouchableOpacity>
+
+                <Text style={styles.fieldLabel}>Motorcycle Type</Text>
+                <TouchableOpacity
+                  style={styles.inputField}
+                  onPress={() => {
+                    Alert.alert(
+                      'Motorcycle Type',
+                      'Select your motorcycle type:',
+                      MOTORCYCLE_TYPES.map(type => ({
+                        text: type.name,
+                        onPress: () => updateFormData({ motorcycleType: type.id })
+                      })).concat([{ text: 'Cancel', style: 'cancel' }])
+                    );
+                  }}
+                >
+                  <Text style={[styles.inputText, !formData.motorcycleType && styles.placeholderText]}>
+                    {formData.motorcycleType ? 
+                      MOTORCYCLE_TYPES.find(t => t.id === formData.motorcycleType)?.name : 
+                      'Select motorcycle type'
+                    }
+                  </Text>
+                  <Ionicons name="chevron-down" size={20} color={Colors.textMuted} />
+                </TouchableOpacity>
+              </View>
+            }
           />
         );
       case 3:
@@ -633,32 +641,32 @@ const PrivateComprehensiveScreen = ({ navigation, route }) => {
             formData={formData}
             onUpdateFormData={updateFormData}
             vehicleAge={formData.vehicleAge}
-            enableEstimation={true}
-            minimumValue={500000}
+            enableEstimation={false}
+            minimumValue={50000}
             customInfo={
-              <View style={styles.comprehensiveInfo}>
+              <View style={styles.motorcycleInfo}>
                 <View style={styles.infoHeader}>
-                  <Ionicons name="shield-checkmark" size={20} color={Colors.primary} />
-                  <Text style={styles.infoTitle}>Comprehensive Insurance Options</Text>
+                  <Ionicons name="bicycle" size={20} color={Colors.primary} />
+                  <Text style={styles.infoTitle}>Motorcycle Insurance Options</Text>
                 </View>
                 <Text style={styles.infoText}>
-                  Comprehensive insurance provides full protection for your vehicle including own damage, 
-                  theft, fire, and third party liability. Choose your coverage level and optional add-ons.
+                  Choose the right insurance coverage for your motorcycle. We offer both third party 
+                  and comprehensive coverage options.
                 </Text>
                 
-                {/* Coverage Level Selection */}
-                <Text style={styles.sectionTitle}>Coverage Level:</Text>
-                {COMPREHENSIVE_COVERAGE_LEVELS.map((level) => (
+                {/* Coverage Type Selection */}
+                <Text style={styles.sectionTitle}>Coverage Type:</Text>
+                {MOTORCYCLE_COVERAGE_TYPES.map((coverage) => (
                   <TouchableOpacity
-                    key={level.id}
+                    key={coverage.id}
                     style={[
                       styles.coverageOption,
-                      formData.selectedCoverageLevel === level.id && styles.coverageSelected
+                      formData.selectedCoverageType === coverage.id && styles.coverageSelected
                     ]}
-                    onPress={() => updateFormData({ selectedCoverageLevel: level.id })}
+                    onPress={() => updateFormData({ selectedCoverageType: coverage.id })}
                   >
                     <View style={styles.coverageCheckbox}>
-                      {formData.selectedCoverageLevel === level.id ? (
+                      {formData.selectedCoverageType === coverage.id ? (
                         <Ionicons name="radio-button-on" size={20} color={Colors.primary} />
                       ) : (
                         <Ionicons name="radio-button-off" size={20} color={Colors.textMuted} />
@@ -666,12 +674,12 @@ const PrivateComprehensiveScreen = ({ navigation, route }) => {
                     </View>
                     <View style={styles.coverageDetails}>
                       <View style={styles.coverageHeader}>
-                        <Text style={styles.coverageName}>{level.name}</Text>
-                        <Text style={styles.coverageRate}>{level.rate}% rate</Text>
+                        <Text style={styles.coverageName}>{coverage.name}</Text>
+                        <Text style={styles.coverageRate}>{coverage.rate}% rate</Text>
                       </View>
-                      <Text style={styles.coverageDescription}>{level.description}</Text>
+                      <Text style={styles.coverageDescription}>{coverage.description}</Text>
                       <View style={styles.featuresList}>
-                        {level.features.map((feature, index) => (
+                        {coverage.features.map((feature, index) => (
                           <Text key={index} style={styles.feature}>• {feature}</Text>
                         ))}
                       </View>
@@ -679,75 +687,51 @@ const PrivateComprehensiveScreen = ({ navigation, route }) => {
                   </TouchableOpacity>
                 ))}
 
-                {/* Add-ons Selection */}
-                <Text style={styles.sectionTitle}>Optional Add-ons:</Text>
-                {COMPREHENSIVE_ADDONS.map((addon) => (
+                {/* Usage Type */}
+                <Text style={styles.sectionTitle}>Usage Type:</Text>
+                <View style={styles.usageOptions}>
                   <TouchableOpacity
-                    key={addon.id}
-                    style={[
-                      styles.addonOption,
-                      formData.selectedAddons?.includes(addon.id) && styles.addonSelected
-                    ]}
-                    onPress={() => {
-                      const selectedAddons = formData.selectedAddons || [];
-                      const index = selectedAddons.indexOf(addon.id);
-                      
-                      if (index !== -1) {
-                        selectedAddons.splice(index, 1);
-                      } else {
-                        selectedAddons.push(addon.id);
-                      }
-                      
-                      updateFormData({ selectedAddons: [...selectedAddons] });
-                    }}
+                    style={[styles.usageOption, formData.useType === 'personal' && styles.usageSelected]}
+                    onPress={() => updateFormData({ useType: 'personal' })}
                   >
-                    <View style={styles.addonCheckbox}>
-                      {formData.selectedAddons?.includes(addon.id) ? (
-                        <Ionicons name="checkbox" size={20} color={Colors.primary} />
-                      ) : (
-                        <Ionicons name="square-outline" size={20} color={Colors.textMuted} />
-                      )}
-                    </View>
-                    <View style={styles.addonDetails}>
-                      <View style={styles.addonHeader}>
-                        <Text style={styles.addonName}>{addon.name}</Text>
-                        <Text style={styles.addonPremium}>+KSh {addon.premium.toLocaleString()}</Text>
-                      </View>
-                      <Text style={styles.addonDescription}>{addon.description}</Text>
-                      <Text style={styles.addonLimit}>{addon.limit}</Text>
-                    </View>
+                    <Ionicons 
+                      name={formData.useType === 'personal' ? "radio-button-on" : "radio-button-off"} 
+                      size={20} 
+                      color={formData.useType === 'personal' ? Colors.primary : Colors.textMuted} 
+                    />
+                    <Text style={styles.usageText}>Personal Use</Text>
                   </TouchableOpacity>
-                ))}
+                  
+                  <TouchableOpacity
+                    style={[styles.usageOption, formData.useType === 'commercial' && styles.usageSelected]}
+                    onPress={() => updateFormData({ useType: 'commercial' })}
+                  >
+                    <Ionicons 
+                      name={formData.useType === 'commercial' ? "radio-button-on" : "radio-button-off"} 
+                      size={20} 
+                      color={formData.useType === 'commercial' ? Colors.primary : Colors.textMuted} 
+                    />
+                    <Text style={styles.usageText}>Commercial Use</Text>
+                  </TouchableOpacity>
+                </View>
 
-                {/* Security Features */}
-                <Text style={styles.sectionTitle}>Security Features (Discounts Available):</Text>
-                <View style={styles.securityFeatures}>
+                {/* Safety Features */}
+                <Text style={styles.sectionTitle}>Safety Features (Discounts Available):</Text>
+                <View style={styles.safetyFeatures}>
                   <TouchableOpacity
-                    style={styles.securityFeature}
-                    onPress={() => updateFormData({ hasTracking: !formData.hasTracking })}
+                    style={styles.safetyFeature}
+                    onPress={() => updateFormData({ hasHelmet: !formData.hasHelmet })}
                   >
                     <Ionicons 
-                      name={formData.hasTracking ? "checkbox" : "square-outline"} 
+                      name={formData.hasHelmet ? "checkbox" : "square-outline"} 
                       size={20} 
-                      color={formData.hasTracking ? Colors.primary : Colors.textMuted} 
+                      color={formData.hasHelmet ? Colors.primary : Colors.textMuted} 
                     />
-                    <Text style={styles.securityFeatureText}>GPS Tracking System (5% discount)</Text>
+                    <Text style={styles.safetyFeatureText}>Approved Helmet (5% discount)</Text>
                   </TouchableOpacity>
                   
                   <TouchableOpacity
-                    style={styles.securityFeature}
-                    onPress={() => updateFormData({ hasDashcam: !formData.hasDashcam })}
-                  >
-                    <Ionicons 
-                      name={formData.hasDashcam ? "checkbox" : "square-outline"} 
-                      size={20} 
-                      color={formData.hasDashcam ? Colors.primary : Colors.textMuted} 
-                    />
-                    <Text style={styles.securityFeatureText}>Dash Camera (2% discount)</Text>
-                  </TouchableOpacity>
-                  
-                  <TouchableOpacity
-                    style={styles.securityFeature}
+                    style={styles.safetyFeature}
                     onPress={() => updateFormData({ hasAntiTheft: !formData.hasAntiTheft })}
                   >
                     <Ionicons 
@@ -755,19 +739,19 @@ const PrivateComprehensiveScreen = ({ navigation, route }) => {
                       size={20} 
                       color={formData.hasAntiTheft ? Colors.primary : Colors.textMuted} 
                     />
-                    <Text style={styles.securityFeatureText}>Anti-theft System (3% discount)</Text>
+                    <Text style={styles.safetyFeatureText}>Anti-theft Device (10% discount)</Text>
                   </TouchableOpacity>
                   
                   <TouchableOpacity
-                    style={styles.securityFeature}
-                    onPress={() => updateFormData({ hasImmobilizer: !formData.hasImmobilizer })}
+                    style={styles.safetyFeature}
+                    onPress={() => updateFormData({ hasPillion: !formData.hasPillion })}
                   >
                     <Ionicons 
-                      name={formData.hasImmobilizer ? "checkbox" : "square-outline"} 
+                      name={formData.hasPillion ? "checkbox" : "square-outline"} 
                       size={20} 
-                      color={formData.hasImmobilizer ? Colors.primary : Colors.textMuted} 
+                      color={formData.hasPillion ? Colors.primary : Colors.textMuted} 
                     />
-                    <Text style={styles.securityFeatureText}>Engine Immobilizer (2% discount)</Text>
+                    <Text style={styles.safetyFeatureText}>Carries Passengers (pillion rider)</Text>
                   </TouchableOpacity>
                 </View>
               </View>
@@ -779,86 +763,77 @@ const PrivateComprehensiveScreen = ({ navigation, route }) => {
           <InsurerSelectionStep
             formData={formData}
             onUpdateFormData={handleInsurerSelection}
-            insurers={comprehensiveInsurers}
-            insuranceType="Comprehensive Insurance"
+            insurers={motorcycleInsurers}
+            insuranceType="Motorcycle Insurance"
             enablePremiumCalculation={true}
             onCalculatePremium={handleCalculatePremium}
             vehicleAge={formData.vehicleAge}
           >
-            {/* Comprehensive Coverage Information */}
+            {/* Motorcycle Coverage Information */}
             {formData.selectedInsurer && (
               <View style={styles.coverageInfoCard}>
                 <View style={styles.coverageCardHeader}>
-                  <Ionicons name="shield-checkmark" size={20} color={Colors.primary} />
-                  <Text style={styles.coverageCardTitle}>Comprehensive Coverage Details</Text>
+                  <Ionicons name="bicycle" size={20} color={Colors.primary} />
+                  <Text style={styles.coverageCardTitle}>Motorcycle Coverage Details</Text>
                 </View>
                 
                 <View style={styles.coverageRow}>
-                  <Text style={styles.coverageLabel}>Coverage Level:</Text>
+                  <Text style={styles.coverageLabel}>Coverage Type:</Text>
                   <Text style={styles.coverageValue}>
-                    {COMPREHENSIVE_COVERAGE_LEVELS.find(l => l.id === formData.selectedCoverageLevel)?.name}
+                    {MOTORCYCLE_COVERAGE_TYPES.find(c => c.id === formData.selectedCoverageType)?.name}
                   </Text>
                 </View>
                 
                 <View style={styles.coverageRow}>
-                  <Text style={styles.coverageLabel}>Own Damage:</Text>
-                  <Text style={styles.coverageValue}>{COMPREHENSIVE_COVERAGE.ownDamage}</Text>
+                  <Text style={styles.coverageLabel}>Engine Capacity:</Text>
+                  <Text style={styles.coverageValue}>{formData.engineCapacity} CC</Text>
+                </View>
+                
+                <View style={styles.coverageRow}>
+                  <Text style={styles.coverageLabel}>Usage Type:</Text>
+                  <Text style={styles.coverageValue}>
+                    {formData.useType === 'personal' ? 'Personal Use' : 'Commercial Use'}
+                  </Text>
                 </View>
                 
                 <View style={styles.coverageRow}>
                   <Text style={styles.coverageLabel}>Third Party Liability:</Text>
-                  <Text style={styles.coverageValue}>{COMPREHENSIVE_COVERAGE.thirdPartyLiability}</Text>
+                  <Text style={styles.coverageValue}>{MOTORCYCLE_COVERAGE.thirdPartyLiability}</Text>
                 </View>
                 
-                <View style={styles.coverageRow}>
-                  <Text style={styles.coverageLabel}>Theft & Fire:</Text>
-                  <Text style={styles.coverageValue}>{COMPREHENSIVE_COVERAGE.theft}</Text>
-                </View>
-                
-                {/* Selected Add-ons */}
-                {formData.selectedAddons && formData.selectedAddons.length > 0 && (
+                {formData.selectedCoverageType === 'comprehensive' && (
                   <>
-                    <Text style={styles.addonsHeader}>Selected Add-ons:</Text>
-                    {formData.selectedAddons.map(addonId => {
-                      const addon = COMPREHENSIVE_ADDONS.find(add => add.id === addonId);
-                      return addon ? (
-                        <View key={addonId} style={styles.selectedAddon}>
-                          <Ionicons name="checkmark-circle" size={16} color={Colors.success} />
-                          <Text style={styles.selectedAddonName}>{addon.name}</Text>
-                          <Text style={styles.selectedAddonPremium}>+KSh {addon.premium.toLocaleString()}</Text>
-                        </View>
-                      ) : null;
-                    })}
+                    <View style={styles.coverageRow}>
+                      <Text style={styles.coverageLabel}>Own Damage:</Text>
+                      <Text style={styles.coverageValue}>{MOTORCYCLE_COVERAGE.ownDamage}</Text>
+                    </View>
+                    <View style={styles.coverageRow}>
+                      <Text style={styles.coverageLabel}>Theft & Fire:</Text>
+                      <Text style={styles.coverageValue}>{MOTORCYCLE_COVERAGE.theft}</Text>
+                    </View>
                   </>
                 )}
                 
-                {/* Security Features */}
-                {(formData.hasTracking || formData.hasDashcam || formData.hasAntiTheft || formData.hasImmobilizer) && (
+                <View style={styles.coverageRow}>
+                  <Text style={styles.coverageLabel}>Personal Accident:</Text>
+                  <Text style={styles.coverageValue}>{MOTORCYCLE_COVERAGE.personalAccident}</Text>
+                </View>
+                
+                {/* Safety Features */}
+                {(formData.hasHelmet || formData.hasAntiTheft) && (
                   <>
-                    <Text style={styles.securityHeader}>Security Features (Discounts Applied):</Text>
-                    <View style={styles.securityList}>
-                      {formData.hasTracking && (
-                        <View style={styles.securityItem}>
-                          <Ionicons name="location" size={14} color={Colors.success} />
-                          <Text style={styles.securityText}>GPS Tracking System</Text>
-                        </View>
-                      )}
-                      {formData.hasDashcam && (
-                        <View style={styles.securityItem}>
-                          <Ionicons name="videocam" size={14} color={Colors.success} />
-                          <Text style={styles.securityText}>Dash Camera</Text>
+                    <Text style={styles.safetyHeader}>Safety Features (Discounts Applied):</Text>
+                    <View style={styles.safetyList}>
+                      {formData.hasHelmet && (
+                        <View style={styles.safetyItem}>
+                          <Ionicons name="shield-checkmark" size={14} color={Colors.success} />
+                          <Text style={styles.safetyText}>Approved Helmet</Text>
                         </View>
                       )}
                       {formData.hasAntiTheft && (
-                        <View style={styles.securityItem}>
+                        <View style={styles.safetyItem}>
                           <Ionicons name="shield" size={14} color={Colors.success} />
-                          <Text style={styles.securityText}>Anti-theft System</Text>
-                        </View>
-                      )}
-                      {formData.hasImmobilizer && (
-                        <View style={styles.securityItem}>
-                          <Ionicons name="lock-closed" size={14} color={Colors.success} />
-                          <Text style={styles.securityText}>Engine Immobilizer</Text>
+                          <Text style={styles.safetyText}>Anti-theft Device</Text>
                         </View>
                       )}
                     </View>
@@ -867,7 +842,7 @@ const PrivateComprehensiveScreen = ({ navigation, route }) => {
                 
                 {formData.selectedQuote && (
                   <View style={styles.coverageRow}>
-                    <Text style={styles.coverageLabel}>Vehicle Value:</Text>
+                    <Text style={styles.coverageLabel}>Motorcycle Value:</Text>
                     <Text style={styles.coverageValue}>KSh {formData.selectedQuote.vehicleValue?.toLocaleString()}</Text>
                   </View>
                 )}
@@ -883,8 +858,8 @@ const PrivateComprehensiveScreen = ({ navigation, route }) => {
             paymentState={paymentState}
             onInitiatePayment={initiateMpesaPayment}
             onRetryPayment={retryPayment}
-            serviceFee={50}
-            insuranceType="Comprehensive Insurance"
+            serviceFee={25}
+            insuranceType="Motorcycle Insurance"
           />
         );
       default:
@@ -893,7 +868,7 @@ const PrivateComprehensiveScreen = ({ navigation, route }) => {
   };
   
   return (
-    <SafeAreaView style={[styles.container, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
+    <SafeAreaView style={[styles.container, { paddingTop: insets.top }]}>
       <StatusBar style="dark" />
       
       {/* Header */}
@@ -904,7 +879,7 @@ const PrivateComprehensiveScreen = ({ navigation, route }) => {
         >
           <Ionicons name="arrow-back" size={24} color="white" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Comprehensive Insurance</Text>
+        <Text style={styles.headerTitle}>Motorcycle Insurance</Text>
         <View style={{ width: 24 }} />
       </View>
 
@@ -912,7 +887,7 @@ const PrivateComprehensiveScreen = ({ navigation, route }) => {
       <QuotationProgressBar
         currentStep={currentStep}
         totalSteps={TOTAL_STEPS}
-        stepLabels={['Personal Info', 'Vehicle Details', 'Coverage & Value', 'Select Insurer', 'Payment']}
+        stepLabels={['Personal Info', 'Motorcycle Details', 'Coverage & Value', 'Select Insurer', 'Payment']}
         showStepLabels={true}
         animated={true}
       />
@@ -1005,7 +980,40 @@ const styles = StyleSheet.create({
     padding: Spacing.md,
     paddingBottom: Spacing.xl,
   },
-  comprehensiveInfo: {
+  motorcycleFields: {
+    marginTop: Spacing.md,
+  },
+  fieldLabel: {
+    fontSize: Typography.fontSize.sm,
+    fontWeight: Typography.fontWeight.medium,
+    color: Colors.textPrimary,
+    marginBottom: Spacing.xs,
+    marginTop: Spacing.sm,
+  },
+  inputField: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    backgroundColor: Colors.white,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    marginBottom: Spacing.sm,
+  },
+  inputError: {
+    borderColor: Colors.error,
+  },
+  inputText: {
+    fontSize: Typography.fontSize.sm,
+    color: Colors.textPrimary,
+    flex: 1,
+  },
+  placeholderText: {
+    color: Colors.textMuted,
+  },
+  motorcycleInfo: {
     backgroundColor: Colors.white,
     borderRadius: 12,
     padding: Spacing.md,
@@ -1091,61 +1099,39 @@ const styles = StyleSheet.create({
     color: Colors.textMuted,
     marginBottom: 2,
   },
-  addonOption: {
+  usageOptions: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
+    justifyContent: 'space-around',
+    marginBottom: Spacing.md,
+  },
+  usageOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
     padding: Spacing.sm,
-    marginBottom: Spacing.sm,
     backgroundColor: Colors.backgroundLight,
     borderRadius: 8,
     borderWidth: 1,
     borderColor: Colors.border,
+    minWidth: 120,
   },
-  addonSelected: {
+  usageSelected: {
     backgroundColor: `${Colors.primary}08`,
     borderColor: Colors.primary,
   },
-  addonCheckbox: {
-    marginRight: Spacing.sm,
-    marginTop: 2,
-  },
-  addonDetails: {
-    flex: 1,
-  },
-  addonHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 4,
-  },
-  addonName: {
+  usageText: {
+    marginLeft: Spacing.xs,
     fontSize: Typography.fontSize.sm,
-    fontWeight: Typography.fontWeight.medium,
     color: Colors.textPrimary,
   },
-  addonPremium: {
-    fontSize: Typography.fontSize.sm,
-    fontWeight: Typography.fontWeight.medium,
-    color: Colors.primary,
-  },
-  addonDescription: {
-    fontSize: Typography.fontSize.xs,
-    color: Colors.textSecondary,
-    marginBottom: 2,
-  },
-  addonLimit: {
-    fontSize: Typography.fontSize.xs,
-    color: Colors.textMuted,
-    fontStyle: 'italic',
-  },
-  securityFeatures: {
+  safetyFeatures: {
     marginTop: Spacing.xs,
   },
-  securityFeature: {
+  safetyFeature: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: Spacing.xs,
   },
-  securityFeatureText: {
+  safetyFeatureText: {
     marginLeft: Spacing.xs,
     fontSize: Typography.fontSize.sm,
     color: Colors.textPrimary,
@@ -1189,47 +1175,24 @@ const styles = StyleSheet.create({
     fontWeight: Typography.fontWeight.medium,
     color: Colors.textPrimary,
   },
-  addonsHeader: {
-    fontSize: Typography.fontSize.sm,
-    fontWeight: Typography.fontWeight.medium,
-    color: Colors.primary,
-    marginTop: Spacing.sm,
-    marginBottom: Spacing.xs,
-  },
-  selectedAddon: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: Spacing.xs,
-  },
-  selectedAddonName: {
-    fontSize: Typography.fontSize.sm,
-    marginLeft: Spacing.xs,
-    flex: 1,
-    color: Colors.textPrimary,
-  },
-  selectedAddonPremium: {
-    fontSize: Typography.fontSize.sm,
-    fontWeight: Typography.fontWeight.medium,
-    color: Colors.primary,
-  },
-  securityHeader: {
+  safetyHeader: {
     fontSize: Typography.fontSize.sm,
     fontWeight: Typography.fontWeight.medium,
     color: Colors.success,
     marginTop: Spacing.sm,
     marginBottom: Spacing.xs,
   },
-  securityList: {
+  safetyList: {
     flexDirection: 'row',
     flexWrap: 'wrap',
   },
-  securityItem: {
+  safetyItem: {
     flexDirection: 'row',
     alignItems: 'center',
     marginRight: Spacing.md,
     marginBottom: Spacing.xs,
   },
-  securityText: {
+  safetyText: {
     fontSize: Typography.fontSize.xs,
     marginLeft: 4,
     color: Colors.success,
@@ -1285,4 +1248,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default PrivateComprehensiveScreen;
+export default PrivateMotorcycleScreen;

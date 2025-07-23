@@ -10,6 +10,9 @@ import {
   EnhancedMotorProductSelectionScreen,
   TORQuotationFlowScreen,
   PrivateThirdPartyScreen,
+  PrivateThirdPartyExtendibleScreen,
+  PrivateComprehensiveScreen,
+  PrivateMotorcycleScreen,
   CommercialThirdPartyScreen,
   PSVThirdPartyScreen,
   MotorcycleThirdPartyScreen,
@@ -86,6 +89,9 @@ const AppNavigator = () => {
             {/* Motor Quotation Screens */}
             <Stack.Screen name="TORQuotationFlow" component={TORQuotationFlowScreen} />
             <Stack.Screen name="PrivateThirdParty" component={PrivateThirdPartyScreen} />
+            <Stack.Screen name="PrivateThirdPartyExtendible" component={PrivateThirdPartyExtendibleScreen} />
+            <Stack.Screen name="PrivateComprehensive" component={PrivateComprehensiveScreen} />
+            <Stack.Screen name="PrivateMotorcycle" component={PrivateMotorcycleScreen} />
             <Stack.Screen name="CommercialThirdParty" component={CommercialThirdPartyScreen} />
             <Stack.Screen name="PSVThirdParty" component={PSVThirdPartyScreen} />
             <Stack.Screen name="MotorcycleThirdParty" component={MotorcycleThirdPartyScreen} />

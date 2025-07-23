@@ -22,7 +22,7 @@ import {
   ScrollView,
   TouchableOpacity
 } from 'react-native';
-import { Colors, Spacing, Typography } from '../../../../constants';
+import { Colors, Spacing, Typography } from '../../../../../constants';
 
 /**
  * Calculate motor insurance premium based on official underwriter rates

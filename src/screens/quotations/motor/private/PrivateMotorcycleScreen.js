@@ -1,66 +1,81 @@
-/**
- * Private Motorcycle Insurance Screen
- * 
- * This screen handles the Private motorcycle insurance 
- * quotation flow for private individual motorcycle owners
- */
-
-import React, { useState, useEffect, useRef } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  ScrollView, 
-  TouchableOpacity, 
-  TextInput, 
-  Alert, 
-  ActivityIndicator, 
-  KeyboardAvoidingView, 
-  Platform,
+import React, { useState, useRef, useEffect } from 'react';
+import {
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  TextInput,
+  Alert,
   Modal,
-  FlatList,
-  Image
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+  SafeAreaView,
 } from 'react-native';
-import { StatusBar } from 'expo-status-bar';
+import { StyleSheet } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 
+// Import components
+import { 
+  PersonalInformationStep,
+  VehicleDetailsStep,
+  VehicleValueStep,
+  InsurerSelectionStep,
+  PaymentStep
+} from './components';
+
+// Import constants
 import { Colors, Typography, Spacing } from '../../../../constants';
-import ActionButton from '../../../../components/common/ActionButton';
-import Button from '../../../../components/common/Button';
 
 // Motorcycle types
 const MOTORCYCLE_TYPES = [
-  'Standard', 'Sports', 'Cruiser', 'Dirt Bike', 'Scooter', 'Moped', 'Delivery Bike'
+  { id: 'standard', name: 'Standard Motorcycle', description: 'General purpose motorcycles for everyday use' },
+  { id: 'sports', name: 'Sports Bike', description: 'High-performance racing and sport motorcycles' },
+  { id: 'cruiser', name: 'Cruiser', description: 'Comfortable touring and leisure motorcycles' },
+  { id: 'scooter', name: 'Scooter', description: 'Small displacement urban transportation' },
+  { id: 'dirt_bike', name: 'Dirt Bike', description: 'Off-road and motocross motorcycles' },
+  { id: 'moped', name: 'Moped', description: 'Low-power motorcycles with pedals' },
+  { id: 'delivery', name: 'Delivery Bike', description: 'Commercial delivery motorcycles' },
 ];
 
 // Motorcycle makes
 const MOTORCYCLE_MAKES = [
-  'Honda', 'Yamaha', 'Suzuki', 'Kawasaki', 'Bajaj', 'TVS', 'Hero', 'Royal Enfield', 
-  'KTM', 'Piaggio', 'BMW', 'Harley-Davidson', 'Ducati', 'Triumph', 'Husqvarna'
+  'Honda',
+  'Yamaha', 
+  'Suzuki',
+  'Kawasaki',
+  'TVS',
+  'Bajaj',
+  'Hero',
+  'Royal Enfield',
+  'KTM',
+  'Haojue',
+  'Skygo',
+  'Dayun',
+  'Other'
 ];
 
-// Models by make
+// Motorcycle models by make
 const MOTORCYCLE_MODELS = {
-  'Honda': ['CB150', 'CB200', 'CB300', 'CB500X', 'CBR250', 'CBR600', 'CRF250', 'XL125', 'Wave'],
-  'Yamaha': ['YBR125', 'FZ150', 'MT-03', 'MT-07', 'R15', 'R25', 'R3', 'TZR', 'XTZ125', 'YZ250'],
-  'Suzuki': ['GN125', 'GSX-R150', 'GSX-R600', 'Hayabusa', 'GD110', 'DR200', 'RM-Z450', 'V-Strom'],
-  'Kawasaki': ['Ninja 250', 'Ninja 400', 'Z400', 'Z650', 'Versys 650', 'KLX150', 'KX250', 'KLR650'],
-  'Bajaj': ['Pulsar 125', 'Pulsar 150', 'Boxer', 'Dominar 400', 'Avenger', 'Discover', 'Platina'],
-  'TVS': ['Apache RTR 160', 'Apache RTR 180', 'Star City', 'Phoenix', 'Wego', 'Jupiter', 'XL100'],
-  'Hero': ['Splendor', 'Passion', 'HF Deluxe', 'Glamour', 'Karizma', 'Xpulse 200', 'Pleasure'],
-  'Royal Enfield': ['Classic 350', 'Classic 500', 'Bullet 350', 'Himalayan', 'Meteor 350', 'Interceptor 650', 'Continental GT'],
-  'KTM': ['Duke 125', 'Duke 200', 'Duke 390', 'RC 125', 'RC 200', 'RC 390', 'Adventure 390'],
-  'Piaggio': ['Vespa Primavera', 'Vespa Sprint', 'Vespa GTS', 'Liberty', 'Fly', 'ZIP', 'NRG'],
-  'BMW': ['G310R', 'G310GS', 'F750GS', 'F850GS', 'R1250GS', 'S1000RR', 'R nineT'],
-  'Harley-Davidson': ['Street 750', 'Iron 883', 'Forty-Eight', 'Fat Boy', 'Heritage Classic', 'Road King', 'Street Glide'],
-  'Ducati': ['Monster', 'Panigale V2', 'Panigale V4', 'Scrambler', 'Multistrada', 'Diavel', 'Hypermotard'],
-  'Triumph': ['Street Triple', 'Speed Triple', 'Tiger 800', 'Bonneville', 'Trident', 'Rocket 3', 'Scrambler'],
-  'Husqvarna': ['Svartpilen 401', 'Vitpilen 401', 'Svartpilen 250', 'Vitpilen 250', 'TE250', 'FE250', 'TE300']
+  'Honda': ['CB150R', 'CBR150R', 'CG125', 'XR150L', 'CB300F', 'CBR300R', 'CB500X', 'PCX150'],
+  'Yamaha': ['YBR125', 'FZ150i', 'R15', 'MT125', 'NMAX155', 'Aerox155', 'YZF-R3', 'MT-03'],
+  'Suzuki': ['GS125', 'GN125', 'GSX-R150', 'Gixxer', 'Address 110', 'Let\'s', 'GSX250R'],
+  'Kawasaki': ['Ninja 300', 'Z125 PRO', 'KLX150', 'Versys-X 300', 'Ninja 400', 'Z400'],
+  'TVS': ['Apache RTR 160', 'Apache RTR 200', 'Star City', 'XL100', 'NTORQ 125'],
+  'Bajaj': ['Pulsar 150', 'Pulsar 200', 'CT100', 'Platina', 'Dominar 400', 'Avenger'],
+  'Hero': ['Splendor Plus', 'HF Deluxe', 'Passion Pro', 'Glamour', 'Xtreme 160R'],
+  'Royal Enfield': ['Classic 350', 'Bullet 350', 'Himalayan', 'Interceptor 650', 'Continental GT'],
+  'KTM': ['Duke 125', 'Duke 200', 'Duke 390', 'RC 200', 'RC 390', 'Adventure 390'],
+  'Haojue': ['DK125', 'DK150', 'TR150', 'HJ125-7', 'Suzuki EN125'],
+  'Skygo': ['SG125', 'SG150', 'SG200', 'Cruiser 150'],
+  'Dayun': ['DY125', 'DY150', 'Hunter 150', 'Warrior 200'],
+  'Other': ['Enter model manually']
 };
 
-// Engine capacity ranges
+// Engine capacities
 const ENGINE_CAPACITIES = [
   '50cc - 100cc',
   '101cc - 125cc', 
@@ -199,77 +214,36 @@ export default function PrivateMotorcycleScreen() {
     // Simulate API call delay
     setTimeout(() => {
       try {
-        // Find selected cover type
-        const coverType = COVER_TYPES.find(c => c.id === formData.coverType);
-        if (!coverType) {
-          setPremium(0);
-          setIsCalculating(false);
-          return;
+        const baseCoverPremium = COVER_TYPES.find(type => type.id === formData.coverType)?.basePremium || 0;
+        let calculatedPremium = baseCoverPremium;
+        
+        // Apply adjustments based on usage
+        if (formData.usageType === 'food_delivery') {
+          calculatedPremium *= 1.5; // 50% increase for delivery
+        } else if (formData.usageType === 'recreational') {
+          calculatedPremium *= 0.8; // 20% discount for weekend riders
         }
         
-        // Start with base premium
-        let calculatedPremium = coverType.basePremium;
+        // Engine capacity adjustment
+        const engineCC = parseInt(formData.engineCapacity.split(' ')[0]);
+        if (engineCC > 400) {
+          calculatedPremium *= 1.3; // 30% increase for high capacity
+        } else if (engineCC < 150) {
+          calculatedPremium *= 0.9; // 10% discount for small bikes
+        }
         
-        // Engine capacity factor
-        const getEngineCapacityFactor = () => {
-          const capacity = formData.engineCapacity;
-          if (capacity === '50cc - 100cc') return 0.8;
-          if (capacity === '101cc - 125cc') return 0.9;
-          if (capacity === '126cc - 150cc') return 1.0;
-          if (capacity === '151cc - 200cc') return 1.1;
-          if (capacity === '201cc - 250cc') return 1.2;
-          if (capacity === '251cc - 400cc') return 1.4;
-          if (capacity === '401cc - 650cc') return 1.6;
-          if (capacity === '651cc - 1000cc') return 2.0;
-          if (capacity === 'Above 1000cc') return 2.5;
-          return 1.0;
-        };
+        // Age factor
+        const vehicleAge = new Date().getFullYear() - parseInt(formData.yearOfManufacture);
+        if (vehicleAge > 10) {
+          calculatedPremium *= 1.2; // 20% increase for old bikes
+        }
         
-        const capacityFactor = getEngineCapacityFactor();
-        calculatedPremium *= capacityFactor;
-        
-        // Motorcycle type factor
-        const getTypeFactors = () => {
-          const type = formData.motorcycleType;
-          if (type === 'Sports') return 1.4;
-          if (type === 'Dirt Bike') return 1.2;
-          if (type === 'Cruiser') return 1.1;
-          if (type === 'Delivery Bike') return 1.3;
-          return 1.0; // Standard, Scooter, Moped
-        };
-        
-        const typeFactor = getTypeFactors();
-        calculatedPremium *= typeFactor;
-        
-        // Usage type factor
-        const getUsageFactor = () => {
-          const usage = formData.usageType;
-          if (usage === 'food_delivery') return 1.5;
-          if (usage === 'commuting') return 1.2;
-          if (usage === 'recreational') return 0.9;
-          return 1.0; // personal
-        };
-        
-        const usageFactor = getUsageFactor();
-        calculatedPremium *= usageFactor;
-        
-        // Age of motorcycle factor
-        const vehicleAge = currentYear - parseInt(formData.yearOfManufacture);
-        let ageFactor = 1.0;
-        
-        if (vehicleAge <= 3) ageFactor = 1.0;
-        else if (vehicleAge <= 5) ageFactor = 1.1;
-        else if (vehicleAge <= 10) ageFactor = 1.2;
-        else ageFactor = 1.3;
-        
-        calculatedPremium *= ageFactor;
-        
-        // Modifications factor
+        // Modifications penalty
         if (formData.hasModifications) {
           calculatedPremium *= 1.15; // 15% increase for modifications
         }
         
-        // Add premiums for selected add-ons (only applicable for comprehensive)
+        // Add-ons (only for comprehensive)
         if (formData.coverType === 'comprehensive') {
           formData.selectedAddons.forEach(addonId => {
             const addon = ADDONS.find(a => a.id === addonId);
@@ -279,1344 +253,1168 @@ export default function PrivateMotorcycleScreen() {
           });
         }
         
-        // Policy fees and levies
-        const trainingLevy = calculatedPremium * 0.002; // Training levy
-        const pcf = 40; // Policy holders compensation fund
-        const stampDuty = 40; // Stamp duty
-        
-        // Add fees and levies
-        calculatedPremium = calculatedPremium + trainingLevy + pcf + stampDuty;
-        
-        // Round to nearest 100
-        calculatedPremium = Math.ceil(calculatedPremium / 100) * 100;
-        
-        setPremium(calculatedPremium);
+        setPremium(Math.round(calculatedPremium));
       } catch (error) {
-        console.error("Premium calculation error:", error);
-        // Fallback to default premium
-        setPremium(formData.coverType === 'comprehensive' ? 7000 : 3000);
+        console.error('Premium calculation error:', error);
+        setPremium(0);
       } finally {
         setIsCalculating(false);
       }
-    }, 800);
+    }, 1000);
   };
   
   // Form validation
   const validateForm = () => {
     const newErrors = {};
     
-    if (!formData.ownerName) newErrors.ownerName = 'Owner name is required';
+    // Required fields validation
+    if (!formData.ownerName.trim()) {
+      newErrors.ownerName = 'Owner name is required';
+    }
     
-    if (!formData.ownerPhone) {
+    if (!formData.ownerPhone.trim()) {
       newErrors.ownerPhone = 'Phone number is required';
-    } else if (!/^(0|\+254|254)7\d{8}$/.test(formData.ownerPhone)) {
-      newErrors.ownerPhone = 'Enter a valid Kenyan mobile number';
+    } else if (!/^[0-9]{10}$/.test(formData.ownerPhone.replace(/\D/g, ''))) {
+      newErrors.ownerPhone = 'Please enter a valid 10-digit phone number';
     }
     
-    if (formData.ownerEmail && !/\S+@\S+\.\S+/.test(formData.ownerEmail)) {
-      newErrors.ownerEmail = 'Enter a valid email address';
+    if (formData.ownerEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.ownerEmail)) {
+      newErrors.ownerEmail = 'Please enter a valid email address';
     }
     
-    if (!formData.motorcycleType) newErrors.motorcycleType = 'Motorcycle type is required';
-    if (!formData.motorcycleMake) newErrors.motorcycleMake = 'Make is required';
-    if (!formData.motorcycleModel) newErrors.motorcycleModel = 'Model is required';
-    if (!formData.engineCapacity) newErrors.engineCapacity = 'Engine capacity is required';
-    if (!formData.yearOfManufacture) newErrors.yearOfManufacture = 'Year is required';
-    if (!formData.usageType) newErrors.usageType = 'Usage type is required';
-    if (!formData.coverType) newErrors.coverType = 'Cover type is required';
+    if (!formData.motorcycleType) {
+      newErrors.motorcycleType = 'Motorcycle type is required';
+    }
     
-    if (!formData.registrationNumber) {
+    if (!formData.motorcycleMake) {
+      newErrors.motorcycleMake = 'Make is required';
+    }
+    
+    if (!formData.motorcycleModel) {
+      newErrors.motorcycleModel = 'Model is required';
+    }
+    
+    if (!formData.engineCapacity) {
+      newErrors.engineCapacity = 'Engine capacity is required';
+    }
+    
+    if (!formData.yearOfManufacture) {
+      newErrors.yearOfManufacture = 'Year of manufacture is required';
+    }
+    
+    if (!formData.registrationNumber.trim()) {
       newErrors.registrationNumber = 'Registration number is required';
-    } else if (!/^K[A-Z]{2}\s?\d{3}[A-Z]$/i.test(formData.registrationNumber)) {
-      newErrors.registrationNumber = 'Invalid registration format (e.g. KAA 123Z)';
     }
     
-    // Only validate motorcycle value for comprehensive cover
-    if (formData.coverType === 'comprehensive') {
-      if (!formData.motorcycleValue) {
-        newErrors.motorcycleValue = 'Motorcycle value is required for comprehensive cover';
-      } else {
-        const value = parseFloat(formData.motorcycleValue);
-        if (isNaN(value) || value < 50000) {
-          newErrors.motorcycleValue = 'Motorcycle value must be at least KSh 50,000';
-        }
-      }
+    if (!formData.motorcycleValue || parseFloat(formData.motorcycleValue) <= 0) {
+      newErrors.motorcycleValue = 'Valid motorcycle value is required';
+    }
+    
+    if (!formData.usageType) {
+      newErrors.usageType = 'Usage type is required';
+    }
+    
+    if (!formData.coverType) {
+      newErrors.coverType = 'Cover type is required';
     }
     
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
   
-  // Handle form submission
-  const handleSubmit = () => {
-    if (validateForm()) {
-      setIsSubmitting(true);
+  // Submit form
+  const handleSubmit = async () => {
+    if (!validateForm()) {
+      Alert.alert('Validation Error', 'Please fill in all required fields correctly.');
+      return;
+    }
+    
+    if (premium === 0) {
+      Alert.alert('Error', 'Unable to calculate premium. Please check your inputs.');
+      return;
+    }
+    
+    setIsSubmitting(true);
+    
+    try {
+      // Generate quotation ID
+      const newQuotationId = `MC${Date.now()}`;
+      setQuotationId(newQuotationId);
       
-      // Move to summary step
-      setCurrentStep(2);
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      Alert.alert(
+        'Quotation Generated!',
+        `Your motorcycle insurance quotation has been generated successfully.\n\nQuotation ID: ${newQuotationId}\nAnnual Premium: KSh ${premium.toLocaleString()}\n\nA copy has been sent to your email.`,
+        [
+          {
+            text: 'OK',
+            onPress: () => navigation.goBack()
+          }
+        ]
+      );
+      
+    } catch (error) {
+      console.error('Submission error:', error);
+      Alert.alert('Error', 'Failed to generate quotation. Please try again.');
+    } finally {
       setIsSubmitting(false);
-      
-      // Generate a quotation ID
-      const prefix = formData.coverType === 'comprehensive' ? 'PMC' : 'PMT';
-      setQuotationId(`${prefix}-${Math.floor(100000 + Math.random() * 900000)}`);
-    } else {
-      // Scroll to first error
-      if (scrollViewRef.current) {
-        scrollViewRef.current.scrollTo({ y: 0, animated: true });
-      }
     }
   };
   
-  // Proceed to final step
-  const handleConfirm = () => {
-    setCurrentStep(3);
+  // Get premium display text
+  const getPremiumDisplay = () => {
+    if (isCalculating) {
+      return 'Calculating...';
+    }
+    if (premium > 0) {
+      return `KSh ${premium.toLocaleString()}`;
+    }
+    return 'Complete form to see premium';
   };
   
-  // First step - Motorcycle and owner information form
-  const renderForm = () => (
-    <View style={styles.formContainer}>
-      <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Owner Details</Text>
-      </View>
-      
-      <View style={styles.formGroup}>
-        <Text style={styles.label}>Owner's Full Name</Text>
-        <TextInput
-          style={[styles.input, errors.ownerName && styles.inputError]}
-          placeholder="Enter owner's full name"
-          value={formData.ownerName}
-          onChangeText={(text) => updateField('ownerName', text)}
-        />
-        {errors.ownerName && <Text style={styles.errorText}>{errors.ownerName}</Text>}
-      </View>
-      
-      <View style={styles.formGroup}>
-        <Text style={styles.label}>Phone Number</Text>
-        <TextInput
-          style={[styles.input, errors.ownerPhone && styles.inputError]}
-          placeholder="E.g. 0722123456"
-          value={formData.ownerPhone}
-          onChangeText={(text) => updateField('ownerPhone', text)}
-          keyboardType="phone-pad"
-        />
-        {errors.ownerPhone && <Text style={styles.errorText}>{errors.ownerPhone}</Text>}
-      </View>
-      
-      <View style={styles.formGroup}>
-        <Text style={styles.label}>Email Address (Optional)</Text>
-        <TextInput
-          style={[styles.input, errors.ownerEmail && styles.inputError]}
-          placeholder="Enter email address"
-          value={formData.ownerEmail}
-          onChangeText={(text) => updateField('ownerEmail', text)}
-          keyboardType="email-address"
-          autoCapitalize="none"
-        />
-        {errors.ownerEmail && <Text style={styles.errorText}>{errors.ownerEmail}</Text>}
-      </View>
-      
-      <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Motorcycle Details</Text>
-      </View>
-      
-      <View style={styles.formGroup}>
-        <Text style={styles.label}>Cover Type</Text>
-        <TouchableOpacity
-          style={[styles.pickerButton, errors.coverType && styles.inputError]}
-          onPress={() => setCoverTypeModalVisible(true)}
-        >
-          <Text style={formData.coverType ? styles.pickerText : styles.placeholderText}>
-            {formData.coverType ? 
-              COVER_TYPES.find(c => c.id === formData.coverType)?.name : 
-              'Select cover type'}
-          </Text>
-          <Ionicons name="chevron-down" size={20} color={Colors.gray} />
-        </TouchableOpacity>
-        {errors.coverType && <Text style={styles.errorText}>{errors.coverType}</Text>}
-      </View>
-      
-      <View style={styles.formGroup}>
-        <Text style={styles.label}>Motorcycle Type</Text>
-        <TouchableOpacity
-          style={[styles.pickerButton, errors.motorcycleType && styles.inputError]}
-          onPress={() => setMotorcycleTypeModalVisible(true)}
-        >
-          <Text style={formData.motorcycleType ? styles.pickerText : styles.placeholderText}>
-            {formData.motorcycleType || 'Select motorcycle type'}
-          </Text>
-          <Ionicons name="chevron-down" size={20} color={Colors.gray} />
-        </TouchableOpacity>
-        {errors.motorcycleType && <Text style={styles.errorText}>{errors.motorcycleType}</Text>}
-      </View>
-      
-      <View style={styles.formGroup}>
-        <Text style={styles.label}>Make</Text>
-        <TouchableOpacity
-          style={[styles.pickerButton, errors.motorcycleMake && styles.inputError]}
-          onPress={() => setMakeModalVisible(true)}
-        >
-          <Text style={formData.motorcycleMake ? styles.pickerText : styles.placeholderText}>
-            {formData.motorcycleMake || 'Select make'}
-          </Text>
-          <Ionicons name="chevron-down" size={20} color={Colors.gray} />
-        </TouchableOpacity>
-        {errors.motorcycleMake && <Text style={styles.errorText}>{errors.motorcycleMake}</Text>}
-      </View>
-      
-      <View style={styles.formGroup}>
-        <Text style={styles.label}>Model</Text>
-        <TouchableOpacity
-          style={[styles.pickerButton, errors.motorcycleModel && styles.inputError]}
-          onPress={() => {
-            if (formData.motorcycleMake) {
-              setModelModalVisible(true);
-            } else {
-              Alert.alert('Select Make First', 'Please select motorcycle make before model.');
-            }
-          }}
-          disabled={!formData.motorcycleMake}
-        >
-          <Text style={formData.motorcycleModel ? styles.pickerText : styles.placeholderText}>
-            {formData.motorcycleModel || (formData.motorcycleMake ? 'Select model' : 'Select make first')}
-          </Text>
-          <Ionicons name="chevron-down" size={20} color={Colors.gray} />
-        </TouchableOpacity>
-        {errors.motorcycleModel && <Text style={styles.errorText}>{errors.motorcycleModel}</Text>}
-      </View>
-      
-      <View style={styles.formGroup}>
-        <Text style={styles.label}>Engine Capacity</Text>
-        <TouchableOpacity
-          style={[styles.pickerButton, errors.engineCapacity && styles.inputError]}
-          onPress={() => setEngineCapacityModalVisible(true)}
-        >
-          <Text style={formData.engineCapacity ? styles.pickerText : styles.placeholderText}>
-            {formData.engineCapacity || 'Select engine capacity'}
-          </Text>
-          <Ionicons name="chevron-down" size={20} color={Colors.gray} />
-        </TouchableOpacity>
-        {errors.engineCapacity && <Text style={styles.errorText}>{errors.engineCapacity}</Text>}
-      </View>
-      
-      <View style={styles.formGroup}>
-        <Text style={styles.label}>Year of Manufacture</Text>
-        <TouchableOpacity
-          style={[styles.pickerButton, errors.yearOfManufacture && styles.inputError]}
-          onPress={() => setYearModalVisible(true)}
-        >
-          <Text style={formData.yearOfManufacture ? styles.pickerText : styles.placeholderText}>
-            {formData.yearOfManufacture || 'Select year'}
-          </Text>
-          <Ionicons name="chevron-down" size={20} color={Colors.gray} />
-        </TouchableOpacity>
-        {errors.yearOfManufacture && <Text style={styles.errorText}>{errors.yearOfManufacture}</Text>}
-      </View>
-      
-      <View style={styles.formGroup}>
-        <Text style={styles.label}>Registration Number</Text>
-        <TextInput
-          style={[styles.input, errors.registrationNumber && styles.inputError]}
-          placeholder="E.g. KAA 123Z"
-          value={formData.registrationNumber}
-          onChangeText={(text) => updateField('registrationNumber', text.toUpperCase())}
-        />
-        {errors.registrationNumber && <Text style={styles.errorText}>{errors.registrationNumber}</Text>}
-      </View>
-      
-      {/* Only show value field for comprehensive cover */}
-      {formData.coverType === 'comprehensive' && (
-        <View style={styles.formGroup}>
-          <Text style={styles.label}>Motorcycle Value (KSh)</Text>
-          <TextInput
-            style={[styles.input, errors.motorcycleValue && styles.inputError]}
-            placeholder="E.g. 150000"
-            value={formData.motorcycleValue}
-            onChangeText={(text) => updateField('motorcycleValue', text)}
-            keyboardType="numeric"
-          />
-          {errors.motorcycleValue && <Text style={styles.errorText}>{errors.motorcycleValue}</Text>}
-        </View>
-      )}
-      
-      <View style={styles.formGroup}>
-        <Text style={styles.label}>Usage Type</Text>
-        <TouchableOpacity
-          style={[styles.pickerButton, errors.usageType && styles.inputError]}
-          onPress={() => setUsageTypeModalVisible(true)}
-        >
-          <Text style={formData.usageType ? styles.pickerText : styles.placeholderText}>
-            {formData.usageType ? 
-              USAGE_TYPES.find(u => u.id === formData.usageType)?.name : 
-              'Select usage type'}
-          </Text>
-          <Ionicons name="chevron-down" size={20} color={Colors.gray} />
-        </TouchableOpacity>
-        {errors.usageType && <Text style={styles.errorText}>{errors.usageType}</Text>}
-      </View>
-      
-      <View style={styles.formGroup}>
-        <View style={styles.switchContainer}>
-          <Text style={styles.label}>Does the motorcycle have modifications?</Text>
-          <TouchableOpacity
-            style={[
-              styles.toggleButton,
-              formData.hasModifications && styles.toggleButtonActive
-            ]}
-            onPress={() => updateField('hasModifications', !formData.hasModifications)}
-          >
-            <View style={[
-              styles.toggleKnob,
-              formData.hasModifications && styles.toggleKnobActive
-            ]} />
-          </TouchableOpacity>
-        </View>
-        <Text style={styles.helperText}>
-          Modifications include performance enhancements, aesthetic changes, or non-standard parts
-        </Text>
-      </View>
-      
-      {/* Add-ons section (only for comprehensive cover) */}
-      {formData.coverType === 'comprehensive' && (
-        <>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Optional Add-ons</Text>
-            <Text style={styles.sectionSubtitle}>Enhance your comprehensive policy with these add-ons</Text>
-          </View>
-          
-          {ADDONS.map((addon) => (
-            <TouchableOpacity
-              key={addon.id}
-              style={[
-                styles.addonOption,
-                formData.selectedAddons.includes(addon.id) && styles.addonOptionSelected
-              ]}
-              onPress={() => toggleAddon(addon.id)}
-            >
-              <View style={styles.addonCheckbox}>
-                {formData.selectedAddons.includes(addon.id) ? (
-                  <Ionicons name="checkbox" size={24} color={Colors.primary} />
-                ) : (
-                  <Ionicons name="square-outline" size={24} color={Colors.gray} />
-                )}
-              </View>
-              <View style={styles.addonDetails}>
-                <View style={styles.addonHeader}>
-                  <Text style={styles.addonName}>{addon.name}</Text>
-                  <Text style={styles.addonPremium}>+ KSh {addon.premium.toLocaleString()}</Text>
-                </View>
-                <Text style={styles.addonDescription}>{addon.description}</Text>
-              </View>
-            </TouchableOpacity>
-          ))}
-        </>
-      )}
-      
-      {/* Premium calculation section */}
-      {premium > 0 && (
-        <View style={styles.premiumContainer}>
-          <Text style={styles.premiumLabel}>
-            {formData.coverType === 'comprehensive' ? 'Comprehensive' : 'Third Party'} Premium:
-          </Text>
-          <Text style={styles.premiumValue}>KES {premium.toLocaleString()}</Text>
-        </View>
-      )}
-      
-      <Button
-        title="Get Quotation"
-        onPress={handleSubmit}
-        loading={isSubmitting}
-        style={styles.submitButton}
-        textStyle={styles.submitButtonText}
-      />
-    </View>
-  );
+  // Get premium display color
+  const getPremiumColor = () => {
+    if (isCalculating) {
+      return Colors.warning;
+    }
+    if (premium > 0) {
+      return Colors.success;
+    }
+    return Colors.textMuted;
+  };
   
-  // Second step - Quotation summary
-  const renderSummary = () => (
-    <View style={styles.summaryContainer}>
-      <View style={styles.quotationHeader}>
-        <Text style={styles.quotationId}>Quotation #{quotationId}</Text>
-        <Text style={styles.quotationDate}>
-          {new Date().toLocaleDateString('en-GB')}
-        </Text>
-      </View>
-      
-      <View style={styles.summaryCard}>
-        <View style={styles.summarySection}>
-          <Text style={styles.summaryTitle}>Motorcycle Details</Text>
-          <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>Type:</Text>
-            <Text style={styles.summaryValue}>{formData.motorcycleType}</Text>
-          </View>
-          <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>Make & Model:</Text>
-            <Text style={styles.summaryValue}>
-              {formData.motorcycleMake} {formData.motorcycleModel}
+  // Next step handler
+  const handleNextStep = () => {
+    if (currentStep < 3) {
+      setCurrentStep(prev => prev + 1);
+      scrollViewRef.current?.scrollTo({ y: 0, animated: true });
+    }
+  };
+  
+  // Previous step handler
+  const handlePrevStep = () => {
+    if (currentStep > 1) {
+      setCurrentStep(prev => prev - 1);
+      scrollViewRef.current?.scrollTo({ y: 0, animated: true });
+    }
+  };
+  
+  // Render step content
+  const renderStepContent = () => {
+    switch (currentStep) {
+      case 1:
+        return (
+          <View>
+            <Text style={styles.stepTitle}>Personal Information</Text>
+            <Text style={styles.stepDescription}>
+              Please provide your personal details
             </Text>
-          </View>
-          <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>Engine:</Text>
-            <Text style={styles.summaryValue}>{formData.engineCapacity}</Text>
-          </View>
-          <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>Year:</Text>
-            <Text style={styles.summaryValue}>{formData.yearOfManufacture}</Text>
-          </View>
-          <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>Registration:</Text>
-            <Text style={styles.summaryValue}>{formData.registrationNumber}</Text>
-          </View>
-          {formData.coverType === 'comprehensive' && (
-            <View style={styles.summaryRow}>
-              <Text style={styles.summaryLabel}>Value:</Text>
-              <Text style={styles.summaryValue}>KSh {parseInt(formData.motorcycleValue).toLocaleString()}</Text>
+            
+            {/* Owner Name */}
+            <View style={styles.inputContainer}>
+              <Text style={styles.inputLabel}>
+                Full Name <Text style={styles.required}>*</Text>
+              </Text>
+              <TextInput
+                style={[styles.textInput, errors.ownerName && styles.inputError]}
+                value={formData.ownerName}
+                onChangeText={(value) => updateField('ownerName', value)}
+                placeholder="Enter your full name"
+                placeholderTextColor={Colors.textMuted}
+              />
+              {errors.ownerName && (
+                <Text style={styles.errorText}>{errors.ownerName}</Text>
+              )}
             </View>
-          )}
-          <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>Usage:</Text>
-            <Text style={styles.summaryValue}>
-              {USAGE_TYPES.find(u => u.id === formData.usageType)?.name}
-            </Text>
-          </View>
-          <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>Modifications:</Text>
-            <Text style={styles.summaryValue}>{formData.hasModifications ? 'Yes' : 'No'}</Text>
-          </View>
-        </View>
-        
-        <View style={styles.divider} />
-        
-        <View style={styles.summarySection}>
-          <Text style={styles.summaryTitle}>Owner Details</Text>
-          <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>Name:</Text>
-            <Text style={styles.summaryValue}>{formData.ownerName}</Text>
-          </View>
-          <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>Phone:</Text>
-            <Text style={styles.summaryValue}>{formData.ownerPhone}</Text>
-          </View>
-          {formData.ownerEmail && (
-            <View style={styles.summaryRow}>
-              <Text style={styles.summaryLabel}>Email:</Text>
-              <Text style={styles.summaryValue}>{formData.ownerEmail}</Text>
+            
+            {/* Phone Number */}
+            <View style={styles.inputContainer}>
+              <Text style={styles.inputLabel}>
+                Phone Number <Text style={styles.required}>*</Text>
+              </Text>
+              <TextInput
+                style={[styles.textInput, errors.ownerPhone && styles.inputError]}
+                value={formData.ownerPhone}
+                onChangeText={(value) => updateField('ownerPhone', value)}
+                placeholder="0712345678"
+                placeholderTextColor={Colors.textMuted}
+                keyboardType="phone-pad"
+                maxLength={15}
+              />
+              {errors.ownerPhone && (
+                <Text style={styles.errorText}>{errors.ownerPhone}</Text>
+              )}
             </View>
-          )}
-        </View>
-        
-        <View style={styles.divider} />
-        
-        <View style={styles.summarySection}>
-          <Text style={styles.summaryTitle}>Coverage Details</Text>
-          <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>Cover Type:</Text>
-            <Text style={styles.summaryValue}>
-              {COVER_TYPES.find(c => c.id === formData.coverType)?.name}
+            
+            {/* Email (optional) */}
+            <View style={styles.inputContainer}>
+              <Text style={styles.inputLabel}>Email Address</Text>
+              <TextInput
+                style={[styles.textInput, errors.ownerEmail && styles.inputError]}
+                value={formData.ownerEmail}
+                onChangeText={(value) => updateField('ownerEmail', value)}
+                placeholder="your.email@example.com"
+                placeholderTextColor={Colors.textMuted}
+                keyboardType="email-address"
+                autoCapitalize="none"
+              />
+              {errors.ownerEmail && (
+                <Text style={styles.errorText}>{errors.ownerEmail}</Text>
+              )}
+            </View>
+          </View>
+        );
+      
+      case 2:
+        return (
+          <View>
+            <Text style={styles.stepTitle}>Motorcycle Details</Text>
+            <Text style={styles.stepDescription}>
+              Tell us about your motorcycle
             </Text>
-          </View>
-          
-          {/* Add-ons (for comprehensive only) */}
-          {formData.coverType === 'comprehensive' && formData.selectedAddons.length > 0 && (
-            <>
-              <Text style={styles.addonsTitle}>Add-ons:</Text>
-              {formData.selectedAddons.map(addonId => {
-                const addon = ADDONS.find(a => a.id === addonId);
-                return (
-                  <View key={addonId} style={styles.addonItem}>
-                    <Ionicons name="checkmark-circle" size={16} color={Colors.success} />
-                    <Text style={styles.addonItemName}>{addon.name}</Text>
-                    <Text style={styles.addonItemPremium}>
-                      KSh {addon.premium.toLocaleString()}
-                    </Text>
-                  </View>
-                );
-              })}
-            </>
-          )}
-          
-          <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>Period:</Text>
-            <Text style={styles.summaryValue}>12 Months</Text>
-          </View>
-          <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>Premium:</Text>
-            <Text style={styles.premiumValue}>KES {premium.toLocaleString()}</Text>
-          </View>
-        </View>
-        
-        <View style={styles.actionsContainer}>
-          <TouchableOpacity 
-            style={styles.editButton}
-            onPress={() => setCurrentStep(1)}
-          >
-            <Ionicons name="arrow-back" size={18} color={Colors.primary} />
-            <Text style={styles.editButtonText}>Edit Details</Text>
-          </TouchableOpacity>
-          
-          <Button
-            title="Proceed to Payment"
-            onPress={handleConfirm}
-            style={styles.confirmButton}
-            textStyle={styles.confirmButtonText}
-          />
-        </View>
-      </View>
-    </View>
-  );
-  
-  // Third step - Success message
-  const renderSuccess = () => (
-    <View style={styles.successContainer}>
-      <View style={styles.successIcon}>
-        <Ionicons name="checkmark-circle" size={100} color={Colors.success} />
-      </View>
-      
-      <Text style={styles.successTitle}>Quotation Created!</Text>
-      <Text style={styles.successMessage}>
-        Your {formData.coverType === 'comprehensive' ? 'comprehensive' : 'third party'} motorcycle insurance quotation has been created successfully.
-      </Text>
-      
-      <View style={styles.successDetails}>
-        <View style={styles.successRow}>
-          <Text style={styles.successLabel}>Quotation ID:</Text>
-          <Text style={styles.successValue}>{quotationId}</Text>
-        </View>
-        <View style={styles.successRow}>
-          <Text style={styles.successLabel}>Amount:</Text>
-          <Text style={styles.successValue}>KES {premium.toLocaleString()}</Text>
-        </View>
-        <View style={styles.successRow}>
-          <Text style={styles.successLabel}>Motorcycle:</Text>
-          <Text style={styles.successValue}>
-            {formData.motorcycleMake} {formData.motorcycleModel}
-          </Text>
-        </View>
-        <View style={styles.successRow}>
-          <Text style={styles.successLabel}>Registration:</Text>
-          <Text style={styles.successValue}>{formData.registrationNumber}</Text>
-        </View>
-      </View>
-      
-      <View style={styles.successActions}>
-        <Button
-          title="View Policy Details"
-          onPress={() => {
-            // In a real app, navigate to policy details
-            Alert.alert('Success', 'Navigating to policy details would happen here.');
-          }}
-          style={styles.successButton}
-          textStyle={styles.successButtonText}
-        />
-        
-        <Button
-          title="Back to Insurance Products"
-          onPress={() => navigation.goBack()}
-          style={styles.outlineButton}
-          textStyle={styles.outlineButtonText}
-        />
-      </View>
-    </View>
-  );
-  
-  // Modal for motorcycle type selection
-  const renderMotorcycleTypeModal = () => (
-    <Modal
-      visible={motorcycleTypeModalVisible}
-      transparent={true}
-      animationType="slide"
-      onRequestClose={() => setMotorcycleTypeModalVisible(false)}
-    >
-      <View style={styles.modalOverlay}>
-        <View style={styles.modalContent}>
-          <Text style={styles.modalTitle}>Select Motorcycle Type</Text>
-          <FlatList
-            data={MOTORCYCLE_TYPES}
-            keyExtractor={item => item}
-            renderItem={({ item }) => (
+            
+            {/* Motorcycle Type */}
+            <View style={styles.inputContainer}>
+              <Text style={styles.inputLabel}>
+                Motorcycle Type <Text style={styles.required}>*</Text>
+              </Text>
               <TouchableOpacity
-                style={styles.modalItem}
-                onPress={() => {
-                  updateField('motorcycleType', item);
-                  setMotorcycleTypeModalVisible(false);
-                }}
+                style={[styles.dropdownButton, errors.motorcycleType && styles.inputError]}
+                onPress={() => setMotorcycleTypeModalVisible(true)}
               >
-                <Text style={styles.modalItemText}>{item}</Text>
-              </TouchableOpacity>
-            )}
-          />
-          <Button
-            title="Cancel"
-            onPress={() => setMotorcycleTypeModalVisible(false)}
-            style={styles.cancelButton}
-            textStyle={styles.cancelButtonText}
-          />
-        </View>
-      </View>
-    </Modal>
-  );
-  
-  // Modal for make selection
-  const renderMakeModal = () => (
-    <Modal
-      visible={makeModalVisible}
-      transparent={true}
-      animationType="slide"
-      onRequestClose={() => setMakeModalVisible(false)}
-    >
-      <View style={styles.modalOverlay}>
-        <View style={styles.modalContent}>
-          <Text style={styles.modalTitle}>Select Motorcycle Make</Text>
-          <FlatList
-            data={MOTORCYCLE_MAKES}
-            keyExtractor={item => item}
-            renderItem={({ item }) => (
-              <TouchableOpacity
-                style={styles.modalItem}
-                onPress={() => {
-                  updateField('motorcycleMake', item);
-                  updateField('motorcycleModel', ''); // Reset model when make changes
-                  setMakeModalVisible(false);
-                }}
-              >
-                <Text style={styles.modalItemText}>{item}</Text>
-              </TouchableOpacity>
-            )}
-          />
-          <Button
-            title="Cancel"
-            onPress={() => setMakeModalVisible(false)}
-            style={styles.cancelButton}
-            textStyle={styles.cancelButtonText}
-          />
-        </View>
-      </View>
-    </Modal>
-  );
-  
-  // Modal for model selection
-  const renderModelModal = () => (
-    <Modal
-      visible={modelModalVisible}
-      transparent={true}
-      animationType="slide"
-      onRequestClose={() => setModelModalVisible(false)}
-    >
-      <View style={styles.modalOverlay}>
-        <View style={styles.modalContent}>
-          <Text style={styles.modalTitle}>
-            Select {formData.motorcycleMake} Model
-          </Text>
-          <FlatList
-            data={formData.motorcycleMake ? MOTORCYCLE_MODELS[formData.motorcycleMake] || [] : []}
-            keyExtractor={item => item}
-            renderItem={({ item }) => (
-              <TouchableOpacity
-                style={styles.modalItem}
-                onPress={() => {
-                  updateField('motorcycleModel', item);
-                  setModelModalVisible(false);
-                }}
-              >
-                <Text style={styles.modalItemText}>{item}</Text>
-              </TouchableOpacity>
-            )}
-          />
-          <Button
-            title="Cancel"
-            onPress={() => setModelModalVisible(false)}
-            style={styles.cancelButton}
-            textStyle={styles.cancelButtonText}
-          />
-        </View>
-      </View>
-    </Modal>
-  );
-  
-  // Modal for year selection
-  const renderYearModal = () => (
-    <Modal
-      visible={yearModalVisible}
-      transparent={true}
-      animationType="slide"
-      onRequestClose={() => setYearModalVisible(false)}
-    >
-      <View style={styles.modalOverlay}>
-        <View style={styles.modalContent}>
-          <Text style={styles.modalTitle}>Select Year of Manufacture</Text>
-          <FlatList
-            data={years}
-            keyExtractor={item => item}
-            renderItem={({ item }) => (
-              <TouchableOpacity
-                style={styles.modalItem}
-                onPress={() => {
-                  updateField('yearOfManufacture', item);
-                  setYearModalVisible(false);
-                }}
-              >
-                <Text style={styles.modalItemText}>{item}</Text>
-              </TouchableOpacity>
-            )}
-          />
-          <Button
-            title="Cancel"
-            onPress={() => setYearModalVisible(false)}
-            style={styles.cancelButton}
-            textStyle={styles.cancelButtonText}
-          />
-        </View>
-      </View>
-    </Modal>
-  );
-  
-  // Modal for engine capacity selection
-  const renderEngineCapacityModal = () => (
-    <Modal
-      visible={engineCapacityModalVisible}
-      transparent={true}
-      animationType="slide"
-      onRequestClose={() => setEngineCapacityModalVisible(false)}
-    >
-      <View style={styles.modalOverlay}>
-        <View style={styles.modalContent}>
-          <Text style={styles.modalTitle}>Select Engine Capacity</Text>
-          <FlatList
-            data={ENGINE_CAPACITIES}
-            keyExtractor={item => item}
-            renderItem={({ item }) => (
-              <TouchableOpacity
-                style={styles.modalItem}
-                onPress={() => {
-                  updateField('engineCapacity', item);
-                  setEngineCapacityModalVisible(false);
-                }}
-              >
-                <Text style={styles.modalItemText}>{item}</Text>
-              </TouchableOpacity>
-            )}
-          />
-          <Button
-            title="Cancel"
-            onPress={() => setEngineCapacityModalVisible(false)}
-            style={styles.cancelButton}
-            textStyle={styles.cancelButtonText}
-          />
-        </View>
-      </View>
-    </Modal>
-  );
-  
-  // Modal for usage type selection
-  const renderUsageTypeModal = () => (
-    <Modal
-      visible={usageTypeModalVisible}
-      transparent={true}
-      animationType="slide"
-      onRequestClose={() => setUsageTypeModalVisible(false)}
-    >
-      <View style={styles.modalOverlay}>
-        <View style={styles.modalContent}>
-          <Text style={styles.modalTitle}>Select Usage Type</Text>
-          <FlatList
-            data={USAGE_TYPES}
-            keyExtractor={item => item.id}
-            renderItem={({ item }) => (
-              <TouchableOpacity
-                style={styles.modalItem}
-                onPress={() => {
-                  updateField('usageType', item.id);
-                  setUsageTypeModalVisible(false);
-                }}
-              >
-                <Text style={styles.modalItemText}>{item.name}</Text>
-                <Text style={styles.modalItemDescription}>{item.description}</Text>
-              </TouchableOpacity>
-            )}
-          />
-          <Button
-            title="Cancel"
-            onPress={() => setUsageTypeModalVisible(false)}
-            style={styles.cancelButton}
-            textStyle={styles.cancelButtonText}
-          />
-        </View>
-      </View>
-    </Modal>
-  );
-  
-  // Modal for cover type selection
-  const renderCoverTypeModal = () => (
-    <Modal
-      visible={coverTypeModalVisible}
-      transparent={true}
-      animationType="slide"
-      onRequestClose={() => setCoverTypeModalVisible(false)}
-    >
-      <View style={styles.modalOverlay}>
-        <View style={styles.modalContent}>
-          <Text style={styles.modalTitle}>Select Cover Type</Text>
-          <FlatList
-            data={COVER_TYPES}
-            keyExtractor={item => item.id}
-            renderItem={({ item }) => (
-              <TouchableOpacity
-                style={styles.modalItem}
-                onPress={() => {
-                  updateField('coverType', item.id);
-                  setCoverTypeModalVisible(false);
-                }}
-              >
-                <Text style={styles.modalItemText}>{item.name}</Text>
-                <Text style={styles.modalItemDescription}>{item.description}</Text>
-                <Text style={styles.modalItemPrice}>
-                  From KSh {item.basePremium.toLocaleString()} per year
+                <Text style={[
+                  styles.dropdownText,
+                  !formData.motorcycleType && styles.placeholderText
+                ]}>
+                  {formData.motorcycleType ? 
+                    MOTORCYCLE_TYPES.find(t => t.id === formData.motorcycleType)?.name || formData.motorcycleType :
+                    'Select motorcycle type'
+                  }
                 </Text>
+                <Ionicons name="chevron-down" size={20} color={Colors.textMuted} />
               </TouchableOpacity>
+              {errors.motorcycleType && (
+                <Text style={styles.errorText}>{errors.motorcycleType}</Text>
+              )}
+            </View>
+            
+            {/* Make */}
+            <View style={styles.inputContainer}>
+              <Text style={styles.inputLabel}>
+                Make <Text style={styles.required}>*</Text>
+              </Text>
+              <TouchableOpacity
+                style={[styles.dropdownButton, errors.motorcycleMake && styles.inputError]}
+                onPress={() => setMakeModalVisible(true)}
+              >
+                <Text style={[
+                  styles.dropdownText,
+                  !formData.motorcycleMake && styles.placeholderText
+                ]}>
+                  {formData.motorcycleMake || 'Select make'}
+                </Text>
+                <Ionicons name="chevron-down" size={20} color={Colors.textMuted} />
+              </TouchableOpacity>
+              {errors.motorcycleMake && (
+                <Text style={styles.errorText}>{errors.motorcycleMake}</Text>
+              )}
+            </View>
+            
+            {/* Model */}
+            <View style={styles.inputContainer}>
+              <Text style={styles.inputLabel}>
+                Model <Text style={styles.required}>*</Text>
+              </Text>
+              <TextInput
+                style={[styles.textInput, errors.motorcycleModel && styles.inputError]}
+                value={formData.motorcycleModel}
+                onChangeText={(value) => updateField('motorcycleModel', value)}
+                placeholder="Enter model"
+                placeholderTextColor={Colors.textMuted}
+              />
+              {errors.motorcycleModel && (
+                <Text style={styles.errorText}>{errors.motorcycleModel}</Text>
+              )}
+            </View>
+            
+            {/* Engine Capacity */}
+            <View style={styles.inputContainer}>
+              <Text style={styles.inputLabel}>
+                Engine Capacity <Text style={styles.required}>*</Text>
+              </Text>
+              <TouchableOpacity
+                style={[styles.dropdownButton, errors.engineCapacity && styles.inputError]}
+                onPress={() => setEngineCapacityModalVisible(true)}
+              >
+                <Text style={[
+                  styles.dropdownText,
+                  !formData.engineCapacity && styles.placeholderText
+                ]}>
+                  {formData.engineCapacity || 'Select engine capacity'}
+                </Text>
+                <Ionicons name="chevron-down" size={20} color={Colors.textMuted} />
+              </TouchableOpacity>
+              {errors.engineCapacity && (
+                <Text style={styles.errorText}>{errors.engineCapacity}</Text>
+              )}
+            </View>
+            
+            {/* Year of Manufacture */}
+            <View style={styles.inputContainer}>
+              <Text style={styles.inputLabel}>
+                Year of Manufacture <Text style={styles.required}>*</Text>
+              </Text>
+              <TouchableOpacity
+                style={[styles.dropdownButton, errors.yearOfManufacture && styles.inputError]}
+                onPress={() => setYearModalVisible(true)}
+              >
+                <Text style={[
+                  styles.dropdownText,
+                  !formData.yearOfManufacture && styles.placeholderText
+                ]}>
+                  {formData.yearOfManufacture || 'Select year'}
+                </Text>
+                <Ionicons name="chevron-down" size={20} color={Colors.textMuted} />
+              </TouchableOpacity>
+              {errors.yearOfManufacture && (
+                <Text style={styles.errorText}>{errors.yearOfManufacture}</Text>
+              )}
+            </View>
+            
+            {/* Registration Number */}
+            <View style={styles.inputContainer}>
+              <Text style={styles.inputLabel}>
+                Registration Number <Text style={styles.required}>*</Text>
+              </Text>
+              <TextInput
+                style={[styles.textInput, errors.registrationNumber && styles.inputError]}
+                value={formData.registrationNumber}
+                onChangeText={(value) => updateField('registrationNumber', value.toUpperCase())}
+                placeholder="KXX 123Y"
+                placeholderTextColor={Colors.textMuted}
+                autoCapitalize="characters"
+                maxLength={10}
+              />
+              {errors.registrationNumber && (
+                <Text style={styles.errorText}>{errors.registrationNumber}</Text>
+              )}
+            </View>
+            
+            {/* Motorcycle Value */}
+            <View style={styles.inputContainer}>
+              <Text style={styles.inputLabel}>
+                Motorcycle Value (KSh) <Text style={styles.required}>*</Text>
+              </Text>
+              <TextInput
+                style={[styles.textInput, errors.motorcycleValue && styles.inputError]}
+                value={formData.motorcycleValue}
+                onChangeText={(value) => updateField('motorcycleValue', value)}
+                placeholder="150000"
+                placeholderTextColor={Colors.textMuted}
+                keyboardType="numeric"
+              />
+              {errors.motorcycleValue && (
+                <Text style={styles.errorText}>{errors.motorcycleValue}</Text>
+              )}
+            </View>
+          </View>
+        );
+      
+      case 3:
+        return (
+          <View>
+            <Text style={styles.stepTitle}>Insurance Details</Text>
+            <Text style={styles.stepDescription}>
+              Choose your coverage options
+            </Text>
+            
+            {/* Usage Type */}
+            <View style={styles.inputContainer}>
+              <Text style={styles.inputLabel}>
+                Usage Type <Text style={styles.required}>*</Text>
+              </Text>
+              <TouchableOpacity
+                style={[styles.dropdownButton, errors.usageType && styles.inputError]}
+                onPress={() => setUsageTypeModalVisible(true)}
+              >
+                <Text style={[
+                  styles.dropdownText,
+                  !formData.usageType && styles.placeholderText
+                ]}>
+                  {formData.usageType ? 
+                    USAGE_TYPES.find(t => t.id === formData.usageType)?.name || formData.usageType :
+                    'Select usage type'
+                  }
+                </Text>
+                <Ionicons name="chevron-down" size={20} color={Colors.textMuted} />
+              </TouchableOpacity>
+              {errors.usageType && (
+                <Text style={styles.errorText}>{errors.usageType}</Text>
+              )}
+            </View>
+            
+            {/* Cover Type */}
+            <View style={styles.inputContainer}>
+              <Text style={styles.inputLabel}>
+                Insurance Cover <Text style={styles.required}>*</Text>
+              </Text>
+              <TouchableOpacity
+                style={[styles.dropdownButton, errors.coverType && styles.inputError]}
+                onPress={() => setCoverTypeModalVisible(true)}
+              >
+                <Text style={[
+                  styles.dropdownText,
+                  !formData.coverType && styles.placeholderText
+                ]}>
+                  {formData.coverType ? 
+                    COVER_TYPES.find(t => t.id === formData.coverType)?.name || formData.coverType :
+                    'Select cover type'
+                  }
+                </Text>
+                <Ionicons name="chevron-down" size={20} color={Colors.textMuted} />
+              </TouchableOpacity>
+              {errors.coverType && (
+                <Text style={styles.errorText}>{errors.coverType}</Text>
+              )}
+            </View>
+            
+            {/* Modifications */}
+            <View style={styles.inputContainer}>
+              <View style={styles.checkboxContainer}>
+                <TouchableOpacity
+                  style={styles.checkbox}
+                  onPress={() => updateField('hasModifications', !formData.hasModifications)}
+                >
+                  <Ionicons
+                    name={formData.hasModifications ? "checkbox" : "square-outline"}
+                    size={24}
+                    color={formData.hasModifications ? Colors.primary : Colors.textMuted}
+                  />
+                </TouchableOpacity>
+                <View style={styles.checkboxTextContainer}>
+                  <Text style={styles.checkboxLabel}>My motorcycle has modifications</Text>
+                  <Text style={styles.checkboxDescription}>
+                    Including exhaust, suspension, performance upgrades, etc.
+                  </Text>
+                </View>
+              </View>
+            </View>
+            
+            {/* Add-ons (only for comprehensive) */}
+            {formData.coverType === 'comprehensive' && (
+              <View style={styles.inputContainer}>
+                <Text style={styles.inputLabel}>Optional Add-ons</Text>
+                <Text style={styles.inputDescription}>
+                  Select additional coverage options
+                </Text>
+                
+                {ADDONS.map((addon) => (
+                  <View key={addon.id} style={styles.addonContainer}>
+                    <TouchableOpacity
+                      style={styles.checkbox}
+                      onPress={() => toggleAddon(addon.id)}
+                    >
+                      <Ionicons
+                        name={formData.selectedAddons.includes(addon.id) ? "checkbox" : "square-outline"}
+                        size={24}
+                        color={formData.selectedAddons.includes(addon.id) ? Colors.primary : Colors.textMuted}
+                      />
+                    </TouchableOpacity>
+                    <View style={styles.addonTextContainer}>
+                      <View style={styles.addonHeader}>
+                        <Text style={styles.addonName}>{addon.name}</Text>
+                        <Text style={styles.addonPremium}>+KSh {addon.premium.toLocaleString()}</Text>
+                      </View>
+                      <Text style={styles.addonDescription}>{addon.description}</Text>
+                    </View>
+                  </View>
+                ))}
+              </View>
             )}
-          />
-          <Button
-            title="Cancel"
-            onPress={() => setCoverTypeModalVisible(false)}
-            style={styles.cancelButton}
-            textStyle={styles.cancelButtonText}
-          />
-        </View>
-      </View>
-    </Modal>
-  );
+            
+            {/* Premium Display */}
+            <View style={styles.premiumContainer}>
+              <View style={styles.premiumHeader}>
+                <Text style={styles.premiumLabel}>Estimated Annual Premium</Text>
+                <Text style={[styles.premiumAmount, { color: getPremiumColor() }]}>
+                  {getPremiumDisplay()}
+                </Text>
+              </View>
+              
+              {premium > 0 && (
+                <View style={styles.premiumBreakdown}>
+                  <Text style={styles.premiumNote}>
+                    * This is an estimated premium. Final premium may vary based on 
+                    underwriter assessment and current market rates.
+                  </Text>
+                </View>
+              )}
+            </View>
+          </View>
+        );
+      
+      default:
+        return null;
+    }
+  };
   
   return (
-    <KeyboardAvoidingView
-      style={[styles.container, { paddingTop: insets.top }]}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
-    >
-      <StatusBar style="light" />
+    <SafeAreaView style={[styles.container, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
+      <StatusBar style="dark" />
       
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity
           style={styles.backButton}
-          onPress={() => {
-            if (currentStep > 1) {
-              setCurrentStep(currentStep - 1);
-            } else {
-              navigation.goBack();
-            }
-          }}
+          onPress={() => navigation.goBack()}
         >
-          <Ionicons name="arrow-back" size={24} color={Colors.white} />
+          <Ionicons name="arrow-back" size={24} color="white" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>
-          Private Motorcycle Insurance
-        </Text>
-        <TouchableOpacity
-          style={styles.infoButton}
-          onPress={() => Alert.alert(
-            'Motorcycle Insurance',
-            'This insurance provides coverage for private motorcycles, with options for both comprehensive and third-party coverage.'
-          )}
-        >
-          <Ionicons name="information-circle-outline" size={24} color={Colors.white} />
-        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Motorcycle Insurance</Text>
+        <View style={styles.placeholder} />
       </View>
       
-      {/* Progress indicator */}
+      {/* Progress Indicator */}
       <View style={styles.progressContainer}>
-        <View style={styles.progressStep}>
-          <View style={[
-            styles.progressDot,
-            currentStep >= 1 && styles.progressActive
-          ]}>
-            <Text style={styles.progressNumber}>1</Text>
+        {[1, 2, 3].map((step) => (
+          <View key={step} style={styles.progressItem}>
+            <View style={[
+              styles.progressCircle,
+              step <= currentStep && styles.progressCircleActive
+            ]}>
+              <Text style={[
+                styles.progressNumber,
+                step <= currentStep && styles.progressNumberActive
+              ]}>
+                {step}
+              </Text>
+            </View>
+            <Text style={[
+              styles.progressLabel,
+              step <= currentStep && styles.progressLabelActive
+            ]}>
+              {step === 1 ? 'Personal' : step === 2 ? 'Motorcycle' : 'Insurance'}
+            </Text>
           </View>
-          <Text style={styles.progressLabel}>Details</Text>
-        </View>
-        <View style={styles.progressLine} />
-        <View style={styles.progressStep}>
-          <View style={[
-            styles.progressDot,
-            currentStep >= 2 && styles.progressActive
-          ]}>
-            <Text style={styles.progressNumber}>2</Text>
-          </View>
-          <Text style={styles.progressLabel}>Quote</Text>
-        </View>
-        <View style={styles.progressLine} />
-        <View style={styles.progressStep}>
-          <View style={[
-            styles.progressDot,
-            currentStep >= 3 && styles.progressActive
-          ]}>
-            <Text style={styles.progressNumber}>3</Text>
-          </View>
-          <Text style={styles.progressLabel}>Complete</Text>
-        </View>
+        ))}
       </View>
       
-      <ScrollView 
-        style={styles.content} 
+      <ScrollView
         ref={scrollViewRef}
+        style={styles.content}
+        contentContainerStyle={styles.contentContainer}
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
       >
-        {currentStep === 1 && renderForm()}
-        {currentStep === 2 && renderSummary()}
-        {currentStep === 3 && renderSuccess()}
+        {renderStepContent()}
       </ScrollView>
       
+      {/* Navigation Buttons */}
+      <View style={styles.navigationContainer}>
+        {currentStep > 1 && (
+          <TouchableOpacity
+            style={[styles.navButton, styles.prevButton]}
+            onPress={handlePrevStep}
+          >
+            <Ionicons name="chevron-back" size={20} color={Colors.primary} />
+            <Text style={styles.prevButtonText}>Previous</Text>
+          </TouchableOpacity>
+        )}
+        
+        <View style={styles.navButtonSpacer} />
+        
+        {currentStep < 3 ? (
+          <TouchableOpacity
+            style={[styles.navButton, styles.nextButton]}
+            onPress={handleNextStep}
+          >
+            <Text style={styles.nextButtonText}>Next</Text>
+            <Ionicons name="chevron-forward" size={20} color="white" />
+          </TouchableOpacity>
+        ) : (
+          <TouchableOpacity
+            style={[styles.navButton, styles.submitButton]}
+            onPress={handleSubmit}
+            disabled={isSubmitting || premium === 0}
+          >
+            {isSubmitting ? (
+              <ActivityIndicator color="white" size="small" />
+            ) : (
+              <>
+                <Text style={styles.submitButtonText}>Generate Quotation</Text>
+                <Ionicons name="checkmark" size={20} color="white" />
+              </>
+            )}
+          </TouchableOpacity>
+        )}
+      </View>
+      
       {/* Modals */}
-      {renderMotorcycleTypeModal()}
-      {renderMakeModal()}
-      {renderModelModal()}
-      {renderYearModal()}
-      {renderEngineCapacityModal()}
-      {renderUsageTypeModal()}
-      {renderCoverTypeModal()}
-    </KeyboardAvoidingView>
+      {/* Motorcycle Type Modal */}
+      <Modal
+        visible={motorcycleTypeModalVisible}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setMotorcycleTypeModalVisible(false)}
+      >
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setMotorcycleTypeModalVisible(false)}
+        >
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Select Motorcycle Type</Text>
+            <ScrollView style={styles.modalList}>
+              {MOTORCYCLE_TYPES.map((type) => (
+                <TouchableOpacity
+                  key={type.id}
+                  style={styles.modalItem}
+                  onPress={() => {
+                    updateField('motorcycleType', type.id);
+                    setMotorcycleTypeModalVisible(false);
+                  }}
+                >
+                  <View>
+                    <Text style={styles.modalItemText}>{type.name}</Text>
+                    <Text style={styles.modalItemDescription}>{type.description}</Text>
+                  </View>
+                  {formData.motorcycleType === type.id && (
+                    <Ionicons name="checkmark" size={20} color={Colors.primary} />
+                  )}
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        </TouchableOpacity>
+      </Modal>
+      
+      {/* Make Modal */}
+      <Modal
+        visible={makeModalVisible}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setMakeModalVisible(false)}
+      >
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setMakeModalVisible(false)}
+        >
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Select Make</Text>
+            <ScrollView style={styles.modalList}>
+              {MOTORCYCLE_MAKES.map((make) => (
+                <TouchableOpacity
+                  key={make}
+                  style={styles.modalItem}
+                  onPress={() => {
+                    updateField('motorcycleMake', make);
+                    setMakeModalVisible(false);
+                  }}
+                >
+                  <Text style={styles.modalItemText}>{make}</Text>
+                  {formData.motorcycleMake === make && (
+                    <Ionicons name="checkmark" size={20} color={Colors.primary} />
+                  )}
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        </TouchableOpacity>
+      </Modal>
+      
+      {/* Engine Capacity Modal */}
+      <Modal
+        visible={engineCapacityModalVisible}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setEngineCapacityModalVisible(false)}
+      >
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setEngineCapacityModalVisible(false)}
+        >
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Select Engine Capacity</Text>
+            <ScrollView style={styles.modalList}>
+              {ENGINE_CAPACITIES.map((capacity) => (
+                <TouchableOpacity
+                  key={capacity}
+                  style={styles.modalItem}
+                  onPress={() => {
+                    updateField('engineCapacity', capacity);
+                    setEngineCapacityModalVisible(false);
+                  }}
+                >
+                  <Text style={styles.modalItemText}>{capacity}</Text>
+                  {formData.engineCapacity === capacity && (
+                    <Ionicons name="checkmark" size={20} color={Colors.primary} />
+                  )}
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        </TouchableOpacity>
+      </Modal>
+      
+      {/* Year Modal */}
+      <Modal
+        visible={yearModalVisible}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setYearModalVisible(false)}
+      >
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setYearModalVisible(false)}
+        >
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Select Year</Text>
+            <ScrollView style={styles.modalList}>
+              {years.map((year) => (
+                <TouchableOpacity
+                  key={year}
+                  style={styles.modalItem}
+                  onPress={() => {
+                    updateField('yearOfManufacture', year);
+                    setYearModalVisible(false);
+                  }}
+                >
+                  <Text style={styles.modalItemText}>{year}</Text>
+                  {formData.yearOfManufacture === year && (
+                    <Ionicons name="checkmark" size={20} color={Colors.primary} />
+                  )}
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        </TouchableOpacity>
+      </Modal>
+      
+      {/* Usage Type Modal */}
+      <Modal
+        visible={usageTypeModalVisible}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setUsageTypeModalVisible(false)}
+      >
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setUsageTypeModalVisible(false)}
+        >
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Select Usage Type</Text>
+            <ScrollView style={styles.modalList}>
+              {USAGE_TYPES.map((type) => (
+                <TouchableOpacity
+                  key={type.id}
+                  style={styles.modalItem}
+                  onPress={() => {
+                    updateField('usageType', type.id);
+                    setUsageTypeModalVisible(false);
+                  }}
+                >
+                  <View>
+                    <Text style={styles.modalItemText}>{type.name}</Text>
+                    <Text style={styles.modalItemDescription}>{type.description}</Text>
+                  </View>
+                  {formData.usageType === type.id && (
+                    <Ionicons name="checkmark" size={20} color={Colors.primary} />
+                  )}
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        </TouchableOpacity>
+      </Modal>
+      
+      {/* Cover Type Modal */}
+      <Modal
+        visible={coverTypeModalVisible}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setCoverTypeModalVisible(false)}
+      >
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setCoverTypeModalVisible(false)}
+        >
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Select Cover Type</Text>
+            <ScrollView style={styles.modalList}>
+              {COVER_TYPES.map((type) => (
+                <TouchableOpacity
+                  key={type.id}
+                  style={styles.modalItem}
+                  onPress={() => {
+                    updateField('coverType', type.id);
+                    setCoverTypeModalVisible(false);
+                  }}
+                >
+                  <View style={styles.coverTypeInfo}>
+                    <View style={styles.coverTypeHeader}>
+                      <Text style={styles.modalItemText}>{type.name}</Text>
+                      <Text style={styles.coverTypePremium}>
+                        from KSh {type.basePremium.toLocaleString()}
+                      </Text>
+                    </View>
+                    <Text style={styles.modalItemDescription}>{type.description}</Text>
+                  </View>
+                  {formData.coverType === type.id && (
+                    <Ionicons name="checkmark" size={20} color={Colors.primary} />
+                  )}
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        </TouchableOpacity>
+      </Modal>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.white,
+    backgroundColor: Colors.backgroundLight,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.md,
     backgroundColor: Colors.primary,
-    paddingHorizontal: Spacing.medium,
-    paddingVertical: Spacing.small,
+    elevation: 4,
+    shadowColor: Colors.shadow,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
   backButton: {
-    padding: Spacing.small,
+    padding: Spacing.xs,
   },
   headerTitle: {
-    color: Colors.white,
-    fontSize: Typography.fontSizes.large,
-    fontWeight: 'bold',
-    flex: 1,
-    textAlign: 'center',
+    fontSize: Typography.fontSize.lg,
+    fontWeight: Typography.fontWeight.bold,
+    color: 'white',
   },
-  infoButton: {
-    padding: Spacing.small,
+  placeholder: {
+    width: 40,
   },
   progressContainer: {
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: Spacing.xlarge,
-    paddingVertical: Spacing.medium,
-    backgroundColor: Colors.lightGray,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.md,
+    backgroundColor: Colors.surface,
   },
-  progressStep: {
+  progressItem: {
     alignItems: 'center',
+    flex: 1,
   },
-  progressDot: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    backgroundColor: Colors.gray,
+  progressCircle: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: Colors.backgroundLight,
+    borderWidth: 2,
+    borderColor: Colors.border,
+    alignItems: 'center',
     justifyContent: 'center',
-    alignItems: 'center',
+    marginBottom: Spacing.xs,
   },
-  progressActive: {
+  progressCircleActive: {
     backgroundColor: Colors.primary,
+    borderColor: Colors.primary,
   },
   progressNumber: {
-    color: Colors.white,
-    fontWeight: 'bold',
+    fontSize: Typography.fontSize.sm,
+    fontWeight: Typography.fontWeight.medium,
+    color: Colors.textMuted,
+  },
+  progressNumberActive: {
+    color: 'white',
   },
   progressLabel: {
-    marginTop: 4,
-    fontSize: Typography.fontSizes.small,
+    fontSize: Typography.fontSize.xs,
+    color: Colors.textMuted,
+    textAlign: 'center',
   },
-  progressLine: {
-    flex: 1,
-    height: 2,
-    backgroundColor: Colors.gray,
-    marginHorizontal: Spacing.tiny,
+  progressLabelActive: {
+    color: Colors.primary,
+    fontWeight: Typography.fontWeight.medium,
   },
   content: {
     flex: 1,
   },
-  formContainer: {
-    padding: Spacing.medium,
+  contentContainer: {
+    padding: Spacing.md,
+    paddingBottom: Spacing.xl,
   },
-  sectionHeader: {
-    marginTop: Spacing.medium,
-    marginBottom: Spacing.small,
+  stepTitle: {
+    fontSize: Typography.fontSize.xl,
+    fontWeight: Typography.fontWeight.bold,
+    color: Colors.textPrimary,
+    marginBottom: Spacing.xs,
   },
-  sectionTitle: {
-    fontSize: Typography.fontSizes.medium,
-    fontWeight: 'bold',
-    color: Colors.primary,
+  stepDescription: {
+    fontSize: Typography.fontSize.md,
+    color: Colors.textSecondary,
+    marginBottom: Spacing.lg,
   },
-  sectionSubtitle: {
-    fontSize: Typography.fontSizes.small,
-    color: Colors.gray,
-    marginTop: Spacing.tiny,
+  inputContainer: {
+    marginBottom: Spacing.md,
   },
-  formGroup: {
-    marginBottom: Spacing.medium,
+  inputLabel: {
+    fontSize: Typography.fontSize.sm,
+    fontWeight: Typography.fontWeight.medium,
+    color: Colors.textPrimary,
+    marginBottom: Spacing.xs,
   },
-  label: {
-    fontSize: Typography.fontSizes.small,
-    fontWeight: '500',
-    marginBottom: 6,
+  required: {
+    color: Colors.error,
   },
-  helperText: {
-    fontSize: Typography.fontSizes.xsmall,
-    color: Colors.gray,
-    marginTop: 2,
-  },
-  input: {
+  textInput: {
     borderWidth: 1,
     borderColor: Colors.border,
     borderRadius: 8,
-    padding: Spacing.small,
-    fontSize: Typography.fontSizes.small,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    fontSize: Typography.fontSize.md,
+    color: Colors.textPrimary,
+    backgroundColor: Colors.white,
+  },
+  dropdownButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderRadius: 8,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    backgroundColor: Colors.white,
+  },
+  dropdownText: {
+    fontSize: Typography.fontSize.md,
+    color: Colors.textPrimary,
+    flex: 1,
+  },
+  placeholderText: {
+    color: Colors.textMuted,
   },
   inputError: {
     borderColor: Colors.error,
   },
   errorText: {
+    fontSize: Typography.fontSize.sm,
     color: Colors.error,
-    fontSize: Typography.fontSizes.xsmall,
-    marginTop: 4,
+    marginTop: Spacing.xs,
   },
-  pickerButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    borderWidth: 1,
-    borderColor: Colors.border,
-    borderRadius: 8,
-    padding: Spacing.small,
-  },
-  pickerText: {
-    fontSize: Typography.fontSizes.small,
-  },
-  placeholderText: {
-    fontSize: Typography.fontSizes.small,
-    color: Colors.gray,
-  },
-  switchContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  toggleButton: {
-    width: 50,
-    height: 30,
-    borderRadius: 15,
-    backgroundColor: Colors.lightGray,
-    justifyContent: 'center',
-    padding: 2,
-  },
-  toggleButtonActive: {
-    backgroundColor: Colors.lightPrimary,
-  },
-  toggleKnob: {
-    width: 26,
-    height: 26,
-    borderRadius: 13,
-    backgroundColor: Colors.white,
-    ...Platform.select({
-      ios: {
-        shadowColor: Colors.dark,
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.2,
-        shadowRadius: 2,
-      },
-      android: {
-        elevation: 2,
-      },
-    }),
-  },
-  toggleKnobActive: {
-    transform: [{ translateX: 20 }],
-    backgroundColor: Colors.primary,
-  },
-  addonOption: {
+  checkboxContainer: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    padding: Spacing.small,
-    marginBottom: Spacing.small,
-    backgroundColor: Colors.backgroundLight,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: Colors.border,
   },
-  addonOptionSelected: {
-    backgroundColor: Colors.lightPrimary,
-    borderColor: Colors.primary,
-  },
-  addonCheckbox: {
-    marginRight: Spacing.small,
+  checkbox: {
+    marginRight: Spacing.sm,
     marginTop: 2,
   },
-  addonDetails: {
+  checkboxTextContainer: {
+    flex: 1,
+  },
+  checkboxLabel: {
+    fontSize: Typography.fontSize.md,
+    fontWeight: Typography.fontWeight.medium,
+    color: Colors.textPrimary,
+  },
+  checkboxDescription: {
+    fontSize: Typography.fontSize.sm,
+    color: Colors.textSecondary,
+    marginTop: 2,
+  },
+  inputDescription: {
+    fontSize: Typography.fontSize.sm,
+    color: Colors.textSecondary,
+    marginBottom: Spacing.sm,
+  },
+  addonContainer: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    paddingVertical: Spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border,
+  },
+  addonTextContainer: {
     flex: 1,
   },
   addonHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 4,
+    alignItems: 'center',
   },
   addonName: {
-    fontSize: Typography.fontSizes.small,
-    fontWeight: '500',
+    fontSize: Typography.fontSize.md,
+    fontWeight: Typography.fontWeight.medium,
+    color: Colors.textPrimary,
   },
   addonPremium: {
-    fontSize: Typography.fontSizes.small,
+    fontSize: Typography.fontSize.sm,
+    fontWeight: Typography.fontWeight.medium,
     color: Colors.primary,
-    fontWeight: '500',
   },
   addonDescription: {
-    fontSize: Typography.fontSizes.xsmall,
-    color: Colors.gray,
+    fontSize: Typography.fontSize.sm,
+    color: Colors.textSecondary,
+    marginTop: 2,
   },
   premiumContainer: {
-    backgroundColor: Colors.lightPrimary,
-    borderRadius: 8,
-    padding: Spacing.medium,
-    marginVertical: Spacing.medium,
+    backgroundColor: Colors.white,
+    borderRadius: 12,
+    padding: Spacing.md,
+    marginTop: Spacing.lg,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    elevation: 2,
+    shadowColor: Colors.shadow,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  premiumHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
   premiumLabel: {
-    fontSize: Typography.fontSizes.small,
-    fontWeight: '500',
+    fontSize: Typography.fontSize.md,
+    fontWeight: Typography.fontWeight.medium,
+    color: Colors.textPrimary,
   },
-  premiumValue: {
-    fontSize: Typography.fontSizes.large,
-    fontWeight: 'bold',
+  premiumAmount: {
+    fontSize: Typography.fontSize.lg,
+    fontWeight: Typography.fontWeight.bold,
+  },
+  premiumBreakdown: {
+    marginTop: Spacing.sm,
+    paddingTop: Spacing.sm,
+    borderTopWidth: 1,
+    borderTopColor: Colors.border,
+  },
+  premiumNote: {
+    fontSize: Typography.fontSize.xs,
+    color: Colors.textMuted,
+    lineHeight: 16,
+  },
+  navigationContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.md,
+    backgroundColor: Colors.surface,
+    borderTopWidth: 1,
+    borderTopColor: Colors.border,
+    elevation: 2,
+    shadowColor: Colors.shadow,
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  navButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: Spacing.sm,
+    paddingHorizontal: Spacing.lg,
+    borderRadius: 8,
+    minWidth: 100,
+    justifyContent: 'center',
+  },
+  navButtonSpacer: {
+    flex: 1,
+  },
+  prevButton: {
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: Colors.primary,
+  },
+  prevButtonText: {
     color: Colors.primary,
+    fontWeight: Typography.fontWeight.medium,
+    marginLeft: Spacing.xs,
+  },
+  nextButton: {
+    backgroundColor: Colors.primary,
+  },
+  nextButtonText: {
+    color: 'white',
+    fontWeight: Typography.fontWeight.medium,
+    marginRight: Spacing.xs,
   },
   submitButton: {
     backgroundColor: Colors.primary,
-    marginTop: Spacing.medium,
-    borderRadius: 8,
   },
   submitButtonText: {
-    fontWeight: 'bold',
+    color: 'white',
+    fontWeight: Typography.fontWeight.medium,
+    marginRight: Spacing.xs,
   },
-  
-  // Modal styles
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'flex-end',
   },
   modalContent: {
     backgroundColor: Colors.white,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
-    padding: Spacing.medium,
     maxHeight: '70%',
+    paddingTop: Spacing.lg,
   },
   modalTitle: {
-    fontSize: Typography.fontSizes.medium,
-    fontWeight: 'bold',
-    marginBottom: Spacing.medium,
+    fontSize: Typography.fontSize.lg,
+    fontWeight: Typography.fontWeight.bold,
+    color: Colors.textPrimary,
     textAlign: 'center',
+    marginBottom: Spacing.md,
+  },
+  modalList: {
+    paddingHorizontal: Spacing.md,
   },
   modalItem: {
-    paddingVertical: Spacing.small,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: Spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.lightGray,
+    borderBottomColor: Colors.border,
   },
   modalItemText: {
-    fontSize: Typography.fontSizes.small,
-    fontWeight: '500',
+    fontSize: Typography.fontSize.md,
+    color: Colors.textPrimary,
+    fontWeight: Typography.fontWeight.medium,
   },
   modalItemDescription: {
-    fontSize: Typography.fontSizes.xsmall,
-    color: Colors.gray,
+    fontSize: Typography.fontSize.sm,
+    color: Colors.textSecondary,
     marginTop: 2,
   },
-  modalItemPrice: {
-    fontSize: Typography.fontSizes.xsmall,
-    color: Colors.primary,
-    fontWeight: '500',
-    marginTop: 2,
-  },
-  cancelButton: {
-    marginTop: Spacing.medium,
-    backgroundColor: Colors.lightGray,
-  },
-  cancelButtonText: {
-    color: Colors.dark,
-  },
-  
-  // Summary styles
-  summaryContainer: {
-    padding: Spacing.medium,
-  },
-  quotationHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: Spacing.medium,
-  },
-  quotationId: {
-    fontSize: Typography.fontSizes.medium,
-    fontWeight: 'bold',
-  },
-  quotationDate: {
-    fontSize: Typography.fontSizes.small,
-    color: Colors.gray,
-  },
-  summaryCard: {
-    backgroundColor: Colors.white,
-    borderRadius: 12,
-    padding: Spacing.medium,
-    ...Platform.select({
-      ios: {
-        shadowColor: Colors.dark,
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-      },
-      android: {
-        elevation: 3,
-      },
-    }),
-  },
-  summarySection: {
-    marginBottom: Spacing.medium,
-  },
-  summaryTitle: {
-    fontSize: Typography.fontSizes.medium,
-    fontWeight: 'bold',
-    marginBottom: Spacing.small,
-    color: Colors.primary,
-  },
-  summaryRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 6,
-  },
-  summaryLabel: {
-    fontSize: Typography.fontSizes.small,
-    color: Colors.gray,
-  },
-  summaryValue: {
-    fontSize: Typography.fontSizes.small,
-    fontWeight: '500',
-    maxWidth: '60%',
-    textAlign: 'right',
-  },
-  addonsTitle: {
-    fontSize: Typography.fontSizes.small,
-    fontWeight: '500',
-    color: Colors.primary,
-    marginTop: Spacing.small,
-    marginBottom: 4,
-  },
-  addonItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: 3,
-  },
-  addonItemName: {
-    fontSize: Typography.fontSizes.small,
-    marginLeft: 6,
+  coverTypeInfo: {
     flex: 1,
   },
-  addonItemPremium: {
-    fontSize: Typography.fontSizes.small,
-    color: Colors.primary,
-    fontWeight: '500',
-  },
-  divider: {
-    height: 1,
-    backgroundColor: Colors.lightGray,
-    marginVertical: Spacing.small,
-  },
-  actionsContainer: {
-    marginTop: Spacing.medium,
-  },
-  editButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: Spacing.medium,
-  },
-  editButtonText: {
-    marginLeft: 6,
-    color: Colors.primary,
-    fontWeight: '500',
-  },
-  confirmButton: {
-    backgroundColor: Colors.primary,
-    borderRadius: 8,
-  },
-  confirmButtonText: {
-    fontWeight: 'bold',
-  },
-  
-  // Success styles
-  successContainer: {
-    padding: Spacing.medium,
-    alignItems: 'center',
-  },
-  successIcon: {
-    marginVertical: Spacing.xlarge,
-  },
-  successTitle: {
-    fontSize: Typography.fontSizes.xlarge,
-    fontWeight: 'bold',
-    color: Colors.success,
-    marginBottom: Spacing.small,
-  },
-  successMessage: {
-    fontSize: Typography.fontSizes.small,
-    textAlign: 'center',
-    color: Colors.gray,
-    marginBottom: Spacing.large,
-  },
-  successDetails: {
-    backgroundColor: Colors.lightGray,
-    width: '100%',
-    borderRadius: 12,
-    padding: Spacing.medium,
-    marginBottom: Spacing.large,
-  },
-  successRow: {
+  coverTypeHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 8,
+    alignItems: 'center',
   },
-  successLabel: {
-    fontSize: Typography.fontSizes.small,
-    color: Colors.gray,
-  },
-  successValue: {
-    fontSize: Typography.fontSizes.small,
-    fontWeight: '500',
-  },
-  successActions: {
-    width: '100%',
-  },
-  successButton: {
-    backgroundColor: Colors.primary,
-    borderRadius: 8,
-    marginBottom: Spacing.small,
-  },
-  successButtonText: {
-    fontWeight: 'bold',
-  },
-  outlineButton: {
-    backgroundColor: Colors.white,
-    borderWidth: 1,
-    borderColor: Colors.primary,
-    borderRadius: 8,
-  },
-  outlineButtonText: {
+  coverTypePremium: {
+    fontSize: Typography.fontSize.sm,
+    fontWeight: Typography.fontWeight.medium,
     color: Colors.primary,
-    fontWeight: 'bold',
   },
 });

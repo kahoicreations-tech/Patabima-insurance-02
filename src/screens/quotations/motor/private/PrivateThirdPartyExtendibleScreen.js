@@ -5,1248 +5,989 @@
  * quotation flow, offering extended coverage options beyond basic third-party
  */
 
-import React, { useState, useEffect, useRef } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  ScrollView, 
-  TouchableOpacity, 
-  TextInput, 
-  Alert, 
-  ActivityIndicator, 
-  KeyboardAvoidingView, 
+import React, { useState, useEffect } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  ScrollView,
+  SafeAreaView,
+  KeyboardAvoidingView,
   Platform,
-  Modal,
-  FlatList,
-  Image
+  Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import { useNavigation, useRoute } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-
 import { Colors, Typography, Spacing } from '../../../../constants';
-import ActionButton from '../../../../components/common/ActionButton';
-import Button from '../../../../components/common/Button';
 
-// Vehicle types
-const VEHICLE_TYPES = [
-  'Saloon', 'Hatchback', 'Station Wagon', 'SUV', 'Pickup', 'Van'
-];
+// Import reusable components
+import {
+  PersonalInformationStep,
+  VehicleDetailsStep,
+  VehicleValueStep,
+  InsurerSelectionStep,
+  PaymentStep,
+  QuotationProgressBar,
+  calculateMotorPremium,
+  validateVehicleEligibility
+} from './components';
 
-// Vehicle makes and models data
-const VEHICLE_MAKES = [
-  'Toyota', 'Nissan', 'Mazda', 'Subaru', 'Honda', 'Mitsubishi', 
-  'Mercedes-Benz', 'BMW', 'Volkswagen', 'Ford', 'Chevrolet', 'Hyundai', 
-  'Kia', 'Suzuki', 'Isuzu', 'Land Rover', 'Jeep', 'Audi', 'Volvo', 'Peugeot'
-];
+// Import third party extendible insurer data
+import { THIRD_PARTY_UNDERWRITERS } from '../../../../data/thirdPartyMotorData';
 
-const VEHICLE_MODELS = {
-  'Toyota': ['Corolla', 'Camry', 'RAV4', 'Prado', 'Land Cruiser', 'Fortuner', 'Hilux', 'Vitz', 'Fielder'],
-  'Nissan': ['X-Trail', 'Juke', 'Qashqai', 'Patrol', 'Sunny', 'Tiida', 'Navara', 'Note', 'Serena'],
-  'Mazda': ['Demio', 'Axela', 'CX-5', 'CX-3', 'Atenza', 'Familia', 'BT-50', 'Verisa'],
-  'Subaru': ['Forester', 'Impreza', 'Legacy', 'Outback', 'XV', 'Tribeca', 'BRZ', 'Levorg'],
-  'Honda': ['Fit', 'CRV', 'HRV', 'Accord', 'Civic', 'Vezel', 'Freed', 'Jade', 'Odyssey'],
-  'Mitsubishi': ['Outlander', 'Pajero', 'Lancer', 'ASX', 'RVR', 'Mirage', 'L200', 'Galant'],
-  'Mercedes-Benz': ['C-Class', 'E-Class', 'S-Class', 'GLA', 'GLC', 'GLE', 'GLS', 'A-Class', 'B-Class'],
-  'BMW': ['3 Series', '5 Series', '7 Series', 'X1', 'X3', 'X5', 'X6', '1 Series', '2 Series'],
-  'Volkswagen': ['Golf', 'Polo', 'Passat', 'Tiguan', 'Touareg', 'Jetta', 'Caddy', 'Amarok'],
-  'Ford': ['Ranger', 'Everest', 'Escape', 'EcoSport', 'Focus', 'Fiesta', 'Mustang', 'Explorer'],
-  'Chevrolet': ['Cruze', 'Captiva', 'Trailblazer', 'Spark', 'Aveo', 'Orlando', 'Colorado'],
-  'Hyundai': ['Tucson', 'Santa Fe', 'i30', 'i20', 'Accent', 'Elantra', 'Creta', 'Sonata', 'H1'],
-  'Kia': ['Sportage', 'Sorento', 'Rio', 'Picanto', 'Cerato', 'Soul', 'Carens'],
-  'Suzuki': ['Swift', 'Jimny', 'Vitara', 'Grand Vitara', 'Alto', 'Ciaz', 'Ertiga', 'S-Cross'],
-  'Isuzu': ['D-Max', 'MU-X', 'FRR', 'NQR', 'NPR', 'ELF', 'FSR', 'FVR'],
-  'Land Rover': ['Discovery', 'Range Rover', 'Defender', 'Range Rover Sport', 'Evoque', 'Freelander'],
-  'Jeep': ['Grand Cherokee', 'Cherokee', 'Wrangler', 'Compass', 'Renegade', 'Gladiator'],
-  'Audi': ['A3', 'A4', 'A6', 'Q3', 'Q5', 'Q7', 'TT', 'A1', 'A5'],
-  'Volvo': ['XC60', 'XC90', 'V40', 'S60', 'V60', 'S90', 'V90', 'XC40'],
-  'Peugeot': ['208', '308', '3008', '508', '2008', '5008', 'Partner', 'Boxer']
-};
-
-// Generate years from 2000 to current year
-const YEARS = Array.from(
-  {length: new Date().getFullYear() - 1999}, 
-  (_, i) => (new Date().getFullYear() - i).toString()
-);
-
-// Extra coverage options specific to extendible third-party
-const EXTRA_COVERAGE_OPTIONS = [
-  { id: 'windscreen', name: 'Windscreen Cover', premium: 3000, description: 'Covers repair or replacement of windscreen without affecting no-claims bonus' },
-  { id: 'audio', name: 'Audio Equipment', premium: 2500, description: 'Coverage for factory-installed audio equipment up to KSh 50,000' },
-  { id: 'personal_effects', name: 'Personal Effects', premium: 2000, description: 'Coverage for personal belongings in the car up to KSh 30,000' },
-  { id: 'medical', name: 'Enhanced Medical Cover', premium: 4000, description: 'Additional medical expenses coverage up to KSh 100,000 for vehicle occupants' },
-  { id: 'towing', name: 'Emergency Towing', premium: 2000, description: 'Towing and recovery services in case of accident up to KSh 20,000' },
-];
-
-// Third-party insurance constants
-const BASE_PREMIUM = 7500; // Higher base premium for extendible
-const MIN_PREMIUM = 7500; // Minimum premium allowed
-
-export default function PrivateThirdPartyExtendibleScreen() {
-  const navigation = useNavigation();
-  const route = useRoute();
+const PrivateThirdPartyExtendibleScreen = ({ navigation, route }) => {
   const insets = useSafeAreaInsets();
-  const scrollViewRef = useRef(null);
-  
-  // Form state
+  const [currentStep, setCurrentStep] = useState(1);
+  const [loading, setLoading] = useState(false);
+
+  // Get passed data from PrivateVehicleScreen
+  const { vehicleCategory, productType, productName, productFeatures } = route.params || {};
+
+  // Form data state
   const [formData, setFormData] = useState({
-    ownerName: '',
-    ownerPhone: '',
-    ownerEmail: '',
-    vehicleType: '',
+    // Step 1: Personal Information
+    fullName: '',
+    idNumber: '',
+    phoneNumber: '',
+    email: '',
+    kraPin: '',
+    
+    // Step 2: Vehicle Details
     vehicleMake: '',
     vehicleModel: '',
     vehicleYear: '',
-    vehicleReg: '',
-    vehicleValue: '',
-    selectedCoverage: []
-  });
-  
-  // UI state
-  const [errors, setErrors] = useState({});
-  const [currentStep, setCurrentStep] = useState(1); // 1: form, 2: summary, 3: success
-  const [premium, setPremium] = useState(0);
-  const [isCalculating, setIsCalculating] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [quotationId, setQuotationId] = useState('');
-  
-  // Modal state
-  const [vehicleTypeModalVisible, setVehicleTypeModalVisible] = useState(false);
-  const [makeModalVisible, setMakeModalVisible] = useState(false);
-  const [modelModalVisible, setModelModalVisible] = useState(false);
-  const [yearModalVisible, setYearModalVisible] = useState(false);
-  
-  // Effect to calculate premium when relevant fields change
-  useEffect(() => {
-    if (formData.vehicleType && formData.vehicleYear) {
-      calculatePremium();
-    }
-  }, [formData.vehicleType, formData.vehicleYear, formData.selectedCoverage]);
-  
-  // Update form fields
-  const updateField = (field, value) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    registrationNumber: '',
     
-    // Clear error for this field if exists
-    if (errors[field]) {
-      setErrors(prev => {
-        const updated = { ...prev };
-        delete updated[field];
-        return updated;
+    // Step 3: Vehicle Value
+    vehicleValue: '',
+    
+    // Calculated fields
+    vehicleAge: 0,
+    
+    // Step 4: Insurer Selection
+    selectedInsurer: '',
+    selectedQuote: null,
+    totalPremium: 0,
+    
+    // Step 5: Payment
+    paymentMethod: 'mpesa',
+    mpesaPhoneNumber: '',
+    paymentStatus: 'pending',
+    transactionId: '',
+    paymentAmount: 0,
+    
+    // Policy validation
+    existingPolicyCheck: null,
+    insuranceStartDate: new Date(Date.now() + 24 * 60 * 60 * 1000), // Default to tomorrow
+    
+    // Third Party Extendible specific fields
+    selectedExtensions: [], // Additional coverage extensions
+  });
+
+  // Payment state
+  const [paymentState, setPaymentState] = useState({
+    isProcessing: false,
+    paymentInitiated: false,
+    paymentCompleted: false,
+    paymentError: null,
+    countdown: 0,
+  });
+
+  // Policy validation state
+  const [policyValidation, setPolicyValidation] = useState({
+    isChecking: false,
+    hasExistingPolicy: false,
+    existingPolicyDetails: null,
+    validationMessage: '',
+    suggestedStartDate: null
+  });
+
+  const TOTAL_STEPS = 5;
+  
+  // Third Party Extendible coverage extensions
+  const EXTENDIBLE_EXTENSIONS = [
+    {
+      id: 'windscreen',
+      name: 'Windscreen Cover',
+      premium: 3000,
+      description: 'Covers repair or replacement of windscreen without affecting no-claims bonus',
+      limit: 'Up to KSh 50,000'
+    },
+    {
+      id: 'audio',
+      name: 'Audio Equipment',
+      premium: 2500,
+      description: 'Coverage for factory-installed audio equipment',
+      limit: 'Up to KSh 50,000'
+    },
+    {
+      id: 'personal_effects',
+      name: 'Personal Effects',
+      premium: 2000,
+      description: 'Coverage for personal belongings in the car',
+      limit: 'Up to KSh 30,000'
+    },
+    {
+      id: 'medical',
+      name: 'Enhanced Medical Cover',
+      premium: 4000,
+      description: 'Additional medical expenses coverage for vehicle occupants',
+      limit: 'Up to KSh 100,000'
+    },
+    {
+      id: 'towing',
+      name: 'Emergency Towing',
+      premium: 2000,
+      description: 'Towing and recovery services in case of accident',
+      limit: 'Up to KSh 20,000'
+    },
+  ];
+
+  // Fixed third party extendible coverage amounts
+  const THIRD_PARTY_EXTENDIBLE_COVERAGE = {
+    bodilyInjury: 3000000, // KSh 3M per person
+    propertyDamage: 1000000, // KSh 1M per accident
+    legalLiability: 'Unlimited as per law',
+    extendibleOptions: EXTENDIBLE_EXTENSIONS
+  };
+
+  // Filter insurers for third party extendible
+  const thirdPartyExtendibleInsurers = THIRD_PARTY_UNDERWRITERS?.map(underwriter => ({
+    id: underwriter.id + '_ext',
+    name: underwriter.name,
+    logo: underwriter.logo,
+    rate: (underwriter.thirdPartyRates?.privateVehicle || underwriter.baseRate) + 1, // Slightly higher rate for extendible
+    baseMinimum: (underwriter.thirdPartyRates?.baseMinimum || underwriter.minimumPremium) + 1500, // Higher minimum for extendible
+    maxVehicleAge: underwriter.thirdPartyRates?.maxVehicleAge || underwriter.maximumVehicleAge || 25,
+    features: [
+      'Third Party Liability',
+      'Extendible Coverage Options',
+      'Windscreen Protection Available',
+      'Personal Effects Coverage',
+      'Enhanced Medical Benefits',
+      'Emergency Towing Services'
+    ],
+    color: getInsurerColor(underwriter.id),
+    pricingLogic: underwriter.pricingLogic,
+    statutoryLevies: underwriter.statutoryLevies,
+    isOfficial: true,
+    supportsExtensions: true
+  })) || [];
+
+  // Helper function to assign colors to insurers
+  function getInsurerColor(insurerId) {
+    const colorMap = {
+      'jubilee_tp': '#27AE60',
+      'madison_tp': '#E74C3C',
+      'britam_tp': '#8E44AD',
+      'kal_tp': '#F39C12',
+      'pacis_tp': '#16A085',
+      'sanlam_tp': '#1B4F72',
+      'monarch_tp': '#C0392B',
+      'ga_tp': '#8B4513'
+    };
+    return colorMap[insurerId] || Colors.primary;
+  }
+
+  // Calculate vehicle age when year changes
+  useEffect(() => {
+    if (formData.vehicleYear) {
+      const age = new Date().getFullYear() - parseInt(formData.vehicleYear);
+      updateFormData({ vehicleAge: age });
+    }
+  }, [formData.vehicleYear]);
+
+  const updateFormData = (updates) => {
+    setFormData(prev => ({ ...prev, ...updates }));
+  };
+  // Check for existing insurance policies
+  const checkExistingInsurance = async (registrationNumber) => {
+    setPolicyValidation(prev => ({ ...prev, isChecking: true }));
+    
+    try {
+      // Simulate API call to check existing policies
+      const mockExistingPolicies = [
+        {
+          id: 'POL123456',
+          registrationNumber: 'KCA123A',
+          insurerName: 'Jubilee Insurance',
+          policyType: 'Third Party Extendible',
+          startDate: '2024-01-15',
+          endDate: '2025-01-14',
+          status: 'active'
+        }
+      ];
+      
+      const existingPolicy = mockExistingPolicies.find(
+        policy => policy.registrationNumber === registrationNumber.toUpperCase() && 
+                  policy.status === 'active'
+      );
+      
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      if (existingPolicy) {
+        const endDate = new Date(existingPolicy.endDate);
+        const suggestedStart = new Date(endDate);
+        suggestedStart.setDate(suggestedStart.getDate() + 1);
+        
+        setPolicyValidation({
+          isChecking: false,
+          hasExistingPolicy: true,
+          existingPolicyDetails: existingPolicy,
+          validationMessage: `Vehicle is currently insured with ${existingPolicy.insurerName} until ${endDate.toLocaleDateString()}`,
+          suggestedStartDate: suggestedStart
+        });
+        
+        updateFormData({ 
+          insuranceStartDate: suggestedStart,
+          existingPolicyCheck: existingPolicy 
+        });
+      } else {
+        setPolicyValidation({
+          isChecking: false,
+          hasExistingPolicy: false,
+          existingPolicyDetails: null,
+          validationMessage: 'No active insurance found for this vehicle',
+          suggestedStartDate: null
+        });
+      }
+      
+    } catch (error) {
+      console.error('Policy check error:', error);
+      setPolicyValidation({
+        isChecking: false,
+        hasExistingPolicy: false,
+        existingPolicyDetails: null,
+        validationMessage: 'Unable to check existing policies. Please proceed.',
+        suggestedStartDate: null
       });
     }
   };
-  
-  // Toggle extra coverage selection
-  const toggleCoverage = (coverageId) => {
-    setFormData(prev => {
-      const selectedCoverage = [...prev.selectedCoverage];
-      const index = selectedCoverage.indexOf(coverageId);
-      
-      if (index !== -1) {
-        selectedCoverage.splice(index, 1);
-      } else {
-        selectedCoverage.push(coverageId);
+
+  // Calculate third party extendible premium
+  const calculateThirdPartyExtendiblePremium = (insurer) => {
+    try {
+      const vehicleValue = formData.vehicleValue ? 
+        parseFloat(formData.vehicleValue.replace(/[^0-9.]/g, '')) : 
+        400000; // Minimum value for third party extendible
+
+      // Calculate base premium using motor premium calculator
+      const calculation = calculateMotorPremium({
+        vehicleValue: vehicleValue,
+        vehicleAge: formData.vehicleAge,
+        insurer: {
+          id: insurer.id,
+          name: insurer.name,
+          rate: insurer.rate,
+          baseMinimum: insurer.baseMinimum,
+          maxVehicleAge: insurer.maxVehicleAge,
+          statutoryLevies: insurer.statutoryLevies || {
+            policyholdersFund: 0.25,
+            trainingLevy: 0.2,
+            stampDuty: 40
+          }
+        },
+        insuranceType: 'ThirdPartyExtendible',
+        vehicleCategory: 'Private'
+      });
+
+      // Add extension premiums
+      let extensionPremium = 0;
+      formData.selectedExtensions?.forEach(extensionId => {
+        const extension = EXTENDIBLE_EXTENSIONS.find(ext => ext.id === extensionId);
+        if (extension) {
+          extensionPremium += extension.premium;
+        }
+      });
+
+      return {
+        isEligible: true,
+        totalPremium: calculation.totalPremium + extensionPremium,
+        basePremium: calculation.finalBasePremium,
+        extensionPremium: extensionPremium,
+        levies: calculation.levies,
+        vehicleValue: vehicleValue,
+        message: ''
+      };
+    } catch (error) {
+      console.error('Third party extendible premium calculation error:', error);
+      return {
+        isEligible: false,
+        totalPremium: 0,
+        message: 'Calculation error'
+      };
+    }
+  };
+
+  // Handle insurer premium calculation
+  const handleCalculatePremium = (insurer, vehicleValue, vehicleAge) => {
+    const eligibility = validateVehicleEligibility(
+      vehicleAge,
+      insurer,
+      'ThirdPartyExtendible'
+    );
+
+    if (!eligibility.isEligible) {
+      return {
+        isEligible: false,
+        totalPremium: 0,
+        message: eligibility.message
+      };
+    }
+
+    return calculateThirdPartyExtendiblePremium(insurer);
+  };
+
+  // Handle insurer selection and premium calculation
+  const handleInsurerSelection = (updates) => {
+    updateFormData(updates);
+    
+    if (updates.selectedInsurer) {
+      const selectedInsurer = thirdPartyExtendibleInsurers.find(i => i.id === updates.selectedInsurer);
+      if (selectedInsurer) {
+        const calculation = calculateThirdPartyExtendiblePremium(selectedInsurer);
+        
+        const quote = {
+          basePremium: calculation.basePremium,
+          extensionPremium: calculation.extensionPremium,
+          policyholdersFund: calculation.levies?.policyholdersFund || 0,
+          trainingLevy: calculation.levies?.trainingLevy || 0,
+          stampDuty: calculation.levies?.stampDuty || 40,
+          totalPremium: calculation.totalPremium,
+          vehicleValue: calculation.vehicleValue,
+          coverageType: 'Third Party Extendible',
+          coverageAmounts: THIRD_PARTY_EXTENDIBLE_COVERAGE,
+          selectedExtensions: formData.selectedExtensions || [],
+          underwriterRef: selectedInsurer.id,
+          calculationDate: new Date().toISOString(),
+          rateSource: 'Official Third Party Extendible Underwriter Rates'
+        };
+
+        updateFormData({ 
+          selectedQuote: quote, 
+          totalPremium: quote.totalPremium,
+          paymentAmount: quote.totalPremium + 50 // Add service fee
+        });
       }
-      
-      return { ...prev, selectedCoverage };
-    });
+    }
   };
   
-  // Calculate premium for Third-Party Extendible insurance
-  const calculatePremium = () => {
-    setIsCalculating(true);
-    
-    // Wait a bit to simulate API call/calculation
-    setTimeout(() => {
-      try {
-        // Base premium calculation
-        let calculatedPremium = BASE_PREMIUM;
-        
-        // Vehicle age adjustment
-        const vehicleAge = new Date().getFullYear() - parseInt(formData.vehicleYear);
-        if (vehicleAge > 12) {
-          calculatedPremium += 3000; // Older vehicles have higher risk
-        } else if (vehicleAge > 8) {
-          calculatedPremium += 2000;
-        } else if (vehicleAge > 5) {
-          calculatedPremium += 1000;
-        }
-        
-        // Vehicle type adjustment
-        if (['SUV', 'Pickup'].includes(formData.vehicleType)) {
-          calculatedPremium += 1500; // Higher premium for larger vehicles
-        }
-        
-        // Add premiums for selected extra coverage options
-        formData.selectedCoverage.forEach(coverageId => {
-          const coverage = EXTRA_COVERAGE_OPTIONS.find(c => c.id === coverageId);
-          if (coverage) {
-            calculatedPremium += coverage.premium;
-          }
-        });
-        
-        // Ensure minimum premium
-        calculatedPremium = Math.max(calculatedPremium, MIN_PREMIUM);
-        
-        setPremium(calculatedPremium);
-      } catch (error) {
-        console.error("Premium calculation error:", error);
-        setPremium(BASE_PREMIUM); // Fallback to base premium
-      } finally {
-        setIsCalculating(false);
+  const validateStep = (step) => {
+    switch (step) {
+      case 1:
+        return formData.fullName && formData.idNumber && formData.phoneNumber;
+      case 2:
+        return formData.vehicleMake && formData.vehicleModel && formData.vehicleYear && formData.registrationNumber;
+      case 3:
+        return formData.vehicleValue && parseFloat(formData.vehicleValue.replace(/[^0-9.]/g, '')) > 0;
+      case 4:
+        return formData.selectedInsurer;
+      case 5:
+        return paymentState.paymentCompleted;
+      default:
+        return true;
+    }
+  };
+
+  const nextStep = () => {
+    if (validateStep(currentStep)) {
+      if (currentStep < TOTAL_STEPS) {
+        setCurrentStep(prev => prev + 1);
       }
+    } else {
+      Alert.alert('Incomplete Information', 'Please fill in all required fields before proceeding.');
+    }
+  };
+
+  const prevStep = () => {
+    if (currentStep > 1) {
+      setCurrentStep(prev => prev - 1);
+    }
+  };
+
+  // M-Pesa payment functions
+  const initiateMpesaPayment = async () => {
+    if (!formData.mpesaPhoneNumber || formData.mpesaPhoneNumber.length < 9) {
+      Alert.alert('Invalid Phone Number', 'Please enter a valid M-Pesa phone number');
+      return;
+    }
+
+    setPaymentState(prev => ({ ...prev, isProcessing: true, paymentError: null }));
+    
+    try {
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      const transactionId = `TPEXT${Date.now()}${Math.floor(Math.random() * 1000)}`;
+      
+      updateFormData({ 
+        transactionId,
+        paymentStatus: 'processing'
+      });
+
+      setPaymentState(prev => ({ 
+        ...prev, 
+        isProcessing: false,
+        paymentInitiated: true,
+        countdown: 60
+      }));
+
+      startPaymentCountdown();
+      
+      Alert.alert(
+        'Payment Request Sent',
+        `An M-Pesa payment request for KSh ${formData.paymentAmount?.toLocaleString()} has been sent to +254${formData.mpesaPhoneNumber}.\n\nPlease complete the payment on your phone.`,
+        [{ text: 'OK' }]
+      );
+
+    } catch (error) {
+      setPaymentState(prev => ({ 
+        ...prev, 
+        isProcessing: false,
+        paymentError: 'Failed to initiate payment. Please try again.'
+      }));
+      Alert.alert('Payment Error', 'Failed to initiate M-Pesa payment. Please try again.');
+    }
+  };
+
+  const startPaymentCountdown = () => {
+    const interval = setInterval(() => {
+      setPaymentState(prev => {
+        if (prev.countdown <= 1) {
+          clearInterval(interval);
+          simulatePaymentCompletion();
+          return { ...prev, countdown: 0 };
+        }
+        return { ...prev, countdown: prev.countdown - 1 };
+      });
     }, 1000);
   };
-  
-  // Form validation
-  const validateForm = () => {
-    const newErrors = {};
+
+  const simulatePaymentCompletion = () => {
+    const isSuccessful = Math.random() > 0.1; // 90% success rate
     
-    if (!formData.ownerName) newErrors.ownerName = 'Owner name is required';
-    
-    if (!formData.ownerPhone) {
-      newErrors.ownerPhone = 'Phone number is required';
-    } else if (!/^(0|\+254|254)7\d{8}$/.test(formData.ownerPhone)) {
-      newErrors.ownerPhone = 'Enter a valid Kenyan mobile number';
-    }
-    
-    if (formData.ownerEmail && !/\S+@\S+\.\S+/.test(formData.ownerEmail)) {
-      newErrors.ownerEmail = 'Enter a valid email address';
-    }
-    
-    if (!formData.vehicleType) newErrors.vehicleType = 'Vehicle type is required';
-    if (!formData.vehicleMake) newErrors.vehicleMake = 'Make is required';
-    if (!formData.vehicleModel) newErrors.vehicleModel = 'Model is required';
-    if (!formData.vehicleYear) newErrors.vehicleYear = 'Year is required';
-    
-    if (!formData.vehicleReg) {
-      newErrors.vehicleReg = 'Registration number is required';
-    } else if (!/^K[A-Z]{2}\s?\d{3}[A-Z]$/i.test(formData.vehicleReg)) {
-      newErrors.vehicleReg = 'Invalid registration format (e.g. KAA 123Z)';
-    }
-    
-    if (!formData.vehicleValue) {
-      newErrors.vehicleValue = 'Vehicle value is required';
+    if (isSuccessful) {
+      updateFormData({ paymentStatus: 'completed' });
+      setPaymentState(prev => ({ 
+        ...prev, 
+        paymentCompleted: true,
+        paymentInitiated: false
+      }));
+      
+      Alert.alert(
+        'Payment Successful!',
+        `Your Third Party Extendible insurance payment of KSh ${formData.paymentAmount?.toLocaleString()} has been confirmed.\n\nTransaction ID: ${formData.transactionId}`,
+        [{ text: 'Continue' }]
+      );
     } else {
-      const value = parseFloat(formData.vehicleValue);
-      if (isNaN(value) || value < 100000) {
-        newErrors.vehicleValue = 'Vehicle value must be at least KSh 100,000';
-      }
-    }
-    
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-  
-  // Handle form submission
-  const handleSubmit = () => {
-    if (validateForm()) {
-      setIsSubmitting(true);
-      
-      // Move to summary step
-      setCurrentStep(2);
-      setIsSubmitting(false);
-      
-      // Generate a quotation ID
-      setQuotationId(`TPEX-${Math.floor(100000 + Math.random() * 900000)}`);
-    } else {
-      // Scroll to first error
-      if (scrollViewRef.current) {
-        scrollViewRef.current.scrollTo({ y: 0, animated: true });
-      }
+      updateFormData({ paymentStatus: 'failed' });
+      setPaymentState(prev => ({ 
+        ...prev, 
+        paymentError: 'Payment was cancelled or failed. Please try again.',
+        paymentInitiated: false
+      }));
     }
   };
-  
-  // Proceed to final step
-  const handleConfirm = () => {
-    setCurrentStep(3);
+
+  const retryPayment = () => {
+    setPaymentState({
+      isProcessing: false,
+      paymentInitiated: false,
+      paymentCompleted: false,
+      paymentError: null,
+      countdown: 0,
+    });
   };
-  
-  // Modal selection for vehicle type
-  const renderVehicleTypeModal = () => (
-    <Modal
-      visible={vehicleTypeModalVisible}
-      transparent={true}
-      animationType="slide"
-      onRequestClose={() => setVehicleTypeModalVisible(false)}
-    >
-      <View style={styles.modalOverlay}>
-        <View style={styles.modalContent}>
-          <Text style={styles.modalTitle}>Select Vehicle Type</Text>
-          <FlatList
-            data={VEHICLE_TYPES}
-            keyExtractor={item => item}
-            renderItem={({ item }) => (
-              <TouchableOpacity
-                style={styles.modalItem}
-                onPress={() => {
-                  updateField('vehicleType', item);
-                  setVehicleTypeModalVisible(false);
-                }}
-              >
-                <Text style={styles.modalItemText}>{item}</Text>
-              </TouchableOpacity>
-            )}
-          />
-          <Button
-            title="Cancel"
-            onPress={() => setVehicleTypeModalVisible(false)}
-            style={styles.cancelButton}
-            textStyle={styles.cancelButtonText}
-          />
-        </View>
-      </View>
-    </Modal>
-  );
-  
-  // Modal selection for vehicle make
-  const renderMakeModal = () => (
-    <Modal
-      visible={makeModalVisible}
-      transparent={true}
-      animationType="slide"
-      onRequestClose={() => setMakeModalVisible(false)}
-    >
-      <View style={styles.modalOverlay}>
-        <View style={styles.modalContent}>
-          <Text style={styles.modalTitle}>Select Vehicle Make</Text>
-          <FlatList
-            data={VEHICLE_MAKES}
-            keyExtractor={item => item}
-            renderItem={({ item }) => (
-              <TouchableOpacity
-                style={styles.modalItem}
-                onPress={() => {
-                  updateField('vehicleMake', item);
-                  updateField('vehicleModel', ''); // Reset model when make changes
-                  setMakeModalVisible(false);
-                }}
-              >
-                <Text style={styles.modalItemText}>{item}</Text>
-              </TouchableOpacity>
-            )}
-          />
-          <Button
-            title="Cancel"
-            onPress={() => setMakeModalVisible(false)}
-            style={styles.cancelButton}
-            textStyle={styles.cancelButtonText}
-          />
-        </View>
-      </View>
-    </Modal>
-  );
-  
-  // Modal selection for vehicle model
-  const renderModelModal = () => (
-    <Modal
-      visible={modelModalVisible}
-      transparent={true}
-      animationType="slide"
-      onRequestClose={() => setModelModalVisible(false)}
-    >
-      <View style={styles.modalOverlay}>
-        <View style={styles.modalContent}>
-          <Text style={styles.modalTitle}>
-            Select {formData.vehicleMake} Model
-          </Text>
-          <FlatList
-            data={formData.vehicleMake ? VEHICLE_MODELS[formData.vehicleMake] || [] : []}
-            keyExtractor={item => item}
-            renderItem={({ item }) => (
-              <TouchableOpacity
-                style={styles.modalItem}
-                onPress={() => {
-                  updateField('vehicleModel', item);
-                  setModelModalVisible(false);
-                }}
-              >
-                <Text style={styles.modalItemText}>{item}</Text>
-              </TouchableOpacity>
-            )}
-          />
-          <Button
-            title="Cancel"
-            onPress={() => setModelModalVisible(false)}
-            style={styles.cancelButton}
-            textStyle={styles.cancelButtonText}
-          />
-        </View>
-      </View>
-    </Modal>
-  );
-  
-  // Modal selection for vehicle year
-  const renderYearModal = () => (
-    <Modal
-      visible={yearModalVisible}
-      transparent={true}
-      animationType="slide"
-      onRequestClose={() => setYearModalVisible(false)}
-    >
-      <View style={styles.modalOverlay}>
-        <View style={styles.modalContent}>
-          <Text style={styles.modalTitle}>Select Vehicle Year</Text>
-          <FlatList
-            data={YEARS}
-            keyExtractor={item => item}
-            renderItem={({ item }) => (
-              <TouchableOpacity
-                style={styles.modalItem}
-                onPress={() => {
-                  updateField('vehicleYear', item);
-                  setYearModalVisible(false);
-                }}
-              >
-                <Text style={styles.modalItemText}>{item}</Text>
-              </TouchableOpacity>
-            )}
-          />
-          <Button
-            title="Cancel"
-            onPress={() => setYearModalVisible(false)}
-            style={styles.cancelButton}
-            textStyle={styles.cancelButtonText}
-          />
-        </View>
-      </View>
-    </Modal>
-  );
-  
-  // First step - Vehicle and owner information form
-  const renderForm = () => (
-    <View style={styles.formContainer}>
-      <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Owner Details</Text>
-      </View>
+
+  const handleSubmit = async () => {
+    setLoading(true);
+    try {
+      await new Promise(resolve => setTimeout(resolve, 2000));
       
-      <View style={styles.formGroup}>
-        <Text style={styles.label}>Owner's Full Name</Text>
-        <TextInput
-          style={[styles.input, errors.ownerName && styles.inputError]}
-          placeholder="Enter owner's full name"
-          value={formData.ownerName}
-          onChangeText={(text) => updateField('ownerName', text)}
-        />
-        {errors.ownerName && <Text style={styles.errorText}>{errors.ownerName}</Text>}
-      </View>
-      
-      <View style={styles.formGroup}>
-        <Text style={styles.label}>Phone Number</Text>
-        <TextInput
-          style={[styles.input, errors.ownerPhone && styles.inputError]}
-          placeholder="E.g. 0722123456"
-          value={formData.ownerPhone}
-          onChangeText={(text) => updateField('ownerPhone', text)}
-          keyboardType="phone-pad"
-        />
-        {errors.ownerPhone && <Text style={styles.errorText}>{errors.ownerPhone}</Text>}
-      </View>
-      
-      <View style={styles.formGroup}>
-        <Text style={styles.label}>Email Address (Optional)</Text>
-        <TextInput
-          style={[styles.input, errors.ownerEmail && styles.inputError]}
-          placeholder="Enter email address"
-          value={formData.ownerEmail}
-          onChangeText={(text) => updateField('ownerEmail', text)}
-          keyboardType="email-address"
-        />
-        {errors.ownerEmail && <Text style={styles.errorText}>{errors.ownerEmail}</Text>}
-      </View>
-      
-      <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Vehicle Details</Text>
-      </View>
-      
-      <View style={styles.formGroup}>
-        <Text style={styles.label}>Vehicle Type</Text>
-        <TouchableOpacity
-          style={[styles.pickerButton, errors.vehicleType && styles.inputError]}
-          onPress={() => setVehicleTypeModalVisible(true)}
-        >
-          <Text style={formData.vehicleType ? styles.pickerText : styles.placeholderText}>
-            {formData.vehicleType || 'Select vehicle type'}
-          </Text>
-          <Ionicons name="chevron-down" size={20} color={Colors.gray} />
-        </TouchableOpacity>
-        {errors.vehicleType && <Text style={styles.errorText}>{errors.vehicleType}</Text>}
-      </View>
-      
-      <View style={styles.formGroup}>
-        <Text style={styles.label}>Make</Text>
-        <TouchableOpacity
-          style={[styles.pickerButton, errors.vehicleMake && styles.inputError]}
-          onPress={() => setMakeModalVisible(true)}
-        >
-          <Text style={formData.vehicleMake ? styles.pickerText : styles.placeholderText}>
-            {formData.vehicleMake || 'Select make'}
-          </Text>
-          <Ionicons name="chevron-down" size={20} color={Colors.gray} />
-        </TouchableOpacity>
-        {errors.vehicleMake && <Text style={styles.errorText}>{errors.vehicleMake}</Text>}
-      </View>
-      
-      <View style={styles.formGroup}>
-        <Text style={styles.label}>Model</Text>
-        <TouchableOpacity
-          style={[styles.pickerButton, errors.vehicleModel && styles.inputError]}
-          onPress={() => {
-            if (formData.vehicleMake) {
-              setModelModalVisible(true);
-            } else {
-              Alert.alert('Select Make First', 'Please select vehicle make before model.');
+      Alert.alert(
+        'Third Party Extendible Insurance Policy Issued',
+        `Your Third Party Extendible insurance policy has been successfully issued.\n\nPolicy ID: TPEXT${Date.now()}\nTotal Premium: KSh ${formData.totalPremium?.toLocaleString()}\nTransaction ID: ${formData.transactionId}\n\nCoverage: Third Party Extendible with selected extensions\nValid for 1 year from policy start date.`,
+        [
+          {
+            text: 'OK',
+            onPress: () => navigation.goBack(),
+          },
+        ]
+      );
+    } catch (error) {
+      Alert.alert('Error', 'Failed to issue policy. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+  const renderCurrentStep = () => {
+    switch (currentStep) {
+      case 1:
+        return (
+          <PersonalInformationStep
+            formData={formData}
+            onUpdateFormData={updateFormData}
+            requiredFields={['fullName', 'idNumber', 'phoneNumber']}
+            optionalFields={['email', 'kraPin']}
+            showValidation={true}
+          />
+        );
+      case 2:
+        return (
+          <VehicleDetailsStep
+            formData={formData}
+            onUpdateFormData={updateFormData}
+            requiredFields={['vehicleMake', 'vehicleModel', 'vehicleYear', 'registrationNumber']}
+            enablePolicyValidation={true}
+            enableInsuranceDate={false}
+            onRegistrationChange={checkExistingInsurance}
+            policyValidation={policyValidation}
+          />
+        );
+      case 3:
+        return (
+          <VehicleValueStep
+            formData={formData}
+            onUpdateFormData={updateFormData}
+            vehicleAge={formData.vehicleAge}
+            enableEstimation={false}
+            customInfo={
+              <View style={styles.extendibleInfo}>
+                <View style={styles.infoHeader}>
+                  <Ionicons name="layers" size={20} color={Colors.primary} />
+                  <Text style={styles.infoTitle}>Third Party Extendible Insurance</Text>
+                </View>
+                <Text style={styles.infoText}>
+                  Third Party Extendible provides basic third party coverage with optional 
+                  extensions like windscreen cover, personal effects, and enhanced medical benefits.
+                </Text>
+                
+                {/* Extension Options */}
+                <Text style={styles.extensionTitle}>Available Extensions:</Text>
+                {EXTENDIBLE_EXTENSIONS.map((extension) => (
+                  <TouchableOpacity
+                    key={extension.id}
+                    style={[
+                      styles.extensionOption,
+                      formData.selectedExtensions?.includes(extension.id) && styles.extensionSelected
+                    ]}
+                    onPress={() => {
+                      const selectedExtensions = formData.selectedExtensions || [];
+                      const index = selectedExtensions.indexOf(extension.id);
+                      
+                      if (index !== -1) {
+                        selectedExtensions.splice(index, 1);
+                      } else {
+                        selectedExtensions.push(extension.id);
+                      }
+                      
+                      updateFormData({ selectedExtensions: [...selectedExtensions] });
+                    }}
+                  >
+                    <View style={styles.extensionCheckbox}>
+                      {formData.selectedExtensions?.includes(extension.id) ? (
+                        <Ionicons name="checkbox" size={20} color={Colors.primary} />
+                      ) : (
+                        <Ionicons name="square-outline" size={20} color={Colors.textMuted} />
+                      )}
+                    </View>
+                    <View style={styles.extensionDetails}>
+                      <View style={styles.extensionHeader}>
+                        <Text style={styles.extensionName}>{extension.name}</Text>
+                        <Text style={styles.extensionPremium}>+KSh {extension.premium.toLocaleString()}</Text>
+                      </View>
+                      <Text style={styles.extensionDescription}>{extension.description}</Text>
+                      <Text style={styles.extensionLimit}>{extension.limit}</Text>
+                    </View>
+                  </TouchableOpacity>
+                ))}
+              </View>
             }
-          }}
-          disabled={!formData.vehicleMake}
-        >
-          <Text 
-            style={
-              formData.vehicleModel 
-                ? styles.pickerText 
-                : styles.placeholderText
-            }
+          />
+        );
+      case 4:
+        return (
+          <InsurerSelectionStep
+            formData={formData}
+            onUpdateFormData={handleInsurerSelection}
+            insurers={thirdPartyExtendibleInsurers}
+            insuranceType="Third Party Extendible Insurance"
+            enablePremiumCalculation={true}
+            onCalculatePremium={handleCalculatePremium}
+            vehicleAge={formData.vehicleAge}
           >
-            {formData.vehicleModel || (formData.vehicleMake ? 'Select model' : 'Select make first')}
-          </Text>
-          <Ionicons name="chevron-down" size={20} color={Colors.gray} />
-        </TouchableOpacity>
-        {errors.vehicleModel && <Text style={styles.errorText}>{errors.vehicleModel}</Text>}
-      </View>
-      
-      <View style={styles.formGroup}>
-        <Text style={styles.label}>Year</Text>
-        <TouchableOpacity
-          style={[styles.pickerButton, errors.vehicleYear && styles.inputError]}
-          onPress={() => setYearModalVisible(true)}
-        >
-          <Text style={formData.vehicleYear ? styles.pickerText : styles.placeholderText}>
-            {formData.vehicleYear || 'Select year'}
-          </Text>
-          <Ionicons name="chevron-down" size={20} color={Colors.gray} />
-        </TouchableOpacity>
-        {errors.vehicleYear && <Text style={styles.errorText}>{errors.vehicleYear}</Text>}
-      </View>
-      
-      <View style={styles.formGroup}>
-        <Text style={styles.label}>Registration Number</Text>
-        <TextInput
-          style={[styles.input, errors.vehicleReg && styles.inputError]}
-          placeholder="E.g. KAA 123Z"
-          value={formData.vehicleReg}
-          onChangeText={(text) => updateField('vehicleReg', text.toUpperCase())}
-        />
-        {errors.vehicleReg && <Text style={styles.errorText}>{errors.vehicleReg}</Text>}
-      </View>
-      
-      <View style={styles.formGroup}>
-        <Text style={styles.label}>Vehicle Value (KSh)</Text>
-        <TextInput
-          style={[styles.input, errors.vehicleValue && styles.inputError]}
-          placeholder="E.g. 1500000"
-          value={formData.vehicleValue}
-          onChangeText={(text) => updateField('vehicleValue', text)}
-          keyboardType="numeric"
-        />
-        {errors.vehicleValue && <Text style={styles.errorText}>{errors.vehicleValue}</Text>}
-      </View>
-      
-      <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Extra Coverage Options</Text>
-        <Text style={styles.sectionSubtitle}>Select additional coverage to extend your third-party policy</Text>
-      </View>
-      
-      {EXTRA_COVERAGE_OPTIONS.map((coverage) => (
-        <TouchableOpacity
-          key={coverage.id}
-          style={[
-            styles.coverageOption,
-            formData.selectedCoverage.includes(coverage.id) && styles.coverageOptionSelected
-          ]}
-          onPress={() => toggleCoverage(coverage.id)}
-        >
-          <View style={styles.coverageCheckbox}>
-            {formData.selectedCoverage.includes(coverage.id) ? (
-              <Ionicons name="checkbox" size={24} color={Colors.primary} />
-            ) : (
-              <Ionicons name="square-outline" size={24} color={Colors.gray} />
-            )}
-          </View>
-          <View style={styles.coverageDetails}>
-            <View style={styles.coverageHeader}>
-              <Text style={styles.coverageName}>{coverage.name}</Text>
-              <Text style={styles.coveragePremium}>+ KSh {coverage.premium.toLocaleString()}</Text>
-            </View>
-            <Text style={styles.coverageDescription}>{coverage.description}</Text>
-          </View>
-        </TouchableOpacity>
-      ))}
-      
-      {/* Premium calculation section */}
-      {premium > 0 && (
-        <View style={styles.premiumContainer}>
-          <Text style={styles.premiumLabel}>Third-Party Extendible Premium:</Text>
-          <Text style={styles.premiumValue}>KES {premium.toLocaleString()}</Text>
-        </View>
-      )}
-      
-      <Button
-        title="Get Quotation"
-        onPress={handleSubmit}
-        loading={isSubmitting}
-        style={styles.submitButton}
-        textStyle={styles.submitButtonText}
-      />
-    </View>
-  );
-  
-  // Second step - Quotation summary
-  const renderSummary = () => (
-    <View style={styles.summaryContainer}>
-      <View style={styles.quotationHeader}>
-        <Text style={styles.quotationId}>Quotation #{quotationId}</Text>
-        <Text style={styles.quotationDate}>
-          {new Date().toLocaleDateString('en-GB')}
-        </Text>
-      </View>
-      
-      <View style={styles.summaryCard}>
-        <View style={styles.summarySection}>
-          <Text style={styles.summaryTitle}>Vehicle Details</Text>
-          <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>Type:</Text>
-            <Text style={styles.summaryValue}>{formData.vehicleType}</Text>
-          </View>
-          <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>Make & Model:</Text>
-            <Text style={styles.summaryValue}>
-              {formData.vehicleMake} {formData.vehicleModel}
-            </Text>
-          </View>
-          <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>Year:</Text>
-            <Text style={styles.summaryValue}>{formData.vehicleYear}</Text>
-          </View>
-          <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>Registration:</Text>
-            <Text style={styles.summaryValue}>{formData.vehicleReg}</Text>
-          </View>
-          <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>Value:</Text>
-            <Text style={styles.summaryValue}>KSh {parseInt(formData.vehicleValue).toLocaleString()}</Text>
-          </View>
-        </View>
-        
-        <View style={styles.divider} />
-        
-        <View style={styles.summarySection}>
-          <Text style={styles.summaryTitle}>Owner Details</Text>
-          <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>Name:</Text>
-            <Text style={styles.summaryValue}>{formData.ownerName}</Text>
-          </View>
-          <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>Phone:</Text>
-            <Text style={styles.summaryValue}>{formData.ownerPhone}</Text>
-          </View>
-          {formData.ownerEmail && (
-            <View style={styles.summaryRow}>
-              <Text style={styles.summaryLabel}>Email:</Text>
-              <Text style={styles.summaryValue}>{formData.ownerEmail}</Text>
-            </View>
-          )}
-        </View>
-        
-        <View style={styles.divider} />
-        
-        <View style={styles.summarySection}>
-          <Text style={styles.summaryTitle}>Coverage Details</Text>
-          <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>Basic Coverage:</Text>
-            <Text style={styles.summaryValue}>Third Party Extendible</Text>
-          </View>
-          
-          {/* Extra coverage options */}
-          {formData.selectedCoverage.length > 0 && (
-            <>
-              <Text style={styles.extraCoverageTitle}>Extra Coverage:</Text>
-              {formData.selectedCoverage.map(coverageId => {
-                const coverage = EXTRA_COVERAGE_OPTIONS.find(c => c.id === coverageId);
-                return (
-                  <View key={coverageId} style={styles.extraCoverageItem}>
-                    <Ionicons name="checkmark-circle" size={16} color={Colors.success} />
-                    <Text style={styles.extraCoverageName}>{coverage.name}</Text>
-                    <Text style={styles.extraCoveragePremium}>
-                      KSh {coverage.premium.toLocaleString()}
-                    </Text>
+            {/* Third Party Extendible Coverage Information */}
+            {formData.selectedInsurer && (
+              <View style={styles.coverageInfoCard}>
+                <View style={styles.coverageHeader}>
+                  <Ionicons name="shield-checkmark" size={20} color={Colors.primary} />
+                  <Text style={styles.coverageTitle}>Third Party Extendible Coverage</Text>
+                </View>
+                <View style={styles.coverageRow}>
+                  <Text style={styles.coverageLabel}>Bodily Injury (per person):</Text>
+                  <Text style={styles.coverageValue}>KSh {THIRD_PARTY_EXTENDIBLE_COVERAGE.bodilyInjury.toLocaleString()}</Text>
+                </View>
+                <View style={styles.coverageRow}>
+                  <Text style={styles.coverageLabel}>Property Damage:</Text>
+                  <Text style={styles.coverageValue}>KSh {THIRD_PARTY_EXTENDIBLE_COVERAGE.propertyDamage.toLocaleString()}</Text>
+                </View>
+                <View style={styles.coverageRow}>
+                  <Text style={styles.coverageLabel}>Legal Liability:</Text>
+                  <Text style={styles.coverageValue}>{THIRD_PARTY_EXTENDIBLE_COVERAGE.legalLiability}</Text>
+                </View>
+                
+                {/* Selected Extensions */}
+                {formData.selectedExtensions && formData.selectedExtensions.length > 0 && (
+                  <>
+                    <Text style={styles.extensionsHeader}>Selected Extensions:</Text>
+                    {formData.selectedExtensions.map(extensionId => {
+                      const extension = EXTENDIBLE_EXTENSIONS.find(ext => ext.id === extensionId);
+                      return extension ? (
+                        <View key={extensionId} style={styles.selectedExtension}>
+                          <Ionicons name="checkmark-circle" size={16} color={Colors.success} />
+                          <Text style={styles.selectedExtensionName}>{extension.name}</Text>
+                          <Text style={styles.selectedExtensionPremium}>+KSh {extension.premium.toLocaleString()}</Text>
+                        </View>
+                      ) : null;
+                    })}
+                  </>
+                )}
+                
+                {formData.selectedQuote && (
+                  <View style={styles.coverageRow}>
+                    <Text style={styles.coverageLabel}>Vehicle Value:</Text>
+                    <Text style={styles.coverageValue}>KSh {formData.selectedQuote.vehicleValue?.toLocaleString()}</Text>
                   </View>
-                );
-              })}
-            </>
-          )}
-          
-          <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>Period:</Text>
-            <Text style={styles.summaryValue}>12 Months</Text>
-          </View>
-          <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>Premium:</Text>
-            <Text style={styles.premiumValue}>KES {premium.toLocaleString()}</Text>
-          </View>
-        </View>
-        
-        <View style={styles.actionsContainer}>
-          <TouchableOpacity 
-            style={styles.editButton}
-            onPress={() => setCurrentStep(1)}
-          >
-            <Ionicons name="arrow-back" size={18} color={Colors.primary} />
-            <Text style={styles.editButtonText}>Edit Details</Text>
-          </TouchableOpacity>
-          
-          <Button
-            title="Proceed to Payment"
-            onPress={handleConfirm}
-            style={styles.confirmButton}
-            textStyle={styles.confirmButtonText}
+                )}
+              </View>
+            )}
+          </InsurerSelectionStep>
+        );
+      case 5:
+        return (
+          <PaymentStep
+            formData={formData}
+            onUpdateFormData={updateFormData}
+            paymentState={paymentState}
+            onInitiatePayment={initiateMpesaPayment}
+            onRetryPayment={retryPayment}
+            serviceFee={50}
+            insuranceType="Third Party Extendible Insurance"
           />
-        </View>
-      </View>
-    </View>
-  );
-  
-  // Third step - Success message
-  const renderSuccess = () => (
-    <View style={styles.successContainer}>
-      <View style={styles.successIcon}>
-        <Ionicons name="checkmark-circle" size={100} color={Colors.success} />
-      </View>
-      
-      <Text style={styles.successTitle}>Quotation Created!</Text>
-      <Text style={styles.successMessage}>
-        Your third-party extendible insurance quotation has been created successfully.
-      </Text>
-      
-      <View style={styles.successDetails}>
-        <View style={styles.successRow}>
-          <Text style={styles.successLabel}>Quotation ID:</Text>
-          <Text style={styles.successValue}>{quotationId}</Text>
-        </View>
-        <View style={styles.successRow}>
-          <Text style={styles.successLabel}>Amount:</Text>
-          <Text style={styles.successValue}>KES {premium.toLocaleString()}</Text>
-        </View>
-        <View style={styles.successRow}>
-          <Text style={styles.successLabel}>Vehicle:</Text>
-          <Text style={styles.successValue}>
-            {formData.vehicleMake} {formData.vehicleModel}
-          </Text>
-        </View>
-        <View style={styles.successRow}>
-          <Text style={styles.successLabel}>Registration:</Text>
-          <Text style={styles.successValue}>{formData.vehicleReg}</Text>
-        </View>
-      </View>
-      
-      <View style={styles.successActions}>
-        <Button
-          title="View Policy Details"
-          onPress={() => {
-            // In a real app, navigate to policy details
-            Alert.alert('Success', 'Navigating to policy details would happen here.');
-          }}
-          style={styles.successButton}
-          textStyle={styles.successButtonText}
-        />
-        
-        <Button
-          title="Back to Insurance Products"
-          onPress={() => navigation.goBack()}
-          style={styles.outlineButton}
-          textStyle={styles.outlineButtonText}
-        />
-      </View>
-    </View>
-  );
+        );
+      default:
+        return null;
+    }
+  };
   
   return (
-    <KeyboardAvoidingView
-      style={[styles.container, { paddingTop: insets.top }]}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
-    >
-      <StatusBar style="light" />
+    <SafeAreaView style={[styles.container, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
+      <StatusBar style="dark" />
       
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity
           style={styles.backButton}
-          onPress={() => {
-            if (currentStep > 1) {
-              setCurrentStep(currentStep - 1);
-            } else {
-              navigation.goBack();
-            }
-          }}
+          onPress={() => navigation.goBack()}
         >
-          <Ionicons name="arrow-back" size={24} color={Colors.white} />
+          <Ionicons name="arrow-back" size={24} color="white" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>
-          Private Third-Party Extendible
-        </Text>
-        <TouchableOpacity
-          style={styles.infoButton}
-          onPress={() => Alert.alert(
-            'Third-Party Extendible Insurance',
-            'This insurance provides the mandatory third-party coverage with additional optional coverages like windscreen, audio equipment, and more.'
-          )}
-        >
-          <Ionicons name="information-circle-outline" size={24} color={Colors.white} />
-        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Third Party Extendible</Text>
+        <View style={{ width: 24 }} />
       </View>
-      
-      {/* Progress indicator */}
-      <View style={styles.progressContainer}>
-        <View style={styles.progressStep}>
-          <View style={[
-            styles.progressDot,
-            currentStep >= 1 && styles.progressActive
-          ]}>
-            <Text style={styles.progressNumber}>1</Text>
-          </View>
-          <Text style={styles.progressLabel}>Details</Text>
-        </View>
-        <View style={styles.progressLine} />
-        <View style={styles.progressStep}>
-          <View style={[
-            styles.progressDot,
-            currentStep >= 2 && styles.progressActive
-          ]}>
-            <Text style={styles.progressNumber}>2</Text>
-          </View>
-          <Text style={styles.progressLabel}>Quote</Text>
-        </View>
-        <View style={styles.progressLine} />
-        <View style={styles.progressStep}>
-          <View style={[
-            styles.progressDot,
-            currentStep >= 3 && styles.progressActive
-          ]}>
-            <Text style={styles.progressNumber}>3</Text>
-          </View>
-          <Text style={styles.progressLabel}>Complete</Text>
-        </View>
-      </View>
-      
-      <ScrollView 
-        style={styles.content} 
-        ref={scrollViewRef}
-        showsVerticalScrollIndicator={false}
+
+      {/* Progress Bar */}
+      <QuotationProgressBar
+        currentStep={currentStep}
+        totalSteps={TOTAL_STEPS}
+        stepLabels={['Personal Info', 'Vehicle Details', 'Vehicle Value', 'Select Insurer', 'Payment']}
+        showStepLabels={true}
+        animated={true}
+      />
+
+      <KeyboardAvoidingView
+        style={styles.content}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
       >
-        {currentStep === 1 && renderForm()}
-        {currentStep === 2 && renderSummary()}
-        {currentStep === 3 && renderSuccess()}
-      </ScrollView>
-      
-      {/* Modals */}
-      {renderVehicleTypeModal()}
-      {renderMakeModal()}
-      {renderModelModal()}
-      {renderYearModal()}
-    </KeyboardAvoidingView>
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.scrollContent}
+        >
+          {renderCurrentStep()}
+        </ScrollView>
+
+        {/* Navigation Buttons */}
+        <View style={styles.navigationContainer}>
+          {currentStep > 1 && (
+            <TouchableOpacity
+              style={[styles.navButton, styles.prevButton]}
+              onPress={prevStep}
+            >
+              <Ionicons name="chevron-back" size={20} color={Colors.primary} />
+              <Text style={styles.prevButtonText}>Previous</Text>
+            </TouchableOpacity>
+          )}
+          
+          {currentStep < TOTAL_STEPS ? (
+            <TouchableOpacity
+              style={[styles.navButton, styles.nextButton]}
+              onPress={nextStep}
+              disabled={!validateStep(currentStep)}
+            >
+              <Text style={styles.nextButtonText}>Next</Text>
+              <Ionicons name="chevron-forward" size={20} color="white" />
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity
+              style={[styles.navButton, styles.submitButton]}
+              onPress={handleSubmit}
+              disabled={loading || !validateStep(currentStep)}
+            >
+              {loading ? (
+                <ActivityIndicator color="white" />
+              ) : (
+                <>
+                  <Text style={styles.submitButtonText}>Issue Policy</Text>
+                  <Ionicons name="checkmark" size={20} color="white" />
+                </>
+              )}
+            </TouchableOpacity>
+          )}
+        </View>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.white,
+    backgroundColor: Colors.backgroundLight,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.md,
     backgroundColor: Colors.primary,
-    paddingHorizontal: Spacing.medium,
-    paddingVertical: Spacing.small,
+    elevation: 4,
+    shadowColor: Colors.shadow,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
   backButton: {
-    padding: Spacing.small,
+    padding: Spacing.xs,
   },
   headerTitle: {
-    color: Colors.white,
-    fontSize: Typography.fontSizes.large,
-    fontWeight: 'bold',
-    flex: 1,
-    textAlign: 'center',
-  },
-  infoButton: {
-    padding: Spacing.small,
-  },
-  progressContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: Spacing.xlarge,
-    paddingVertical: Spacing.medium,
-    backgroundColor: Colors.lightGray,
-  },
-  progressStep: {
-    alignItems: 'center',
-  },
-  progressDot: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    backgroundColor: Colors.gray,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  progressActive: {
-    backgroundColor: Colors.primary,
-  },
-  progressNumber: {
-    color: Colors.white,
-    fontWeight: 'bold',
-  },
-  progressLabel: {
-    marginTop: 4,
-    fontSize: Typography.fontSizes.small,
-  },
-  progressLine: {
-    flex: 1,
-    height: 2,
-    backgroundColor: Colors.gray,
-    marginHorizontal: Spacing.tiny,
+    fontSize: Typography.fontSize.lg,
+    fontWeight: Typography.fontWeight.bold,
+    color: 'white',
   },
   content: {
     flex: 1,
   },
-  formContainer: {
-    padding: Spacing.medium,
+  scrollContent: {
+    padding: Spacing.md,
+    paddingBottom: Spacing.xl,
   },
-  sectionHeader: {
-    marginTop: Spacing.medium,
-    marginBottom: Spacing.small,
-  },
-  sectionTitle: {
-    fontSize: Typography.fontSizes.medium,
-    fontWeight: 'bold',
-    color: Colors.primary,
-  },
-  sectionSubtitle: {
-    fontSize: Typography.fontSizes.small,
-    color: Colors.gray,
-    marginTop: Spacing.tiny,
-  },
-  formGroup: {
-    marginBottom: Spacing.medium,
-  },
-  label: {
-    fontSize: Typography.fontSizes.small,
-    fontWeight: '500',
-    marginBottom: 6,
-  },
-  input: {
+  extendibleInfo: {
+    backgroundColor: Colors.white,
+    borderRadius: 12,
+    padding: Spacing.md,
+    marginBottom: Spacing.md,
     borderWidth: 1,
     borderColor: Colors.border,
-    borderRadius: 8,
-    padding: Spacing.small,
-    fontSize: Typography.fontSizes.small,
+    elevation: 2,
+    shadowColor: Colors.shadow,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
-  inputError: {
-    borderColor: Colors.error,
-  },
-  errorText: {
-    color: Colors.error,
-    fontSize: Typography.fontSizes.xsmall,
-    marginTop: 4,
-  },
-  pickerButton: {
+  infoHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    borderWidth: 1,
-    borderColor: Colors.border,
-    borderRadius: 8,
-    padding: Spacing.small,
+    marginBottom: Spacing.sm,
   },
-  pickerText: {
-    fontSize: Typography.fontSizes.small,
+  infoTitle: {
+    marginLeft: Spacing.xs,
+    fontSize: Typography.fontSize.md,
+    fontWeight: Typography.fontWeight.medium,
+    color: Colors.primary,
   },
-  placeholderText: {
-    fontSize: Typography.fontSizes.small,
-    color: Colors.gray,
+  infoText: {
+    fontSize: Typography.fontSize.sm,
+    color: Colors.textSecondary,
+    lineHeight: 20,
+    marginBottom: Spacing.md,
   },
-  coverageOption: {
+  extensionTitle: {
+    fontSize: Typography.fontSize.md,
+    fontWeight: Typography.fontWeight.medium,
+    color: Colors.textPrimary,
+    marginBottom: Spacing.sm,
+  },
+  extensionOption: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    padding: Spacing.small,
-    marginBottom: Spacing.small,
+    padding: Spacing.sm,
+    marginBottom: Spacing.sm,
     backgroundColor: Colors.backgroundLight,
     borderRadius: 8,
     borderWidth: 1,
     borderColor: Colors.border,
   },
-  coverageOptionSelected: {
-    backgroundColor: Colors.lightPrimary,
+  extensionSelected: {
+    backgroundColor: `${Colors.primary}08`,
     borderColor: Colors.primary,
   },
-  coverageCheckbox: {
-    marginRight: Spacing.small,
+  extensionCheckbox: {
+    marginRight: Spacing.sm,
     marginTop: 2,
   },
-  coverageDetails: {
+  extensionDetails: {
     flex: 1,
+  },
+  extensionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 4,
+  },
+  extensionName: {
+    fontSize: Typography.fontSize.sm,
+    fontWeight: Typography.fontWeight.medium,
+    color: Colors.textPrimary,
+  },
+  extensionPremium: {
+    fontSize: Typography.fontSize.sm,
+    fontWeight: Typography.fontWeight.medium,
+    color: Colors.primary,
+  },
+  extensionDescription: {
+    fontSize: Typography.fontSize.xs,
+    color: Colors.textSecondary,
+    marginBottom: 2,
+  },
+  extensionLimit: {
+    fontSize: Typography.fontSize.xs,
+    color: Colors.textMuted,
+    fontStyle: 'italic',
+  },
+  coverageInfoCard: {
+    backgroundColor: Colors.white,
+    borderRadius: 12,
+    padding: Spacing.md,
+    marginTop: Spacing.md,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    elevation: 2,
+    shadowColor: Colors.shadow,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
   coverageHeader: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 4,
+    alignItems: 'center',
+    marginBottom: Spacing.md,
   },
-  coverageName: {
-    fontSize: Typography.fontSizes.small,
-    fontWeight: '500',
+  coverageTitle: {
+    marginLeft: Spacing.xs,
+    fontSize: Typography.fontSize.md,
+    fontWeight: Typography.fontWeight.medium,
+    color: Colors.textPrimary,
   },
-  coveragePremium: {
-    fontSize: Typography.fontSizes.small,
-    color: Colors.primary,
-    fontWeight: '500',
-  },
-  coverageDescription: {
-    fontSize: Typography.fontSizes.xsmall,
-    color: Colors.gray,
-  },
-  premiumContainer: {
-    backgroundColor: Colors.lightPrimary,
-    borderRadius: 8,
-    padding: Spacing.medium,
-    marginVertical: Spacing.medium,
+  coverageRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    marginBottom: Spacing.sm,
   },
-  premiumLabel: {
-    fontSize: Typography.fontSizes.small,
-    fontWeight: '500',
+  coverageLabel: {
+    fontSize: Typography.fontSize.sm,
+    color: Colors.textSecondary,
+    flex: 1,
   },
-  premiumValue: {
-    fontSize: Typography.fontSizes.large,
-    fontWeight: 'bold',
+  coverageValue: {
+    fontSize: Typography.fontSize.sm,
+    fontWeight: Typography.fontWeight.medium,
+    color: Colors.textPrimary,
+  },
+  extensionsHeader: {
+    fontSize: Typography.fontSize.sm,
+    fontWeight: Typography.fontWeight.medium,
     color: Colors.primary,
+    marginTop: Spacing.sm,
+    marginBottom: Spacing.xs,
+  },
+  selectedExtension: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: Spacing.xs,
+  },
+  selectedExtensionName: {
+    fontSize: Typography.fontSize.sm,
+    marginLeft: Spacing.xs,
+    flex: 1,
+    color: Colors.textPrimary,
+  },
+  selectedExtensionPremium: {
+    fontSize: Typography.fontSize.sm,
+    fontWeight: Typography.fontWeight.medium,
+    color: Colors.primary,
+  },
+  navigationContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.md,
+    backgroundColor: Colors.surface,
+    borderTopWidth: 1,
+    borderTopColor: Colors.border,
+    elevation: 2,
+    shadowColor: Colors.shadow,
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  navButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: Spacing.sm,
+    paddingHorizontal: Spacing.lg,
+    borderRadius: 8,
+    minWidth: 100,
+    justifyContent: 'center',
+  },
+  prevButton: {
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: Colors.primary,
+  },
+  prevButtonText: {
+    color: Colors.primary,
+    fontWeight: Typography.fontWeight.medium,
+    marginLeft: Spacing.xs,
+  },
+  nextButton: {
+    backgroundColor: Colors.primary,
+  },
+  nextButtonText: {
+    color: 'white',
+    fontWeight: Typography.fontWeight.medium,
+    marginRight: Spacing.xs,
   },
   submitButton: {
     backgroundColor: Colors.primary,
-    marginTop: Spacing.medium,
-    borderRadius: 8,
   },
   submitButtonText: {
-    fontWeight: 'bold',
-  },
-  
-  // Modal styles
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'flex-end',
-  },
-  modalContent: {
-    backgroundColor: Colors.white,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    padding: Spacing.medium,
-    maxHeight: '70%',
-  },
-  modalTitle: {
-    fontSize: Typography.fontSizes.medium,
-    fontWeight: 'bold',
-    marginBottom: Spacing.medium,
-    textAlign: 'center',
-  },
-  modalItem: {
-    paddingVertical: Spacing.small,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.lightGray,
-  },
-  modalItemText: {
-    fontSize: Typography.fontSizes.small,
-  },
-  cancelButton: {
-    marginTop: Spacing.medium,
-    backgroundColor: Colors.lightGray,
-  },
-  cancelButtonText: {
-    color: Colors.dark,
-  },
-  
-  // Summary styles
-  summaryContainer: {
-    padding: Spacing.medium,
-  },
-  quotationHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: Spacing.medium,
-  },
-  quotationId: {
-    fontSize: Typography.fontSizes.medium,
-    fontWeight: 'bold',
-  },
-  quotationDate: {
-    fontSize: Typography.fontSizes.small,
-    color: Colors.gray,
-  },
-  summaryCard: {
-    backgroundColor: Colors.white,
-    borderRadius: 12,
-    padding: Spacing.medium,
-    ...Platform.select({
-      ios: {
-        shadowColor: Colors.dark,
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-      },
-      android: {
-        elevation: 3,
-      },
-    }),
-  },
-  summarySection: {
-    marginBottom: Spacing.medium,
-  },
-  summaryTitle: {
-    fontSize: Typography.fontSizes.medium,
-    fontWeight: 'bold',
-    marginBottom: Spacing.small,
-    color: Colors.primary,
-  },
-  summaryRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 6,
-  },
-  summaryLabel: {
-    fontSize: Typography.fontSizes.small,
-    color: Colors.gray,
-  },
-  summaryValue: {
-    fontSize: Typography.fontSizes.small,
-    fontWeight: '500',
-    maxWidth: '60%',
-    textAlign: 'right',
-  },
-  extraCoverageTitle: {
-    fontSize: Typography.fontSizes.small,
-    fontWeight: '500',
-    color: Colors.primary,
-    marginTop: Spacing.small,
-    marginBottom: 4,
-  },
-  extraCoverageItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: 3,
-  },
-  extraCoverageName: {
-    fontSize: Typography.fontSizes.small,
-    marginLeft: 6,
-    flex: 1,
-  },
-  extraCoveragePremium: {
-    fontSize: Typography.fontSizes.small,
-    color: Colors.primary,
-    fontWeight: '500',
-  },
-  divider: {
-    height: 1,
-    backgroundColor: Colors.lightGray,
-    marginVertical: Spacing.small,
-  },
-  actionsContainer: {
-    marginTop: Spacing.medium,
-  },
-  editButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: Spacing.medium,
-  },
-  editButtonText: {
-    marginLeft: 6,
-    color: Colors.primary,
-    fontWeight: '500',
-  },
-  confirmButton: {
-    backgroundColor: Colors.primary,
-    borderRadius: 8,
-  },
-  confirmButtonText: {
-    fontWeight: 'bold',
-  },
-  
-  // Success styles
-  successContainer: {
-    padding: Spacing.medium,
-    alignItems: 'center',
-  },
-  successIcon: {
-    marginVertical: Spacing.xlarge,
-  },
-  successTitle: {
-    fontSize: Typography.fontSizes.xlarge,
-    fontWeight: 'bold',
-    color: Colors.success,
-    marginBottom: Spacing.small,
-  },
-  successMessage: {
-    fontSize: Typography.fontSizes.small,
-    textAlign: 'center',
-    color: Colors.gray,
-    marginBottom: Spacing.large,
-  },
-  successDetails: {
-    backgroundColor: Colors.lightGray,
-    width: '100%',
-    borderRadius: 12,
-    padding: Spacing.medium,
-    marginBottom: Spacing.large,
-  },
-  successRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 8,
-  },
-  successLabel: {
-    fontSize: Typography.fontSizes.small,
-    color: Colors.gray,
-  },
-  successValue: {
-    fontSize: Typography.fontSizes.small,
-    fontWeight: '500',
-  },
-  successActions: {
-    width: '100%',
-  },
-  successButton: {
-    backgroundColor: Colors.primary,
-    borderRadius: 8,
-    marginBottom: Spacing.small,
-  },
-  successButtonText: {
-    fontWeight: 'bold',
-  },
-  outlineButton: {
-    backgroundColor: Colors.white,
-    borderWidth: 1,
-    borderColor: Colors.primary,
-    borderRadius: 8,
-  },
-  outlineButtonText: {
-    color: Colors.primary,
-    fontWeight: 'bold',
+    color: 'white',
+    fontWeight: Typography.fontWeight.medium,
+    marginRight: Spacing.xs,
   },
 });
+
+export default PrivateThirdPartyExtendibleScreen;
