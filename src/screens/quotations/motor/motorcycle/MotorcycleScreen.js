@@ -69,7 +69,7 @@ const MotorcycleScreen = ({ navigation }) => {
       
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + Spacing.xl }]}
       >
         <View style={styles.content}>
           <Text style={styles.title}>Select Insurance Product</Text>
@@ -81,19 +81,10 @@ const MotorcycleScreen = ({ navigation }) => {
           {motorcycleProducts.map((product) => (
             <TouchableOpacity
               key={product.id}
-              style={[
-                styles.productCard,
-                product.isRecommended && styles.recommendedCard
-              ]}
+              style={styles.productCard}
               onPress={() => handleProductSelect(product)}
               activeOpacity={0.7}
             >
-              {product.isRecommended && (
-                <View style={styles.recommendedBadge}>
-                  <Text style={styles.recommendedText}>Recommended</Text>
-                </View>
-              )}
-              
               <View style={styles.productIconContainer}>
                 <Text style={styles.productIcon}>{product.icon}</Text>
               </View>
@@ -188,26 +179,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
-    position: 'relative',
-  },
-  recommendedCard: {
-    borderWidth: 2,
-    borderColor: Colors.primary,
-  },
-  recommendedBadge: {
-    position: 'absolute',
-    top: -8,
-    right: 16,
-    backgroundColor: Colors.primary,
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: Spacing.xs,
-    borderRadius: 12,
-    zIndex: 1,
-  },
-  recommendedText: {
-    color: Colors.white,
-    fontSize: Typography.fontSize.xs,
-    fontWeight: Typography.fontWeight.bold,
   },
   productIconContainer: {
     width: 60,

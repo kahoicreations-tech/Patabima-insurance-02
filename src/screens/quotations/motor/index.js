@@ -23,6 +23,7 @@ export { default as PrivateMotorcycleScreen } from './private/PrivateMotorcycleS
 export { default as CommercialThirdPartyScreen } from './commercial/CommercialThirdPartyScreen';
 export { default as PSVThirdPartyScreen } from './psv/PSVThirdPartyScreen';
 export { default as MotorcycleThirdPartyScreen } from './motorcycle/MotorcycleThirdPartyScreen';
+export { default as MotorcycleComprehensiveScreen } from './motorcycle/MotorcycleComprehensiveScreen';
 
 // Export data and common components
 export * from './data';

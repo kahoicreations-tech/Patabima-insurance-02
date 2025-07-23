@@ -16,6 +16,7 @@ import {
   CommercialThirdPartyScreen,
   PSVThirdPartyScreen,
   MotorcycleThirdPartyScreen,
+  MotorcycleComprehensiveScreen,
   PrivateVehicleScreen,
   CommercialVehicleScreen,
   MotorcycleScreen,
@@ -95,6 +96,7 @@ const AppNavigator = () => {
             <Stack.Screen name="CommercialThirdParty" component={CommercialThirdPartyScreen} />
             <Stack.Screen name="PSVThirdParty" component={PSVThirdPartyScreen} />
             <Stack.Screen name="MotorcycleThirdParty" component={MotorcycleThirdPartyScreen} />
+            <Stack.Screen name="MotorcycleComprehensive" component={MotorcycleComprehensiveScreen} />
             
             {/* Medical Insurance Flow */}
             <Stack.Screen name="MedicalCategory" component={EnhancedMedicalCategoryScreen} />

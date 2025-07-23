@@ -23,7 +23,8 @@ const PaymentStep = ({
   onRetryPayment,
   showHeader = true,
   serviceFee = 50,
-  insuranceType = 'Motor Insurance'
+  insuranceType = 'Motor Insurance',
+  totalAmount = null // Accept totalAmount prop for motorcycle flows
 }) => {
   const updateFormData = (updates) => {
     onUpdateFormData(updates);
@@ -42,9 +43,9 @@ const PaymentStep = ({
     updateFormData({ mpesaPhoneNumber: cleanText });
   };
 
-  // Calculate total amount
-  const premiumAmount = formData.selectedQuote?.totalPremium || 0;
-  const totalAmount = premiumAmount + serviceFee;
+  // Calculate total amount - use passed totalAmount or calculate from selectedQuote
+  const premiumAmount = totalAmount || formData.selectedQuote?.totalPremium || 0;
+  const finalTotalAmount = totalAmount || (premiumAmount + serviceFee);
 
   return (
     <View style={styles.container}>
@@ -67,14 +68,16 @@ const PaymentStep = ({
           <Text style={styles.paymentValue}>KSh {formatNumber(premiumAmount)}</Text>
         </View>
         
-        <View style={styles.paymentDetailsRow}>
-          <Text style={styles.paymentLabel}>Service Fee:</Text>
-          <Text style={styles.paymentValue}>KSh {formatNumber(serviceFee)}</Text>
-        </View>
+        {!totalAmount && (
+          <View style={styles.paymentDetailsRow}>
+            <Text style={styles.paymentLabel}>Service Fee:</Text>
+            <Text style={styles.paymentValue}>KSh {formatNumber(serviceFee)}</Text>
+          </View>
+        )}
         
         <View style={[styles.paymentDetailsRow, styles.totalPaymentRow]}>
           <Text style={styles.totalPaymentLabel}>Total Amount:</Text>
-          <Text style={styles.totalPaymentValue}>KSh {formatNumber(totalAmount)}</Text>
+          <Text style={styles.totalPaymentValue}>KSh {formatNumber(finalTotalAmount)}</Text>
         </View>
       </View>
 
@@ -118,7 +121,7 @@ const PaymentStep = ({
               >
                 <Ionicons name="card" size={20} color="white" />
                 <Text style={styles.payButtonText}>
-                  Pay KSh {formatNumber(totalAmount)}
+                  Pay KSh {formatNumber(finalTotalAmount)}
                 </Text>
               </TouchableOpacity>
             </>

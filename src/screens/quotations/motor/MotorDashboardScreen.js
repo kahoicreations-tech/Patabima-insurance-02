@@ -71,7 +71,7 @@ const MotorDashboardScreen = ({ navigation }) => {
       
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + Spacing.xl }]}
       >
         {/* Main Content */}
         <View style={styles.content}>
