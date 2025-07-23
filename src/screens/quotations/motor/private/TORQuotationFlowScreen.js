@@ -93,6 +93,13 @@ const TORQuotationFlowScreen = ({ navigation, route }) => {
     preferredStartDate: '',
     existingPolicyCheck: null,
     policyConflict: null,
+    
+    // M-Pesa payment fields
+    paymentMethod: 'mpesa',
+    mpesaPhoneNumber: '',
+    paymentStatus: 'pending', // pending, processing, completed, failed
+    transactionId: '',
+    paymentAmount: 0,
   });
 
   // Add new state for policy validation
@@ -104,7 +111,16 @@ const TORQuotationFlowScreen = ({ navigation, route }) => {
     suggestedStartDate: null
   });
 
-  const TOTAL_STEPS = 5;
+  // Add M-Pesa payment state
+  const [paymentState, setPaymentState] = useState({
+    isProcessing: false,
+    paymentInitiated: false,
+    paymentCompleted: false,
+    paymentError: null,
+    countdown: 0,
+  });
+
+  const TOTAL_STEPS = 6;
 
   // Use real TOR underwriter data from your official files
   const torInsurers = TOR_UNDERWRITERS.map(underwriter => ({
@@ -241,6 +257,8 @@ const TORQuotationFlowScreen = ({ navigation, route }) => {
         return formData.selectedInsurer;
       case 5:
         return formData.documents.logbook && formData.documents.nationalId;
+      case 6:
+        return paymentState.paymentCompleted;
       default:
         return true;
     }
@@ -292,7 +310,7 @@ const TORQuotationFlowScreen = ({ navigation, route }) => {
       
       Alert.alert(
         'TOR Quotation Submitted',
-        `Your TOR quotation has been submitted successfully.\n\nQuotation ID: TOR${Date.now()}\nTotal Premium: KSh ${formData.totalPremium?.toLocaleString()}`,
+        `Your TOR quotation has been submitted successfully.\n\nQuotation ID: TOR${Date.now()}\nTotal Premium: KSh ${formData.totalPremium?.toLocaleString()}\nTransaction ID: ${formData.transactionId}`,
         [
           {
             text: 'OK',
@@ -304,6 +322,128 @@ const TORQuotationFlowScreen = ({ navigation, route }) => {
       Alert.alert('Error', 'Failed to submit quotation. Please try again.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // M-Pesa payment functions
+  const initiateMpesaPayment = async () => {
+    if (!formData.mpesaPhoneNumber || formData.mpesaPhoneNumber.length < 10) {
+      Alert.alert('Invalid Phone Number', 'Please enter a valid M-Pesa phone number');
+      return;
+    }
+
+    setPaymentState(prev => ({ ...prev, isProcessing: true, paymentError: null }));
+    
+    try {
+      // Simulate M-Pesa STK Push request
+      const paymentData = {
+        phone: formData.mpesaPhoneNumber,
+        amount: formData.totalPremium,
+        accountReference: `TOR${Date.now()}`,
+        transactionDesc: 'TOR Motor Insurance Premium Payment'
+      };
+
+      // Simulate API call to initiate payment
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // Generate mock transaction ID
+      const transactionId = `MP${Date.now()}${Math.floor(Math.random() * 1000)}`;
+      
+      updateFormData({ 
+        transactionId,
+        paymentAmount: formData.totalPremium,
+        paymentStatus: 'processing'
+      });
+
+      setPaymentState(prev => ({ 
+        ...prev, 
+        isProcessing: false,
+        paymentInitiated: true,
+        countdown: 60
+      }));
+
+      // Start countdown for payment confirmation
+      startPaymentCountdown();
+      
+      Alert.alert(
+        'Payment Request Sent',
+        `An M-Pesa payment request for KSh ${formData.totalPremium?.toLocaleString()} has been sent to ${formData.mpesaPhoneNumber}.\n\nPlease complete the payment on your phone.`,
+        [{ text: 'OK' }]
+      );
+
+    } catch (error) {
+      setPaymentState(prev => ({ 
+        ...prev, 
+        isProcessing: false,
+        paymentError: 'Failed to initiate payment. Please try again.'
+      }));
+      Alert.alert('Payment Error', 'Failed to initiate M-Pesa payment. Please try again.');
+    }
+  };
+
+  const startPaymentCountdown = () => {
+    const interval = setInterval(() => {
+      setPaymentState(prev => {
+        if (prev.countdown <= 1) {
+          clearInterval(interval);
+          // Simulate payment completion after countdown
+          simulatePaymentCompletion();
+          return { ...prev, countdown: 0 };
+        }
+        return { ...prev, countdown: prev.countdown - 1 };
+      });
+    }, 1000);
+  };
+
+  const simulatePaymentCompletion = () => {
+    // Simulate successful payment (90% success rate)
+    const isSuccessful = Math.random() > 0.1;
+    
+    if (isSuccessful) {
+      updateFormData({ paymentStatus: 'completed' });
+      setPaymentState(prev => ({ 
+        ...prev, 
+        paymentCompleted: true,
+        paymentInitiated: false
+      }));
+      
+      Alert.alert(
+        'Payment Successful!',
+        `Your M-Pesa payment of KSh ${formData.totalPremium?.toLocaleString()} has been confirmed.\n\nTransaction ID: ${formData.transactionId}`,
+        [{ text: 'Continue' }]
+      );
+    } else {
+      updateFormData({ paymentStatus: 'failed' });
+      setPaymentState(prev => ({ 
+        ...prev, 
+        paymentError: 'Payment was cancelled or failed. Please try again.',
+        paymentInitiated: false
+      }));
+      
+      Alert.alert(
+        'Payment Failed',
+        'Your M-Pesa payment was not completed. Please try again.',
+        [{ text: 'Retry', onPress: () => setPaymentState(prev => ({ ...prev, paymentError: null })) }]
+      );
+    }
+  };
+
+  const checkPaymentStatus = async () => {
+    setPaymentState(prev => ({ ...prev, isProcessing: true }));
+    
+    try {
+      // Simulate payment status check
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      // Force payment completion for demo
+      simulatePaymentCompletion();
+      
+    } catch (error) {
+      setPaymentState(prev => ({ 
+        ...prev, 
+        isProcessing: false,
+        paymentError: 'Failed to check payment status.'
+      }));
     }
   };
 
@@ -1110,6 +1250,161 @@ const TORQuotationFlowScreen = ({ navigation, route }) => {
     </View>
   );
 
+  // Step 6: M-Pesa Payment
+  const renderStep6 = () => (
+    <View style={styles.stepContainer}>
+      <Text style={styles.stepTitle}>Complete Payment</Text>
+      <Text style={styles.stepSubtitle}>Secure M-Pesa payment for your TOR insurance</Text>
+
+      {/* Payment Summary */}
+      <View style={styles.paymentSummaryCard}>
+        <View style={styles.paymentSummaryHeader}>
+          <Ionicons name="shield-checkmark" size={24} color="#D5222B" />
+          <Text style={styles.paymentSummaryTitle}>Payment Summary</Text>
+        </View>
+        
+        <View style={styles.paymentDetailsRow}>
+          <Text style={styles.paymentLabel}>Premium Amount:</Text>
+          <Text style={styles.paymentValue}>KSh {formData.selectedQuote?.totalPremium?.toLocaleString() || '0'}</Text>
+        </View>
+        
+        <View style={styles.paymentDetailsRow}>
+          <Text style={styles.paymentLabel}>Service Fee:</Text>
+          <Text style={styles.paymentValue}>KSh 50</Text>
+        </View>
+        
+        <View style={[styles.paymentDetailsRow, styles.totalPaymentRow]}>
+          <Text style={styles.totalPaymentLabel}>Total Amount:</Text>
+          <Text style={styles.totalPaymentValue}>
+            KSh {(parseFloat(formData.selectedQuote?.totalPremium || 0) + 50).toLocaleString()}
+          </Text>
+        </View>
+      </View>
+
+      {/* M-Pesa Payment Form */}
+      <View style={styles.paymentFormCard}>
+        <View style={styles.mpesaHeader}>
+          <View style={styles.mpesaLogo}>
+            <Text style={styles.mpesaLogoText}>M-PESA</Text>
+          </View>
+          <Text style={styles.mpesaDescription}>Pay securely with M-Pesa</Text>
+        </View>
+
+        {!paymentState.paymentInitiated ? (
+          <>
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>M-Pesa Phone Number</Text>
+              <View style={styles.phoneInputContainer}>
+                <Text style={styles.countryCode}>+254</Text>
+                <TextInput
+                  style={styles.phoneInput}
+                  placeholder="7XXXXXXXX"
+                  value={formData.mpesaPhoneNumber}
+                  onChangeText={(text) => {
+                    // Remove any non-numeric characters and limit to 9 digits
+                    const cleanText = text.replace(/[^0-9]/g, '').substring(0, 9);
+                    setFormData(prev => ({ ...prev, mpesaPhoneNumber: cleanText }));
+                  }}
+                  keyboardType="numeric"
+                  maxLength={9}
+                />
+              </View>
+              {formData.mpesaPhoneNumber && formData.mpesaPhoneNumber.length !== 9 && (
+                <Text style={styles.validationError}>Please enter a valid 9-digit phone number</Text>
+              )}
+            </View>
+
+            <TouchableOpacity
+              style={[
+                styles.mpesaPayButton,
+                (!formData.mpesaPhoneNumber || formData.mpesaPhoneNumber.length !== 9) && styles.disabledButton
+              ]}
+              onPress={initiateMpesaPayment}
+              disabled={!formData.mpesaPhoneNumber || formData.mpesaPhoneNumber.length !== 9}
+            >
+              <Ionicons name="card" size={20} color="white" />
+              <Text style={styles.mpesaPayButtonText}>
+                Pay KSh {(parseFloat(formData.selectedQuote?.totalPremium || 0) + 50).toLocaleString()}
+              </Text>
+            </TouchableOpacity>
+          </>
+        ) : (
+          <View style={styles.paymentStatusContainer}>
+            {paymentState.isProcessing && !paymentState.paymentCompleted && (
+              <>
+                <View style={styles.processingHeader}>
+                  <Ionicons name="time" size={24} color="#D5222B" />
+                  <Text style={styles.processingTitle}>Payment Processing</Text>
+                </View>
+                
+                <Text style={styles.processingMessage}>
+                  A payment request has been sent to +254{formData.mpesaPhoneNumber}
+                </Text>
+                
+                <Text style={styles.countdownText}>
+                  Complete payment within: {paymentState.countdown}s
+                </Text>
+                
+                <View style={styles.processingSteps}>
+                  <Text style={styles.stepInstruction}>1. Check your phone for M-Pesa prompt</Text>
+                  <Text style={styles.stepInstruction}>2. Enter your M-Pesa PIN</Text>
+                  <Text style={styles.stepInstruction}>3. Confirm the payment</Text>
+                </View>
+                
+                <View style={styles.loadingIndicator}>
+                  <Ionicons name="refresh" size={24} color="#D5222B" />
+                  <Text style={styles.loadingText}>Waiting for payment confirmation...</Text>
+                </View>
+              </>
+            )}
+
+            {paymentState.paymentCompleted && (
+              <View style={styles.successContainer}>
+                <Ionicons name="checkmark-circle" size={48} color="#4CAF50" />
+                <Text style={styles.successTitle}>Payment Successful!</Text>
+                <Text style={styles.successMessage}>
+                  Transaction ID: {paymentState.transactionId}
+                </Text>
+                <Text style={styles.successSubMessage}>
+                  Your TOR insurance policy is now active
+                </Text>
+              </View>
+            )}
+
+            {paymentState.paymentError && (
+              <View style={styles.errorContainer}>
+                <Ionicons name="close-circle" size={48} color="#F44336" />
+                <Text style={styles.errorTitle}>Payment Failed</Text>
+                <Text style={styles.errorMessage}>{paymentState.paymentError}</Text>
+                <TouchableOpacity
+                  style={styles.retryButton}
+                  onPress={() => {
+                    setPaymentState({
+                      isProcessing: false,
+                      paymentInitiated: false,
+                      paymentCompleted: false,
+                      paymentError: null,
+                      countdown: 120,
+                      transactionId: null
+                    });
+                  }}
+                >
+                  <Text style={styles.retryButtonText}>Try Again</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+          </View>
+        )}
+      </View>
+
+      {/* Security Notice */}
+      <View style={styles.securityNotice}>
+        <Ionicons name="shield-checkmark" size={16} color="#4CAF50" />
+        <Text style={styles.securityText}>Your payment is secured with 256-bit encryption</Text>
+      </View>
+    </View>
+  );
+
   const renderCurrentStep = () => {
     switch (currentStep) {
       case 1:
@@ -1122,6 +1417,8 @@ const TORQuotationFlowScreen = ({ navigation, route }) => {
         return renderStep4();
       case 5:
         return renderStep5();
+      case 6:
+        return renderStep6();
       default:
         return renderStep1();
     }
@@ -1759,6 +2056,256 @@ const styles = StyleSheet.create({
     flex: 1,
     lineHeight: 16,
     fontFamily: 'Poppins_400Regular',
+  },
+  
+  // M-Pesa Payment Styles
+  paymentSummaryCard: {
+    backgroundColor: 'white',
+    borderRadius: 12,
+    padding: Spacing.md,
+    marginBottom: Spacing.md,
+    elevation: 2,
+    shadowColor: Colors.shadow,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  paymentSummaryHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: Spacing.md,
+  },
+  paymentSummaryTitle: {
+    fontSize: Typography.fontSize.lg,
+    fontFamily: 'Poppins_600SemiBold',
+    color: Colors.textPrimary,
+    marginLeft: Spacing.sm,
+  },
+  paymentDetailsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: Spacing.xs,
+  },
+  paymentLabel: {
+    fontSize: Typography.fontSize.md,
+    fontFamily: 'Poppins_400Regular',
+    color: Colors.textSecondary,
+  },
+  paymentValue: {
+    fontSize: Typography.fontSize.md,
+    fontFamily: 'Poppins_600SemiBold',
+    color: Colors.textPrimary,
+  },
+  totalPaymentRow: {
+    borderTopWidth: 1,
+    borderTopColor: Colors.border,
+    marginTop: Spacing.sm,
+    paddingTop: Spacing.sm,
+  },
+  totalPaymentLabel: {
+    fontSize: Typography.fontSize.lg,
+    fontFamily: 'Poppins_600SemiBold',
+    color: Colors.textPrimary,
+  },
+  totalPaymentValue: {
+    fontSize: Typography.fontSize.lg,
+    fontFamily: 'Poppins_700Bold',
+    color: Colors.primary,
+  },
+  paymentFormCard: {
+    backgroundColor: 'white',
+    borderRadius: 12,
+    padding: Spacing.md,
+    marginBottom: Spacing.md,
+    elevation: 2,
+    shadowColor: Colors.shadow,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  mpesaHeader: {
+    alignItems: 'center',
+    marginBottom: Spacing.lg,
+  },
+  mpesaLogo: {
+    backgroundColor: '#00AF50',
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    borderRadius: 8,
+    marginBottom: Spacing.sm,
+  },
+  mpesaLogoText: {
+    color: 'white',
+    fontSize: Typography.fontSize.lg,
+    fontFamily: 'Poppins_700Bold',
+    letterSpacing: 1,
+  },
+  mpesaDescription: {
+    fontSize: Typography.fontSize.md,
+    color: Colors.textSecondary,
+    fontFamily: 'Poppins_400Regular',
+  },
+  phoneInputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderRadius: 8,
+    backgroundColor: 'white',
+  },
+  countryCode: {
+    fontSize: Typography.fontSize.md,
+    fontFamily: 'Poppins_600SemiBold',
+    color: Colors.textPrimary,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    backgroundColor: Colors.backgroundSecondary,
+    borderTopLeftRadius: 8,
+    borderBottomLeftRadius: 8,
+  },
+  phoneInput: {
+    flex: 1,
+    fontSize: Typography.fontSize.md,
+    fontFamily: 'Poppins_400Regular',
+    color: Colors.textPrimary,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+  },
+  mpesaPayButton: {
+    backgroundColor: '#00AF50',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: Spacing.md,
+    borderRadius: 8,
+    marginTop: Spacing.md,
+  },
+  mpesaPayButtonText: {
+    color: 'white',
+    fontSize: Typography.fontSize.md,
+    fontFamily: 'Poppins_600SemiBold',
+    marginLeft: Spacing.sm,
+  },
+  disabledButton: {
+    backgroundColor: Colors.textMuted,
+    opacity: 0.6,
+  },
+  paymentStatusContainer: {
+    alignItems: 'center',
+    paddingVertical: Spacing.lg,
+  },
+  processingHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: Spacing.md,
+  },
+  processingTitle: {
+    fontSize: Typography.fontSize.lg,
+    fontFamily: 'Poppins_600SemiBold',
+    color: Colors.textPrimary,
+    marginLeft: Spacing.sm,
+  },
+  processingMessage: {
+    fontSize: Typography.fontSize.md,
+    color: Colors.textSecondary,
+    fontFamily: 'Poppins_400Regular',
+    textAlign: 'center',
+    marginBottom: Spacing.md,
+  },
+  countdownText: {
+    fontSize: Typography.fontSize.lg,
+    fontFamily: 'Poppins_600SemiBold',
+    color: Colors.primary,
+    marginBottom: Spacing.lg,
+  },
+  processingSteps: {
+    alignSelf: 'stretch',
+    marginBottom: Spacing.lg,
+  },
+  stepInstruction: {
+    fontSize: Typography.fontSize.md,
+    color: Colors.textSecondary,
+    fontFamily: 'Poppins_400Regular',
+    marginBottom: Spacing.sm,
+    paddingLeft: Spacing.md,
+  },
+  loadingIndicator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  loadingText: {
+    fontSize: Typography.fontSize.md,
+    color: Colors.textSecondary,
+    fontFamily: 'Poppins_400Regular',
+    marginLeft: Spacing.sm,
+  },
+  successContainer: {
+    alignItems: 'center',
+    paddingVertical: Spacing.lg,
+  },
+  successTitle: {
+    fontSize: Typography.fontSize.xl,
+    fontFamily: 'Poppins_600SemiBold',
+    color: '#4CAF50',
+    marginTop: Spacing.md,
+    marginBottom: Spacing.sm,
+  },
+  successMessage: {
+    fontSize: Typography.fontSize.md,
+    color: Colors.textSecondary,
+    fontFamily: 'Poppins_400Regular',
+    textAlign: 'center',
+    marginBottom: Spacing.sm,
+  },
+  successSubMessage: {
+    fontSize: Typography.fontSize.sm,
+    color: Colors.textMuted,
+    fontFamily: 'Poppins_400Regular',
+    textAlign: 'center',
+  },
+  errorContainer: {
+    alignItems: 'center',
+    paddingVertical: Spacing.lg,
+  },
+  errorTitle: {
+    fontSize: Typography.fontSize.xl,
+    fontFamily: 'Poppins_600SemiBold',
+    color: '#F44336',
+    marginTop: Spacing.md,
+    marginBottom: Spacing.sm,
+  },
+  errorMessage: {
+    fontSize: Typography.fontSize.md,
+    color: Colors.textSecondary,
+    fontFamily: 'Poppins_400Regular',
+    textAlign: 'center',
+    marginBottom: Spacing.md,
+  },
+  retryButton: {
+    backgroundColor: Colors.primary,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.md,
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    color: 'white',
+    fontSize: Typography.fontSize.md,
+    fontFamily: 'Poppins_600SemiBold',
+  },
+  securityNotice: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: Spacing.md,
+    backgroundColor: Colors.backgroundSecondary,
+    borderRadius: 8,
+  },
+  securityText: {
+    fontSize: Typography.fontSize.sm,
+    color: Colors.textSecondary,
+    fontFamily: 'Poppins_400Regular',
+    marginLeft: Spacing.sm,
   },
 });
 
