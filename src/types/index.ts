@@ -178,12 +178,16 @@ export interface RenewalItem {
 
 // Navigation Types
 export type RootStackParamList = {
+  Auth: undefined;
+  MainTabs: undefined;
+};
+
+export type AuthStackParamList = {
   Splash: undefined;
-  InsuranceWelcome: undefined;
+  Welcome: undefined;
   Login: undefined;
   Signup: undefined;
   ForgotPassword: undefined;
-  MainTabs: undefined;
 };
 
 export type MainTabParamList = {

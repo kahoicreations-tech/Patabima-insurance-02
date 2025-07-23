@@ -3,17 +3,13 @@ import { View, ActivityIndicator, StatusBar } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useFonts, Poppins_400Regular, Poppins_500Medium, Poppins_600SemiBold, Poppins_700Bold } from '@expo-google-fonts/poppins';
 // import { Amplify } from 'aws-amplify';
-import { AppNavigator } from './src/navigation';
+import AppNavigator from './src/navigation';
 import { AWSProviderDev } from './src/contexts/AWSContextDev';
+import { AuthProvider } from './src/contexts/AuthContext';
 // import awsConfig from './src/config/awsConfigDev';
 
 export default function App() {
-  // TODO: Re-enable AWS Amplify initialization after fixing circular dependencies
-  // useEffect(() => {
-  //   Amplify.configure(awsConfig);
-  // }, []);
-
-  let [fontsLoaded] = useFonts({
+  const [fontsLoaded] = useFonts({
     Poppins_400Regular,
     Poppins_500Medium,
     Poppins_600SemiBold,
@@ -26,8 +22,8 @@ export default function App() {
         <View style={{ 
           flex: 1, 
           justifyContent: 'center', 
-          alignItems: 'center', 
-          backgroundColor: '#FFFFFF' 
+          alignItems: 'center',
+          backgroundColor: '#FFFFFF',
         }}>
           <ActivityIndicator size="large" color="#D5222B" />
         </View>
@@ -37,14 +33,16 @@ export default function App() {
 
   return (
     <SafeAreaProvider>
-      <AWSProviderDev>
-        <StatusBar 
-          barStyle="light-content" 
-          backgroundColor="#D5222B" 
-          translucent={false}
-        />
-        <AppNavigator />
-      </AWSProviderDev>
+      <StatusBar 
+        barStyle="light-content" 
+        backgroundColor="#D5222B" 
+        translucent={false}
+      />
+      <AuthProvider>
+        <AWSProviderDev>
+          <AppNavigator />
+        </AWSProviderDev>
+      </AuthProvider>
     </SafeAreaProvider>
   );
 }

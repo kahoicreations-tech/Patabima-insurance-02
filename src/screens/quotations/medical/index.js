@@ -3,15 +3,11 @@
  * Exports all medical insurance related screens
  */
 
-// Original Medical Quotation Screen removed
+import EnhancedMedicalCategoryScreen from './EnhancedMedicalCategoryScreen';
+import EnhancedIndividualMedicalQuotation from './EnhancedIndividualMedicalQuotation';
+import EnhancedCorporateMedicalQuotation from './EnhancedCorporateMedicalQuotation';
 
-// Enhanced Medical Insurance Screens
-export { default as EnhancedMedicalCategoryScreen } from './EnhancedMedicalCategoryScreen';
-export { default as EnhancedIndividualMedicalQuotation } from './EnhancedIndividualMedicalQuotation';
-export { default as EnhancedCorporateMedicalQuotation } from './EnhancedCorporateMedicalQuotation';
-
-// Default export for easier navigation reference
-export default {
+export {
   EnhancedMedicalCategoryScreen,
   EnhancedIndividualMedicalQuotation,
   EnhancedCorporateMedicalQuotation

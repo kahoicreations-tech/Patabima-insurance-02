@@ -1,4 +1,4 @@
-export const Colors = {
+const Colors = {
   // PataBima official brand colors
   primary: '#D5222B',     // PataBima Red (from logo)
   primaryDark: '#B01E26',
@@ -53,3 +53,5 @@ export const Colors = {
   statusDraft: '#6C757D',
   statusPaid: '#28A745',
 };
+
+export { Colors };

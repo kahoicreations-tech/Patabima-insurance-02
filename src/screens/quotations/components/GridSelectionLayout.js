@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
-import { SelectionCard } from './';
+import SelectionCard from './SelectionCard';
 import { Colors, Typography } from '../../../constants';
 
 /**

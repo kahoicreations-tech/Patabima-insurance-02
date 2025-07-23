@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const AuthContext = createContext();
 
@@ -22,15 +23,65 @@ export const AuthProvider = ({ children }) => {
 
   const checkAuthStatus = async () => {
     try {
-      // For demo purposes, start unauthenticated
-      // In a real app, check stored tokens or session data here
-      await new Promise(resolve => setTimeout(resolve, 100));
-      setIsAuthenticated(false);
+      // Check if user has stored auth token/session
+      const storedUser = await AsyncStorage.getItem('@PataBima:userData');
+      const sessionToken = await AsyncStorage.getItem('@PataBima:sessionToken');
+      const sessionExpiry = await AsyncStorage.getItem('@PataBima:sessionExpiry');
+      
+      if (storedUser && sessionToken && sessionExpiry) {
+        const userData = JSON.parse(storedUser);
+        const expiryTime = parseInt(sessionExpiry);
+        const currentTime = Date.now();
+        
+        // Check if session is still valid (not expired)
+        if (currentTime < expiryTime) {
+          setUser(userData);
+          setIsAuthenticated(true);
+          console.log('User authenticated from stored session:', userData.email);
+        } else {
+          // Session expired, clear stored data
+          console.log('Session expired, clearing stored data');
+          await clearStoredAuth();
+          setIsAuthenticated(false);
+        }
+      } else {
+        console.log('No valid session found, user needs to login');
+        setIsAuthenticated(false);
+      }
     } catch (error) {
       console.error('Error checking auth status:', error);
       setIsAuthenticated(false);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const clearStoredAuth = async () => {
+    try {
+      await AsyncStorage.multiRemove([
+        '@PataBima:userData',
+        '@PataBima:sessionToken',
+        '@PataBima:sessionExpiry'
+      ]);
+    } catch (error) {
+      console.error('Error clearing stored auth:', error);
+    }
+  };
+
+  const storeAuthData = async (userData, sessionDuration = 24 * 60 * 60 * 1000) => {
+    try {
+      const sessionToken = `pat_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      const sessionExpiry = Date.now() + sessionDuration; // Default 24 hours
+      
+      await AsyncStorage.multiSet([
+        ['@PataBima:userData', JSON.stringify(userData)],
+        ['@PataBima:sessionToken', sessionToken],
+        ['@PataBima:sessionExpiry', sessionExpiry.toString()]
+      ]);
+      
+      console.log('Auth data stored successfully');
+    } catch (error) {
+      console.error('Error storing auth data:', error);
     }
   };
 
@@ -50,9 +101,13 @@ export const AuthProvider = ({ children }) => {
         phone: '+254 700 000 000'
       };
       
+      // Store auth data for persistence
+      await storeAuthData(demoUser);
+      
       setUser(demoUser);
       setIsAuthenticated(true);
       
+      console.log('User logged in successfully:', demoUser.email);
       return { success: true, user: demoUser };
     } catch (error) {
       console.error('Login error:', error);
@@ -78,9 +133,13 @@ export const AuthProvider = ({ children }) => {
         phone: userData.phone
       };
       
+      // Store auth data for persistence
+      await storeAuthData(newUser);
+      
       setUser(newUser);
       setIsAuthenticated(true);
       
+      console.log('User signed up successfully:', newUser.email);
       return { success: true, user: newUser };
     } catch (error) {
       console.error('Signup error:', error);
@@ -94,12 +153,16 @@ export const AuthProvider = ({ children }) => {
     try {
       setIsLoading(true);
       
-      // In a real app, clear tokens and notify backend
+      // Clear stored auth data
+      await clearStoredAuth();
+      
+      // In a real app, notify backend about logout
       await new Promise(resolve => setTimeout(resolve, 500));
       
       setUser(null);
       setIsAuthenticated(false);
       
+      console.log('User logged out successfully');
       return { success: true };
     } catch (error) {
       console.error('Logout error:', error);
