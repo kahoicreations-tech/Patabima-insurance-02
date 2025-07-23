@@ -2,16 +2,25 @@
  * Export all motor insurance related screens and components
  */
 
-// Original Motor Screens - still needed for compatibility
-export { default as MotorQuotationScreen } from './MotorQuotationScreen';
-export { default as MotorCategorySelectionScreen } from './MotorCategorySelectionScreen';
-export { default as MotorProductSelectionScreen } from './MotorProductSelectionScreen';
-export { default as CheckInsuranceStatusScreen } from './CheckInsuranceStatusScreen';
-
-// Enhanced Motor Screens (Current Implementation)
-export { default as EnhancedMotorCategorySelectionScreen } from './EnhancedMotorCategorySelectionScreen';
+// Dashboard and Product Selection
+export { default as MotorDashboardScreen } from './MotorDashboardScreen';
 export { default as EnhancedMotorProductSelectionScreen } from './EnhancedMotorProductSelectionScreen';
-export { default as TORQuotationFlowScreen } from './TORQuotationFlowScreen';
 
-// Export data
+// Category Landing Screens
+export { default as PrivateVehicleScreen } from './private/PrivateVehicleScreen';
+export { default as CommercialVehicleScreen } from './commercial/CommercialVehicleScreen';
+export { default as MotorcycleScreen } from './motorcycle/MotorcycleScreen';
+export { default as PSVScreen } from './psv/PSVScreen';
+export { default as TukTukScreen } from './tuktuk/TukTukScreen';
+export { default as SpecialClassesScreen } from './special/SpecialClassesScreen';
+
+// Insurance Category Screens
+export { default as TORQuotationFlowScreen } from './private/TORQuotationFlowScreen';
+export { default as PrivateThirdPartyScreen } from './private/PrivateThirdPartyScreen';
+export { default as CommercialThirdPartyScreen } from './commercial/CommercialThirdPartyScreen';
+export { default as PSVThirdPartyScreen } from './psv/PSVThirdPartyScreen';
+export { default as MotorcycleThirdPartyScreen } from './motorcycle/MotorcycleThirdPartyScreen';
+
+// Export data and common components
 export * from './data';
+export * from './components';

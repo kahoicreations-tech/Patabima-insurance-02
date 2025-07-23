@@ -67,10 +67,20 @@ export default function MotorProductSelectionScreen({ navigation, route }) {
   }, [vehicleCategory]);
 
   const handleProductSelect = (product) => {
-    navigation.navigate('MotorQuotation', { 
-      vehicleCategory,
-      selectedProduct: product 
-    });
+    // Special handling for private third-party
+    if (product.id === 'private_third_party') {
+      navigation.navigate('PrivateThirdParty', { 
+        vehicleCategory,
+        productType: product.id,
+        productName: product.name
+      });
+    } else {
+      // Default navigation for other products
+      navigation.navigate('MotorQuotation', { 
+        vehicleCategory,
+        selectedProduct: product 
+      });
+    }
   };
 
   const handleCompareProducts = () => {

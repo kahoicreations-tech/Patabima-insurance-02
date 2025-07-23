@@ -20,9 +20,15 @@ const EnhancedMotorProductSelectionScreen = ({ navigation, route }) => {
   const motorProducts = getMotorInsuranceProducts(vehicleCategory);
 
   const handleProductSelect = (product) => {
-    // Only TOR is fully implemented
+    // Implementation for TOR and Private Third-Party
     if (product.id === 'tor_private') {
       navigation.navigate('TORQuotationFlow', {
+        vehicleCategory,
+        productType: product.id,
+        productName: product.name
+      });
+    } else if (product.id === 'private_third_party') {
+      navigation.navigate('PrivateThirdParty', {
         vehicleCategory,
         productType: product.id,
         productName: product.name
@@ -31,7 +37,7 @@ const EnhancedMotorProductSelectionScreen = ({ navigation, route }) => {
       // Show under development alert for other products
       Alert.alert(
         'Under Development',
-        `${product.name} is currently under development. Please select TOR for Private for now.`,
+        `${product.name} is currently under development. Please select TOR or Private Third-Party for now.`,
         [{ text: 'OK', style: 'default' }]
       );
     }
@@ -72,13 +78,13 @@ const EnhancedMotorProductSelectionScreen = ({ navigation, route }) => {
           </Text>
           
           {motorProducts.map((product) => (
-            <TouchableOpacity
+              <TouchableOpacity
               key={product.id}
               style={[
                 styles.productCard, 
                 product.isPopular && styles.popularCard,
-                product.id === 'tor_private' && styles.availableCard,
-                product.id !== 'tor_private' && styles.developmentCard
+                (product.id === 'tor_private' || product.id === 'private_third_party') && styles.availableCard,
+                (product.id !== 'tor_private' && product.id !== 'private_third_party') && styles.developmentCard
               ]}
               onPress={() => handleProductSelect(product)}
               activeOpacity={0.7}
@@ -89,19 +95,17 @@ const EnhancedMotorProductSelectionScreen = ({ navigation, route }) => {
                 </View>
               )}
               
-              {product.id === 'tor_private' && (
+              {(product.id === 'tor_private' || product.id === 'private_third_party') && (
                 <View style={styles.availableBadge}>
                   <Text style={styles.availableText}>AVAILABLE NOW</Text>
                 </View>
               )}
               
-              {product.id !== 'tor_private' && (
+              {(product.id !== 'tor_private' && product.id !== 'private_third_party') && (
                 <View style={styles.developmentBadge}>
                   <Text style={styles.developmentText}>UNDER DEVELOPMENT</Text>
                 </View>
-              )}
-              
-              <View style={styles.productHeader}>
+              )}              <View style={styles.productHeader}>
                 <View style={styles.productIconContainer}>
                   <Text style={styles.productIcon}>{product.icon}</Text>
                 </View>
@@ -122,11 +126,11 @@ const EnhancedMotorProductSelectionScreen = ({ navigation, route }) => {
                     <Ionicons 
                       name="checkmark-circle" 
                       size={14} 
-                      color={product.id === 'tor_private' ? Colors.success : Colors.textSecondary} 
+                      color={(product.id === 'tor_private' || product.id === 'private_third_party') ? Colors.success : Colors.textSecondary} 
                     />
                     <Text style={[
                       styles.featureText,
-                      product.id !== 'tor_private' && styles.disabledText
+                      (product.id !== 'tor_private' && product.id !== 'private_third_party') && styles.disabledText
                     ]}>
                       {feature}
                     </Text>
@@ -138,9 +142,11 @@ const EnhancedMotorProductSelectionScreen = ({ navigation, route }) => {
                 <Text style={styles.priceLabel}>Rate</Text>
                 <Text style={[
                   styles.priceText,
-                  product.id !== 'tor_private' && styles.disabledText
+                  (product.id !== 'tor_private' && product.id !== 'private_third_party') && styles.disabledText
                 ]}>
-                  {product.id === 'tor_private' ? `${product.baseRate}% + Excess` : `${product.baseRate}% (Coming Soon)`}
+                  {(product.id === 'tor_private' || product.id === 'private_third_party') ? 
+                    `${product.baseRate}% + Excess` : 
+                    `${product.baseRate}% (Coming Soon)`}
                 </Text>
               </View>
             </TouchableOpacity>
@@ -153,8 +159,8 @@ const EnhancedMotorProductSelectionScreen = ({ navigation, route }) => {
             </View>
             <Text style={styles.infoText}>
               • <Text style={{ fontWeight: 'bold', color: Colors.success }}>TOR:</Text> Fully implemented with real underwriter data{'\n'}
+              • <Text style={{ fontWeight: 'bold', color: Colors.success }}>Private Third-Party:</Text> Now available for private vehicles{'\n'}
               • <Text style={{ fontWeight: 'bold', color: Colors.textSecondary }}>Other Products:</Text> Under development{'\n'}
-              • <Text style={{ fontWeight: 'bold' }}>TOR Benefits:</Text> Lowest cost with deductible option{'\n'}
               • <Text style={{ fontWeight: 'bold' }}>Ready for Presentation:</Text> Complete purchase flow available
             </Text>
           </View>

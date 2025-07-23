@@ -1,0 +1,593 @@
+/**
+ * Commercial Third Party Fire & Theft Insurance Screen
+ * Handles TPFT insurance quotations for commercial vehicles
+ * including lorries, trucks, and business vehicles
+ */
+
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  TextInput,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  Modal,
+  FlatList,
+  Dimensions
+} from 'react-native';
+import { StatusBar } from 'expo-status-bar';
+import { useNavigation, useRoute } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
+import Colors from '../../../../constants/Colors';
+import Button from '../../../../components/shared/Button';
+import {
+  VEHICLE_CATEGORIES,
+  COVERAGE_OPTIONS,
+  ADDONS,
+  PAYMENT_PLANS
+} from './constants';
+
+const CommercialTPFTScreen = () => {
+  const navigation = useNavigation();
+  const route = useRoute();
+  const insets = useSafeAreaInsets();
+  const scrollViewRef = useRef(null);
+
+  // Form state
+  const [formData, setFormData] = useState({
+    businessName: '',
+    contactPerson: '',
+    phoneNumber: '',
+    emailAddress: '',
+    vehicleCategory: '',
+    subCategory: '',
+    make: '',
+    model: '',
+    year: '',
+    registrationNumber: '',
+    tonnage: '',
+    vehicleValue: '',
+    coverageType: '',
+    selectedAddons: [],
+    hasTracking: false,
+    hasAntiTheft: false,
+    operatingRadius: '',
+    driverExperience: '',
+    claimsHistory: {
+      hasPreviousClaims: false,
+      numberOfClaims: '',
+      claimDetails: []
+    },
+    documents: {
+      logbook: null,
+      inspectionReport: null,
+      goodsTransitLicense: null,
+      driverLicense: null
+    },
+    paymentPlan: '',
+    declarationAccepted: false
+  });
+
+  // UI state
+  const [currentStep, setCurrentStep] = useState(1);
+  const [errors, setErrors] = useState({});
+  const [premium, setPremium] = useState(0);
+  const [isCalculating, setIsCalculating] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [quotationId, setQuotationId] = useState('');
+
+  // Modal states
+  const [categoryModalVisible, setCategoryModalVisible] = useState(false);
+  const [subCategoryModalVisible, setSubCategoryModalVisible] = useState(false);
+  const [makeModalVisible, setMakeModalVisible] = useState(false);
+  const [modelModalVisible, setModelModalVisible] = useState(false);
+  const [coverageModalVisible, setCoverageModalVisible] = useState(false);
+  const [claimsModalVisible, setClaimsModalVisible] = useState(false);
+  const [paymentPlanModalVisible, setPaymentPlanModalVisible] = useState(false);
+  const [documentUploadVisible, setDocumentUploadVisible] = useState(false);
+
+  // Loading states
+  const [isLoadingMakes, setIsLoadingMakes] = useState(false);
+  const [isLoadingModels, setIsLoadingModels] = useState(false);
+  const [isUploadingDocument, setIsUploadingDocument] = useState(false);
+
+  // Update form fields
+  const updateField = (field, value) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    if (errors[field]) {
+      setErrors(prev => {
+        const updated = { ...prev };
+        delete updated[field];
+        return updated;
+      });
+    }
+  };
+
+  // Toggle addon selection
+  const toggleAddon = (addonId) => {
+    setFormData(prev => {
+      const selectedAddons = [...prev.selectedAddons];
+      const index = selectedAddons.indexOf(addonId);
+      
+      if (index !== -1) {
+        selectedAddons.splice(index, 1);
+      } else {
+        selectedAddons.push(addonId);
+      }
+      
+      return { ...prev, selectedAddons };
+    });
+  };
+
+  // Calculate TPFT premium
+  const calculatePremium = useCallback(() => {
+    if (!formData.vehicleValue || !formData.coverageType) return;
+
+    setIsCalculating(true);
+
+    try {
+      const vehicleValue = parseFloat(formData.vehicleValue);
+      if (isNaN(vehicleValue)) {
+        setPremium(0);
+        return;
+      }
+
+      // Get base rate from selected coverage
+      const coverage = COVERAGE_OPTIONS.find(c => c.id === formData.coverageType);
+      if (!coverage) {
+        setPremium(0);
+        return;
+      }
+
+      let rate = coverage.rate;
+
+      // Add rates for selected add-ons
+      formData.selectedAddons.forEach(addonId => {
+        const addon = ADDONS.find(a => a.id === addonId);
+        if (addon) {
+          rate += addon.rate;
+        }
+      });
+
+      // Adjust rate based on tonnage
+      const tonnage = parseFloat(formData.tonnage);
+      if (!isNaN(tonnage)) {
+        if (tonnage > 10) rate += 0.75;
+        else if (tonnage > 5) rate += 0.5;
+      }
+
+      // Adjust for operating radius
+      switch (formData.operatingRadius) {
+        case 'national':
+          rate += 0.3;
+          break;
+        case 'regional':
+          rate += 0.5;
+          break;
+        case 'international':
+          rate += 0.75;
+          break;
+      }
+
+      // Security features discounts
+      if (formData.hasTracking) rate -= 0.25;
+      if (formData.hasAntiTheft) rate -= 0.25;
+
+      // Calculate base premium
+      let calculatedPremium = (vehicleValue * (rate / 100));
+
+      // Minimum premium thresholds
+      const minPremium = 30000; // Lower minimum for TPFT compared to comprehensive
+      calculatedPremium = Math.max(calculatedPremium, minPremium);
+
+      // Add standard fees
+      const stampDuty = 40;
+      const phcf = 0.25; // Policy holders compensation fund
+      const trainingLevy = calculatedPremium * 0.002;
+
+      calculatedPremium += stampDuty + (calculatedPremium * phcf / 100) + trainingLevy;
+
+      // Round to nearest 100
+      calculatedPremium = Math.ceil(calculatedPremium / 100) * 100;
+
+      setPremium(calculatedPremium);
+    } catch (error) {
+      console.error('Premium calculation error:', error);
+      setPremium(0);
+    } finally {
+      setIsCalculating(false);
+    }
+  }, [formData]);
+
+  // Effect to calculate premium when relevant fields change
+  useEffect(() => {
+    calculatePremium();
+  }, [
+    formData.vehicleValue,
+    formData.coverageType,
+    formData.selectedAddons,
+    formData.hasTracking,
+    formData.hasAntiTheft,
+    formData.operatingRadius,
+    formData.tonnage,
+    calculatePremium
+  ]);
+
+  // Form validation
+  const validateForm = () => {
+    const newErrors = {};
+
+    // Business Information
+    if (!formData.businessName) newErrors.businessName = 'Business name is required';
+    if (!formData.contactPerson) newErrors.contactPerson = 'Contact person is required';
+
+    if (!formData.phoneNumber) {
+      newErrors.phoneNumber = 'Phone number is required';
+    } else if (!/^(0|\+254|254)7\d{8}$/.test(formData.phoneNumber)) {
+      newErrors.phoneNumber = 'Enter a valid Kenyan mobile number';
+    }
+
+    if (formData.emailAddress && !/\S+@\S+\.\S+/.test(formData.emailAddress)) {
+      newErrors.emailAddress = 'Enter a valid email address';
+    }
+
+    // Vehicle Information
+    if (!formData.vehicleCategory) newErrors.vehicleCategory = 'Vehicle category is required';
+    if (!formData.subCategory) newErrors.subCategory = 'Sub-category is required';
+    if (!formData.make) newErrors.make = 'Make is required';
+    if (!formData.model) newErrors.model = 'Model is required';
+    if (!formData.year) newErrors.year = 'Year is required';
+
+    if (!formData.registrationNumber) {
+      newErrors.registrationNumber = 'Registration number is required';
+    } else if (!/^K[A-Z]{2}\s?\d{3}[A-Z]$/i.test(formData.registrationNumber)) {
+      newErrors.registrationNumber = 'Invalid registration format (e.g. KAA 123Z)';
+    }
+
+    if (!formData.tonnage) {
+      newErrors.tonnage = 'Tonnage is required';
+    } else if (isNaN(parseFloat(formData.tonnage)) || parseFloat(formData.tonnage) <= 0) {
+      newErrors.tonnage = 'Enter a valid tonnage';
+    }
+
+    if (!formData.vehicleValue) {
+      newErrors.vehicleValue = 'Vehicle value is required';
+    } else {
+      const value = parseFloat(formData.vehicleValue);
+      if (isNaN(value) || value < 500000) { // Lower minimum value for TPFT
+        newErrors.vehicleValue = 'Vehicle value must be at least KSh 500,000';
+      }
+    }
+
+    // Operating Details
+    if (!formData.operatingRadius) newErrors.operatingRadius = 'Operating radius is required';
+    if (!formData.coverageType) newErrors.coverageType = 'Please select a coverage type';
+
+    // Required Documents
+    const requiredDocs = [
+      { key: 'logbook', label: 'Vehicle Logbook' },
+      { key: 'inspectionReport', label: 'Inspection Report' },
+      { key: 'driverLicense', label: 'Driver\'s License' }
+    ];
+
+    if (formData.vehicleCategory === 'general_cartage') {
+      requiredDocs.push({ key: 'goodsTransitLicense', label: 'Goods in Transit License' });
+    }
+
+    requiredDocs.forEach(doc => {
+      if (!formData.documents[doc.key]) {
+        newErrors[`document_${doc.key}`] = `${doc.label} is required`;
+      }
+    });
+
+    // Payment Plan
+    if (!formData.paymentPlan) {
+      newErrors.paymentPlan = 'Please select a payment plan';
+    }
+
+    // Declaration
+    if (!formData.declarationAccepted) {
+      newErrors.declarationAccepted = 'You must accept the declaration';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  // Handle form submission
+  const handleSubmit = () => {
+    if (validateForm()) {
+      setIsSubmitting(true);
+      setCurrentStep(2);
+      setIsSubmitting(false);
+      setQuotationId(`TPFT-${Math.floor(100000 + Math.random() * 900000)}`);
+    } else {
+      if (scrollViewRef.current) {
+        scrollViewRef.current.scrollTo({ y: 0, animated: true });
+      }
+    }
+  };
+
+  // Modal implementations
+  const renderCategoryModal = () => (
+    <Modal
+      visible={categoryModalVisible}
+      transparent={true}
+      animationType="slide"
+      onRequestClose={() => setCategoryModalVisible(false)}
+    >
+      <View style={styles.modalContainer}>
+        <View style={styles.modalContent}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>Select Vehicle Category</Text>
+            <TouchableOpacity
+              style={styles.modalCloseButton}
+              onPress={() => setCategoryModalVisible(false)}
+            >
+              <Ionicons name="close" size={24} color={Colors.text} />
+            </TouchableOpacity>
+          </View>
+          <FlatList
+            data={VEHICLE_CATEGORIES}
+            keyExtractor={(item) => item.id}
+            renderItem={({ item }) => (
+              <TouchableOpacity
+                style={styles.modalItem}
+                onPress={() => {
+                  updateField('vehicleCategory', item.id);
+                  updateField('subCategory', '');
+                  setCategoryModalVisible(false);
+                }}
+              >
+                <View>
+                  <Text style={styles.modalItemTitle}>{item.name}</Text>
+                  <Text style={styles.modalItemDescription}>{item.description}</Text>
+                </View>
+                {formData.vehicleCategory === item.id && (
+                  <Ionicons name="checkmark-circle" size={24} color={Colors.primary} />
+                )}
+              </TouchableOpacity>
+            )}
+            ItemSeparatorComponent={() => <View style={styles.modalSeparator} />}
+          />
+        </View>
+      </View>
+    </Modal>
+  );
+
+  return (
+    <KeyboardAvoidingView
+      style={[styles.container, { paddingTop: insets.top }]}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+    >
+      <StatusBar style="light" />
+
+      {/* Header */}
+      <View style={styles.header}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => {
+            if (currentStep > 1) {
+              setCurrentStep(currentStep - 1);
+            } else {
+              navigation.goBack();
+            }
+          }}
+        >
+          <Ionicons name="arrow-back" size={24} color={Colors.white} />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Commercial TPFT</Text>
+        <TouchableOpacity
+          style={styles.infoButton}
+          onPress={() => Alert.alert(
+            'Commercial TPFT',
+            'Third Party Fire & Theft coverage for commercial vehicles including fire damage, theft, and third party liability.'
+          )}
+        >
+          <Ionicons name="information-circle-outline" size={24} color={Colors.white} />
+        </TouchableOpacity>
+      </View>
+
+      {/* Progress Steps */}
+      <View style={styles.progressContainer}>
+        {[1, 2, 3].map((step) => (
+          <React.Fragment key={step}>
+            <View style={styles.progressStep}>
+              <View style={[
+                styles.progressDot,
+                currentStep >= step && styles.progressActive
+              ]}>
+                <Text style={styles.progressNumber}>{step}</Text>
+              </View>
+              <Text style={styles.progressLabel}>
+                {step === 1 ? 'Details' : step === 2 ? 'Quote' : 'Complete'}
+              </Text>
+            </View>
+            {step < 3 && <View style={styles.progressLine} />}
+          </React.Fragment>
+        ))}
+      </View>
+
+      <ScrollView
+        style={styles.content}
+        ref={scrollViewRef}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Form components from previous implementation */}
+      </ScrollView>
+
+      {/* Modals */}
+      {renderCategoryModal()}
+      {/* Other modals... */}
+    </KeyboardAvoidingView>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: Colors.background,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: Colors.primary,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: Colors.white,
+  },
+  backButton: {
+    padding: 8,
+  },
+  infoButton: {
+    padding: 8,
+  },
+  progressContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 16,
+    backgroundColor: Colors.white,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border,
+  },
+  progressStep: {
+    alignItems: 'center',
+  },
+  progressDot: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: Colors.background,
+    borderWidth: 2,
+    borderColor: Colors.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  progressActive: {
+    backgroundColor: Colors.primary,
+    borderColor: Colors.primary,
+  },
+  progressNumber: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: Colors.text,
+  },
+  progressLabel: {
+    fontSize: 12,
+    color: Colors.textLight,
+    marginTop: 4,
+  },
+  progressLine: {
+    flex: 1,
+    height: 2,
+    backgroundColor: Colors.border,
+    marginHorizontal: 8,
+  },
+  content: {
+    flex: 1,
+  },
+  section: {
+    backgroundColor: Colors.white,
+    borderRadius: 8,
+    padding: 16,
+    marginBottom: 16,
+    elevation: 2,
+    shadowColor: Colors.shadow,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: Colors.primary,
+    marginBottom: 16,
+  },
+  inputGroup: {
+    marginBottom: 16,
+  },
+  label: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: Colors.text,
+    marginBottom: 8,
+  },
+  input: {
+    height: 48,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderRadius: 8,
+    paddingHorizontal: 16,
+    fontSize: 16,
+    color: Colors.text,
+  },
+  inputError: {
+    borderColor: Colors.error,
+  },
+  errorText: {
+    color: Colors.error,
+    fontSize: 12,
+    marginTop: 4,
+  },
+  modalContainer: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    backgroundColor: Colors.white,
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    maxHeight: '80%',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: Colors.text,
+  },
+  modalCloseButton: {
+    padding: 4,
+  },
+  modalItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 16,
+  },
+  modalItemTitle: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: Colors.text,
+    marginBottom: 4,
+  },
+  modalItemDescription: {
+    fontSize: 14,
+    color: Colors.textLight,
+  },
+  modalSeparator: {
+    height: 1,
+    backgroundColor: Colors.border,
+  },
+});
+
+export default CommercialTPFTScreen;
