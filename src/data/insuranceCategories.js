@@ -63,7 +63,7 @@ export const INSURANCE_CATEGORIES = [
     color: Colors.primary,
     type: CATEGORY_TYPES.MOTOR,
     status: CATEGORY_STATUS.ACTIVE,
-    screen: 'MotorCategorySelection', // Uses EnhancedMotorCategorySelectionScreen component
+    screen: 'MotorDashboard', // Updated to use the new centralized Motor Dashboard
     isPopular: true,
     commissionRate: 0.15, // 15%
     minimumPremium: 15000,
