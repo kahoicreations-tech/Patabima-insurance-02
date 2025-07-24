@@ -15,6 +15,7 @@ import {
   PrivateMotorcycleScreen,
   CommercialThirdPartyScreen,
   PSVThirdPartyScreen,
+  PSVComprehensiveScreen,
   MotorcycleThirdPartyScreen,
   MotorcycleComprehensiveScreen,
   PrivateVehicleScreen,
@@ -24,6 +25,14 @@ import {
   TukTukScreen,
   SpecialClassesScreen
 } from '../screens/quotations/motor';
+
+// Import commercial screens directly to fix component issue
+import CommercialComprehensiveScreen from '../screens/quotations/motor/commercial/CommercialComprehensiveScreenNew';
+import CommercialTPFTScreen from '../screens/quotations/motor/commercial/CommercialTPFTScreenNew';
+
+// Log to verify import
+console.log('CommercialComprehensiveScreen:', CommercialComprehensiveScreen);
+console.log('CommercialTPFTScreen:', CommercialTPFTScreen);
 
 // Import other quotation screens
 import { 
@@ -94,7 +103,10 @@ const AppNavigator = () => {
             <Stack.Screen name="PrivateComprehensive" component={PrivateComprehensiveScreen} />
             <Stack.Screen name="PrivateMotorcycle" component={PrivateMotorcycleScreen} />
             <Stack.Screen name="CommercialThirdParty" component={CommercialThirdPartyScreen} />
+            <Stack.Screen name="CommercialComprehensive" component={CommercialComprehensiveScreen} />
+            <Stack.Screen name="CommercialTPFT" component={CommercialTPFTScreen} />
             <Stack.Screen name="PSVThirdParty" component={PSVThirdPartyScreen} />
+            <Stack.Screen name="PSVComprehensive" component={PSVComprehensiveScreen} />
             <Stack.Screen name="MotorcycleThirdParty" component={MotorcycleThirdPartyScreen} />
             <Stack.Screen name="MotorcycleComprehensive" component={MotorcycleComprehensiveScreen} />
             
