@@ -33,16 +33,17 @@ export default function App() {
 
   return (
     <SafeAreaProvider>
-      <StatusBar 
-        barStyle="light-content" 
-        backgroundColor="#D5222B" 
-        translucent={false}
-      />
-      <AuthProvider>
-        <AWSProviderDev>
-          <AppNavigator />
-        </AWSProviderDev>
-      </AuthProvider>
+      <View style={{ flex: 1, backgroundColor: '#D5222B' }}>
+        <StatusBar 
+          barStyle="light-content" 
+          translucent={false}
+        />
+        <AuthProvider>
+          <AWSProviderDev>
+            <AppNavigator />
+          </AWSProviderDev>
+        </AuthProvider>
+      </View>
     </SafeAreaProvider>
   );
 }
