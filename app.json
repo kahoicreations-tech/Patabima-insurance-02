@@ -1,46 +1,37 @@
 {
   "expo": {
-    "name": "PataBimaApp",
-    "slug": "PataBimaApp",
+    "name": "PataBima Agent",
+    "slug": "patabima-agent",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/PataLogo.png",
+    "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
-    "newArchEnabled": true,
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#D5222B"
     },
+    "updates": {
+      "fallbackToCacheTimeout": 0
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
-      "bundleIdentifier": "com.patabima.app",
-      "buildNumber": "1",
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.patabima.agent"
     },
     "android": {
-      "package": "com.patabima.app",
-      "versionCode": 1,
       "adaptiveIcon": {
-        "foregroundImage": "./assets/PataLogo.png",
-        "backgroundColor": "#ffffff"
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#D5222B"
       },
-      "softwareKeyboardLayoutMode": "pan",
-      "permissions": [
-        "CAMERA",
-        "READ_EXTERNAL_STORAGE",
-        "WRITE_EXTERNAL_STORAGE"
-      ],
-      "jsEngine": "hermes"
+      "package": "com.patabima.agent"
     },
-    "web": {
-      "favicon": "./assets/favicon.png"
-    },
-    "plugins": [
-      "expo-font"
-    ],
+    "owner": "kahoikreations",
     "extra": {
       "eas": {
-        "projectId": "a890a827-7c20-48bb-a0db-eb1ba3abdc35"
+        "projectId": "05038c89-0d3b-4bba-a357-c3fa6af17848"
       }
     }
   }
