@@ -1,593 +1,458 @@
 /**
- * Commercial Third Party Fire & Theft Insurance Screen
- * Handles TPFT insurance quotations for commercial vehicles
- * including lorries, trucks, and business vehicles
+ * Commercial TPFT (Third Party, Fire and Theft) Insurance Screen
+ * Provides coverage for third party liability plus fire and theft protection
+ * for commercial vehicles.
  */
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
   TouchableOpacity,
-  TextInput,
-  Alert,
+  ScrollView,
+  SafeAreaView,
   KeyboardAvoidingView,
   Platform,
-  Modal,
-  FlatList,
-  Dimensions
+  Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import { useNavigation, useRoute } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors } from '../../../../constants';
-import Button from '../../../../components/shared/Button';
-import {
-  VEHICLE_CATEGORIES,
-  COVERAGE_OPTIONS,
-  ADDONS,
-  PAYMENT_PLANS
-} from './constants';
+import { Colors, Typography, Spacing } from '../../../../constants';
 
-const CommercialTPFTScreen = () => {
-  const navigation = useNavigation();
-  const route = useRoute();
+// Import commercial components
+import CommercialPersonalInformationStep from './components/CommercialPersonalInformationStep';
+import CommercialVehicleDetailsStep from './components/CommercialVehicleDetailsStep';
+import CommercialVehicleValueStep from './components/CommercialVehicleValueStep';
+import CommercialInsurerSelectionStep from './components/CommercialInsurerSelectionStep';
+import CommercialDocumentUploadStep from './components/CommercialDocumentUploadStep';
+import CommercialPaymentStep from './components/CommercialPaymentStep';
+import CommercialQuotationProgressBar from './components/CommercialQuotationProgressBar';
+import { COMMERCIAL_UNDERWRITERS } from './constants';
+
+const CommercialTPFTScreen = ({ navigation, route }) => {
   const insets = useSafeAreaInsets();
-  const scrollViewRef = useRef(null);
+  const [currentStep, setCurrentStep] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [isCalculatingPremium, setIsCalculatingPremium] = useState(false);
 
-  // Form state
+  // Get passed data from CommercialVehicleScreen
+  const { vehicleCategory, productType, productName } = route.params || {};
+  
+  // Premium calculation result
+  const [premiumResult, setPremiumResult] = useState(null);
+
+  // Form data state
   const [formData, setFormData] = useState({
-    businessName: '',
-    contactPerson: '',
+    // Step 1: Business/Personal Information
+    fullName: '',
+    idNumber: '',
     phoneNumber: '',
-    emailAddress: '',
-    vehicleCategory: '',
-    subCategory: '',
-    make: '',
-    model: '',
-    year: '',
+    email: '',
+    kraPin: '',
+    businessName: '',
+    businessType: '',
+    
+    // Step 2: Vehicle Details
+    vehicleMake: '',
+    vehicleModel: '',
+    vehicleYear: new Date().getFullYear().toString(),
+    vehicleAge: 0,
     registrationNumber: '',
-    tonnage: '',
+    chassisNumber: '',
+    engineNumber: '',
+    grossWeight: '',
+    commercialCategory: 'general_cartage',
+    commercialSubCategory: '',
+    vehicleType: '',
+    vehicleUsage: 'urban_delivery',
+    
+    // Step 3: Vehicle Value
     vehicleValue: '',
-    coverageType: '',
-    selectedAddons: [],
+    
+    // Step 4: Insurer Selection
+    selectedInsurer: '',
+    selectedQuote: null,
+    totalPremium: 0,
+    
+    // Step 5: Payment
+    paymentMethod: 'mpesa',
+    mpesaPhoneNumber: '',
+    paymentStatus: 'pending',
+    transactionId: '',
+    paymentAmount: 0,
+    
+    // Security details (required for TPFT)
     hasTracking: false,
+    trackingCompany: '',
     hasAntiTheft: false,
-    operatingRadius: '',
-    driverExperience: '',
-    claimsHistory: {
-      hasPreviousClaims: false,
-      numberOfClaims: '',
-      claimDetails: []
-    },
-    documents: {
-      logbook: null,
-      inspectionReport: null,
-      goodsTransitLicense: null,
-      driverLicense: null
-    },
-    paymentPlan: '',
-    declarationAccepted: false
+    antiTheftSystem: '',
+    
+    // Policy validation
+    existingPolicyCheck: null,
+    insuranceStartDate: new Date(Date.now() + 24 * 60 * 60 * 1000), // Default to tomorrow
   });
 
-  // UI state
-  const [currentStep, setCurrentStep] = useState(1);
-  const [errors, setErrors] = useState({});
-  const [premium, setPremium] = useState(0);
-  const [isCalculating, setIsCalculating] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [quotationId, setQuotationId] = useState('');
-
-  // Modal states
-  const [categoryModalVisible, setCategoryModalVisible] = useState(false);
-  const [subCategoryModalVisible, setSubCategoryModalVisible] = useState(false);
-  const [makeModalVisible, setMakeModalVisible] = useState(false);
-  const [modelModalVisible, setModelModalVisible] = useState(false);
-  const [coverageModalVisible, setCoverageModalVisible] = useState(false);
-  const [claimsModalVisible, setClaimsModalVisible] = useState(false);
-  const [paymentPlanModalVisible, setPaymentPlanModalVisible] = useState(false);
-  const [documentUploadVisible, setDocumentUploadVisible] = useState(false);
-
-  // Loading states
-  const [isLoadingMakes, setIsLoadingMakes] = useState(false);
-  const [isLoadingModels, setIsLoadingModels] = useState(false);
-  const [isUploadingDocument, setIsUploadingDocument] = useState(false);
-
-  // Update form fields
-  const updateField = (field, value) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-    if (errors[field]) {
-      setErrors(prev => {
-        const updated = { ...prev };
-        delete updated[field];
-        return updated;
-      });
-    }
-  };
-
-  // Toggle addon selection
-  const toggleAddon = (addonId) => {
-    setFormData(prev => {
-      const selectedAddons = [...prev.selectedAddons];
-      const index = selectedAddons.indexOf(addonId);
-      
-      if (index !== -1) {
-        selectedAddons.splice(index, 1);
-      } else {
-        selectedAddons.push(addonId);
-      }
-      
-      return { ...prev, selectedAddons };
-    });
-  };
-
-  // Calculate TPFT premium
-  const calculatePremium = useCallback(() => {
-    if (!formData.vehicleValue || !formData.coverageType) return;
-
-    setIsCalculating(true);
-
-    try {
-      const vehicleValue = parseFloat(formData.vehicleValue);
-      if (isNaN(vehicleValue)) {
-        setPremium(0);
-        return;
-      }
-
-      // Get base rate from selected coverage
-      const coverage = COVERAGE_OPTIONS.find(c => c.id === formData.coverageType);
-      if (!coverage) {
-        setPremium(0);
-        return;
-      }
-
-      let rate = coverage.rate;
-
-      // Add rates for selected add-ons
-      formData.selectedAddons.forEach(addonId => {
-        const addon = ADDONS.find(a => a.id === addonId);
-        if (addon) {
-          rate += addon.rate;
-        }
-      });
-
-      // Adjust rate based on tonnage
-      const tonnage = parseFloat(formData.tonnage);
-      if (!isNaN(tonnage)) {
-        if (tonnage > 10) rate += 0.75;
-        else if (tonnage > 5) rate += 0.5;
-      }
-
-      // Adjust for operating radius
-      switch (formData.operatingRadius) {
-        case 'national':
-          rate += 0.3;
-          break;
-        case 'regional':
-          rate += 0.5;
-          break;
-        case 'international':
-          rate += 0.75;
-          break;
-      }
-
-      // Security features discounts
-      if (formData.hasTracking) rate -= 0.25;
-      if (formData.hasAntiTheft) rate -= 0.25;
-
-      // Calculate base premium
-      let calculatedPremium = (vehicleValue * (rate / 100));
-
-      // Minimum premium thresholds
-      const minPremium = 30000; // Lower minimum for TPFT compared to comprehensive
-      calculatedPremium = Math.max(calculatedPremium, minPremium);
-
-      // Add standard fees
-      const stampDuty = 40;
-      const phcf = 0.25; // Policy holders compensation fund
-      const trainingLevy = calculatedPremium * 0.002;
-
-      calculatedPremium += stampDuty + (calculatedPremium * phcf / 100) + trainingLevy;
-
-      // Round to nearest 100
-      calculatedPremium = Math.ceil(calculatedPremium / 100) * 100;
-
-      setPremium(calculatedPremium);
-    } catch (error) {
-      console.error('Premium calculation error:', error);
-      setPremium(0);
-    } finally {
-      setIsCalculating(false);
-    }
-  }, [formData]);
-
-  // Effect to calculate premium when relevant fields change
+  // Payment state
+  const [paymentState, setPaymentState] = useState({
+    isProcessing: false,
+    paymentInitiated: false,
+    paymentCompleted: false,
+    paymentError: null,
+    countdown: 0,
+  });
+  
+  // Update vehicle age when year changes
   useEffect(() => {
-    calculatePremium();
-  }, [
-    formData.vehicleValue,
-    formData.coverageType,
-    formData.selectedAddons,
-    formData.hasTracking,
-    formData.hasAntiTheft,
-    formData.operatingRadius,
-    formData.tonnage,
-    calculatePremium
-  ]);
-
-  // Form validation
-  const validateForm = () => {
-    const newErrors = {};
-
-    // Business Information
-    if (!formData.businessName) newErrors.businessName = 'Business name is required';
-    if (!formData.contactPerson) newErrors.contactPerson = 'Contact person is required';
-
-    if (!formData.phoneNumber) {
-      newErrors.phoneNumber = 'Phone number is required';
-    } else if (!/^(0|\+254|254)7\d{8}$/.test(formData.phoneNumber)) {
-      newErrors.phoneNumber = 'Enter a valid Kenyan mobile number';
+    if (formData.vehicleYear) {
+      const currentYear = new Date().getFullYear();
+      const vehicleYear = parseInt(formData.vehicleYear);
+      const vehicleAge = currentYear - vehicleYear;
+      
+      setFormData({
+        ...formData,
+        vehicleAge: vehicleAge >= 0 ? vehicleAge : 0,
+      });
     }
+  }, [formData.vehicleYear]);
 
-    if (formData.emailAddress && !/\S+@\S+\.\S+/.test(formData.emailAddress)) {
-      newErrors.emailAddress = 'Enter a valid email address';
+  // Handle premium calculation
+  const handlePremiumCalculated = (result) => {
+    setPremiumResult(result);
+    if (result) {
+      setFormData(prev => ({
+        ...prev,
+        totalPremium: result.totalPremium,
+        paymentAmount: result.totalPremium,
+      }));
     }
-
-    // Vehicle Information
-    if (!formData.vehicleCategory) newErrors.vehicleCategory = 'Vehicle category is required';
-    if (!formData.subCategory) newErrors.subCategory = 'Sub-category is required';
-    if (!formData.make) newErrors.make = 'Make is required';
-    if (!formData.model) newErrors.model = 'Model is required';
-    if (!formData.year) newErrors.year = 'Year is required';
-
-    if (!formData.registrationNumber) {
-      newErrors.registrationNumber = 'Registration number is required';
-    } else if (!/^K[A-Z]{2}\s?\d{3}[A-Z]$/i.test(formData.registrationNumber)) {
-      newErrors.registrationNumber = 'Invalid registration format (e.g. KAA 123Z)';
+    setIsCalculatingPremium(false);
+  };
+  
+  // Next step handler
+  const handleNextStep = () => {
+    // Validate current step (example validation logic)
+    let isValid = true;
+    let errorMessage = '';
+    
+    switch (currentStep) {
+      case 1: // Personal information
+        if (!formData.fullName || !formData.phoneNumber) {
+          isValid = false;
+          errorMessage = 'Please fill in all required personal information fields.';
+        }
+        break;
+      case 2: // Vehicle details
+        if (!formData.vehicleMake || !formData.vehicleModel || !formData.registrationNumber) {
+          isValid = false;
+          errorMessage = 'Please fill in all required vehicle details.';
+        }
+        break;
+      case 3: // Vehicle value
+        if (!formData.vehicleValue || parseFloat(formData.vehicleValue) <= 0) {
+          isValid = false;
+          errorMessage = 'Please enter a valid vehicle value.';
+        }
+        
+        // TPFT requires security systems
+        if (!formData.hasTracking && !formData.hasAntiTheft) {
+          isValid = false;
+          errorMessage = 'TPFT coverage requires at least one security system (tracking or anti-theft).';
+        }
+        break;
     }
-
-    if (!formData.tonnage) {
-      newErrors.tonnage = 'Tonnage is required';
-    } else if (isNaN(parseFloat(formData.tonnage)) || parseFloat(formData.tonnage) <= 0) {
-      newErrors.tonnage = 'Enter a valid tonnage';
+    
+    if (!isValid) {
+      Alert.alert('Validation Error', errorMessage);
+      return;
     }
+    
+    if (currentStep < 5) {
+      setCurrentStep(currentStep + 1);
+      
+      // Calculate premium when moving to insurer selection step
+      if (currentStep === 3) {
+        setIsCalculatingPremium(true);
+      }
+    }
+  };
 
-    if (!formData.vehicleValue) {
-      newErrors.vehicleValue = 'Vehicle value is required';
+  // Previous step handler
+  const handlePrevStep = () => {
+    if (currentStep > 1) {
+      setCurrentStep(currentStep - 1);
     } else {
-      const value = parseFloat(formData.vehicleValue);
-      if (isNaN(value) || value < 500000) { // Lower minimum value for TPFT
-        newErrors.vehicleValue = 'Vehicle value must be at least KSh 500,000';
-      }
+      navigation.goBack();
     }
+  };
 
-    // Operating Details
-    if (!formData.operatingRadius) newErrors.operatingRadius = 'Operating radius is required';
-    if (!formData.coverageType) newErrors.coverageType = 'Please select a coverage type';
-
-    // Required Documents
-    const requiredDocs = [
-      { key: 'logbook', label: 'Vehicle Logbook' },
-      { key: 'inspectionReport', label: 'Inspection Report' },
-      { key: 'driverLicense', label: 'Driver\'s License' }
-    ];
-
-    if (formData.vehicleCategory === 'general_cartage') {
-      requiredDocs.push({ key: 'goodsTransitLicense', label: 'Goods in Transit License' });
-    }
-
-    requiredDocs.forEach(doc => {
-      if (!formData.documents[doc.key]) {
-        newErrors[`document_${doc.key}`] = `${doc.label} is required`;
-      }
-    });
-
-    // Payment Plan
-    if (!formData.paymentPlan) {
-      newErrors.paymentPlan = 'Please select a payment plan';
-    }
-
-    // Declaration
-    if (!formData.declarationAccepted) {
-      newErrors.declarationAccepted = 'You must accept the declaration';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+  // Update form data
+  const updateFormData = (data) => {
+    setFormData({ ...formData, ...data });
   };
 
   // Handle form submission
-  const handleSubmit = () => {
-    if (validateForm()) {
-      setIsSubmitting(true);
-      setCurrentStep(2);
-      setIsSubmitting(false);
-      setQuotationId(`TPFT-${Math.floor(100000 + Math.random() * 900000)}`);
-    } else {
-      if (scrollViewRef.current) {
-        scrollViewRef.current.scrollTo({ y: 0, animated: true });
-      }
+  const handleSubmit = async () => {
+    try {
+      setLoading(true);
+      
+      // In a real app, we would submit the data to an API here
+      // For now, we'll just simulate a delay and success
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // Simulate successful submission
+      Alert.alert(
+        "Quotation Submitted",
+        "Your commercial TPFT insurance quote has been successfully generated. A PataBima agent will contact you shortly.",
+        [
+          { 
+            text: "OK", 
+            onPress: () => navigation.navigate('MainTabs')
+          }
+        ]
+      );
+    } catch (error) {
+      Alert.alert("Error", "Failed to submit quotation. Please try again.");
+      console.error("Quotation submission error:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  // Modal implementations
-  const renderCategoryModal = () => (
-    <Modal
-      visible={categoryModalVisible}
-      transparent={true}
-      animationType="slide"
-      onRequestClose={() => setCategoryModalVisible(false)}
-    >
-      <View style={styles.modalContainer}>
-        <View style={styles.modalContent}>
-          <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>Select Vehicle Category</Text>
-            <TouchableOpacity
-              style={styles.modalCloseButton}
-              onPress={() => setCategoryModalVisible(false)}
-            >
-              <Ionicons name="close" size={24} color={Colors.text} />
-            </TouchableOpacity>
-          </View>
-          <FlatList
-            data={VEHICLE_CATEGORIES}
-            keyExtractor={(item) => item.id}
-            renderItem={({ item }) => (
-              <TouchableOpacity
-                style={styles.modalItem}
-                onPress={() => {
-                  updateField('vehicleCategory', item.id);
-                  updateField('subCategory', '');
-                  setCategoryModalVisible(false);
-                }}
-              >
-                <View>
-                  <Text style={styles.modalItemTitle}>{item.name}</Text>
-                  <Text style={styles.modalItemDescription}>{item.description}</Text>
-                </View>
-                {formData.vehicleCategory === item.id && (
-                  <Ionicons name="checkmark-circle" size={24} color={Colors.primary} />
-                )}
-              </TouchableOpacity>
-            )}
-            ItemSeparatorComponent={() => <View style={styles.modalSeparator} />}
+  // Commercial TPFT Premium Calculator component
+  const CommercialPremiumCalculator = ({ formData, onPremiumCalculated, isCalculating, setIsCalculating }) => {
+    useEffect(() => {
+      if (isCalculating) {
+        calculatePremium();
+      }
+    }, [isCalculating]);
+
+    const calculatePremium = async () => {
+      try {
+        // Basic premium calculation for commercial TPFT
+        // Typically 3.5-4.0% of vehicle value with minimum premium of KSh 25,000
+        const vehicleValue = parseFloat(formData.vehicleValue) || 0;
+        const vehicleAge = formData.vehicleAge || 0;
+        
+        // Determine rate based on vehicle age
+        let rate = 0.035; // 3.5% base rate
+        
+        if (vehicleAge > 5) {
+          rate = 0.040; // 4.0% for vehicles older than 5 years
+        }
+        
+        // Calculate basic premium
+        let basicPremium = vehicleValue * rate;
+        
+        // Enforce minimum premium
+        const minimumPremium = 25000;
+        basicPremium = Math.max(basicPremium, minimumPremium);
+        
+        // Security discount
+        let securityDiscount = 0;
+        if (formData.hasTracking) {
+          securityDiscount += 0.10; // 10% discount for tracking system
+        }
+        if (formData.hasAntiTheft) {
+          securityDiscount += 0.05; // 5% discount for anti-theft system
+        }
+        
+        // Apply security discount (cap at 15%)
+        securityDiscount = Math.min(securityDiscount, 0.15);
+        basicPremium = basicPremium * (1 - securityDiscount);
+        
+        // Calculate levies and taxes
+        const policyHolderCompensation = 0.0025 * basicPremium; // 0.25% of basic premium
+        const trainingLevy = 0.002 * basicPremium; // 0.2% of basic premium
+        const stampDuty = 40; // Fixed KSh 40
+        
+        // Total premium
+        const totalPremium = basicPremium + policyHolderCompensation + trainingLevy + stampDuty;
+        
+        // Simulate API delay
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        // Return premium calculation result
+        onPremiumCalculated({
+          basicPremium: Math.round(basicPremium),
+          policyHolderCompensation: Math.round(policyHolderCompensation),
+          trainingLevy: Math.round(trainingLevy),
+          stampDuty: stampDuty,
+          totalPremium: Math.round(totalPremium),
+          rate: rate * 100, // Convert to percentage for display
+          securityDiscount: securityDiscount * 100, // Convert to percentage for display
+        });
+      } catch (error) {
+        console.error("Premium calculation error:", error);
+        Alert.alert("Error", "Failed to calculate premium. Please try again.");
+        onPremiumCalculated(null);
+      }
+    };
+
+    return null; // This is a background component, no UI
+  };
+
+  // Render the correct step based on currentStep
+  const renderStep = () => {
+    switch (currentStep) {
+      case 1:
+        return (
+          <CommercialPersonalInformationStep
+            formData={formData}
+            onUpdateFormData={updateFormData}
+            onNext={handleNextStep}
+            onBack={handlePrevStep}
           />
-        </View>
-      </View>
-    </Modal>
-  );
+        );
+      case 2:
+        return (
+          <CommercialVehicleDetailsStep
+            formData={formData}
+            onUpdateFormData={updateFormData}
+            onNext={handleNextStep}
+            onBack={handlePrevStep}
+          />
+        );
+      case 3:
+        return (
+          <CommercialVehicleValueStep
+            formData={formData}
+            onUpdateFormData={updateFormData}
+            onNext={handleNextStep}
+            onBack={handlePrevStep}
+            insuranceType="tpft"
+            validateVehicle={(data) => true} // Simplified validation
+            showSecurityOptions={true}
+          />
+        );
+      case 4:
+        return (
+          <CommercialInsurerSelectionStep
+            formData={formData}
+            onUpdateFormData={updateFormData}
+            onNext={handleNextStep}
+            onBack={handlePrevStep}
+            premiumResult={premiumResult}
+            underwriters={COMMERCIAL_UNDERWRITERS}
+            coverageType="tpft"
+          />
+        );
+      case 5:
+        return (
+          <CommercialPaymentStep
+            formData={formData}
+            onUpdateFormData={updateFormData}
+            onSubmit={handleSubmit}
+            onBack={handlePrevStep}
+            paymentState={paymentState}
+            setPaymentState={setPaymentState}
+          />
+        );
+      default:
+        return null;
+    }
+  };
 
   return (
-    <KeyboardAvoidingView
-      style={[styles.container, { paddingTop: insets.top }]}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
-    >
-      <StatusBar style="light" />
-
+    <SafeAreaView style={[styles.container, { paddingTop: insets.top }]}>
+      <StatusBar style="dark" />
+      
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity
+        <TouchableOpacity 
           style={styles.backButton}
-          onPress={() => {
-            if (currentStep > 1) {
-              setCurrentStep(currentStep - 1);
-            } else {
-              navigation.goBack();
-            }
-          }}
+          onPress={handlePrevStep}
         >
-          <Ionicons name="arrow-back" size={24} color={Colors.white} />
+          <Ionicons name="arrow-back" size={24} color={Colors.primary} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Commercial TPFT</Text>
-        <TouchableOpacity
-          style={styles.infoButton}
-          onPress={() => Alert.alert(
-            'Commercial TPFT',
-            'Third Party Fire & Theft coverage for commercial vehicles including fire damage, theft, and third party liability.'
-          )}
-        >
-          <Ionicons name="information-circle-outline" size={24} color={Colors.white} />
-        </TouchableOpacity>
+        <Text style={styles.headerTitle}>{productName || "Commercial TPFT"}</Text>
+        <View style={{ width: 24 }} />
       </View>
-
-      {/* Progress Steps */}
-      <View style={styles.progressContainer}>
-        {[1, 2, 3].map((step) => (
-          <React.Fragment key={step}>
-            <View style={styles.progressStep}>
-              <View style={[
-                styles.progressDot,
-                currentStep >= step && styles.progressActive
-              ]}>
-                <Text style={styles.progressNumber}>{step}</Text>
-              </View>
-              <Text style={styles.progressLabel}>
-                {step === 1 ? 'Details' : step === 2 ? 'Quote' : 'Complete'}
-              </Text>
-            </View>
-            {step < 3 && <View style={styles.progressLine} />}
-          </React.Fragment>
-        ))}
-      </View>
-
-      <ScrollView
-        style={styles.content}
-        ref={scrollViewRef}
-        showsVerticalScrollIndicator={false}
+      
+      {/* Progress Bar */}
+      <CommercialQuotationProgressBar 
+        currentStep={currentStep}
+        totalSteps={5}
+      />
+      
+      {/* Main Content */}
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.keyboardAvoid}
       >
-        {/* Form components from previous implementation */}
-      </ScrollView>
-
-      {/* Modals */}
-      {renderCategoryModal()}
-      {/* Other modals... */}
-    </KeyboardAvoidingView>
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Premium Calculator (hidden component) */}
+          <CommercialPremiumCalculator
+            formData={formData}
+            onPremiumCalculated={handlePremiumCalculated}
+            isCalculating={isCalculatingPremium}
+            setIsCalculating={setIsCalculatingPremium}
+          />
+          
+          {/* Current Step Content */}
+          {renderStep()}
+          
+          {/* Loading Overlay */}
+          {loading && (
+            <View style={styles.loadingOverlay}>
+              <ActivityIndicator size="large" color={Colors.primary} />
+              <Text style={styles.loadingText}>Processing your request...</Text>
+            </View>
+          )}
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: Colors.backgroundLight,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: Colors.primary,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: Colors.white,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.md,
+    backgroundColor: Colors.white,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border,
   },
   backButton: {
-    padding: 8,
+    padding: Spacing.sm,
   },
-  infoButton: {
-    padding: 8,
+  headerTitle: {
+    fontSize: Typography.fontSize.lg,
+    fontWeight: Typography.fontWeight.bold,
+    color: Colors.textPrimary,
   },
-  progressContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 16,
-    backgroundColor: Colors.white,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
-  },
-  progressStep: {
-    alignItems: 'center',
-  },
-  progressDot: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: Colors.background,
-    borderWidth: 2,
-    borderColor: Colors.border,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  progressActive: {
-    backgroundColor: Colors.primary,
-    borderColor: Colors.primary,
-  },
-  progressNumber: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: Colors.text,
-  },
-  progressLabel: {
-    fontSize: 12,
-    color: Colors.textLight,
-    marginTop: 4,
-  },
-  progressLine: {
-    flex: 1,
-    height: 2,
-    backgroundColor: Colors.border,
-    marginHorizontal: 8,
-  },
-  content: {
+  keyboardAvoid: {
     flex: 1,
   },
-  section: {
-    backgroundColor: Colors.white,
-    borderRadius: 8,
-    padding: 16,
-    marginBottom: 16,
-    elevation: 2,
-    shadowColor: Colors.shadow,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+  scrollContent: {
+    flexGrow: 1,
+    padding: Spacing.md,
   },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
+  loadingOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 100,
+  },
+  loadingText: {
+    marginTop: Spacing.md,
+    fontSize: Typography.fontSize.md,
     color: Colors.primary,
-    marginBottom: 16,
-  },
-  inputGroup: {
-    marginBottom: 16,
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: Colors.text,
-    marginBottom: 8,
-  },
-  input: {
-    height: 48,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    borderRadius: 8,
-    paddingHorizontal: 16,
-    fontSize: 16,
-    color: Colors.text,
-  },
-  inputError: {
-    borderColor: Colors.error,
-  },
-  errorText: {
-    color: Colors.error,
-    fontSize: 12,
-    marginTop: 4,
-  },
-  modalContainer: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'flex-end',
-  },
-  modalContent: {
-    backgroundColor: Colors.white,
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
-    maxHeight: '80%',
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: Colors.text,
-  },
-  modalCloseButton: {
-    padding: 4,
-  },
-  modalItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: 16,
-  },
-  modalItemTitle: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: Colors.text,
-    marginBottom: 4,
-  },
-  modalItemDescription: {
-    fontSize: 14,
-    color: Colors.textLight,
-  },
-  modalSeparator: {
-    height: 1,
-    backgroundColor: Colors.border,
-  },
+    fontWeight: Typography.fontWeight.medium,
+  }
 });
 
 export default CommercialTPFTScreen;

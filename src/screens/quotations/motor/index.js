@@ -21,6 +21,8 @@ export { default as PrivateThirdPartyExtendibleScreen } from './private/PrivateT
 export { default as PrivateComprehensiveScreen } from './private/PrivateComprehensiveScreen';
 export { default as PrivateMotorcycleScreen } from './private/PrivateMotorcycleScreen';
 export { default as CommercialThirdPartyScreen } from './commercial/CommercialThirdPartyScreen';
+export { default as CommercialComprehensiveScreen } from './commercial/CommercialComprehensiveScreen';
+export { default as CommercialTPFTScreen } from './commercial/CommercialTPFTScreen';
 export { default as PSVThirdPartyScreen } from './psv/PSVThirdPartyScreen';
 export { default as PSVComprehensiveScreen } from './psv/PSVComprehensiveScreen';
 export { default as MotorcycleThirdPartyScreen } from './motorcycle/MotorcycleThirdPartyScreen';

@@ -13,7 +13,6 @@ import {
   PrivateThirdPartyExtendibleScreen,
   PrivateComprehensiveScreen,
   PrivateMotorcycleScreen,
-  CommercialThirdPartyScreen,
   PSVThirdPartyScreen,
   PSVComprehensiveScreen,
   MotorcycleThirdPartyScreen,
@@ -26,13 +25,10 @@ import {
   SpecialClassesScreen
 } from '../screens/quotations/motor';
 
-// Import commercial screens directly to fix component issue
-import CommercialComprehensiveScreen from '../screens/quotations/motor/commercial/CommercialComprehensiveScreenNew';
-import CommercialTPFTScreen from '../screens/quotations/motor/commercial/CommercialTPFTScreenNew';
-
-// Log to verify import
-console.log('CommercialComprehensiveScreen:', CommercialComprehensiveScreen);
-console.log('CommercialTPFTScreen:', CommercialTPFTScreen);
+// Import commercial screens
+import CommercialThirdPartyScreen from '../screens/quotations/motor/commercial/CommercialThirdPartyScreen';
+import CommercialComprehensiveScreen from '../screens/quotations/motor/commercial/CommercialComprehensiveScreen';
+import CommercialTPFTScreen from '../screens/quotations/motor/commercial/CommercialTPFTScreen';
 
 // Import other quotation screens
 import { 

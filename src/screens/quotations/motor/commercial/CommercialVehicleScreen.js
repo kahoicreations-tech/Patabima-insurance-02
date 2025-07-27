@@ -25,7 +25,7 @@ const CommercialVehicleScreen = ({ navigation }) => {
       id: 'commercial_third_party',
       name: 'Commercial Third Party',
       description: 'Essential third party liability coverage for commercial vehicles',
-      screen: 'CommercialThirdParty',
+      screen: 'CommercialThirdParty',  // Matches the name in AppNavigator.js
       icon: '🚚',
       isRecommended: true
     },
@@ -33,8 +33,16 @@ const CommercialVehicleScreen = ({ navigation }) => {
       id: 'commercial_comprehensive',
       name: 'Commercial Comprehensive',
       description: 'Full coverage for commercial vehicles including goods in transit',
-      screen: 'CommercialComprehensive',
+      screen: 'CommercialComprehensive',  // Matches the name in AppNavigator.js
       icon: '🛡️',
+      isRecommended: false
+    },
+    {
+      id: 'commercial_tpft',
+      name: 'Commercial Third Party Fire & Theft',
+      description: 'Third party coverage plus protection against fire and theft',
+      screen: 'CommercialTPFT',  // Matches the name in AppNavigator.js
+      icon: '🔥',
       isRecommended: false
     }
   ];
@@ -48,7 +56,7 @@ const CommercialVehicleScreen = ({ navigation }) => {
   };
 
   const handleCheckInsurance = () => {
-    navigation.navigate('CheckInsuranceStatusScreen');
+    navigation.navigate('MainTabs');
   };
 
   return (
