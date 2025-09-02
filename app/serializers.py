@@ -13,13 +13,13 @@ password_validator = RegexValidator(
 )
 
 class AuthLoginSerializer(serializers.Serializer):
-    username = serializers.CharField(max_length=50)
+    phonenumber = serializers.CharField(max_length=50)
     password = serializers.CharField(max_length=50)
     code = serializers.CharField(max_length=6)
 
 
 class LoginSerializer(serializers.Serializer):
-    username = serializers.CharField(max_length=50)
+    phonenumber = serializers.CharField(max_length=50)
     password = serializers.CharField(max_length=50)
 
 
@@ -74,3 +74,29 @@ class RegisterPublicUserSerializer(serializers.Serializer):
             raise 'Password do not match.'
         
         return attrs
+    
+class UserSerializer(serializers.ModelSerializer):
+    full_names = serializers.SerializerMethodField()
+    agent_code = serializers.SerializerMethodField()
+
+    class Meta:
+        model = models.User
+        fields = [
+            'email',
+            'role',
+            'full_names',
+            'agent_code'
+
+        ]
+
+    def get_full_names(self, obj):
+        if obj.role == 'PUBLICUSER':
+            return obj.public_user_profile.full_names
+        else:
+            return obj.staff_user_profile.full_names
+        
+    def get_agent_code(self, obj):
+        if obj.role == 'PUBLICUSER':
+            return None
+        else:
+            return f'{obj.staff_user_profile.agent_prefix}{obj.staff_user_profile.agent_code}'

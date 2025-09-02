@@ -39,14 +39,16 @@ class LoginViewSet(BaseViewset):
             user_inst = models.User.objects.create(
                 email = serializer.validated_data['email'],
                 phonenumber = serializer.validated_data['phonenumber'],
-                role = serializer.valdated_data['role']
+                role = serializer.validated_data['user_role'],
+                password =  make_password(serializer.validated_data['password'])
             )
 
-            if serializer.valdated_data['role'] == 'PUBLICUSER':
+            if serializer.validated_data['user_role'] == 'PUBLICUSER':
                 #create profile
                 models.PublicUserProfile.objects.create(
-                    user = user_inst,
-                    registration_number = utils.generate_registration_number(model_inst=models.User,account_type='P')
+                    user_id = user_inst,
+                    registration_number = utils.generate_registration_number(model_inst=models.User,account_type='P'),
+                    full_names = serializer.validated_data['full_names']
                 )
             else:
                 #create staff profile
@@ -72,8 +74,6 @@ class LoginViewSet(BaseViewset):
 
             return Response({'detail':'user created successfully.','user_id':user_inst.id}, status=status.HTTP_200_OK)
             
-
-
     @action(detail=False, methods=['POST'])
     def auth_login(self,request):
         serializer = serializers.AuthLoginSerializer(
@@ -197,3 +197,21 @@ class LoginViewSet(BaseViewset):
 
 
         return Response({'detail':'Password reset successfully.'}, status=status.HTTP_200_OK)
+    
+
+class UserViewset(BaseViewset):
+    @action(detail=False, methods=['GET'])
+    def get_user(self, request):
+        if self.request.query_params.get('user_id') in [None,'']:
+            return Response({'detail': 'user id is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            user_ = models.User.objects.get(id=self.request.query_params.get('user_id'))
+        except models.User.DoesNotExist:
+            return Response({'detail': 'user does not exists'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        serializer = serializers.UserSerializer(
+            user_
+        )
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
