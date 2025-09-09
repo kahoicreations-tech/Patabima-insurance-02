@@ -5,6 +5,7 @@ from rest_framework import status, viewsets,filters
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework.exceptions import ValidationError
 
 from django.contrib.auth import authenticate
 from django.contrib.auth.hashers import make_password
@@ -168,8 +169,8 @@ class LoginViewSet(BaseViewset):
 
         return Response({'detail':'OTP sent successfully.','otp_code':otp_inst.code}, status=status.HTTP_200_OK)
 
-    @action(detail=False, methods=['POST'],permission_classes = [IsAuthenticated])
-    def reset_password_self(self,request):
+    @action(detail=False, methods=['POST'])
+    def reset_password(self,request):
 
         serializer= serializers.ResetPassword(
              data = self.request.data
@@ -178,25 +179,54 @@ class LoginViewSet(BaseViewset):
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-        user_ = models.User.objects.get(id=utils.get_logged_in_user(headers=self.return_headers()))
+        user_ = models.User.objects.get(phonenumber = serializer.validated_data['phonenumber'], email=serializer.validated_data['email'])
 
         #check if new password is not equal to old password
-        user = authenticate(username=user_.username,password=serializer.validated_data['password'])
+        user = authenticate(phonenumber=serializer.validated_data['phonenumber'],password=serializer.validated_data['password'])
 
         if not user in ['',None]:
             return Response({"detail":"New password cannot be same as old password."}, status=status.HTTP_400_BAD_REQUEST)
 
-        user = authenticate(username=user_.username,password=serializer.validated_data['old_password'])
+        #check if we have code
+        if serializer.validated_data.get('code'):
+            #validate otp code
+            otp_inst = models.OTPModel.objects.get(user=user_,otp_for='RESET_PASSWORD')
+            if not otp_inst:
+                raise ValidationError('Request for OTP first before validating.')
+            
+            #validate code is valid
+            if not otp_inst.expiry_time >= timezone.now():
+                return Response({'detail': 'OTP code is already expired.'}, status=status.HTTP_400_BAD_REQUEST)
+            
 
-        if user in ['',None]:
-            return Response({"detail":"Invalid password provided."}, status=status.HTTP_400_BAD_REQUEST)
+            elif otp_inst.code != self.request.data['code']:
+                return Response({'detail': 'OTP code is Invalid.'}, status=status.HTTP_400_BAD_REQUEST)
 
-        #update the password
-        user_.password = make_password(serializer.validated_data['password'])
-        user_.save()
+            otp_inst.is_verified=True
+            otp_inst.save()
+
+            #update the password
+            user_.password = make_password(serializer.validated_data['password'])
+            user_.save()
+
+            return Response({'detail':'Password reset successfully.Procced to login.'}, status=status.HTTP_200_OK)
 
 
-        return Response({'detail':'Password reset successfully.'}, status=status.HTTP_200_OK)
+        else:
+            #send code
+            otp_inst,created = models.OTPModel.objects.get_or_create(user=user_,otp_for='RESET_PASSWORD')
+            otp_inst.code = ''.join(random.choice(string.digits+string.ascii_uppercase) for _ in range(6))
+            otp_inst.expiry_time = timezone.now() + timedelta(minutes=5)
+            otp_inst.is_verified = False
+            otp_inst.save()
+
+            return Response({'detail':'OTP code for reset password has been sent to your phone.','otp_code':otp_inst.code}, status=status.HTTP_200_OK)
+
+
+        
+
+
+        
     
 
 class UserViewset(BaseViewset):
