@@ -2,6 +2,7 @@ import string
 from rest_framework import serializers 
 from django.contrib.auth import authenticate
 from django.core.validators import RegexValidator
+from rest_framework.exceptions import ValidationError
 
 from . import models
 
@@ -24,26 +25,21 @@ class LoginSerializer(serializers.Serializer):
 
 
 class ResetPassword(serializers.Serializer):
-    username = serializers.CharField(max_length=50,required=False)
-    old_password = serializers.CharField(max_length=50,min_length=8,write_only=True,required=False)
-    password = serializers.CharField(max_length=50, min_length=8,write_only=True)
-    confirm_password = serializers.CharField(max_length=50,min_length=8,write_only=True)
+    phonenumber = serializers.CharField(max_length=10,min_length=9)
+    email = serializers.EmailField()
+    password = serializers.CharField(max_length=20, min_length=8,write_only=True, validators = [password_validator])
+    confirm_password = serializers.CharField(max_length=20,min_length=8,write_only=True, validators = [password_validator])
     code = serializers.CharField(max_length=6, required=False)
 
     def validate(self, attrs):
-        if attrs.get('username'):
+        if attrs.get('phonenumber'):
             try:
-                user_ = models.User.objects.get(username = attrs['username'])
+                models.User.objects.get(phonenumber = attrs['phonenumber'] , email=attrs['email'])
             except models.User.DoesNotExist:
-                raise 'User does not exists.'
-
-            user_ = authenticate(username=attrs['username'],password=attrs['password'])
-
-            if not user_ in ['',None]:
-                raise 'Changed password cannot be the same as the current.'
+                raise ValidationError('User does not exists.')
 
         if attrs['password'] != attrs['confirm_password']:
-            raise 'Passwords do not match.'
+            raise ValidationError('Passwords do not match.')
             
         return attrs
     
@@ -59,19 +55,19 @@ class RegisterPublicUserSerializer(serializers.Serializer):
     def validate_email(self, value):
         #check if user with emial already exists
         if models.User.objects.filter(email =  value).exists():
-            raise 'User already exists.'
+            raise ValidationError('User already exists.')
         return value
     
     def validate_phonenumber(self, value):
         if models.User.objects.filter(phonenumber =  value).exists():
-            raise 'User already exists.'
+            raise ValidationError('User already exists.')
         return value
     
     def validate(self, attrs):
         #validate passwords
 
         if attrs['password'] != attrs['confirm_password']:
-            raise 'Password do not match.'
+            raise ValidationError('Password do not match.')
         
         return attrs
     
