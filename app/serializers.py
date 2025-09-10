@@ -47,10 +47,8 @@ class ResetPassword(serializers.Serializer):
             raise serializers.ValidationError('Passwords do not match.')
 
         return attrs
-
-
 class RegisterPublicUserSerializer(serializers.Serializer):
-    phonenumber = serializers.CharField(max_length=10, min_length=10)  # ✅ fixed to 10
+    phonenumber = serializers.CharField(max_length=10, min_length=10)  # 10 digits phone number
     full_names = serializers.CharField(max_length=50)
     email = serializers.EmailField(required=False, allow_null=True, allow_blank=True)
     user_role = serializers.ChoiceField(choices=models.ROLES)
@@ -63,17 +61,28 @@ class RegisterPublicUserSerializer(serializers.Serializer):
 
     def validate_email(self, value):
         if models.User.objects.filter(email=value).exists():
-            raise serializers.ValidationError('User with this email already exists.')
+            raise serializers.ValidationError('A user with this email already exists.')
         return value
 
     def validate_phonenumber(self, value):
-        if models.User.objects.filter(phonenumber=value).exists():
-            raise serializers.ValidationError('User with this phone number already exists.')
-        return value
+        # Remove any non-digit characters like spaces, country code (+254), etc.
+        cleaned_value = ''.join(filter(str.isdigit, value))  # Keeps only digits
+        
+        # Ensure the phone number has exactly 10 digits
+        if len(cleaned_value) != 10:
+            raise serializers.ValidationError('Phone number must be exactly 10 digits.')
+        
+        # Ensure the phone number is unique
+        if models.User.objects.filter(phonenumber=cleaned_value).exists():
+            raise serializers.ValidationError('A user with this phone number already exists.')
+        
+        return cleaned_value
 
     def validate(self, attrs):
+        # Check if passwords match
         if attrs['password'] != attrs['confirm_password']:
             raise serializers.ValidationError('Passwords do not match.')
+        
         return attrs
 
 

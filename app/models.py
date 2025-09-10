@@ -2,7 +2,9 @@ import uuid
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser
 from django.contrib.auth.base_user import BaseUserManager
+from django.core.exceptions import ValidationError
 
+# Choices for gender, roles, OTP
 GENDER = [
     ('MALE', 'Male'),
     ('FEMALE', 'Female'),
@@ -12,7 +14,7 @@ GENDER = [
 ROLES = [
     ('ADMIN', 'Admin'),
     ('AGENT', 'Agent'),
-    ('CUSTOMER', 'Customer'),  # ✅ Renamed PUBLICUSER to CUSTOMER for clarity
+    ('CUSTOMER', 'Customer'),  # Renamed PUBLICUSER to CUSTOMER for clarity
 ]
 
 OTPFOR = [
@@ -69,8 +71,8 @@ class UserManager(BaseUserManager):
 
 class User(AbstractBaseUser, BaseModel):
     email = models.CharField(max_length=255, unique=True)
-    phonenumber = models.CharField(max_length=10, unique=True)  # ✅ 10 digits
-    role = models.CharField(max_length=50, choices=ROLES, null=True, blank=True)  # ✅ no default
+    phonenumber = models.CharField(max_length=10, unique=True)  # 10 digits phone number
+    role = models.CharField(max_length=50, choices=ROLES, null=True, blank=True)
     nationality = models.CharField(max_length=100, default='KENYAN')
     country_code = models.CharField(max_length=100, default='+254')
     is_admin = models.BooleanField(default=False)
@@ -81,6 +83,7 @@ class User(AbstractBaseUser, BaseModel):
     objects = UserManager()
 
     USERNAME_FIELD = "phonenumber"
+    REQUIRED_FIELDS = ['email']  # Include email as a required field in admin panel
 
     def __str__(self):
         return str(self.id)
@@ -91,10 +94,16 @@ class User(AbstractBaseUser, BaseModel):
     def has_module_perms(self, app_label):
         return True
 
+    def clean(self):
+        # Custom validation for phone number to ensure it is only digits and 10 characters long
+        self.phonenumber = ''.join(filter(str.isdigit, self.phonenumber))
+        if len(self.phonenumber) != 10:
+            raise ValidationError("Phone number must be exactly 10 digits.")
+
 
 class Profile(BaseModel):
     idnum = models.CharField(max_length=15, blank=True, null=True, unique=True)
-    full_names = models.CharField(max_length=50, blank=True, null=True)  # ✅ aligned with serializer
+    full_names = models.CharField(max_length=50, blank=True, null=True)
     dob = models.DateField(blank=True, null=True)
     physical_address = models.CharField(max_length=100, blank=True, null=True)
     gender = models.CharField(max_length=10, null=True, blank=True, choices=GENDER)
