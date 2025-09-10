@@ -1,41 +1,41 @@
 import uuid
-
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser
 from django.contrib.auth.base_user import BaseUserManager
 
 GENDER = [
-    ('MALE','Male'),
-    ('FEMALE','Female'),
-    ('OTHERS','Others'),
+    ('MALE', 'Male'),
+    ('FEMALE', 'Female'),
+    ('OTHERS', 'Others'),
 ]
 
 ROLES = [
-    ('ADMIN','Admin'),
-    ('AGENT','agent'),
-    ('PUBLICUSER','PublicUser'),
+    ('ADMIN', 'Admin'),
+    ('AGENT', 'Agent'),
+    ('CUSTOMER', 'Customer'),  # ✅ Renamed PUBLICUSER to CUSTOMER for clarity
 ]
 
 OTPFOR = [
-    ('LOGIN','Login'),
-    ('CREATE_ACCOUNT','Create_Account'),
-    ('RESET_PASSWORD','Reset_Password'),
-    ('VERIFY','Verify')
+    ('LOGIN', 'Login'),
+    ('CREATE_ACCOUNT', 'Create_Account'),
+    ('RESET_PASSWORD', 'Reset_Password'),
+    ('VERIFY', 'Verify')
 ]
+
 
 class BaseModel(models.Model):
     id = models.UUIDField(primary_key=True, editable=False, default=uuid.uuid4)
-    date_created = models.DateTimeField(auto_now_add=True,null=True, blank=True)
-    date_updated = models.DateTimeField(auto_now=True,null=True, blank=True)
+    date_created = models.DateTimeField(auto_now_add=True, null=True, blank=True)
+    date_updated = models.DateTimeField(auto_now=True, null=True, blank=True)
     is_active = models.BooleanField(default=True)
 
     class Meta:
         abstract = True
-        ordering =("-date_created",)
+        ordering = ("-date_created",)
 
-#inherit from basemanager
+
 class UserManager(BaseUserManager):
-    def create_user(self,email, password,**extra_fields):
+    def create_user(self, email, password, **extra_fields):
         """
         Create and save a User with the given email and password and role
         """
@@ -43,41 +43,40 @@ class UserManager(BaseUserManager):
             raise ValueError('The Email must be set')
 
         user = self.model(
-            eamil=email,
+            email=email,
             is_staff=True,
+            **extra_fields
         )
         user.set_password(password)
-        user.save(using=self.db)
+        user.save(using=self._db)
         return user
 
     def create_superuser(self, email, password, **extra_fields):
         """
-        create and save a SuperUser with the given email and password.
+        Create and save a SuperUser with the given email and password.
         """
         user = self.create_user(
             email=email,
-            is_staff=True,
             password=password,
+            **extra_fields
         )
-
         user.is_admin = True
         user.is_active = True
+        user.is_staff = True
         user.save(using=self._db)
         return user
 
-#user abstract
-class User(AbstractBaseUser,BaseModel):
+
+class User(AbstractBaseUser, BaseModel):
     email = models.CharField(max_length=255, unique=True)
-    phonenumber = models.CharField(max_length= 10, unique=True)   
-    role = models.CharField(max_length=50,choices=ROLES, default='PUBLICUSER')
+    phonenumber = models.CharField(max_length=10, unique=True)  # ✅ 10 digits
+    role = models.CharField(max_length=50, choices=ROLES, null=True, blank=True)  # ✅ no default
     nationality = models.CharField(max_length=100, default='KENYAN')
     country_code = models.CharField(max_length=100, default='+254')
     is_admin = models.BooleanField(default=False)
     is_staff = models.BooleanField(default=False)
-    created_by = models.CharField(max_length=100,default='SYSTEM')
-   
+    created_by = models.CharField(max_length=100, default='SYSTEM')
     is_default_password = models.BooleanField(default=False)
-
 
     objects = UserManager()
 
@@ -92,24 +91,22 @@ class User(AbstractBaseUser,BaseModel):
     def has_module_perms(self, app_label):
         return True
 
-    
-
 
 class Profile(BaseModel):
-    
-    idnum = models.CharField(max_length=15, blank=True, null=True,unique=True)
-    full_names = models.CharField(max_length=25,blank=True, null=True)
+    idnum = models.CharField(max_length=15, blank=True, null=True, unique=True)
+    full_names = models.CharField(max_length=50, blank=True, null=True)  # ✅ aligned with serializer
     dob = models.DateField(blank=True, null=True)
-    physical_address = models.CharField(max_length = 100, blank=True, null=True)
+    physical_address = models.CharField(max_length=100, blank=True, null=True)
     gender = models.CharField(max_length=10, null=True, blank=True, choices=GENDER)
     is_email_verified = models.BooleanField(default=False)
     is_phone_verified = models.BooleanField(default=False)
+
     class Meta:
         abstract = True
 
 
 class StaffUserProfile(Profile):
-    user_id = models.OneToOneField(
+    user = models.OneToOneField(
         User,
         on_delete=models.CASCADE,
         related_name="staff_user_profile",
@@ -117,26 +114,25 @@ class StaffUserProfile(Profile):
         null=True,
     )
     agent_code = models.IntegerField(unique=True)
-    agent_prefix = models.CharField(max_length=5,default='AGT')
+    agent_prefix = models.CharField(max_length=5, default='AGT')
 
 
 class PublicUserProfile(Profile):
-    user_id = models.OneToOneField(
+    user = models.OneToOneField(
         User,
         on_delete=models.CASCADE,
         related_name="public_user_profile",
         blank=True,
         null=True,
     )
-    registration_number = models.CharField(max_length=20,unique=True)
-
+    registration_number = models.CharField(max_length=20, unique=True)
 
     def __str__(self):
         return str(self.registration_number)
-    
+
 
 class OTPModel(models.Model):
-    otp_for = models.CharField(max_length=50,choices=OTPFOR)
+    otp_for = models.CharField(max_length=50, choices=OTPFOR)
     code = models.CharField(max_length=10, default='INVALID')
     expiry_time = models.DateTimeField(blank=True, null=True)
     user = models.CharField(max_length=50)
