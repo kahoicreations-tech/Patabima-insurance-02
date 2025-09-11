@@ -47,6 +47,8 @@ class ResetPassword(serializers.Serializer):
             raise serializers.ValidationError('Passwords do not match.')
 
         return attrs
+
+
 class RegisterPublicUserSerializer(serializers.Serializer):
     phonenumber = serializers.CharField(max_length=10, min_length=10)  # 10 digits phone number
     full_names = serializers.CharField(max_length=50)
@@ -68,9 +70,13 @@ class RegisterPublicUserSerializer(serializers.Serializer):
         # Remove any non-digit characters like spaces, country code (+254), etc.
         cleaned_value = ''.join(filter(str.isdigit, value))  # Keeps only digits
         
-        # Ensure the phone number has exactly 10 digits
-        if len(cleaned_value) != 10:
-            raise serializers.ValidationError('Phone number must be exactly 10 digits.')
+        # Handle if user sends +2547XXXXXXXX (convert to 07XXXXXXXX)
+        if cleaned_value.startswith("254") and len(cleaned_value) == 12:
+            cleaned_value = "0" + cleaned_value[3:]
+
+        # Now it must be exactly 10 digits and start with 07
+        if len(cleaned_value) != 10 or not cleaned_value.startswith("07"):
+            raise serializers.ValidationError("Phone number must be a valid Kenyan number (07XXXXXXXX).")
         
         # Ensure the phone number is unique
         if models.User.objects.filter(phonenumber=cleaned_value).exists():

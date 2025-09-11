@@ -71,7 +71,9 @@ class UserManager(BaseUserManager):
 
 class User(AbstractBaseUser, BaseModel):
     email = models.CharField(max_length=255, unique=True)
-    phonenumber = models.CharField(max_length=10, unique=True)  # 10 digits phone number
+    
+    # Update max_length to 13 to allow international format (+254...)
+    phonenumber = models.CharField(max_length=13, unique=True)  # Allow +254 format
     role = models.CharField(max_length=50, choices=ROLES, null=True, blank=True)
     nationality = models.CharField(max_length=100, default='KENYAN')
     country_code = models.CharField(max_length=100, default='+254')
@@ -95,10 +97,18 @@ class User(AbstractBaseUser, BaseModel):
         return True
 
     def clean(self):
-        # Custom validation for phone number to ensure it is only digits and 10 characters long
-        self.phonenumber = ''.join(filter(str.isdigit, self.phonenumber))
-        if len(self.phonenumber) != 10:
-            raise ValidationError("Phone number must be exactly 10 digits.")
+        # Custom validation for phone number to support both formats:
+        number = self.phonenumber.strip()
+
+        if number.startswith("+254") and len(number) == 13:
+            # International format: +2547XXXXXXXX (13 characters)
+            self.phonenumber = number
+        elif number.startswith("0") and len(number) == 10:
+            # Local format: 07XXXXXXXX (10 digits)
+            self.phonenumber = number
+        else:
+            # Raise error if not matching either format
+            raise ValidationError("Phone number must be either in the format: 07XXXXXXXX or +2547XXXXXXXX.")
 
 
 class Profile(BaseModel):
