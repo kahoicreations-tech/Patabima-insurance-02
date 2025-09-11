@@ -50,7 +50,7 @@ class ResetPassword(serializers.Serializer):
 
 
 class RegisterPublicUserSerializer(serializers.Serializer):
-    phonenumber = serializers.CharField(max_length=10, min_length=10)  # 10 digits phone number
+    phonenumber = serializers.CharField(max_length=15)  # allow room for +254XXXXXXXXX
     full_names = serializers.CharField(max_length=50)
     email = serializers.EmailField(required=False, allow_null=True, allow_blank=True)
     user_role = serializers.ChoiceField(choices=models.ROLES)
@@ -67,28 +67,25 @@ class RegisterPublicUserSerializer(serializers.Serializer):
         return value
 
     def validate_phonenumber(self, value):
-        # Remove any non-digit characters like spaces, country code (+254), etc.
-        cleaned_value = ''.join(filter(str.isdigit, value))  # Keeps only digits
-        
-        # Handle if user sends +2547XXXXXXXX (convert to 07XXXXXXXX)
+        # Remove any non-digit characters
+        cleaned_value = ''.join(filter(str.isdigit, value))
+
+        # Convert 2547XXXXXXXX → 07XXXXXXXX
         if cleaned_value.startswith("254") and len(cleaned_value) == 12:
             cleaned_value = "0" + cleaned_value[3:]
 
-        # Now it must be exactly 10 digits and start with 07
+        # Ensure final format is 07XXXXXXXX (10 digits)
         if len(cleaned_value) != 10 or not cleaned_value.startswith("07"):
             raise serializers.ValidationError("Phone number must be a valid Kenyan number (07XXXXXXXX).")
-        
-        # Ensure the phone number is unique
+
         if models.User.objects.filter(phonenumber=cleaned_value).exists():
             raise serializers.ValidationError('A user with this phone number already exists.')
-        
+
         return cleaned_value
 
     def validate(self, attrs):
-        # Check if passwords match
         if attrs['password'] != attrs['confirm_password']:
             raise serializers.ValidationError('Passwords do not match.')
-        
         return attrs
 
 
