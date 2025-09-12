@@ -1,18 +1,17 @@
 import random
 import string
 from rest_framework.response import Response
-from rest_framework import status, viewsets
+from rest_framework import status, viewsets, filters
 from rest_framework.decorators import action
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework.exceptions import ValidationError
 
 from django.contrib.auth import authenticate
 from django.contrib.auth.hashers import make_password
 from django.utils import timezone
 from django.db import transaction
 
-from datetime import timedelta
+from datetime import timedelta, datetime, time
 
 from . import serializers, models, utils
 
@@ -26,43 +25,83 @@ class BaseViewset(viewsets.ViewSet):
 
 
 class LoginViewSet(BaseViewset):
+
     @action(detail=False, methods=['POST'])
     def signup(self, request):
         serializer = serializers.RegisterPublicUserSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
         with transaction.atomic():
-            user_inst = serializer.save()
+            phonenumber = serializer.validated_data['phonenumber']  # 9 digits
+            email = serializer.validated_data.get('email', None)
+            role = serializer.validated_data['user_role']
+            full_names = serializer.validated_data['full_names']
+            password = serializer.validated_data['password']
 
-        return Response(
-            {'detail': 'User created successfully.', 'user_id': str(user_inst.id)},
-            status=status.HTTP_201_CREATED
-        )
+            # create user using manager
+            user_inst = models.User.objects.create_user(
+                phonenumber=phonenumber,
+                password=password,
+                email=email,
+                role=role
+            )
+
+            if role == 'CUSTOMER':
+                models.PublicUserProfile.objects.create(
+                    user=user_inst,
+                    registration_number=utils.generate_registration_number(model_inst=models.User, account_type='P'),
+                    full_names=full_names
+                )
+            else:
+                # generate unique agent_code
+                agent_code = random.randint(10000, 99999)
+                # ensure uniqueness
+                while models.StaffUserProfile.objects.filter(agent_code=agent_code).exists():
+                    agent_code = random.randint(10000, 99999)
+                models.StaffUserProfile.objects.create(
+                    user=user_inst,
+                    agent_code=agent_code,
+                )
+
+            # create OTP entries: store user as string UUID to match model
+            models.OTPModel.objects.bulk_create(
+                [
+                    models.OTPModel(
+                        otp_for='CREATE_ACCOUNT',
+                        user=str(user_inst.id),
+                    ),
+                    models.OTPModel(
+                        otp_for='LOGIN',
+                        user=str(user_inst.id),
+                    )
+                ]
+            )
+
+            return Response({'detail': 'user created successfully.', 'user_id': user_inst.id}, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['POST'])
     def auth_login(self, request):
         serializer = serializers.AuthLoginSerializer(data=request.data)
-        if not serializer.is_valid():
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        serializer.is_valid(raise_exception=True)
 
-        phonenumber = serializer.validated_data.get('phonenumber')
-        password = serializer.validated_data.get('password')
-        code = serializer.validated_data.get('code')
+        ph = serializer.validated_data['phonenumber']
+        password = serializer.validated_data['password']
+        code = serializer.validated_data['code']
 
-        user_ = authenticate(phonenumber=phonenumber, password=password)
-
+        # authenticate (username uses USERNAME_FIELD = phonenumber)
+        user_ = authenticate(username=ph, password=password)
         if user_ is None:
-            return Response({'detail': 'User does not exist or invalid credentials'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'detail': 'Invalid credentials'}, status=status.HTTP_400_BAD_REQUEST)
 
-        otp_inst = models.OTPModel.objects.filter(user=user_, otp_for='LOGIN').first()
-        if otp_inst is None:
+        otp_inst = models.OTPModel.objects.filter(user=str(user_.id), otp_for='LOGIN').first()
+        if not otp_inst:
             return Response({'detail': 'No OTP instance found.'}, status=status.HTTP_400_BAD_REQUEST)
 
         if otp_inst.expiry_time and otp_inst.expiry_time < timezone.now():
             return Response({'detail': 'OTP code is already expired.'}, status=status.HTTP_400_BAD_REQUEST)
 
         if otp_inst.code != code:
-            return Response({'detail': 'OTP code is invalid.'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'detail': 'OTP code is Invalid.'}, status=status.HTTP_400_BAD_REQUEST)
 
         otp_inst.is_verified = True
         otp_inst.save()
@@ -72,7 +111,7 @@ class LoginViewSet(BaseViewset):
         resp = {
             'refresh': str(refresh),
             'access': str(refresh.access_token),
-            'expires_at': utils.decode_jwt(str(refresh.access_token))['exp'] if hasattr(utils, 'decode_jwt') else None,
+            'expires_at': (timezone.now() + timedelta(hours=2)).timestamp(),
             'user_role': user_.role
         }
 
@@ -81,86 +120,61 @@ class LoginViewSet(BaseViewset):
     @action(detail=False, methods=['POST'])
     def login(self, request):
         serializer = serializers.LoginSerializer(data=request.data)
-        if not serializer.is_valid():
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        serializer.is_valid(raise_exception=True)
 
-        phonenumber = serializer.validated_data.get('phonenumber')
-        password = serializer.validated_data.get('password')
+        ph = serializer.validated_data['phonenumber']
+        password = serializer.validated_data['password']
 
-        user_ = authenticate(phonenumber=phonenumber, password=password)
+        user_ = authenticate(username=ph, password=password)
         if user_ is None:
             return Response({'detail': 'User does not exist or invalid credentials'}, status=status.HTTP_400_BAD_REQUEST)
 
-        # send login OTP
-        otp_inst, _ = models.OTPModel.objects.get_or_create(user=user_, otp_for='LOGIN')
+        # send login OTP (dev: we return code)
+        otp_inst = models.OTPModel.objects.filter(user=str(user_.id), otp_for='LOGIN').first()
+        if not otp_inst:
+            # create if missing
+            otp_inst = models.OTPModel.objects.create(user=str(user_.id), otp_for='LOGIN')
+
+        # generate code
         otp_inst.code = ''.join(random.choice(string.digits + string.ascii_uppercase) for _ in range(6))
         otp_inst.expiry_time = timezone.now() + timedelta(minutes=5)
         otp_inst.is_verified = False
         otp_inst.save()
 
-        # optionally send SMS/email
-        msg = utils.get_msg('OTP', locals()) if hasattr(utils, 'get_msg') else None
+        # prepare message (if any)
+        phonenumber = user_.phonenumber
+        msg = utils.get_msg('OTP', locals())
         if msg:
+            # For dev we're printing; in prod you'd send SMS/email
             print(msg)
-            # threading.Thread(target=utils.send_sms, args=(phonenumber, msg)).start()
 
         return Response({'detail': 'OTP sent successfully.', 'otp_code': otp_inst.code}, status=status.HTTP_200_OK)
 
-    @action(detail=False, methods=['POST'])
-    def reset_password(self, request):
-        """
-        Unified reset password flow:
-        - User provides phone + email
-        - If 'code' is not provided, system sends OTP
-        - If 'code' is provided, system verifies OTP and resets password
-        """
-        serializer = serializers.ResetPassword(data=request.data)
+    @action(detail=False, methods=['POST'], permission_classes=[IsAuthenticated])
+    def reset_password_self(self, request):
+        serializer = serializers.ResetPasswordSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        try:
-            user_ = models.User.objects.get(
-                phonenumber=serializer.validated_data['phonenumber'],
-                email=serializer.validated_data['email']
-            )
-        except models.User.DoesNotExist:
-            return Response({'detail': 'User not found.'}, status=status.HTTP_400_BAD_REQUEST)
+        # find logged in user id from headers using utils (existing project util)
+        user_id = utils.get_logged_in_user(headers=self.return_headers())
+        if not user_id:
+            return Response({'detail': 'Authentication required.'}, status=status.HTTP_401_UNAUTHORIZED)
 
-        # If OTP code provided, verify and reset password
-        if serializer.validated_data.get('code'):
-            otp_inst = models.OTPModel.objects.filter(user=user_, otp_for='RESET_PASSWORD').first()
-            if not otp_inst:
-                raise ValidationError('Request for OTP first before validating.')
+        user_ = models.User.objects.get(id=user_id)
 
-            if otp_inst.expiry_time < timezone.now():
-                return Response({'detail': 'OTP code is already expired.'}, status=status.HTTP_400_BAD_REQUEST)
+        # check old password
+        old_pw = serializer.validated_data.get('old_password', None)
+        if old_pw and not user_.check_password(old_pw):
+            return Response({"detail": "Invalid old password provided."}, status=status.HTTP_400_BAD_REQUEST)
 
-            if otp_inst.code != serializer.validated_data['code']:
-                return Response({'detail': 'OTP code is invalid.'}, status=status.HTTP_400_BAD_REQUEST)
+        # ensure new password different
+        if user_.check_password(serializer.validated_data['password']):
+            return Response({"detail": "New password cannot be same as old password."}, status=status.HTTP_400_BAD_REQUEST)
 
-            otp_inst.is_verified = True
-            otp_inst.save()
+        user_.password = make_password(serializer.validated_data['password'])
+        user_.save()
 
-            # ensure new password isn't same as old
-            if user_.check_password(serializer.validated_data['password']):
-                return Response({"detail": "New password cannot be same as old password."}, status=status.HTTP_400_BAD_REQUEST)
-
-            # update password
-            user_.password = make_password(serializer.validated_data['password'])
-            user_.save()
-
-            return Response({'detail': 'Password reset successfully. Proceed to login.'}, status=status.HTTP_200_OK)
-
-        # If no OTP code, send one
-        otp_inst, _ = models.OTPModel.objects.get_or_create(user=user_, otp_for='RESET_PASSWORD')
-        otp_inst.code = ''.join(random.choice(string.digits + string.ascii_uppercase) for _ in range(6))
-        otp_inst.expiry_time = timezone.now() + timedelta(minutes=5)
-        otp_inst.is_verified = False
-        otp_inst.save()
-
-        return Response(
-            {'detail': 'OTP code for reset password has been sent.', 'otp_code': otp_inst.code},
-            status=status.HTTP_200_OK
-        )
+        return Response({'detail': 'Password reset successfully.'}, status=status.HTTP_200_OK)
 
 
 class UserViewset(BaseViewset):

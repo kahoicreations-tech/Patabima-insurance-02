@@ -1,21 +1,23 @@
+
 import uuid
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser
 from django.contrib.auth.base_user import BaseUserManager
-from django.core.exceptions import ValidationError
 
-# Choices for gender, roles, OTP
+
 GENDER = [
     ('MALE', 'Male'),
     ('FEMALE', 'Female'),
     ('OTHERS', 'Others'),
 ]
 
+
 ROLES = [
     ('ADMIN', 'Admin'),
     ('AGENT', 'Agent'),
-    ('CUSTOMER', 'Customer'),  # Renamed PUBLICUSER to CUSTOMER for clarity
+    ('CUSTOMER', 'Customer'),
 ]
+
 
 OTPFOR = [
     ('LOGIN', 'Login'),
@@ -25,90 +27,85 @@ OTPFOR = [
 ]
 
 
+
+
 class BaseModel(models.Model):
     id = models.UUIDField(primary_key=True, editable=False, default=uuid.uuid4)
     date_created = models.DateTimeField(auto_now_add=True, null=True, blank=True)
     date_updated = models.DateTimeField(auto_now=True, null=True, blank=True)
     is_active = models.BooleanField(default=True)
 
+
     class Meta:
         abstract = True
         ordering = ("-date_created",)
 
 
+
+
 class UserManager(BaseUserManager):
-    def create_user(self, email, password, **extra_fields):
+    def create_user(self, phonenumber, password=None, email=None, **extra_fields):
         """
-        Create and save a User with the given email and password and role
+        Create and save a User with the given phone number (9 digits) and password.
+        The phonenumber here is expected to be 9 digits (e.g. 712345678) — no leading 0.
         """
-        if not email:
-            raise ValueError('The Email must be set')
+        if not phonenumber:
+            raise ValueError("The phone number must be set")
 
-        user = self.model(
-            email=email,
-            is_staff=True,
-            **extra_fields
-        )
-        user.set_password(password)
+
+        # Normalize phone if needed (but assume frontend already sanitized)
+        user = self.model(phonenumber=phonenumber, email=email, **extra_fields)
+        if password:
+            user.set_password(password)
+        else:
+            user.set_unusable_password()
         user.save(using=self._db)
         return user
 
-    def create_superuser(self, email, password, **extra_fields):
-        """
-        Create and save a SuperUser with the given email and password.
-        """
-        user = self.create_user(
-            email=email,
-            password=password,
-            **extra_fields
-        )
+
+    def create_superuser(self, phonenumber, password, email=None, **extra_fields):
+        user = self.create_user(phonenumber=phonenumber, password=password, email=email, **extra_fields)
         user.is_admin = True
-        user.is_active = True
         user.is_staff = True
+        user.is_active = True
         user.save(using=self._db)
         return user
+
+
 
 
 class User(AbstractBaseUser, BaseModel):
-    email = models.CharField(max_length=255, unique=True)
-    
-    # Update max_length to 13 to allow international format (+254...)
-    phonenumber = models.CharField(max_length=13, unique=True)  # Allow +254 format
-    role = models.CharField(max_length=50, choices=ROLES, null=True, blank=True)
+    email = models.CharField(max_length=255, unique=True, null=True, blank=True)
+    # Store 9 digits without leading 0, e.g. 712345678
+    phonenumber = models.CharField(max_length=9, unique=True)
+    role = models.CharField(max_length=20, choices=ROLES, default='CUSTOMER')
     nationality = models.CharField(max_length=100, default='KENYAN')
-    country_code = models.CharField(max_length=100, default='+254')
+    country_code = models.CharField(max_length=10, default='+254')
     is_admin = models.BooleanField(default=False)
     is_staff = models.BooleanField(default=False)
     created_by = models.CharField(max_length=100, default='SYSTEM')
     is_default_password = models.BooleanField(default=False)
 
+
     objects = UserManager()
 
+
     USERNAME_FIELD = "phonenumber"
-    REQUIRED_FIELDS = ['email']  # Include email as a required field in admin panel
+    REQUIRED_FIELDS = []
+
 
     def __str__(self):
         return str(self.id)
 
+
     def has_perm(self, perm, obj=None):
         return True
+
 
     def has_module_perms(self, app_label):
         return True
 
-    def clean(self):
-        # Custom validation for phone number to support both formats:
-        number = self.phonenumber.strip()
 
-        if number.startswith("+254") and len(number) == 13:
-            # International format: +2547XXXXXXXX (13 characters)
-            self.phonenumber = number
-        elif number.startswith("0") and len(number) == 10:
-            # Local format: 07XXXXXXXX (10 digits)
-            self.phonenumber = number
-        else:
-            # Raise error if not matching either format
-            raise ValidationError("Phone number must be either in the format: 07XXXXXXXX or +2547XXXXXXXX.")
 
 
 class Profile(BaseModel):
@@ -120,8 +117,11 @@ class Profile(BaseModel):
     is_email_verified = models.BooleanField(default=False)
     is_phone_verified = models.BooleanField(default=False)
 
+
     class Meta:
         abstract = True
+
+
 
 
 class StaffUserProfile(Profile):
@@ -136,6 +136,8 @@ class StaffUserProfile(Profile):
     agent_prefix = models.CharField(max_length=5, default='AGT')
 
 
+
+
 class PublicUserProfile(Profile):
     user = models.OneToOneField(
         User,
@@ -146,18 +148,24 @@ class PublicUserProfile(Profile):
     )
     registration_number = models.CharField(max_length=20, unique=True)
 
+
     def __str__(self):
         return str(self.registration_number)
+
+
 
 
 class OTPModel(models.Model):
     otp_for = models.CharField(max_length=50, choices=OTPFOR)
     code = models.CharField(max_length=10, default='INVALID')
     expiry_time = models.DateTimeField(blank=True, null=True)
+    # keep storing user as string (UUID) to match the project's history and avoid FK migration complexity
     user = models.CharField(max_length=50)
     date_created = models.DateTimeField(auto_now_add=True)
     is_verified = models.BooleanField(default=False)
     date_updated = models.DateTimeField(auto_now=True)
+
+
 
 
 class MessagesModels(models.Model):
@@ -166,3 +174,5 @@ class MessagesModels(models.Model):
     message = models.TextField()
     variables = models.JSONField()
     is_active = models.BooleanField(default=True)
+
+
