@@ -12,7 +12,7 @@ GENDER = [
 ROLES = [
     ('ADMIN', 'Admin'),
     ('AGENT', 'Agent'),
-    ('CUSTOMER', 'Customer'),  # ✅ Renamed PUBLICUSER to CUSTOMER for clarity
+    ('CUSTOMER', 'Customer'),
 ]
 
 OTPFOR = [
@@ -35,44 +35,39 @@ class BaseModel(models.Model):
 
 
 class UserManager(BaseUserManager):
-    def create_user(self, email, password, **extra_fields):
+    def create_user(self, phonenumber, password=None, email=None, **extra_fields):
         """
-        Create and save a User with the given email and password and role
+        Create and save a User with the given phone number (9 digits) and password.
+        The phonenumber here is expected to be 9 digits (e.g. 712345678) — no leading 0.
         """
-        if not email:
-            raise ValueError('The Email must be set')
+        if not phonenumber:
+            raise ValueError("The phone number must be set")
 
-        user = self.model(
-            email=email,
-            is_staff=True,
-            **extra_fields
-        )
-        user.set_password(password)
+        # Normalize phone if needed (but assume frontend already sanitized)
+        user = self.model(phonenumber=phonenumber, email=email, **extra_fields)
+        if password:
+            user.set_password(password)
+        else:
+            user.set_unusable_password()
         user.save(using=self._db)
         return user
 
-    def create_superuser(self, email, password, **extra_fields):
-        """
-        Create and save a SuperUser with the given email and password.
-        """
-        user = self.create_user(
-            email=email,
-            password=password,
-            **extra_fields
-        )
+    def create_superuser(self, phonenumber, password, email=None, **extra_fields):
+        user = self.create_user(phonenumber=phonenumber, password=password, email=email, **extra_fields)
         user.is_admin = True
-        user.is_active = True
         user.is_staff = True
+        user.is_active = True
         user.save(using=self._db)
         return user
 
 
 class User(AbstractBaseUser, BaseModel):
-    email = models.CharField(max_length=255, unique=True)
-    phonenumber = models.CharField(max_length=10, unique=True)  # ✅ 10 digits
-    role = models.CharField(max_length=50, choices=ROLES, null=True, blank=True)  # ✅ no default
+    email = models.CharField(max_length=255, unique=True, null=True, blank=True)
+    # Store 9 digits without leading 0, e.g. 712345678
+    phonenumber = models.CharField(max_length=9, unique=True)
+    role = models.CharField(max_length=20, choices=ROLES, default='CUSTOMER')
     nationality = models.CharField(max_length=100, default='KENYAN')
-    country_code = models.CharField(max_length=100, default='+254')
+    country_code = models.CharField(max_length=10, default='+254')
     is_admin = models.BooleanField(default=False)
     is_staff = models.BooleanField(default=False)
     created_by = models.CharField(max_length=100, default='SYSTEM')
@@ -81,6 +76,7 @@ class User(AbstractBaseUser, BaseModel):
     objects = UserManager()
 
     USERNAME_FIELD = "phonenumber"
+    REQUIRED_FIELDS = []
 
     def __str__(self):
         return str(self.id)
@@ -94,7 +90,7 @@ class User(AbstractBaseUser, BaseModel):
 
 class Profile(BaseModel):
     idnum = models.CharField(max_length=15, blank=True, null=True, unique=True)
-    full_names = models.CharField(max_length=50, blank=True, null=True)  # ✅ aligned with serializer
+    full_names = models.CharField(max_length=50, blank=True, null=True)
     dob = models.DateField(blank=True, null=True)
     physical_address = models.CharField(max_length=100, blank=True, null=True)
     gender = models.CharField(max_length=10, null=True, blank=True, choices=GENDER)
@@ -135,6 +131,7 @@ class OTPModel(models.Model):
     otp_for = models.CharField(max_length=50, choices=OTPFOR)
     code = models.CharField(max_length=10, default='INVALID')
     expiry_time = models.DateTimeField(blank=True, null=True)
+    # keep storing user as string (UUID) to match the project's history and avoid FK migration complexity
     user = models.CharField(max_length=50)
     date_created = models.DateTimeField(auto_now_add=True)
     is_verified = models.BooleanField(default=False)
