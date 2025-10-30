@@ -1,0 +1,7 @@
+{
+  "Records": [
+    {
+      "body": "{\"jobId\": \"test-job-123\", \"objectKey\": \"uploads/dev/95069092-9673-4c6b-a137-19a3f6131272/2025/10/1507ea52-5516-40a7-b726-7114a006061d/downloadpng\", \"docType\": \"logbook\", \"callbackUrl\": \"http://10.0.2.2:8000/api/v1/public_app/docs/callback\", \"quoteId\": \"test-quote-123\"}"
+    }
+  ]
+}

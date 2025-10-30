@@ -1,0 +1,10 @@
+{
+  "mcp.servers": {
+    "adb-android": {
+      "command": "node",
+      "args": [
+        "c:/Users/USER/Desktop/PATABIMA/PATABIMA FRONT/PATA BIMA AGENCY - Copy/LocalPilotMCP/dist/index.js"
+      ]
+    }
+  }
+}

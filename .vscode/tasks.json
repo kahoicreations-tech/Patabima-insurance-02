@@ -11,6 +11,102 @@
 			"group": "build",
 			"isBackground": true,
 			"problemMatcher": []
+		},
+		{
+			"label": "Start Expo Dev Server",
+			"type": "shell",
+			"command": "npm",
+			"args": [
+				"start"
+			],
+			"isBackground": true,
+			"problemMatcher": [
+				"$eslint-stylish"
+			],
+			"group": "build"
+		},
+		{
+			"label": "Run Django Migrations",
+			"type": "shell",
+			"command": "pwsh",
+			"args": [
+				"-NoProfile",
+				"-Command",
+				"$env:PYTHONUNBUFFERED=1; $env:DJANGO_SETTINGS_MODULE='insurance-app.settings'; python -m pip show django > $null; if ($LASTEXITCODE -ne 0) { Write-Host 'Python env not ready. Please run the backend venv and install dependencies.'; exit 1 }; python insurance-app/manage.py migrate --noinput"
+			],
+			"problemMatcher": [
+				"$eslint-stylish"
+			],
+			"group": "build"
+		},
+		{
+			"label": "Run Django Tests (commissions)",
+			"type": "shell",
+			"command": "pwsh",
+			"args": [
+				"-NoProfile",
+				"-Command",
+				"$env:PYTHONUNBUFFERED=1; $env:DJANGO_SETTINGS_MODULE='insurance-app.settings'; python -m pip show django > $null; if ($LASTEXITCODE -ne 0) { Write-Host 'Python env not ready. Please run the backend venv and install dependencies.'; exit 1 }; python insurance-app/manage.py test app.tests.test_commissions_api -v 2"
+			],
+			"problemMatcher": [
+				"$eslint-stylish"
+			],
+			"group": "build"
+		},
+		{
+			"label": "Run Django Tests (commissions)",
+			"type": "shell",
+			"command": "pwsh",
+			"args": [
+				"-NoProfile",
+				"-Command",
+				"$env:PYTHONUNBUFFERED=1; $env:DJANGO_SETTINGS_MODULE='insurance-app.settings'; python -m pip show django > $null; if ($LASTEXITCODE -ne 0) { Write-Host 'Python env not ready. Please run the backend venv and install dependencies.'; exit 1 }; python insurance-app/manage.py test app.tests.test_commissions_api -v 2"
+			],
+			"problemMatcher": [
+				"$eslint-stylish"
+			],
+			"group": "build"
+		},
+		{
+			"label": "Run Django Migrations",
+			"type": "shell",
+			"command": "pwsh",
+			"args": [
+				"-NoProfile",
+				"-Command",
+				"$env:PYTHONUNBUFFERED=1; $env:DJANGO_SETTINGS_MODULE='insurance-app.settings'; python -m pip show django > $null; if ($LASTEXITCODE -ne 0) { Write-Host 'Python env not ready. Please run the backend venv and install dependencies.'; exit 1 }; python insurance-app/manage.py migrate --noinput"
+			],
+			"group": "build"
+		},
+		{
+			"label": "Start Expo Dev Server",
+			"type": "shell",
+			"command": "npm",
+			"args": [
+				"start"
+			],
+			"isBackground": true,
+			"group": "build"
+		},
+		{
+			"label": "Django system check",
+			"type": "shell",
+			"command": "pwsh",
+			"args": [
+				"-NoProfile",
+				"-Command",
+				"$env:PYTHONUNBUFFERED=1; $env:DJANGO_SETTINGS_MODULE='insurance-app.settings'; python -m pip show django > $null; if ($LASTEXITCODE -ne 0) { Write-Host 'Python env not ready. Please run the backend venv and install dependencies.'; exit 1 }; python insurance-app/manage.py check --deploy"
+			]
+		},
+		{
+			"label": "Django run checks after badges",
+			"type": "shell",
+			"command": "pwsh",
+			"args": [
+				"-NoProfile",
+				"-Command",
+				"$env:PYTHONUNBUFFERED=1; $env:DJANGO_SETTINGS_MODULE='insurance-app.settings'; python -m pip show django > $null; if ($LASTEXITCODE -ne 0) { Write-Host 'Python env not ready. Please run the backend venv and install dependencies.'; exit 1 }; python insurance-app/manage.py check"
+			]
 		}
 	]
 }

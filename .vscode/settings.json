@@ -1,0 +1,17 @@
+{
+    "python-envs.pythonProjects": [
+        {
+            "path": "",
+            "envManager": "ms-python.python:system",
+            "packageManager": "ms-python.python:pip"
+        }
+    ],
+    "mcp.servers": {
+        "adb-android": {
+            "command": "node",
+            "args": [
+                "c:\\Users\\USER\\Desktop\\PATABIMA01\\LocalPilotMCP\\min-server.mjs"
+            ]
+        }
+    }
+}

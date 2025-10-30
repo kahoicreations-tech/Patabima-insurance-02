@@ -1,0 +1,753 @@
+# PataBima AWS Deployment Guide
+
+[![AWS](https://img.shields.io/badge/AWS-Production%20Ready-FF9900.svg)](https://aws.amazon.com/amplify/)
+[![Django](https://img.shields.io/badge/Django-4.2.16-092E20.svg)](https://www.djangoproject.com/)
+[![React Native](https://img.shields.io/badge/React%20Native-0.79.5-61DAFB.svg)](https://reactnative.dev/)
+[![Expo](https://img.shields.io/badge/Expo-53.0.23-000020.svg)](https://expo.dev/)
+
+## 📋 Table of Contents
+
+- [Overview](#overview)
+- [Architecture Diagram](#architecture-diagram)
+- [Prerequisites](#prerequisites)
+- [Quick Deployment](#quick-deployment)
+- [Infrastructure Components](#infrastructure-components)
+- [Step-by-Step Deployment](#step-by-step-deployment)
+- [Environment Configuration](#environment-configuration)
+- [CI/CD Pipeline](#cicd-pipeline)
+- [Monitoring & Logging](#monitoring--logging)
+- [Cost Optimization](#cost-optimization)
+- [Security Best Practices](#security-best-practices)
+- [Troubleshooting](#troubleshooting)
+
+## 🏗️ Overview
+
+PataBima is a comprehensive insurance agency platform consisting of:
+
+**Frontend Components:**
+- **React Native Mobile App** (Expo) - Insurance agent mobile application
+- **Web Dashboard** (React Native Web) - Agent portal and admin interface
+
+**Backend Components:**
+- **Django REST API** - Core insurance business logic and data management
+- **PostgreSQL Database** - Primary data storage for policies, users, and transactions
+- **AWS Lambda Functions** - Document processing with Textract integration
+- **S3 Storage** - Document storage, campaign banners, and static assets
+
+**Key Features:**
+- Motor insurance quotations with 60+ product types
+- Document processing and auto-fill using AWS Textract
+- Real-time premium calculations across multiple underwriters
+- Campaign management and agent commission tracking
+- M-PESA and card payment integration
+
+## 🔧 Architecture Diagram
+
+```
+┌─────────────────────┐    ┌──────────────────────┐    ┌─────────────────────┐
+│                     │    │                      │    │                     │
+│   Mobile App        │    │   Web Dashboard      │    │   Admin Portal      │
+│   (React Native)    │    │   (React Native Web) │    │   (Django Admin)    │
+│                     │    │                      │    │                     │
+└─────────┬───────────┘    └───────────┬──────────┘    └──────────┬──────────┘
+          │                            │                          │
+          └────────────────────────────┼──────────────────────────┘
+                                       │
+                              ┌────────▼────────┐
+                              │                 │
+                              │   CloudFront    │
+                              │   (CDN + SSL)   │
+                              │                 │
+                              └────────┬────────┘
+                                       │
+                              ┌────────▼────────┐
+                              │                 │
+                              │ Application     │
+                              │ Load Balancer   │
+                              │ (ALB)          │
+                              │                 │
+                              └────────┬────────┘
+                                       │
+                     ┌─────────────────┼─────────────────┐
+                     │                 │                 │
+            ┌────────▼────────┐ ┌──────▼──────┐ ┌────────▼────────┐
+            │                 │ │             │ │                 │
+            │   ECS Fargate   │ │ ECS Fargate │ │   ECS Fargate   │
+            │   (Django API)  │ │(Django API) │ │   (Django API)  │
+            │   Container 1   │ │Container 2  │ │   Container 3   │
+            │                 │ │             │ │                 │
+            └─────────────────┘ └─────────────┘ └─────────────────┘
+                     │                 │                 │
+                     └─────────────────┼─────────────────┘
+                                       │
+                              ┌────────▼────────┐
+                              │                 │
+                              │   Amazon RDS    │
+                              │   (PostgreSQL)  │
+                              │   Multi-AZ      │
+                              │                 │
+                              └─────────────────┘
+
+        ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+        │                 │    │                 │    │                 │
+        │   Amazon S3     │    │   AWS Lambda    │    │   AWS Cognito   │
+        │   (Documents    │    │   (Textract     │    │   (User Auth)   │
+        │   & Assets)     │    │   Processing)   │    │                 │
+        │                 │    │                 │    │                 │
+        └─────────────────┘    └─────────────────┘    └─────────────────┘
+
+        ┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+        │                 │    │                 │    │                 │
+        │   CloudWatch    │    │   AWS WAF       │    │   Route 53      │
+        │   (Monitoring)  │    │   (Security)    │    │   (DNS)         │
+        │                 │    │                 │    │                 │
+        └─────────────────┘    └─────────────────┘    └─────────────────┘
+```
+
+## 📋 Prerequisites
+
+### AWS Account Setup
+- AWS Account with billing enabled
+- AWS CLI v2 installed and configured
+- AdministratorAccess permissions (or custom IAM role with required permissions)
+
+### Local Development Tools
+```bash
+# Install AWS CLI v2
+curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+unzip awscliv2.zip
+sudo ./aws/install
+
+# Install Docker
+curl -fsSL https://get.docker.com -o get-docker.sh
+sh get-docker.sh
+
+# Install Node.js 18+
+curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+sudo apt-get install -y nodejs
+
+# Install Expo CLI
+npm install -g @expo/cli
+```
+
+### Domain Requirements
+- Domain name registered (e.g., `patabima.com`)
+- SSL certificate (AWS Certificate Manager will handle this)
+
+## ⚡ Quick Deployment
+
+For immediate deployment using AWS CDK/CloudFormation:
+
+```bash
+# Clone the repository
+git clone <your-repo-url>
+cd "PATA BIMA AGENCY - Copy"
+
+# Run the deployment script
+chmod +x deploy-aws.sh
+./deploy-aws.sh
+```
+
+**Deployment Time:** ~25-30 minutes for complete infrastructure
+
+## 🏗️ Infrastructure Components
+
+### Core AWS Services
+
+| Service | Purpose | Configuration |
+|---------|---------|---------------|
+| **ECS Fargate** | Django API hosting | Auto-scaling containers |
+| **RDS PostgreSQL** | Primary database | Multi-AZ deployment |
+| **S3** | Document & asset storage | Versioning enabled |
+| **CloudFront** | CDN & caching | Global edge locations |
+| **Application Load Balancer** | Traffic distribution | Health checks enabled |
+| **Lambda** | Document processing | Textract integration |
+| **Cognito** | User authentication | JWT token management |
+| **Route 53** | DNS management | Health checks |
+| **CloudWatch** | Monitoring & logs | Custom dashboards |
+| **AWS WAF** | Security & filtering | Rate limiting |
+
+### Estimated Monthly Costs
+
+| Component | Usage | Cost (USD) |
+|-----------|-------|------------|
+| **ECS Fargate** | 3 containers (0.25 vCPU, 0.5GB) | ~$25 |
+| **RDS PostgreSQL** | db.t3.micro Multi-AZ | ~$35 |
+| **S3 Storage** | 100GB + requests | ~$15 |
+| **CloudFront** | 1TB transfer | ~$85 |
+| **Application Load Balancer** | Always on | ~$18 |
+| **Lambda** | 1M requests/month | ~$2 |
+| **Route 53** | Hosted zone + queries | ~$2 |
+| **CloudWatch** | Standard monitoring | ~$10 |
+| **Total Estimated** | | **~$192/month** |
+
+## 🚀 Step-by-Step Deployment
+
+### Step 1: Infrastructure Setup
+
+#### 1.1 Create VPC and Networking
+
+```bash
+# Create deployment script
+cat > deploy-infrastructure.sh << 'EOF'
+#!/bin/bash
+set -e
+
+echo "🚀 Deploying PataBima Infrastructure..."
+
+# Set variables
+REGION="us-east-1"
+STACK_NAME="patabima-infrastructure"
+DOMAIN_NAME="patabima.com"  # Replace with your domain
+
+# Deploy infrastructure stack
+aws cloudformation deploy \
+  --template-file infrastructure/cloudformation-template.yaml \
+  --stack-name $STACK_NAME \
+  --parameter-overrides \
+    DomainName=$DOMAIN_NAME \
+    Environment=production \
+  --capabilities CAPABILITY_IAM \
+  --region $REGION
+
+echo "✅ Infrastructure deployed successfully!"
+EOF
+
+chmod +x deploy-infrastructure.sh
+```
+
+#### 1.2 Create CloudFormation Template
+
+<function_calls>
+<invoke name="create_file">
+<parameter name="content">AWSTemplateFormatVersion: '2010-09-09'
+Description: 'PataBima Insurance Platform - Complete Infrastructure'
+
+Parameters:
+  DomainName:
+    Type: String
+    Default: patabima.com
+    Description: Domain name for the application
+  
+  Environment:
+    Type: String
+    Default: production
+    AllowedValues: [development, staging, production]
+    Description: Environment name
+  
+  DatabasePassword:
+    Type: String
+    NoEcho: true
+    MinLength: 12
+    Description: Password for PostgreSQL database
+    Default: "GenerateSecurePassword123!"
+
+Resources:
+  # VPC and Networking
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.0.0/16
+      EnableDnsHostnames: true
+      EnableDnsSupport: true
+      Tags:
+        - Key: Name
+          Value: !Sub "${Environment}-patabima-vpc"
+
+  PublicSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: 10.0.1.0/24
+      AvailabilityZone: !Select [0, !GetAZs '']
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: !Sub "${Environment}-public-subnet-1"
+
+  PublicSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: 10.0.2.0/24
+      AvailabilityZone: !Select [1, !GetAZs '']
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: !Sub "${Environment}-public-subnet-2"
+
+  PrivateSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: 10.0.3.0/24
+      AvailabilityZone: !Select [0, !GetAZs '']
+      Tags:
+        - Key: Name
+          Value: !Sub "${Environment}-private-subnet-1"
+
+  PrivateSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: 10.0.4.0/24
+      AvailabilityZone: !Select [1, !GetAZs '']
+      Tags:
+        - Key: Name
+          Value: !Sub "${Environment}-private-subnet-2"
+
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: !Sub "${Environment}-patabima-igw"
+
+  AttachGateway:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref VPC
+      InternetGatewayId: !Ref InternetGateway
+
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub "${Environment}-public-route-table"
+
+  PublicRoute:
+    Type: AWS::EC2::Route
+    DependsOn: AttachGateway
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+
+  PublicSubnetRouteTableAssociation1:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnet1
+      RouteTableId: !Ref PublicRouteTable
+
+  PublicSubnetRouteTableAssociation2:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnet2
+      RouteTableId: !Ref PublicRouteTable
+
+  # Security Groups
+  ALBSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security group for Application Load Balancer
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: Name
+          Value: !Sub "${Environment}-alb-security-group"
+
+  ECSSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security group for ECS tasks
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 8000
+          ToPort: 8000
+          SourceSecurityGroupId: !Ref ALBSecurityGroup
+      Tags:
+        - Key: Name
+          Value: !Sub "${Environment}-ecs-security-group"
+
+  DatabaseSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security group for RDS database
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 5432
+          ToPort: 5432
+          SourceSecurityGroupId: !Ref ECSSecurityGroup
+      Tags:
+        - Key: Name
+          Value: !Sub "${Environment}-database-security-group"
+
+  # Application Load Balancer
+  ApplicationLoadBalancer:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Name: !Sub "${Environment}-patabima-alb"
+      Scheme: internet-facing
+      Type: application
+      Subnets:
+        - !Ref PublicSubnet1
+        - !Ref PublicSubnet2
+      SecurityGroups:
+        - !Ref ALBSecurityGroup
+      Tags:
+        - Key: Name
+          Value: !Sub "${Environment}-patabima-alb"
+
+  # Target Group
+  TargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      Name: !Sub "${Environment}-patabima-targets"
+      Port: 8000
+      Protocol: HTTP
+      VpcId: !Ref VPC
+      TargetType: ip
+      HealthCheckPath: /api/health/
+      HealthCheckProtocol: HTTP
+      HealthCheckIntervalSeconds: 30
+      HealthCheckTimeoutSeconds: 5
+      HealthyThresholdCount: 2
+      UnhealthyThresholdCount: 5
+
+  # ALB Listener
+  ALBListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref TargetGroup
+      LoadBalancerArn: !Ref ApplicationLoadBalancer
+      Port: 80
+      Protocol: HTTP
+
+  # RDS Database
+  DatabaseSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription: Subnet group for PataBima database
+      SubnetIds:
+        - !Ref PrivateSubnet1
+        - !Ref PrivateSubnet2
+      Tags:
+        - Key: Name
+          Value: !Sub "${Environment}-database-subnet-group"
+
+  Database:
+    Type: AWS::RDS::DBInstance
+    DeletionPolicy: Snapshot
+    Properties:
+      DBInstanceIdentifier: !Sub "${Environment}-patabima-database"
+      DBInstanceClass: db.t3.micro
+      Engine: postgres
+      EngineVersion: '15.3'
+      AllocatedStorage: 20
+      StorageType: gp2
+      StorageEncrypted: true
+      MultiAZ: true
+      DBName: patabima_insurance
+      MasterUsername: patabima_user
+      MasterUserPassword: !Ref DatabasePassword
+      VPCSecurityGroups:
+        - !Ref DatabaseSecurityGroup
+      DBSubnetGroupName: !Ref DatabaseSubnetGroup
+      BackupRetentionPeriod: 7
+      PreferredBackupWindow: "03:00-04:00"
+      PreferredMaintenanceWindow: "sun:04:00-sun:05:00"
+      Tags:
+        - Key: Name
+          Value: !Sub "${Environment}-patabima-database"
+
+  # S3 Buckets
+  DocumentsBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub "${Environment}-patabima-documents-${AWS::AccountId}"
+      VersioningConfiguration:
+        Status: Enabled
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      CorsConfiguration:
+        CorsRules:
+          - AllowedHeaders: ['*']
+            AllowedMethods: [GET, PUT, POST, DELETE, HEAD]
+            AllowedOrigins: ['*']
+            MaxAge: 3000
+
+  StaticAssetsBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub "${Environment}-patabima-assets-${AWS::AccountId}"
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: false
+        BlockPublicPolicy: false
+        IgnorePublicAcls: false
+        RestrictPublicBuckets: false
+
+  # S3 Bucket Policy for public assets
+  StaticAssetsBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref StaticAssetsBucket
+      PolicyDocument:
+        Statement:
+          - Sid: PublicReadGetObject
+            Effect: Allow
+            Principal: '*'
+            Action: s3:GetObject
+            Resource: !Sub "${StaticAssetsBucket}/campaign_banners/*"
+
+  # ECS Cluster
+  ECSCluster:
+    Type: AWS::ECS::Cluster
+    Properties:
+      ClusterName: !Sub "${Environment}-patabima-cluster"
+      CapacityProviders:
+        - FARGATE
+        - FARGATE_SPOT
+      DefaultCapacityProviderStrategy:
+        - CapacityProvider: FARGATE
+          Weight: 1
+
+  # ECS Task Definition
+  TaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: !Sub "${Environment}-patabima-django"
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+        - FARGATE
+      Cpu: 256
+      Memory: 512
+      ExecutionRoleArn: !Ref ECSExecutionRole
+      TaskRoleArn: !Ref ECSTaskRole
+      ContainerDefinitions:
+        - Name: django-api
+          Image: python:3.11-slim  # This will be replaced with actual image
+          PortMappings:
+            - ContainerPort: 8000
+          Environment:
+            - Name: DATABASE_URL
+              Value: !Sub "postgresql://patabima_user:${DatabasePassword}@${Database.Endpoint.Address}:5432/patabima_insurance"
+            - Name: AWS_STORAGE_BUCKET_NAME
+              Value: !Ref DocumentsBucket
+            - Name: AWS_S3_REGION_NAME
+              Value: !Ref AWS::Region
+            - Name: USE_S3_MEDIA
+              Value: "1"
+            - Name: DEBUG
+              Value: "False"
+            - Name: ALLOWED_HOSTS
+              Value: !Sub "${DomainName},${ApplicationLoadBalancer.DNSName}"
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group: !Ref LogGroup
+              awslogs-region: !Ref AWS::Region
+              awslogs-stream-prefix: django
+
+  # CloudWatch Log Group
+  LogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/ecs/${Environment}-patabima"
+      RetentionInDays: 7
+
+  # ECS Service
+  ECSService:
+    Type: AWS::ECS::Service
+    DependsOn: ALBListener
+    Properties:
+      ServiceName: !Sub "${Environment}-patabima-service"
+      Cluster: !Ref ECSCluster
+      TaskDefinition: !Ref TaskDefinition
+      DesiredCount: 2
+      LaunchType: FARGATE
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          SecurityGroups:
+            - !Ref ECSSecurityGroup
+          Subnets:
+            - !Ref PublicSubnet1
+            - !Ref PublicSubnet2
+          AssignPublicIp: ENABLED
+      LoadBalancers:
+        - ContainerName: django-api
+          ContainerPort: 8000
+          TargetGroupArn: !Ref TargetGroup
+
+  # IAM Roles
+  ECSExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+
+  ECSTaskRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: S3Access
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:PutObject
+                  - s3:DeleteObject
+                  - s3:ListBucket
+                Resource:
+                  - !Sub "${DocumentsBucket}/*"
+                  - !Ref DocumentsBucket
+                  - !Sub "${StaticAssetsBucket}/*"
+                  - !Ref StaticAssetsBucket
+        - PolicyName: TextractAccess
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                  - textract:DetectDocumentText
+                  - textract:AnalyzeDocument
+                Resource: "*"
+
+  # Lambda Function for Document Processing
+  DocumentProcessingFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub "${Environment}-patabima-document-processing"
+      Runtime: python3.11
+      Handler: lambda_function.lambda_handler
+      Role: !Ref LambdaExecutionRole
+      Code:
+        ZipFile: |
+          import json
+          import boto3
+          import logging
+
+          logger = logging.getLogger()
+          logger.setLevel(logging.INFO)
+
+          def lambda_handler(event, context):
+              textract = boto3.client('textract')
+              s3 = boto3.client('s3')
+              
+              try:
+                  bucket = event['Records'][0]['s3']['bucket']['name']
+                  key = event['Records'][0]['s3']['object']['key']
+                  
+                  response = textract.detect_document_text(
+                      Document={'S3Object': {'Bucket': bucket, 'Name': key}}
+                  )
+                  
+                  extracted_text = []
+                  for item in response['Blocks']:
+                      if item['BlockType'] == 'LINE':
+                          extracted_text.append(item['Text'])
+                  
+                  return {
+                      'statusCode': 200,
+                      'body': json.dumps({
+                          'extracted_text': extracted_text,
+                          'document_key': key
+                      })
+                  }
+              except Exception as e:
+                  logger.error(f"Error processing document: {str(e)}")
+                  return {
+                      'statusCode': 500,
+                      'body': json.dumps({'error': str(e)})
+                  }
+      Environment:
+        Variables:
+          DOCUMENTS_BUCKET: !Ref DocumentsBucket
+
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: TextractAndS3Access
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                  - textract:DetectDocumentText
+                  - textract:AnalyzeDocument
+                Resource: "*"
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                Resource: !Sub "${DocumentsBucket}/*"
+
+Outputs:
+  VPCId:
+    Description: VPC ID
+    Value: !Ref VPC
+    Export:
+      Name: !Sub "${Environment}-VPCId"
+
+  DatabaseEndpoint:
+    Description: RDS PostgreSQL endpoint
+    Value: !GetAtt Database.Endpoint.Address
+    Export:
+      Name: !Sub "${Environment}-DatabaseEndpoint"
+
+  LoadBalancerDNS:
+    Description: Application Load Balancer DNS name
+    Value: !GetAtt ApplicationLoadBalancer.DNSName
+    Export:
+      Name: !Sub "${Environment}-LoadBalancerDNS"
+
+  DocumentsBucket:
+    Description: S3 bucket for document storage
+    Value: !Ref DocumentsBucket
+    Export:
+      Name: !Sub "${Environment}-DocumentsBucket"
+
+  StaticAssetsBucket:
+    Description: S3 bucket for static assets
+    Value: !Ref StaticAssetsBucket
+    Export:
+      Name: !Sub "${Environment}-StaticAssetsBucket"
+
+  ECSCluster:
+    Description: ECS Cluster name
+    Value: !Ref ECSCluster
+    Export:
+      Name: !Sub "${Environment}-ECSCluster"

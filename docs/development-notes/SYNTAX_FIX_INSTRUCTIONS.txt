@@ -1,0 +1,11 @@
+  // Fix for syntax error in DynamicVehicleForm.js
+  // Remove these duplicate lines starting at line 636:
+  //     comparingUnderwriters,
+  //     underwriterComparisons.length
+  //   ]);
+  
+  // The correct useEffect should end at line 635 with:
+  //   ]);
+  
+  // Then continue with:
+  //   // Legacy support for simple form rendering

@@ -1,0 +1,711 @@
+﻿{
+    "categories":  [
+                       {
+                           "id":  "fe27c128-972d-4a08-8893-1ad922d882bd",
+                           "category_code":  "COMMERCIAL",
+                           "category_name":  "Commercial Vehicles",
+                           "subcategories":  [
+                                                 {
+                                                     "id":  "92ee4e03-6360-4de7-83d9-8f94ba528ed1",
+                                                     "subcategory_code":  "PRIME_MOVER",
+                                                     "subcategory_name":  "Prime Mover",
+                                                     "product_type":  "third_party"
+                                                 },
+                                                 {
+                                                     "id":  "ce915212-dd5f-4f26-b031-f3d6186e8bcf",
+                                                     "subcategory_code":  "OWN_GOODS_COMP",
+                                                     "subcategory_name":  "Own Goods Comprehensive",
+                                                     "product_type":  "comprehensive"
+                                                 },
+                                                 {
+                                                     "id":  "76383788-15f1-4d78-b907-0735f7bda940",
+                                                     "subcategory_code":  "GENERAL_CARTAGE_COMP",
+                                                     "subcategory_name":  "General Cartage Comprehensive",
+                                                     "product_type":  "comprehensive"
+                                                 },
+                                                 {
+                                                     "id":  "028fbcc5-11d7-4d60-bb18-1991509c2402",
+                                                     "subcategory_code":  "TRACTOR_TP",
+                                                     "subcategory_name":  "Tractor Third Party",
+                                                     "product_type":  "third_party"
+                                                 },
+                                                 {
+                                                     "id":  "600c8670-5d5a-4d30-8b79-d5c8af741c60",
+                                                     "subcategory_code":  "TRACTOR_COMP",
+                                                     "subcategory_name":  "Tractor Comprehensive",
+                                                     "product_type":  "comprehensive"
+                                                 },
+                                                 {
+                                                     "id":  "7ca45ecb-5543-4e98-9ad2-61021e1a4d9c",
+                                                     "subcategory_code":  "COMM_COMPREHENSIVE",
+                                                     "subcategory_name":  "Commercial Comprehensive",
+                                                     "product_type":  "comprehensive"
+                                                 },
+                                                 {
+                                                     "id":  "d91de60c-790f-4972-a2ac-fcd8e8ba5f90",
+                                                     "subcategory_code":  "COMM_TONNAGE",
+                                                     "subcategory_name":  "Commercial TPO Tonnage Scale",
+                                                     "product_type":  "tonnage"
+                                                 },
+                                                 {
+                                                     "id":  "28fd24a3-683d-44d7-b1ce-0223354498bf",
+                                                     "subcategory_code":  "COMM_TONNAGE_FLEET",
+                                                     "subcategory_name":  "Commercial TPO Tonnage Scale FLEET",
+                                                     "product_type":  "tonnage"
+                                                 },
+                                                 {
+                                                     "id":  "b53ecfd2-5e15-4090-9230-14be15db719f",
+                                                     "subcategory_code":  "TRAILER_TP",
+                                                     "subcategory_name":  "Trailer Third Party",
+                                                     "product_type":  "third_party"
+                                                 },
+                                                 {
+                                                     "id":  "c89ceed5-638c-41f1-bd37-d2ecad4ae0e7",
+                                                     "subcategory_code":  "TRAILER_COMP",
+                                                     "subcategory_name":  "Trailer Comprehensive",
+                                                     "product_type":  "comprehensive"
+                                                 },
+                                                 {
+                                                     "id":  "fe36b058-bb58-4212-bef3-5590935234ba",
+                                                     "subcategory_code":  "OWN_GOODS_TP",
+                                                     "subcategory_name":  "Own Goods Third Party",
+                                                     "product_type":  "third_party"
+                                                 },
+                                                 {
+                                                     "id":  "4381ad99-fa3d-491b-bf98-93700d6429bd",
+                                                     "subcategory_code":  "GENERAL_CARTAGE_TP",
+                                                     "subcategory_name":  "General Cartage Third Party",
+                                                     "product_type":  "third_party"
+                                                 },
+                                                 {
+                                                     "id":  "d85a3baa-dc18-4773-9dd4-d5556c66f24c",
+                                                     "subcategory_code":  "COMM_TUKTUK_TP",
+                                                     "subcategory_name":  "Commercial TukTuk Third Party",
+                                                     "product_type":  "third_party"
+                                                 },
+                                                 {
+                                                     "id":  "626068ab-1162-422b-8d8d-5244ab3aa60b",
+                                                     "subcategory_code":  "GENERAL_CARTAGE_TP_MONTHLY",
+                                                     "subcategory_name":  "General Cartage Third Party Monthly",
+                                                     "product_type":  "third_party"
+                                                 },
+                                                 {
+                                                     "id":  "839308a4-fe63-47e4-87b5-ca2dff3e3626",
+                                                     "subcategory_code":  "FLEET_TP",
+                                                     "subcategory_name":  "Commercial Fleet Third Party",
+                                                     "product_type":  "third_party"
+                                                 },
+                                                 {
+                                                     "id":  "5627545c-5a1b-4ce3-b12a-ffb32c486598",
+                                                     "subcategory_code":  "FLEET_COMP",
+                                                     "subcategory_name":  "Commercial Fleet Comprehensive",
+                                                     "product_type":  "comprehensive"
+                                                 },
+                                                 {
+                                                     "id":  "1b53a0d0-bf07-4319-a4eb-7fec8e4fa4d0",
+                                                     "subcategory_code":  "PICKUP_COMP",
+                                                     "subcategory_name":  "Commercial Pickup Comprehensive",
+                                                     "product_type":  "comprehensive"
+                                                 },
+                                                 {
+                                                     "id":  "303d85e5-be15-43fb-bcca-5a93aca0c233",
+                                                     "subcategory_code":  "COMM_TOR",
+                                                     "subcategory_name":  "Commercial Time On Risk",
+                                                     "product_type":  "fixed"
+                                                 },
+                                                 {
+                                                     "id":  "863cd40b-5685-4c32-8d75-a0792a9ec4d9",
+                                                     "subcategory_code":  "OWN_GOODS_TP_MONTHLY",
+                                                     "subcategory_name":  "Own Goods Third Party Monthly",
+                                                     "product_type":  "third_party"
+                                                 },
+                                                 {
+                                                     "id":  "a56e5055-f2b7-4de4-a494-951eda9207f4",
+                                                     "subcategory_code":  "OWN_GOODS_TP_ANNUAL",
+                                                     "subcategory_name":  "Own Goods Third Party Annual",
+                                                     "product_type":  "third_party"
+                                                 }
+                                             ]
+                       },
+                       {
+                           "id":  "83a003d5-9c80-422b-9350-583f92bb9d55",
+                           "category_code":  "MOTORCYCLE",
+                           "category_name":  "Motorcycles",
+                           "subcategories":  [
+                                                 {
+                                                     "id":  "2a1351c5-ae23-4aab-9591-75ab21f6caf2",
+                                                     "subcategory_code":  "COURIER_TP",
+                                                     "subcategory_name":  "Courier Third Party",
+                                                     "product_type":  "third_party"
+                                                 },
+                                                 {
+                                                     "id":  "f38e3ff4-d83e-47b3-8a12-5b837da6bc3d",
+                                                     "subcategory_code":  "DISPATCH_TP",
+                                                     "subcategory_name":  "Dispatch Third Party",
+                                                     "product_type":  "third_party"
+                                                 },
+                                                 {
+                                                     "id":  "87862519-800b-4655-b480-790228534766",
+                                                     "subcategory_code":  "MOTORCYCLE_PRIVATE_TP",
+                                                     "subcategory_name":  "Private Motorcycle Third Party",
+                                                     "product_type":  "third_party"
+                                                 },
+                                                 {
+                                                     "id":  "ce88273c-85b0-4d72-a815-d9e9fef0b66a",
+                                                     "subcategory_code":  "MOTORCYCLE_PSV_TP",
+                                                     "subcategory_name":  "PSV Motorcycle Third Party",
+                                                     "product_type":  "third_party"
+                                                 },
+                                                 {
+                                                     "id":  "47b87134-7c9e-423d-80b2-04beebfa69ca",
+                                                     "subcategory_code":  "MOTORCYCLE_COMPREHENSIVE",
+                                                     "subcategory_name":  "Motorcycle Comprehensive",
+                                                     "product_type":  "comprehensive"
+                                                 },
+                                                 {
+                                                     "id":  "2a6069eb-a65c-4c60-8d26-c3173f68a42a",
+                                                     "subcategory_code":  "MOTORCYCLE_PVA",
+                                                     "subcategory_name":  "Motorcycle Personal Accident",
+                                                     "product_type":  "fixed"
+                                                 },
+                                                 {
+                                                     "id":  "8443fcbd-e882-470a-acd5-ed92648a2e69",
+                                                     "subcategory_code":  "BODA_BODA_TP",
+                                                     "subcategory_name":  "Boda Boda Third Party",
+                                                     "product_type":  "third_party"
+                                                 },
+                                                 {
+                                                     "id":  "22208ee2-2048-4674-a8b4-16825259ea3e",
+                                                     "subcategory_code":  "DELIVERY_BIKE_TP",
+                                                     "subcategory_name":  "Delivery Bike Third Party",
+                                                     "product_type":  "third_party"
+                                                 },
+                                                 {
+                                                     "id":  "273b0d67-633f-415a-b0c0-6caad5cfa81f",
+                                                     "subcategory_code":  "MOTORCYCLE_EXEC_COMP",
+                                                     "subcategory_name":  "Motorcycle Executive Comprehensive",
+                                                     "product_type":  "comprehensive"
+                                                 }
+                                             ]
+                       },
+                       {
+                           "id":  "02a099fd-e88b-4b61-8f64-0e3eb7ee173f",
+                           "category_code":  "PRIVATE",
+                           "category_name":  "Private Vehicles",
+                           "subcategories":  [
+                                                 {
+                                                     "id":  "fada31af-ac96-499b-aecf-b79c4f07e64c",
+                                                     "subcategory_code":  "PRIVATE_EXECUTIVE_COMP",
+                                                     "subcategory_name":  "Private Executive Comprehensive",
+                                                     "product_type":  "comprehensive"
+                                                 },
+                                                 {
+                                                     "id":  "4a4c05c7-f3bf-47b9-b07e-e6119a238b8c",
+                                                     "subcategory_code":  "PRIVATE_TOR_EXT",
+                                                     "subcategory_name":  "Private TOR Extendible",
+                                                     "product_type":  "fixed"
+                                                 },
+                                                 {
+                                                     "id":  "380681f9-6827-484a-a6e6-58732e892346",
+                                                     "subcategory_code":  "PRIVATE_PVA",
+                                                     "subcategory_name":  "Private Personal Accident",
+                                                     "product_type":  "fixed"
+                                                 },
+                                                 {
+                                                     "id":  "585b8f07-7193-4fed-9eb0-d0f9b52994b4",
+                                                     "subcategory_code":  "PRIVATE_MINI_TP",
+                                                     "subcategory_name":  "Private Mini Third Party",
+                                                     "product_type":  "third_party"
+                                                 },
+                                                 {
+                                                     "id":  "c3d87a28-c87a-4b21-951f-1b0586a9d908",
+                                                     "subcategory_code":  "PRIVATE_COMPREHENSIVE",
+                                                     "subcategory_name":  "Private Comprehensive",
+                                                     "product_type":  "comprehensive"
+                                                 },
+                                                 {
+                                                     "id":  "39198a55-a98e-456b-b859-c7629f8a4d76",
+                                                     "subcategory_code":  "PRIVATE_PICKUP_TP",
+                                                     "subcategory_name":  "Private Pickup Third Party",
+                                                     "product_type":  "third_party"
+                                                 },
+                                                 {
+                                                     "id":  "f033da0c-395a-4b1b-ad55-9db8282eb6ce",
+                                                     "subcategory_code":  "PRIVATE_SALOON_COMP",
+                                                     "subcategory_name":  "Private Saloon Comprehensive",
+                                                     "product_type":  "comprehensive"
+                                                 },
+                                                 {
+                                                     "id":  "d83ac6d4-9151-417f-b11e-4f2a3277ac82",
+                                                     "subcategory_code":  "PRIVATE_TOR",
+                                                     "subcategory_name":  "Private Time On Risk",
+                                                     "product_type":  "fixed"
+                                                 },
+                                                 {
+                                                     "id":  "0afc141a-4e17-4bc1-a158-a5cc74e4122d",
+                                                     "subcategory_code":  "PRIVATE_TP",
+                                                     "subcategory_name":  "Private Third Party",
+                                                     "product_type":  "third_party"
+                                                 },
+                                                 {
+                                                     "id":  "f648468c-b703-4074-9060-8809bdbf3d82",
+                                                     "subcategory_code":  "PRIVATE_TP_EXT",
+                                                     "subcategory_name":  "Private Third Party Extendible",
+                                                     "product_type":  "third_party"
+                                                 },
+                                                 {
+                                                     "id":  "ccde1098-9280-410b-985e-0282cd645b2c",
+                                                     "subcategory_code":  "PRIVATE_SUV_COMP",
+                                                     "subcategory_name":  "Private SUV Comprehensive",
+                                                     "product_type":  "comprehensive"
+                                                 }
+                                             ]
+                       },
+                       {
+                           "id":  "d4ee8d63-363f-40e1-a5fc-41748a26ef42",
+                           "category_code":  "PSV",
+                           "category_name":  "Public Service Vehicles",
+                           "subcategories":  [
+                                                 {
+                                                     "id":  "1935b259-0aa6-4381-abc5-76cd18748c93",
+                                                     "subcategory_code":  "PSV_STANDARD",
+                                                     "subcategory_name":  "PSV Standard (PLL carrier)",
+                                                     "product_type":  "psv"
+                                                 },
+                                                 {
+                                                     "id":  "0e223e7b-8085-4fa8-9985-97e6d3b4edf0",
+                                                     "subcategory_code":  "PSV_SACCO_TP",
+                                                     "subcategory_name":  "PSV Sacco Third Party",
+                                                     "product_type":  "third_party"
+                                                 },
+                                                 {
+                                                     "id":  "08258568-ae27-4b18-8b76-3c6ce6f61261",
+                                                     "subcategory_code":  "PSV_CHARTER_TP",
+                                                     "subcategory_name":  "PSV Charter Third Party",
+                                                     "product_type":  "third_party"
+                                                 },
+                                                 {
+                                                     "id":  "be3dcf03-dec4-4082-805a-2b117c09d31b",
+                                                     "subcategory_code":  "PSV_TOUR_TP",
+                                                     "subcategory_name":  "PSV Tour Third Party",
+                                                     "product_type":  "third_party"
+                                                 },
+                                                 {
+                                                     "id":  "92e6757e-3bfd-4034-85d4-5b797d4d6121",
+                                                     "subcategory_code":  "PSV_EXEC_COMP",
+                                                     "subcategory_name":  "PSV Executive Comprehensive",
+                                                     "product_type":  "comprehensive"
+                                                 },
+                                                 {
+                                                     "id":  "8a6b2335-aa56-4658-a15d-9c0db0062b2c",
+                                                     "subcategory_code":  "PSV_UBER_TP",
+                                                     "subcategory_name":  "PSV Uber Third Party",
+                                                     "product_type":  "third_party"
+                                                 },
+                                                 {
+                                                     "id":  "accb806c-d4ba-4aa0-9ff0-bb7505fd78d2",
+                                                     "subcategory_code":  "PSV_TUKTUK_TP",
+                                                     "subcategory_name":  "PSV TukTuk Third Party",
+                                                     "product_type":  "third_party"
+                                                 },
+                                                 {
+                                                     "id":  "d0ad6cb1-df0b-4dc4-90a7-570adc047ffc",
+                                                     "subcategory_code":  "PSV_MATATU_TP_1M",
+                                                     "subcategory_name":  "1 Month PSV Matatu Third Party",
+                                                     "product_type":  "third_party"
+                                                 },
+                                                 {
+                                                     "id":  "97928183-0ec7-4efb-9f26-0128dd5c2829",
+                                                     "subcategory_code":  "PSV_COMPREHENSIVE",
+                                                     "subcategory_name":  "PSV Comprehensive",
+                                                     "product_type":  "comprehensive"
+                                                 },
+                                                 {
+                                                     "id":  "8b6f362e-fba4-41f7-b5f1-c9e8c081cadc",
+                                                     "subcategory_code":  "PSV_TOWN_SERVICE_TP",
+                                                     "subcategory_name":  "PSV Town Service Third Party",
+                                                     "product_type":  "third_party"
+                                                 },
+                                                 {
+                                                     "id":  "a5ce8beb-9917-49f4-857f-b8737e9db1db",
+                                                     "subcategory_code":  "PSV_LONG_DISTANCE_TP",
+                                                     "subcategory_name":  "PSV Long Distance Third Party",
+                                                     "product_type":  "third_party"
+                                                 },
+                                                 {
+                                                     "id":  "e089c365-ae65-49f6-924e-f95922328fcc",
+                                                     "subcategory_code":  "PSV_SCHOOL_BUS_TP",
+                                                     "subcategory_name":  "PSV School Bus Third Party",
+                                                     "product_type":  "third_party"
+                                                 },
+                                                 {
+                                                     "id":  "77c45fb2-a058-4426-96f8-752dc8c4ad04",
+                                                     "subcategory_code":  "PSV_SCHOOL_BUS_COMP",
+                                                     "subcategory_name":  "PSV School Bus Comprehensive",
+                                                     "product_type":  "comprehensive"
+                                                 }
+                                             ]
+                       },
+                       {
+                           "id":  "63206394-bcc9-4ca4-9a2f-faf4cbadddb0",
+                           "category_code":  "SPECIAL",
+                           "category_name":  "Special Classes",
+                           "subcategories":  [
+                                                 {
+                                                     "id":  "0587a3ed-99f6-47fd-b991-fefcd85ce60c",
+                                                     "subcategory_code":  "SPECIAL_COMPREHENSIVE",
+                                                     "subcategory_name":  "Special Classes Comprehensive",
+                                                     "product_type":  "comprehensive"
+                                                 },
+                                                 {
+                                                     "id":  "cb11913a-b08c-4441-8e3e-56836f92f31c",
+                                                     "subcategory_code":  "GOVERNMENT_TP",
+                                                     "subcategory_name":  "Government Third Party",
+                                                     "product_type":  "third_party"
+                                                 },
+                                                 {
+                                                     "id":  "826bd603-0b44-48e2-8335-2aeb13aa15f6",
+                                                     "subcategory_code":  "GOVERNMENT_COMP",
+                                                     "subcategory_name":  "Government Comprehensive",
+                                                     "product_type":  "comprehensive"
+                                                 },
+                                                 {
+                                                     "id":  "03e18907-451a-47f3-b1d3-307566d97e49",
+                                                     "subcategory_code":  "DRIVING_SCHOOL_TP",
+                                                     "subcategory_name":  "Driving School Third Party",
+                                                     "product_type":  "third_party"
+                                                 },
+                                                 {
+                                                     "id":  "203948cb-d2f9-4a3d-8c74-f0a2aefb5732",
+                                                     "subcategory_code":  "INSTITUTIONAL_TP",
+                                                     "subcategory_name":  "Institutional Third Party",
+                                                     "product_type":  "third_party"
+                                                 },
+                                                 {
+                                                     "id":  "481d8aaf-5064-4274-bfed-8faa7a18ff84",
+                                                     "subcategory_code":  "SCHOOL_BUS_COMP",
+                                                     "subcategory_name":  "School Bus Comprehensive",
+                                                     "product_type":  "comprehensive"
+                                                 },
+                                                 {
+                                                     "id":  "f18bc080-5612-4e28-b78f-c40d6171d5b4",
+                                                     "subcategory_code":  "AMBULANCE_TP",
+                                                     "subcategory_name":  "Ambulance Third Party",
+                                                     "product_type":  "third_party"
+                                                 },
+                                                 {
+                                                     "id":  "1b71d047-0116-496c-9541-12b713fbea04",
+                                                     "subcategory_code":  "AMBULANCE_COMP",
+                                                     "subcategory_name":  "Ambulance Comprehensive",
+                                                     "product_type":  "comprehensive"
+                                                 },
+                                                 {
+                                                     "id":  "4a756980-0f4d-4047-8ce6-3acf7d53a492",
+                                                     "subcategory_code":  "HEAVY_EQUIP_TP",
+                                                     "subcategory_name":  "Heavy Equipment Third Party",
+                                                     "product_type":  "third_party"
+                                                 },
+                                                 {
+                                                     "id":  "f9c85bb3-182d-46dc-99db-3306c3e7bdc0",
+                                                     "subcategory_code":  "HEAVY_EQUIP_COMP",
+                                                     "subcategory_name":  "Heavy Equipment Comprehensive",
+                                                     "product_type":  "comprehensive"
+                                                 },
+                                                 {
+                                                     "id":  "87b8f05a-f0a9-4214-a4ec-cd5a2dce183c",
+                                                     "subcategory_code":  "FIRE_ENGINE_TP",
+                                                     "subcategory_name":  "Fire Engine Third Party",
+                                                     "product_type":  "third_party"
+                                                 },
+                                                 {
+                                                     "id":  "8161b6e6-3c59-4148-9730-bf58f03fa31c",
+                                                     "subcategory_code":  "AGRIC_TRACTOR_TP",
+                                                     "subcategory_name":  "Agricultural Tractor Third Party",
+                                                     "product_type":  "third_party"
+                                                 },
+                                                 {
+                                                     "id":  "557953e9-747e-4235-bcb6-4fe910b1640d",
+                                                     "subcategory_code":  "AGRIC_TRACTOR_COMP",
+                                                     "subcategory_name":  "Agricultural Tractor Comprehensive",
+                                                     "product_type":  "comprehensive"
+                                                 },
+                                                 {
+                                                     "id":  "f0d611b4-fc2f-4e21-8a6d-f5d1aa1174c7",
+                                                     "subcategory_code":  "CONSTRUCTION_PLANT_TP",
+                                                     "subcategory_name":  "Construction Plant Third Party",
+                                                     "product_type":  "third_party"
+                                                 },
+                                                 {
+                                                     "id":  "c9ffca93-20e7-4c2d-8881-78c161dfb480",
+                                                     "subcategory_code":  "CONSTRUCTION_PLANT_COMP",
+                                                     "subcategory_name":  "Construction Plant Comprehensive",
+                                                     "product_type":  "comprehensive"
+                                                 },
+                                                 {
+                                                     "id":  "fe6077eb-a4cf-4be8-bc73-d2b7b04c0279",
+                                                     "subcategory_code":  "SCHOOL_BUS_TP",
+                                                     "subcategory_name":  "School Bus Third Party",
+                                                     "product_type":  "third_party"
+                                                 }
+                                             ]
+                       },
+                       {
+                           "id":  "4f87a0cc-d791-4e20-9b96-39855211270e",
+                           "category_code":  "TUKTUK",
+                           "category_name":  "TukTuk",
+                           "subcategories":  [
+                                                 {
+                                                     "id":  "c9962703-9124-4ad2-88a8-b681087439d6",
+                                                     "subcategory_code":  "PSV_TUKTUK_TP",
+                                                     "subcategory_name":  "PSV TukTuk Third Party",
+                                                     "product_type":  "third_party"
+                                                 },
+                                                 {
+                                                     "id":  "673c15a5-067c-4d9c-9f36-2742e129adfe",
+                                                     "subcategory_code":  "TUKTUK_TOR",
+                                                     "subcategory_name":  "TukTuk Time on Risk",
+                                                     "product_type":  "fixed"
+                                                 },
+                                                 {
+                                                     "id":  "69c4296a-dd57-40d5-ab3c-3302f822eea1",
+                                                     "subcategory_code":  "COMM_TUKTUK_TP",
+                                                     "subcategory_name":  "Commercial TukTuk Third Party",
+                                                     "product_type":  "third_party"
+                                                 },
+                                                 {
+                                                     "id":  "083e0efc-c1b9-4a4f-9bb2-2993440cd0a3",
+                                                     "subcategory_code":  "TUKTUK_COMPREHENSIVE",
+                                                     "subcategory_name":  "TukTuk Comprehensive",
+                                                     "product_type":  "comprehensive"
+                                                 },
+                                                 {
+                                                     "id":  "fa9c503c-c5cd-4e6e-afec-15fba32c4611",
+                                                     "subcategory_code":  "TUKTUK_PVA",
+                                                     "subcategory_name":  "TukTuk Personal Accident",
+                                                     "product_type":  "fixed"
+                                                 },
+                                                 {
+                                                     "id":  "ab0d88d0-3942-4cd0-a21d-82200d0b9073",
+                                                     "subcategory_code":  "TUKTUK_TP_PRIVATE",
+                                                     "subcategory_name":  "Private TukTuk Third Party",
+                                                     "product_type":  "third_party"
+                                                 },
+                                                 {
+                                                     "id":  "8dbbc970-3c8d-4391-b092-725d53b982f9",
+                                                     "subcategory_code":  "TUKTUK_TP_COMMERCIAL",
+                                                     "subcategory_name":  "Commercial TukTuk Third Party",
+                                                     "product_type":  "third_party"
+                                                 }
+                                             ]
+                       }
+                   ],
+    "timestamp":  "2025-09-23 20:07:35",
+    "underwriters":  [
+                         {
+                             "id":  "14900c1c-4327-4366-a1e9-585699b1a495",
+                             "name":  "Jubilee Insurance",
+                             "code":  "JUB",
+                             "features":  {
+                                              "dmvic":  true
+                                          }
+                         },
+                         {
+                             "id":  "acff5e40-a95b-4dd1-bc06-8e210e1e95bc",
+                             "name":  "APA Insurance",
+                             "code":  "APA",
+                             "features":  {
+                                              "dmvic":  true
+                                          }
+                         }
+                     ],
+    "phone":  "750997861",
+    "test_results":  {
+                         "Comparison_PSV Standard":  {
+                                                         "comparisons":  [
+                                                                             {
+                                                                                 "underwriter_code":  "APA",
+                                                                                 "result":  {
+                                                                                                "calculation_type":  "psv",
+                                                                                                "base_premium":  "7000.00",
+                                                                                                "mandatory_levies":  {
+                                                                                                                         "insurance_training_levy":  "17.50",
+                                                                                                                         "pcf_levy":  "17.50",
+                                                                                                                         "stamp_duty":  "40.00"
+                                                                                                                     },
+                                                                                                "total_premium":  "7075.00",
+                                                                                                "subcategory":  "PSV_STANDARD",
+                                                                                                "underwriter":  "APA"
+                                                                                            }
+                                                                             },
+                                                                             {
+                                                                                 "underwriter_code":  "JUB",
+                                                                                 "error":  "No PSV PLL rate configured"
+                                                                             }
+                                                                         ]
+                                                     },
+                         "Commercial Tonnage":  {
+                                                    "calculation_type":  "tonnage",
+                                                    "base_premium":  "5500.00",
+                                                    "mandatory_levies":  {
+                                                                             "insurance_training_levy":  "13.75",
+                                                                             "pcf_levy":  "13.75",
+                                                                             "stamp_duty":  "40.00"
+                                                                         },
+                                                    "total_premium":  "5567.50",
+                                                    "subcategory":  "COMM_TONNAGE",
+                                                    "underwriter":  "APA"
+                                                },
+                         "Commercial Comprehensive":  {
+                                                          "calculation_type":  "comprehensive",
+                                                          "base_premium":  "60000.00",
+                                                          "mandatory_levies":  {
+                                                                                   "insurance_training_levy":  "150.00",
+                                                                                   "pcf_levy":  "150.00",
+                                                                                   "stamp_duty":  "40.00"
+                                                                               },
+                                                          "total_premium":  "60340.00",
+                                                          "subcategory":  "COMM_COMPREHENSIVE",
+                                                          "underwriter":  "APA"
+                                                      },
+                         "Private Comprehensive":  {
+                                                       "calculation_type":  "comprehensive",
+                                                       "base_premium":  "53750.00",
+                                                       "mandatory_levies":  {
+                                                                                "insurance_training_levy":  "134.38",
+                                                                                "pcf_levy":  "134.38",
+                                                                                "stamp_duty":  "40.00"
+                                                                            },
+                                                       "total_premium":  "54058.76",
+                                                       "subcategory":  "PRIVATE_COMPREHENSIVE",
+                                                       "underwriter":  "APA"
+                                                   },
+                         "Comparison_Private Comprehensive":  {
+                                                                  "comparisons":  [
+                                                                                      {
+                                                                                          "underwriter_code":  "APA",
+                                                                                          "result":  {
+                                                                                                         "calculation_type":  "comprehensive",
+                                                                                                         "base_premium":  "36000.00",
+                                                                                                         "mandatory_levies":  {
+                                                                                                                                  "insurance_training_levy":  "90.00",
+                                                                                                                                  "pcf_levy":  "90.00",
+                                                                                                                                  "stamp_duty":  "40.00"
+                                                                                                                              },
+                                                                                                         "total_premium":  "36220.00",
+                                                                                                         "subcategory":  "PRIVATE_COMPREHENSIVE",
+                                                                                                         "underwriter":  "APA"
+                                                                                                     }
+                                                                                      },
+                                                                                      {
+                                                                                          "underwriter_code":  "JUB",
+                                                                                          "result":  {
+                                                                                                         "calculation_type":  "comprehensive",
+                                                                                                         "base_premium":  "39000.00",
+                                                                                                         "mandatory_levies":  {
+                                                                                                                                  "insurance_training_levy":  "97.50",
+                                                                                                                                  "pcf_levy":  "97.50",
+                                                                                                                                  "stamp_duty":  "40.00"
+                                                                                                                              },
+                                                                                                         "total_premium":  "39235.00",
+                                                                                                         "subcategory":  "PRIVATE_COMPREHENSIVE",
+                                                                                                         "underwriter":  "JUB"
+                                                                                                     }
+                                                                                      }
+                                                                                  ]
+                                                              },
+                         "TukTuk Comprehensive":  {
+                                                      "calculation_type":  "comprehensive",
+                                                      "base_premium":  "15000.00",
+                                                      "mandatory_levies":  {
+                                                                               "insurance_training_levy":  "37.50",
+                                                                               "pcf_levy":  "37.50",
+                                                                               "stamp_duty":  "40.00"
+                                                                           },
+                                                      "total_premium":  "15115.00",
+                                                      "subcategory":  "TUKTUK_COMPREHENSIVE",
+                                                      "underwriter":  "APA"
+                                                  },
+                         "Comparison_Commercial Tonnage":  {
+                                                               "comparisons":  [
+                                                                                   {
+                                                                                       "underwriter_code":  "APA",
+                                                                                       "result":  {
+                                                                                                      "calculation_type":  "tonnage",
+                                                                                                      "base_premium":  "5500.00",
+                                                                                                      "mandatory_levies":  {
+                                                                                                                               "insurance_training_levy":  "13.75",
+                                                                                                                               "pcf_levy":  "13.75",
+                                                                                                                               "stamp_duty":  "40.00"
+                                                                                                                           },
+                                                                                                      "total_premium":  "5567.50",
+                                                                                                      "subcategory":  "COMM_TONNAGE",
+                                                                                                      "underwriter":  "APA"
+                                                                                                  }
+                                                                                   },
+                                                                                   {
+                                                                                       "underwriter_code":  "JUB",
+                                                                                       "result":  {
+                                                                                                      "calculation_type":  "tonnage",
+                                                                                                      "base_premium":  "5700.00",
+                                                                                                      "mandatory_levies":  {
+                                                                                                                               "insurance_training_levy":  "14.25",
+                                                                                                                               "pcf_levy":  "14.25",
+                                                                                                                               "stamp_duty":  "40.00"
+                                                                                                                           },
+                                                                                                      "total_premium":  "5768.50",
+                                                                                                      "subcategory":  "COMM_TONNAGE",
+                                                                                                      "underwriter":  "JUB"
+                                                                                                  }
+                                                                                   }
+                                                                               ]
+                                                           },
+                         "PSV Standard":  {
+                                              "calculation_type":  "psv",
+                                              "base_premium":  "7000.00",
+                                              "mandatory_levies":  {
+                                                                       "insurance_training_levy":  "17.50",
+                                                                       "pcf_levy":  "17.50",
+                                                                       "stamp_duty":  "40.00"
+                                                                   },
+                                              "total_premium":  "7075.00",
+                                              "subcategory":  "PSV_STANDARD",
+                                              "underwriter":  "APA"
+                                          },
+                         "Motorcycle Comprehensive":  {
+                                                          "calculation_type":  "comprehensive",
+                                                          "base_premium":  "15000.00",
+                                                          "mandatory_levies":  {
+                                                                                   "insurance_training_levy":  "37.50",
+                                                                                   "pcf_levy":  "37.50",
+                                                                                   "stamp_duty":  "40.00"
+                                                                               },
+                                                          "total_premium":  "15115.00",
+                                                          "subcategory":  "MOTORCYCLE_COMPREHENSIVE",
+                                                          "underwriter":  "APA"
+                                                      },
+                         "PSV Comprehensive":  {
+                                                   "calculation_type":  "comprehensive",
+                                                   "base_premium":  "54000.00",
+                                                   "mandatory_levies":  {
+                                                                            "insurance_training_levy":  "135.00",
+                                                                            "pcf_levy":  "135.00",
+                                                                            "stamp_duty":  "40.00"
+                                                                        },
+                                                   "total_premium":  "54310.00",
+                                                   "subcategory":  "PSV_COMPREHENSIVE",
+                                                   "underwriter":  "APA"
+                                               },
+                         "Private TOR":  {
+                                             "calculation_type":  "fixed",
+                                             "base_premium":  "650.00",
+                                             "mandatory_levies":  {
+                                                                      "insurance_training_levy":  "1.62",
+                                                                      "pcf_levy":  "1.62",
+                                                                      "stamp_duty":  "40.00"
+                                                                  },
+                                             "total_premium":  "693.24",
+                                             "subcategory":  "PRIVATE_TOR",
+                                             "underwriter":  "APA"
+                                         }
+                     }
+}

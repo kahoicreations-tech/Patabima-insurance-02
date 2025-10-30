@@ -1,0 +1,157 @@
+{
+  "info": {
+    "name": "PataBima Motor Insurance (Compat)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login (OTP send)",
+          "request": {
+            "method": "POST",
+            "header": [{"key":"Content-Type","value":"application/json"}],
+            "url": "{{base_url}}/auth/login",
+            "body": {"mode":"raw","raw": "{\n  \"phonenumber\": \"{{phonenumber}}\",\n  \"password\": \"{{password}}\"\n}"}
+          },
+          "event": [{
+            "listen": "test",
+            "script": {
+              "type": "text/javascript",
+              "exec": [
+                "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+                "pm.test('OTP captured', function () { const j = pm.response.json(); pm.expect(j).to.have.property('otp_code'); pm.environment.set('otp_code', j.otp_code||''); });"
+              ]
+            }
+          }]
+        },
+        {
+          "name": "Auth Login (with OTP)",
+          "request": {
+            "method": "POST",
+            "header": [{"key":"Content-Type","value":"application/json"}],
+            "url": "{{base_url}}/auth/auth_login",
+            "body": {"mode":"raw","raw": "{\n  \"phonenumber\": \"{{phonenumber}}\",\n  \"password\": \"{{password}}\",\n  \"code\": \"{{otp_code}}\"\n}"}
+          },
+          "event": [{
+            "listen": "test",
+            "script": {
+              "type": "text/javascript",
+              "exec": [
+                "pm.test('Tokens set', function () { const j = pm.response.json(); pm.response.to.have.status(200); pm.expect(j).to.have.property('access'); pm.environment.set('access_token', j.access||''); });"
+              ]
+            }
+          }]
+        }
+      ]
+    },
+    {
+      "name": "Motor Insurance",
+      "item": [
+        {
+          "name": "List Categories + Subcategories",
+          "request": {
+            "method": "GET",
+            "header": [{"key":"Authorization","value":"Bearer {{access_token}}"}],
+            "url": "{{base_url}}/insurance/insurance/motor_categories"
+          },
+          "event": [{
+            "listen": "test",
+            "script": {"type":"text/javascript","exec":[
+              "pm.test('OK + categories', function () { const j = pm.response.json(); pm.response.to.have.status(200); pm.expect(j.categories).to.be.an('array'); });"
+            ]}
+          }]
+        },
+        {
+          "name": "List Underwriters",
+          "request": {
+            "method": "GET",
+            "header": [{"key":"Authorization","value":"Bearer {{access_token}}"}],
+            "url": "{{base_url}}/insurance/insurance/underwriters"
+          },
+          "event": [{
+            "listen": "test",
+            "script": {"type":"text/javascript","exec":[
+              "pm.test('OK + underwriters', function () { const j = pm.response.json(); pm.response.to.have.status(200); pm.expect(j.underwriters).to.be.an('array'); });"
+            ]}
+          }]
+        },
+        {
+          "name": "Get Pricing Factors",
+          "request": {
+            "method": "GET",
+            "header": [{"key":"Authorization","value":"Bearer {{access_token}}"}],
+            "url": "{{base_url}}/insurance/insurance/pricing_factors"
+          },
+          "event": [{
+            "listen": "test",
+            "script": {"type":"text/javascript","exec":[
+              "pm.test('OK + factors', function () { const j = pm.response.json(); pm.response.to.have.status(200); pm.expect(j).to.have.property('factors'); });"
+            ]}
+          }]
+        },
+        {
+          "name": "Calculate Premium (Comprehensive)",
+          "request": {
+            "method": "POST",
+            "header": [{"key":"Content-Type","value":"application/json"},{"key":"Authorization","value":"Bearer {{access_token}}"}],
+            "url": "{{base_url}}/insurance/insurance/calculate_motor_premium",
+            "body": {"mode":"raw","raw":"{\n  \"subcategory_code\": \"{{subcategory_code_comp}}\",\n  \"underwriter_code\": \"{{underwriter_code}}\",\n  \"sum_insured\": {{sum_insured}},\n  \"add_ons\": {\n    \"excess_protector\": true,\n    \"pvt\": false,\n    \"windscreen_value\": 50000,\n    \"radio_value\": 10000\n  }\n}"}
+          },
+          "event": [{
+            "listen": "test",
+            "script": {"type":"text/javascript","exec":[
+              "pm.test('OK + levies', function () { const j = pm.response.json(); pm.response.to.have.status(200); pm.expect(j.mandatory_levies).to.be.an('object'); });"
+            ]}
+          }]
+        },
+        {
+          "name": "Calculate Premium (Tonnage)",
+          "request": {
+            "method": "POST",
+            "header": [{"key":"Content-Type","value":"application/json"},{"key":"Authorization","value":"Bearer {{access_token}}"}],
+            "url": "{{base_url}}/insurance/insurance/calculate_motor_premium",
+            "body": {"mode":"raw","raw":"{\n  \"subcategory_code\": \"{{subcategory_code_tonnage}}\",\n  \"underwriter_code\": \"{{underwriter_code}}\",\n  \"tonnage\": {{tonnage}}\n}"}
+          },
+          "event": [{
+            "listen": "test",
+            "script": {"type":"text/javascript","exec":[
+              "pm.test('OK + total', function () { const j = pm.response.json(); pm.response.to.have.status(200); pm.expect(j).to.have.property('total_premium'); });"
+            ]}
+          }]
+        },
+        {
+          "name": "Calculate Premium (PSV)",
+          "request": {
+            "method": "POST",
+            "header": [{"key":"Content-Type","value":"application/json"},{"key":"Authorization","value":"Bearer {{access_token}}"}],
+            "url": "{{base_url}}/insurance/insurance/calculate_motor_premium",
+            "body": {"mode":"raw","raw":"{\n  \"subcategory_code\": \"{{subcategory_code_psv}}\",\n  \"underwriter_code\": \"{{underwriter_code}}\",\n  \"passenger_count\": {{passenger_count}}\n}"}
+          },
+          "event": [{
+            "listen": "test",
+            "script": {"type":"text/javascript","exec":[
+              "pm.test('OK + total', function () { const j = pm.response.json(); pm.response.to.have.status(200); pm.expect(j).to.have.property('total_premium'); });"
+            ]}
+          }]
+        },
+        {
+          "name": "Compare Pricing (APA vs JUB)",
+          "request": {
+            "method": "POST",
+            "header": [{"key":"Content-Type","value":"application/json"},{"key":"Authorization","value":"Bearer {{access_token}}"}],
+            "url": "{{base_url}}/insurance/insurance/compare_motor_pricing",
+            "body": {"mode":"raw","raw":"{\n  \"subcategory_code\": \"{{subcategory_code_comp}}\",\n  \"underwriter_codes\": [\"APA\", \"JUB\"],\n  \"sum_insured\": {{sum_insured}}\n}"}
+          },
+          "event": [{
+            "listen": "test",
+            "script": {"type":"text/javascript","exec":[
+              "pm.test('OK + comparisons', function () { const j = pm.response.json(); pm.response.to.have.status(200); pm.expect(j.comparisons).to.be.an('array'); });"
+            ]}
+          }]
+        }
+      ]
+    }
+  ]
+}

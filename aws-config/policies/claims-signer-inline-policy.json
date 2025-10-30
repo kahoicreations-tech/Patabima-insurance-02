@@ -1,0 +1,34 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowS3PutForPresignedUploads",
+      "Effect": "Allow",
+      "Action": [
+        "s3:PutObject"
+      ],
+      "Resource": [
+        "arn:aws:s3:::${PATABIMA_UPLOADS_BUCKET}/claims/*",
+        "arn:aws:s3:::${PATABIMA_UPLOADS_BUCKET}/dev/*",
+        "arn:aws:s3:::${PATABIMA_UPLOADS_BUCKET}/staging/*",
+        "arn:aws:s3:::${PATABIMA_UPLOADS_BUCKET}/prod/*",
+        "arn:aws:s3:::${PATABIMA_UPLOADS_BUCKET}/${PATABIMA_S3_PREFIX}/*"
+      ]
+    },
+    {
+      "Sid": "AllowKMSIfSSEKMSIsUsed",
+      "Effect": "Allow",
+      "Action": [
+        "kms:Encrypt",
+        "kms:GenerateDataKey",
+        "kms:DescribeKey"
+      ],
+      "Resource": "arn:aws:kms:${AWS_REGION}:${AWS_ACCOUNT_ID}:key/${PATABIMA_KMS_KEY_ID}",
+      "Condition": {
+        "StringEquals": {
+          "kms:ViaService": "s3.${AWS_REGION}.amazonaws.com"
+        }
+      }
+    }
+  ]
+}

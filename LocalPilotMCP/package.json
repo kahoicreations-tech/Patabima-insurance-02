@@ -1,0 +1,42 @@
+{
+  "name": "adb-mcp-server",
+  "version": "1.0.0",
+  "description": "ADB Model Context Protocol server for real-time Android emulator observation (screenshots + logs) for PataBima",
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc -p .",
+    "start": "node dist/index.js",
+    "dev": "ts-node src/index.ts",
+    "check:adb": "node dist/check-adb.js",
+    "ping": "node scripts/ping.mjs",
+    "expert:on": "node scripts/expert-on.mjs",
+    "observe:expo": "node scripts/observe-expo.mjs",
+    "act:sample": "node scripts/act-and-view.mjs",
+    "simulate:user": "node scripts/user-flow-simulation.mjs",
+    "simulate:intelligent": "node scripts/intelligent-user-simulation.mjs",
+    "observe:start": "node scripts/observe-start.mjs",
+    "observe:stop": "node scripts/observe-stop.mjs",
+    "observe:screenshot": "node scripts/screenshot.mjs",
+    "observe:logs": "node scripts/logs.mjs",
+    "observe:live": "node scripts/observe-live.mjs --screenshot-interval=30 --logs-every=2000",
+    "adb:devices": "node scripts/devices.mjs",
+    "view:now": "node scripts/get-view.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.20.1",
+    "eventemitter3": "^5.0.1",
+    "fast-xml-parser": "^4.4.1",
+    "which": "^4.0.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.7.4",
+    "@types/which": "^3.0.4",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.4.5"
+  }
+}

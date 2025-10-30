@@ -1,0 +1,78 @@
+{
+  "expo": {
+    "name": "PataBima Agency ",
+    "slug": "patabima-agent",
+    "version": "1.0.1",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#FFFFFF",
+      "imageMode": "center"
+    },
+    "updates": {
+      "fallbackToCacheTimeout": 0,
+      "url": "https://u.expo.dev/05038c89-0d3b-4bba-a357-c3fa6af17848"
+    },
+    "assetBundlePatterns": [
+      "assets/fonts/**/*",
+      "assets/icons/**/*",
+      "assets/*.png",
+      "assets/*.jpg"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.patabima.agent"
+    },
+    "android": {
+      "icon": "./assets/icon.png",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#D5222B",
+        "monochromeImage": "./assets/adaptive-icon.png"
+      },
+      "package": "com.patabima.agent",
+      "versionCode": 2,
+      "softwareKeyboardLayoutMode": "resize",
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.INTERNET",
+        "android.permission.ACCESS_NETWORK_STATE"
+      ],
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "patabima.com"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
+        }
+      ]
+    },
+    "owner": "kahoikreations",
+    "extra": {
+      "eas": {
+        "projectId": "05038c89-0d3b-4bba-a357-c3fa6af17848"
+      },
+      "docsPipelineEnabled": true,
+      "apiUrl": "http://ec2-34-203-241-81.compute-1.amazonaws.com"
+    },
+    "plugins": [
+      "expo-secure-store"
+    ],
+    "runtimeVersion": {
+      "policy": "appVersion"
+    }
+  }
+}

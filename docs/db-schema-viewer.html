@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PataBima Database Schema - ER Diagram</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #D5222B;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .diagram-container {
+            text-align: center;
+            margin: 20px 0;
+            padding: 20px;
+            background-color: #fafafa;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+        }
+        .instructions {
+            background-color: #e8f4f8;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 20px 0;
+            border-left: 4px solid #D5222B;
+        }
+        .instructions h3 {
+            margin-top: 0;
+            color: #D5222B;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>PataBima Database Schema - ER Diagram</h1>
+        
+        <div class="instructions">
+            <h3>How to export as PNG:</h3>
+            <ol>
+                <li>Open this HTML file in your browser</li>
+                <li>Use browser developer tools (F12) or browser screenshot tools to capture the diagram</li>
+                <li>Alternatively, right-click on the diagram area and use "Save image as..." if supported</li>
+                <li>Or use a full-page screenshot browser extension</li>
+            </ol>
+        </div>
+
+        <div class="diagram-container">
+            <div class="mermaid">
+erDiagram
+    USER ||--o{ INSURANCE_QUOTATION : "creates"
+    INSURANCE_QUOTATION ||--o{ DOCUMENT_UPLOAD : "has"
+    INSURANCE_QUOTATION ||--o{ SERVICE_PROCESSING_LOG : "logs"
+    INSURANCE_QUOTATION ||--o{ MOTOR_INSURANCE_DETAILS : "has"
+
+    MOTOR_INSURANCE_DETAILS }o--|| MOTOR_SUBCATEGORY : "subcategory_id (FK)"
+    MOTOR_SUBCATEGORY }o--|| MOTOR_CATEGORY : "category_id (FK)"
+
+    MOTOR_SUBCATEGORY ||--o{ MOTOR_PRICING : "pricing"
+    MOTOR_SUBCATEGORY ||--o{ COMMERCIAL_TONNAGE_PRICING : "tonnage_pricing"
+    MOTOR_SUBCATEGORY ||--o{ PSVPLLPRICING : "pll_pricing"
+    MOTOR_SUBCATEGORY ||--o{ ADDITIONAL_FIELD_PRICING : "additional_pricing"
+    MOTOR_SUBCATEGORY ||--o{ EXTENDIBLEPRICING : "extendible_pricing"
+
+    INSURANCE_PROVIDER ||--o{ MOTOR_PRICING : "underwriter/pricing"
+    INSURANCE_PROVIDER ||--o{ COMMERCIAL_TONNAGE_PRICING : "underwriter/tonnage"
+    INSURANCE_PROVIDER ||--o{ PSVPLLPRICING : "underwriter/pll"
+    INSURANCE_PROVIDER ||--o{ EXTENDIBLEPRICING : "underwriter/extendible"
+
+    MOTOR_POLICY }o--|| USER : "user (owner)"
+    MOTOR_POLICY ||--o{ AGENT_COMMISSION : "commissions"
+
+    COMMISSION_RULE }o--|| MOTOR_SUBCATEGORY : "optional rule for subcategory"
+    COMMISSION_RULE }o--|| INSURANCE_PROVIDER : "optional rule for underwriter"
+
+    CLAIM ||--o{ CLAIM_DOCUMENT : "documents"
+    USER ||--o{ CLAIM : "files"
+            </div>
+        </div>
+
+        <div class="instructions">
+            <h3>Alternative Online Conversion:</h3>
+            <p>Visit <a href="https://mermaid.live" target="_blank">mermaid.live</a> and paste the Mermaid code from the diagram above, then use the export options (PNG, SVG, PDF).</p>
+        </div>
+    </div>
+
+    <script>
+        mermaid.initialize({ 
+            startOnLoad: true,
+            theme: 'default',
+            themeVariables: {
+                primaryColor: '#D5222B',
+                primaryTextColor: '#333',
+                primaryBorderColor: '#D5222B',
+                lineColor: '#666'
+            }
+        });
+    </script>
+</body>
+</html>

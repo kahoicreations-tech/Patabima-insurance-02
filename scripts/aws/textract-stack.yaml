@@ -1,0 +1,119 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: PataBima - Textract pipeline (SQS + Lambda) for document processing
+
+Parameters:
+  Env:
+    Type: String
+    Default: dev
+    AllowedValues: [dev, staging, prod]
+  BucketName:
+    Type: String
+    Description: S3 bucket where uploaded documents reside and where results will be written
+  CodeS3Bucket:
+    Type: String
+    Description: S3 bucket that contains the Lambda deployment package (zip)
+  CodeS3Key:
+    Type: String
+    Description: S3 key for the Lambda zip
+  CallbackSecret:
+    Type: String
+    NoEcho: true
+    Description: Shared HMAC secret for Django callback validation
+
+Mappings:
+  Defaults:
+    Memory:
+      Size: 1024
+    Timeout:
+      Sec: 60
+
+Resources:
+  DocsDlq:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub patabima-textract-dlq-${Env}
+
+  DocsQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Sub patabima-textract-${Env}
+      VisibilityTimeout: 60
+      RedrivePolicy:
+        deadLetterTargetArn: !GetAtt DocsDlq.Arn
+        maxReceiveCount: 5
+
+  LambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub patabima-textract-role-${Env}
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: patabima-textract-inline
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                Resource:
+                  - !Sub arn:aws:s3:::${BucketName}/uploads/${Env}/*
+              - Effect: Allow
+                Action:
+                  - s3:PutObject
+                Resource:
+                  - !Sub arn:aws:s3:::${BucketName}/results/*
+              - Effect: Allow
+                Action:
+                  - textract:AnalyzeDocument
+                Resource: '*'
+              - Effect: Allow
+                Action:
+                  - sqs:ReceiveMessage
+                  - sqs:DeleteMessage
+                  - sqs:GetQueueAttributes
+                Resource: !GetAtt DocsQueue.Arn
+
+  TextractFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub patabima-textract-processor-${Env}
+      Role: !GetAtt LambdaRole.Arn
+      Runtime: python3.12
+      Handler: textract_processor.handler
+      MemorySize: !FindInMap [Defaults, Memory, Size]
+      Timeout: !FindInMap [Defaults, Timeout, Sec]
+      Code:
+        S3Bucket: !Ref CodeS3Bucket
+        S3Key: !Ref CodeS3Key
+      Environment:
+        Variables:
+          S3_BUCKET: !Ref BucketName
+          TEXTRACT_FEATURES: 'FORMS,TABLES'
+          CALLBACK_SECRET: !Ref CallbackSecret
+
+  QueueToLambda:
+    Type: AWS::Lambda::EventSourceMapping
+    Properties:
+      EventSourceArn: !GetAtt DocsQueue.Arn
+      FunctionName: !Ref TextractFunction
+      BatchSize: 1
+      MaximumBatchingWindowInSeconds: 0
+
+Outputs:
+  QueueUrl:
+    Description: SQS queue URL for document jobs
+    Value: !Ref DocsQueue
+  QueueArn:
+    Description: SQS queue ARN
+    Value: !GetAtt DocsQueue.Arn
+  FunctionArn:
+    Description: Lambda function ARN
+    Value: !GetAtt TextractFunction.Arn

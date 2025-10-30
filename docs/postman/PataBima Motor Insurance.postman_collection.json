@@ -1,0 +1,215 @@
+{
+  "info": {
+    "name": "PataBima Motor Insurance",
+    "_postman_id": "8a0d7d77-5f8b-4a06-9a69-06f296f94435",
+    "description": "Collection to exercise Motor Insurance endpoints (auth, products, pricing).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login (OTP send)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "auth-login-post-c-pm-1",
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('OTP code present and saved', function () { const j = pm.response.json(); pm.expect(j).to.have.property('otp_code'); pm.environment.set('otp_code', j.otp_code || ''); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{base_url}}/auth/login", "host": ["{{base_url}}"], "path": ["auth", "login"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phonenumber\": \"{{phonenumber}}\",\n  \"password\": \"{{password}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Get Pricing Factors",
+          "event": [
+            {"listen": "test", "script": {"id": "ins-pricing-factors-post-c-pm-1", "type": "text/javascript", "exec": [
+              "const responseBodyJson = pm.response.json();",
+              "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+              "pm.test('Contains factors object', function () { pm.expect(responseBodyJson).to.have.property('factors'); pm.expect(responseBodyJson.factors).to.be.an('object'); });"
+            ]}}
+          ],
+          "request": {
+            "method": "GET",
+            "header": [ { "key": "Authorization", "value": "Bearer {{access_token}}" } ],
+            "url": { "raw": "{{base_url}}/insurance/insurance/pricing_factors", "host": ["{{base_url}}"], "path": ["insurance", "insurance", "pricing_factors"] }
+          }
+        },
+        {
+          "name": "Auth Login (with OTP)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "id": "auth-auth_login-post-c-pm-1",
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200 and tokens returned', function () { const j = pm.response.json(); pm.response.to.have.status(200); pm.expect(j).to.have.property('access'); pm.expect(j).to.have.property('refresh'); pm.environment.set('access_token', j.access || ''); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{base_url}}/auth/auth_login", "host": ["{{base_url}}"], "path": ["auth", "auth_login"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phonenumber\": \"{{phonenumber}}\",\n  \"password\": \"{{password}}\",\n  \"code\": \"{{otp_code}}\"\n}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Motor Insurance",
+      "item": [
+        {
+          "name": "List Categories + Subcategories",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "id": "ins-motor_categories-pre-c-pm-1",
+                "type": "text/javascript",
+                "exec": [
+                  "// Note: Pre-request scripts run before request is sent; no pm.response here.",
+                  "pm.variables.set('ts', Date.now());"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "id": "ins-motor_categories-post-c-pm-1",
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Has categories array', function () { const j = pm.response.json(); pm.expect(j).to.have.property('categories'); pm.expect(j.categories).to.be.an('array').that.is.not.empty; });",
+                  "pm.test('Each category has subcategories', function () { const j = pm.response.json(); j.categories.forEach(c => { pm.expect(c).to.have.property('subcategories'); pm.expect(c.subcategories).to.be.an('array'); }); });"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": { "raw": "{{base_url}}/insurance/insurance/motor_categories", "host": ["{{base_url}}"], "path": ["insurance", "insurance", "motor_categories"] }
+          }
+        },
+        {
+          "name": "List Underwriters",
+          "event": [
+            {"listen": "test", "script": {"id": "ins-underwriters-post-c-pm-1", "type": "text/javascript", "exec": [
+              "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+              "pm.test('Underwriters array present', function () { const j = pm.response.json(); pm.expect(j).to.have.property('underwriters'); pm.expect(j.underwriters).to.be.an('array').that.is.not.empty; });"
+            ]}}
+          ],
+          "request": {
+            "method": "GET",
+            "header": [ { "key": "Authorization", "value": "Bearer {{access_token}}" } ],
+            "url": { "raw": "{{base_url}}/insurance/insurance/underwriters", "host": ["{{base_url}}"], "path": ["insurance", "insurance", "underwriters"] }
+          }
+        },
+        {
+          "name": "Calculate Premium (Comprehensive)",
+          "event": [
+            {"listen": "test", "script": {"id": "ins-calc-comp-post-c-pm-1", "type": "text/javascript", "exec": [
+              "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+              "pm.test('Has total_premium and levies', function () { const j = pm.response.json(); pm.expect(j).to.have.property('total_premium'); pm.expect(j).to.have.property('mandatory_levies'); });",
+              "pm.test('Levies: ITL & PCF at 0.25%, Stamp 40', function () { const j = pm.response.json(); const base = parseFloat(j.base_premium); const itl = parseFloat(j.mandatory_levies.insurance_training_levy); const pcf = parseFloat(j.mandatory_levies.pcf_levy); const sd = parseFloat(j.mandatory_levies.stamp_duty); pm.expect(Math.abs(itl - base*0.0025)).to.be.below(0.02); pm.expect(Math.abs(pcf - base*0.0025)).to.be.below(0.02); pm.expect(sd).to.eql(40.00); })"
+            ]}}
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": { "raw": "{{base_url}}/insurance/insurance/calculate_motor_premium", "host": ["{{base_url}}"], "path": ["insurance", "insurance", "calculate_motor_premium"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"subcategory_code\": \"{{subcategory_code_comp}}\",\n  \"underwriter_code\": \"{{underwriter_code}}\",\n  \"sum_insured\": {{sum_insured}},\n  \"add_ons\": {\n    \"excess_protector\": true,\n    \"pvt\": false,\n    \"windscreen_value\": 50000,\n    \"radio_value\": 10000\n  }\n}"
+            }
+          }
+        },
+        {
+          "name": "Calculate Premium (Tonnage)",
+          "event": [
+            {"listen": "test", "script": {"id": "ins-calc-ton-post-c-pm-1", "type": "text/javascript", "exec": [
+              "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+              "pm.test('Has total_premium', function () { const j = pm.response.json(); pm.expect(j).to.have.property('total_premium'); });",
+              "pm.test('Levies: ITL & PCF at 0.25%, Stamp 40', function () { const j = pm.response.json(); const base = parseFloat(j.base_premium); const itl = parseFloat(j.mandatory_levies.insurance_training_levy); const pcf = parseFloat(j.mandatory_levies.pcf_levy); const sd = parseFloat(j.mandatory_levies.stamp_duty); pm.expect(Math.abs(itl - base*0.0025)).to.be.below(0.02); pm.expect(Math.abs(pcf - base*0.0025)).to.be.below(0.02); pm.expect(sd).to.eql(40.00); })"
+            ]}}
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": { "raw": "{{base_url}}/insurance/insurance/calculate_motor_premium", "host": ["{{base_url}}"], "path": ["insurance", "insurance", "calculate_motor_premium"] },
+            "body": { "mode": "raw", "raw": "{\n  \"subcategory_code\": \"{{subcategory_code_tonnage}}\",\n  \"underwriter_code\": \"{{underwriter_code}}\",\n  \"tonnage\": {{tonnage}}\n}" }
+          }
+        },
+        {
+          "name": "Calculate Premium (PSV)",
+          "event": [
+            {"listen": "test", "script": {"id": "ins-calc-psv-post-c-pm-1", "type": "text/javascript", "exec": [
+              "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+              "pm.test('Has total_premium', function () { const j = pm.response.json(); pm.expect(j).to.have.property('total_premium'); });",
+              "pm.test('Levies: ITL & PCF at 0.25%, Stamp 40', function () { const j = pm.response.json(); const base = parseFloat(j.base_premium); const itl = parseFloat(j.mandatory_levies.insurance_training_levy); const pcf = parseFloat(j.mandatory_levies.pcf_levy); const sd = parseFloat(j.mandatory_levies.stamp_duty); pm.expect(Math.abs(itl - base*0.0025)).to.be.below(0.02); pm.expect(Math.abs(pcf - base*0.0025)).to.be.below(0.02); pm.expect(sd).to.eql(40.00); })"
+            ]}}
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": { "raw": "{{base_url}}/insurance/insurance/calculate_motor_premium", "host": ["{{base_url}}"], "path": ["insurance", "insurance", "calculate_motor_premium"] },
+            "body": { "mode": "raw", "raw": "{\n  \"subcategory_code\": \"{{subcategory_code_psv}}\",\n  \"underwriter_code\": \"{{underwriter_code}}\",\n  \"passenger_count\": {{passenger_count}}\n}" }
+          }
+        },
+        {
+          "name": "Compare Pricing (APA vs JUB)",
+          "event": [
+            {"listen": "test", "script": {"id": "ins-compare-post-c-pm-1", "type": "text/javascript", "exec": [
+              "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+              "pm.test('Comparisons array present', function () { const j = pm.response.json(); pm.expect(j).to.have.property('comparisons'); pm.expect(j.comparisons).to.be.an('array').that.is.not.empty; });"
+            ]}}
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{access_token}}" }
+            ],
+            "url": { "raw": "{{base_url}}/insurance/insurance/compare_motor_pricing", "host": ["{{base_url}}"], "path": ["insurance", "insurance", "compare_motor_pricing"] },
+            "body": { "mode": "raw", "raw": "{\n  \"subcategory_code\": \"{{subcategory_code_comp}}\",\n  \"underwriter_codes\": [\"APA\", \"JUB\"],\n  \"sum_insured\": {{sum_insured}}\n}" }
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,2385 @@
+{
+  "categories": {
+    "status": 200,
+    "ok": true,
+    "json": {
+      "categories": [
+        {
+          "id": "02a099fd-e88b-4b61-8f64-0e3eb7ee173f",
+          "code": "PRIVATE",
+          "name": "Private",
+          "description": "Personal vehicles for private use",
+          "icon": "🚗",
+          "requires_tonnage": false,
+          "requires_engine_capacity": false,
+          "requires_passenger_count": false,
+          "requires_passenger_type": false,
+          "requires_carrying_capacity": false,
+          "supports_time_period_variants": false,
+          "min_vehicle_age": 0,
+          "max_vehicle_age": 25,
+          "field_requirements": {
+            "core_fields": [
+              "financial_interest",
+              "vehicle_identification_method",
+              "registration_number",
+              "vehicle_make",
+              "vehicle_model",
+              "year_of_manufacture",
+              "cover_start_date",
+              "kyc_documents"
+            ]
+          },
+          "sort_order": 1,
+          "is_active": true
+        },
+        {
+          "id": "fe27c128-972d-4a08-8893-1ad922d882bd",
+          "code": "COMMERCIAL",
+          "name": "Commercial",
+          "description": "Goods carriers and commercial vehicles",
+          "icon": "🚚",
+          "requires_tonnage": true,
+          "requires_engine_capacity": false,
+          "requires_passenger_count": false,
+          "requires_passenger_type": false,
+          "requires_carrying_capacity": false,
+          "supports_time_period_variants": false,
+          "min_vehicle_age": 0,
+          "max_vehicle_age": 20,
+          "field_requirements": {
+            "core_fields": [
+              "financial_interest",
+              "vehicle_identification_method",
+              "registration_number",
+              "vehicle_make",
+              "vehicle_model",
+              "year_of_manufacture",
+              "cover_start_date",
+              "kyc_documents"
+            ],
+            "tonnage": {
+              "type": "number",
+              "max": 31,
+              "required": true
+            }
+          },
+          "sort_order": 2,
+          "is_active": true
+        },
+        {
+          "id": "d4ee8d63-363f-40e1-a5fc-41748a26ef42",
+          "code": "PSV",
+          "name": "PSV",
+          "description": "Public service vehicles (matatu, buses)",
+          "icon": "🚌",
+          "requires_tonnage": false,
+          "requires_engine_capacity": false,
+          "requires_passenger_count": true,
+          "requires_passenger_type": false,
+          "requires_carrying_capacity": false,
+          "supports_time_period_variants": true,
+          "min_vehicle_age": 0,
+          "max_vehicle_age": 20,
+          "field_requirements": {
+            "core_fields": [
+              "financial_interest",
+              "vehicle_identification_method",
+              "registration_number",
+              "vehicle_make",
+              "vehicle_model",
+              "year_of_manufacture",
+              "cover_start_date",
+              "kyc_documents"
+            ],
+            "passenger_count": {
+              "type": "number",
+              "min": 1,
+              "required": true
+            }
+          },
+          "sort_order": 3,
+          "is_active": true
+        },
+        {
+          "id": "83a003d5-9c80-422b-9350-583f92bb9d55",
+          "code": "MOTORCYCLE",
+          "name": "Motorcycle",
+          "description": "Motorcycles including boda boda",
+          "icon": "🏍️",
+          "requires_tonnage": false,
+          "requires_engine_capacity": true,
+          "requires_passenger_count": false,
+          "requires_passenger_type": false,
+          "requires_carrying_capacity": false,
+          "supports_time_period_variants": true,
+          "min_vehicle_age": 0,
+          "max_vehicle_age": 15,
+          "field_requirements": {
+            "core_fields": [
+              "financial_interest",
+              "vehicle_identification_method",
+              "registration_number",
+              "vehicle_make",
+              "vehicle_model",
+              "year_of_manufacture",
+              "cover_start_date",
+              "kyc_documents"
+            ],
+            "engine_capacity": {
+              "type": "number",
+              "unit": "cc",
+              "required": true
+            }
+          },
+          "sort_order": 4,
+          "is_active": true
+        },
+        {
+          "id": "4f87a0cc-d791-4e20-9b96-39855211270e",
+          "code": "TUKTUK",
+          "name": "TukTuk",
+          "description": "Three-wheeler vehicles",
+          "icon": "🛺",
+          "requires_tonnage": false,
+          "requires_engine_capacity": false,
+          "requires_passenger_count": true,
+          "requires_passenger_type": false,
+          "requires_carrying_capacity": false,
+          "supports_time_period_variants": false,
+          "min_vehicle_age": 0,
+          "max_vehicle_age": 15,
+          "field_requirements": {
+            "core_fields": [
+              "financial_interest",
+              "vehicle_identification_method",
+              "registration_number",
+              "vehicle_make",
+              "vehicle_model",
+              "year_of_manufacture",
+              "cover_start_date",
+              "kyc_documents"
+            ],
+            "passenger_count": {
+              "type": "number",
+              "min": 1,
+              "required": true
+            }
+          },
+          "sort_order": 5,
+          "is_active": true
+        },
+        {
+          "id": "63206394-bcc9-4ca4-9a2f-faf4cbadddb0",
+          "code": "SPECIAL",
+          "name": "Special Classes",
+          "description": "Agricultural, institutional, and special vehicles",
+          "icon": "🚜",
+          "requires_tonnage": true,
+          "requires_engine_capacity": false,
+          "requires_passenger_count": true,
+          "requires_passenger_type": true,
+          "requires_carrying_capacity": false,
+          "supports_time_period_variants": false,
+          "min_vehicle_age": 0,
+          "max_vehicle_age": 25,
+          "field_requirements": {
+            "core_fields": [
+              "financial_interest",
+              "vehicle_identification_method",
+              "registration_number",
+              "vehicle_make",
+              "vehicle_model",
+              "year_of_manufacture",
+              "cover_start_date",
+              "kyc_documents"
+            ],
+            "tonnage": {
+              "type": "number",
+              "max": 31,
+              "required": true
+            },
+            "passenger_count": {
+              "type": "number",
+              "min": 1,
+              "required": true
+            },
+            "passenger_type": {
+              "type": "select",
+              "options": [
+                "ADULTS",
+                "STUDENTS",
+                "MIXED"
+              ],
+              "required": true
+            }
+          },
+          "sort_order": 6,
+          "is_active": true
+        }
+      ],
+      "total_count": 6
+    }
+  },
+  "subcategories_PRIVATE": {
+    "status": 200,
+    "ok": true,
+    "json": {
+      "category": {
+        "id": "02a099fd-e88b-4b61-8f64-0e3eb7ee173f",
+        "code": "PRIVATE",
+        "name": "Private",
+        "description": "Personal vehicles for private use",
+        "icon": "🚗",
+        "requires_tonnage": false,
+        "requires_engine_capacity": false,
+        "requires_passenger_count": false,
+        "requires_passenger_type": false,
+        "requires_carrying_capacity": false,
+        "supports_time_period_variants": false,
+        "min_vehicle_age": 0,
+        "max_vehicle_age": 25,
+        "field_requirements": {
+          "core_fields": [
+            "financial_interest",
+            "vehicle_identification_method",
+            "registration_number",
+            "vehicle_make",
+            "vehicle_model",
+            "year_of_manufacture",
+            "cover_start_date",
+            "kyc_documents"
+          ]
+        },
+        "sort_order": 1,
+        "is_active": true
+      },
+      "subcategories": [
+        {
+          "subcategory_code": "COMMERCIAL_GENERAL_CARTAGE_TP",
+          "subcategory_name": "COMMERCIAL_GENERAL_CARTAGE_TP",
+          "product_type": "THIRD_PARTY",
+          "pricing_model": "FIXED",
+          "cover_type": "THIRD_PARTY",
+          "name": "General Cartage Third-Party",
+          "description": "Third party coverage for general cartage vehicles (field tonnage up to 31)",
+          "has_fixed_premium": true,
+          "base_premium": 6000,
+          "min_sum_insured": null,
+          "max_sum_insured": null,
+          "requires_sum_insured": false,
+          "requires_tonnage": true,
+          "max_tonnage": 31,
+          "requires_passenger_count": false,
+          "requires_passenger_type": false,
+          "requires_financial_interest": true,
+          "requires_vehicle_identification_method": true,
+          "requires_vehicle_make_model": true,
+          "requires_year_of_manufacture": true,
+          "requires_vehicle_valuation": false,
+          "requires_windscreen_value": false,
+          "requires_radio_value": false,
+          "supports_optional_addons": false,
+          "allows_financed_vehicles": true,
+          "requires_kyc_documents": true,
+          "requires_manual_underwriting": false,
+          "time_period": null,
+          "sort_order": 3
+        },
+        {
+          "subcategory_code": "COMMERCIAL_OWN_GOODS_COMP",
+          "subcategory_name": "COMMERCIAL_OWN_GOODS_COMP",
+          "product_type": "THIRD_PARTY",
+          "pricing_model": "FIXED",
+          "cover_type": "COMPREHENSIVE",
+          "name": "Own Goods Comprehensive",
+          "description": "Comprehensive coverage for own goods vehicles (field tonnage)",
+          "has_fixed_premium": false,
+          "base_premium": null,
+          "min_sum_insured": 500000,
+          "max_sum_insured": 8000000,
+          "requires_sum_insured": true,
+          "requires_tonnage": true,
+          "max_tonnage": 31,
+          "requires_passenger_count": false,
+          "requires_passenger_type": false,
+          "requires_financial_interest": true,
+          "requires_vehicle_identification_method": true,
+          "requires_vehicle_make_model": true,
+          "requires_year_of_manufacture": true,
+          "requires_vehicle_valuation": false,
+          "requires_windscreen_value": false,
+          "requires_radio_value": false,
+          "supports_optional_addons": false,
+          "allows_financed_vehicles": true,
+          "requires_kyc_documents": true,
+          "requires_manual_underwriting": false,
+          "time_period": null,
+          "sort_order": 4
+        },
+        {
+          "subcategory_code": "COMMERCIAL_OWN_GOODS_TP",
+          "subcategory_name": "COMMERCIAL_OWN_GOODS_TP",
+          "product_type": "THIRD_PARTY",
+          "pricing_model": "FIXED",
+          "cover_type": "THIRD_PARTY",
+          "name": "Own Goods Third-Party",
+          "description": "Third party coverage for own goods vehicles (field tonnage up to 31)",
+          "has_fixed_premium": true,
+          "base_premium": 5000,
+          "min_sum_insured": null,
+          "max_sum_insured": null,
+          "requires_sum_insured": false,
+          "requires_tonnage": true,
+          "max_tonnage": 31,
+          "requires_passenger_count": false,
+          "requires_passenger_type": false,
+          "requires_financial_interest": true,
+          "requires_vehicle_identification_method": true,
+          "requires_vehicle_make_model": true,
+          "requires_year_of_manufacture": true,
+          "requires_vehicle_valuation": false,
+          "requires_windscreen_value": false,
+          "requires_radio_value": false,
+          "supports_optional_addons": false,
+          "allows_financed_vehicles": true,
+          "requires_kyc_documents": true,
+          "requires_manual_underwriting": false,
+          "time_period": null,
+          "sort_order": 2
+        },
+        {
+          "subcategory_code": "COMMERCIAL_TOR",
+          "subcategory_name": "COMMERCIAL_TOR",
+          "product_type": "THIRD_PARTY",
+          "pricing_model": "FIXED",
+          "cover_type": "TOR",
+          "name": "TOR For Commercial",
+          "description": "Time on Risk coverage for commercial vehicles (field tonnage up to 31)",
+          "has_fixed_premium": true,
+          "base_premium": 2000,
+          "min_sum_insured": null,
+          "max_sum_insured": null,
+          "requires_sum_insured": false,
+          "requires_tonnage": true,
+          "max_tonnage": 31,
+          "requires_passenger_count": false,
+          "requires_passenger_type": false,
+          "requires_financial_interest": false,
+          "requires_vehicle_identification_method": false,
+          "requires_vehicle_make_model": true,
+          "requires_year_of_manufacture": true,
+          "requires_vehicle_valuation": false,
+          "requires_windscreen_value": false,
+          "requires_radio_value": false,
+          "supports_optional_addons": false,
+          "allows_financed_vehicles": true,
+          "requires_kyc_documents": true,
+          "requires_manual_underwriting": false,
+          "time_period": null,
+          "sort_order": 1
+        },
+        {
+          "subcategory_code": "MOTORCYCLE_PRIVATE_COMP",
+          "subcategory_name": "MOTORCYCLE_PRIVATE_COMP",
+          "product_type": "THIRD_PARTY",
+          "pricing_model": "FIXED",
+          "cover_type": "COMPREHENSIVE",
+          "name": "Private Motorcycle Comprehensive",
+          "description": "Comprehensive coverage for private motorcycles",
+          "has_fixed_premium": false,
+          "base_premium": null,
+          "min_sum_insured": 50000,
+          "max_sum_insured": 500000,
+          "requires_sum_insured": true,
+          "requires_tonnage": false,
+          "max_tonnage": 31,
+          "requires_passenger_count": false,
+          "requires_passenger_type": false,
+          "requires_financial_interest": true,
+          "requires_vehicle_identification_method": true,
+          "requires_vehicle_make_model": true,
+          "requires_year_of_manufacture": true,
+          "requires_vehicle_valuation": false,
+          "requires_windscreen_value": false,
+          "requires_radio_value": false,
+          "supports_optional_addons": false,
+          "allows_financed_vehicles": true,
+          "requires_kyc_documents": true,
+          "requires_manual_underwriting": false,
+          "time_period": null,
+          "sort_order": 3
+        },
+        {
+          "subcategory_code": "PRIVATE_COMPREHENSIVE",
+          "subcategory_name": "Private Comprehensive",
+          "product_type": "comprehensive",
+          "pricing_model": "FIXED",
+          "cover_type": "COMPREHENSIVE",
+          "name": "Private Comprehensive",
+          "description": "Full comprehensive coverage for private vehicles",
+          "has_fixed_premium": false,
+          "base_premium": null,
+          "min_sum_insured": 200000,
+          "max_sum_insured": 15000000,
+          "requires_sum_insured": true,
+          "requires_tonnage": false,
+          "max_tonnage": 31,
+          "requires_passenger_count": false,
+          "requires_passenger_type": false,
+          "requires_financial_interest": true,
+          "requires_vehicle_identification_method": true,
+          "requires_vehicle_make_model": true,
+          "requires_year_of_manufacture": true,
+          "requires_vehicle_valuation": true,
+          "requires_windscreen_value": true,
+          "requires_radio_value": true,
+          "supports_optional_addons": true,
+          "allows_financed_vehicles": true,
+          "requires_kyc_documents": true,
+          "requires_manual_underwriting": false,
+          "time_period": null,
+          "sort_order": 5
+        },
+        {
+          "subcategory_code": "PRIVATE_TOR",
+          "subcategory_name": "Private Time On Risk",
+          "product_type": "fixed",
+          "pricing_model": "FIXED",
+          "cover_type": "TOR",
+          "name": "TOR For Private",
+          "description": "Time on Risk coverage for private vehicles",
+          "has_fixed_premium": true,
+          "base_premium": 1500,
+          "min_sum_insured": null,
+          "max_sum_insured": null,
+          "requires_sum_insured": false,
+          "requires_tonnage": false,
+          "max_tonnage": 31,
+          "requires_passenger_count": false,
+          "requires_passenger_type": false,
+          "requires_financial_interest": false,
+          "requires_vehicle_identification_method": false,
+          "requires_vehicle_make_model": true,
+          "requires_year_of_manufacture": true,
+          "requires_vehicle_valuation": false,
+          "requires_windscreen_value": false,
+          "requires_radio_value": false,
+          "supports_optional_addons": false,
+          "allows_financed_vehicles": true,
+          "requires_kyc_documents": true,
+          "requires_manual_underwriting": false,
+          "time_period": null,
+          "sort_order": 1
+        },
+        {
+          "subcategory_code": "PRIVATE_MOTORCYCLE_TP",
+          "subcategory_name": "PRIVATE_MOTORCYCLE_TP",
+          "product_type": "THIRD_PARTY",
+          "pricing_model": "FIXED",
+          "cover_type": "THIRD_PARTY",
+          "name": "Private Motorcycle Third-Party",
+          "description": "Third party coverage for private motorcycles",
+          "has_fixed_premium": true,
+          "base_premium": 2500,
+          "min_sum_insured": null,
+          "max_sum_insured": null,
+          "requires_sum_insured": false,
+          "requires_tonnage": false,
+          "max_tonnage": 31,
+          "requires_passenger_count": false,
+          "requires_passenger_type": false,
+          "requires_financial_interest": true,
+          "requires_vehicle_identification_method": true,
+          "requires_vehicle_make_model": true,
+          "requires_year_of_manufacture": true,
+          "requires_vehicle_valuation": false,
+          "requires_windscreen_value": false,
+          "requires_radio_value": false,
+          "supports_optional_addons": false,
+          "allows_financed_vehicles": true,
+          "requires_kyc_documents": true,
+          "requires_manual_underwriting": false,
+          "time_period": null,
+          "sort_order": 4
+        },
+        {
+          "subcategory_code": "PRIVATE_THIRD_PARTY",
+          "subcategory_name": "PRIVATE_THIRD_PARTY",
+          "product_type": "THIRD_PARTY",
+          "pricing_model": "FIXED",
+          "cover_type": "THIRD_PARTY",
+          "name": "Private Third-Party",
+          "description": "Third party coverage for private vehicles",
+          "has_fixed_premium": true,
+          "base_premium": 3500,
+          "min_sum_insured": null,
+          "max_sum_insured": null,
+          "requires_sum_insured": false,
+          "requires_tonnage": false,
+          "max_tonnage": 31,
+          "requires_passenger_count": false,
+          "requires_passenger_type": false,
+          "requires_financial_interest": true,
+          "requires_vehicle_identification_method": true,
+          "requires_vehicle_make_model": true,
+          "requires_year_of_manufacture": true,
+          "requires_vehicle_valuation": false,
+          "requires_windscreen_value": false,
+          "requires_radio_value": false,
+          "supports_optional_addons": false,
+          "allows_financed_vehicles": true,
+          "requires_kyc_documents": true,
+          "requires_manual_underwriting": false,
+          "time_period": null,
+          "sort_order": 2
+        },
+        {
+          "subcategory_code": "PRIVATE_THIRD_PARTY_EXT",
+          "subcategory_name": "PRIVATE_THIRD_PARTY_EXT",
+          "product_type": "THIRD_PARTY",
+          "pricing_model": "FIXED",
+          "cover_type": "THIRD_PARTY_EXT",
+          "name": "Private Third-Party Extendible",
+          "description": "Extendible third party coverage for private vehicles",
+          "has_fixed_premium": true,
+          "base_premium": 4000,
+          "min_sum_insured": null,
+          "max_sum_insured": null,
+          "requires_sum_insured": false,
+          "requires_tonnage": false,
+          "max_tonnage": 31,
+          "requires_passenger_count": false,
+          "requires_passenger_type": false,
+          "requires_financial_interest": true,
+          "requires_vehicle_identification_method": true,
+          "requires_vehicle_make_model": true,
+          "requires_year_of_manufacture": true,
+          "requires_vehicle_valuation": false,
+          "requires_windscreen_value": false,
+          "requires_radio_value": false,
+          "supports_optional_addons": false,
+          "allows_financed_vehicles": true,
+          "requires_kyc_documents": true,
+          "requires_manual_underwriting": false,
+          "time_period": null,
+          "sort_order": 3
+        },
+        {
+          "subcategory_code": "PSV_MATATU_1M_TP",
+          "subcategory_name": "PSV_MATATU_1M_TP",
+          "product_type": "THIRD_PARTY",
+          "pricing_model": "FIXED",
+          "cover_type": "THIRD_PARTY",
+          "name": "1 Month PSV Matatu Third-Party",
+          "description": "1 month third party coverage for matatus (Number of passengers)",
+          "has_fixed_premium": true,
+          "base_premium": 5000,
+          "min_sum_insured": null,
+          "max_sum_insured": null,
+          "requires_sum_insured": false,
+          "requires_tonnage": false,
+          "max_tonnage": 31,
+          "requires_passenger_count": true,
+          "requires_passenger_type": false,
+          "requires_financial_interest": true,
+          "requires_vehicle_identification_method": true,
+          "requires_vehicle_make_model": true,
+          "requires_year_of_manufacture": true,
+          "requires_vehicle_valuation": false,
+          "requires_windscreen_value": false,
+          "requires_radio_value": false,
+          "supports_optional_addons": false,
+          "allows_financed_vehicles": true,
+          "requires_kyc_documents": true,
+          "requires_manual_underwriting": false,
+          "time_period": "1_MONTH",
+          "sort_order": 2
+        },
+        {
+          "subcategory_code": "PSV_UBER_COMP",
+          "subcategory_name": "PSV_UBER_COMP",
+          "product_type": "THIRD_PARTY",
+          "pricing_model": "FIXED",
+          "cover_type": "COMPREHENSIVE",
+          "name": "PSV UBER COMPREHENSIVE",
+          "description": "Comprehensive coverage for Uber vehicles (Number of passengers)",
+          "has_fixed_premium": false,
+          "base_premium": null,
+          "min_sum_insured": 300000,
+          "max_sum_insured": 5000000,
+          "requires_sum_insured": true,
+          "requires_tonnage": false,
+          "max_tonnage": 31,
+          "requires_passenger_count": true,
+          "requires_passenger_type": false,
+          "requires_financial_interest": true,
+          "requires_vehicle_identification_method": true,
+          "requires_vehicle_make_model": true,
+          "requires_year_of_manufacture": true,
+          "requires_vehicle_valuation": false,
+          "requires_windscreen_value": false,
+          "requires_radio_value": false,
+          "supports_optional_addons": false,
+          "allows_financed_vehicles": true,
+          "requires_kyc_documents": true,
+          "requires_manual_underwriting": false,
+          "time_period": null,
+          "sort_order": 3
+        },
+        {
+          "subcategory_code": "SPECIAL_AGRICULTURAL_COMP",
+          "subcategory_name": "SPECIAL_AGRICULTURAL_COMP",
+          "product_type": "THIRD_PARTY",
+          "pricing_model": "FIXED",
+          "cover_type": "COMPREHENSIVE",
+          "name": "Agricultural Tractor Comprehensive",
+          "description": "Comprehensive coverage for agricultural tractors",
+          "has_fixed_premium": false,
+          "base_premium": null,
+          "min_sum_insured": 200000,
+          "max_sum_insured": 5000000,
+          "requires_sum_insured": true,
+          "requires_tonnage": false,
+          "max_tonnage": 31,
+          "requires_passenger_count": false,
+          "requires_passenger_type": false,
+          "requires_financial_interest": true,
+          "requires_vehicle_identification_method": true,
+          "requires_vehicle_make_model": true,
+          "requires_year_of_manufacture": true,
+          "requires_vehicle_valuation": false,
+          "requires_windscreen_value": false,
+          "requires_radio_value": false,
+          "supports_optional_addons": false,
+          "allows_financed_vehicles": true,
+          "requires_kyc_documents": true,
+          "requires_manual_underwriting": false,
+          "time_period": null,
+          "sort_order": 3
+        },
+        {
+          "subcategory_code": "SPECIAL_AGRICULTURAL_TP",
+          "subcategory_name": "SPECIAL_AGRICULTURAL_TP",
+          "product_type": "THIRD_PARTY",
+          "pricing_model": "FIXED",
+          "cover_type": "THIRD_PARTY",
+          "name": "Agricultural Tractor Third-Party",
+          "description": "Third party coverage for agricultural tractors (field tonnage up to 31)",
+          "has_fixed_premium": true,
+          "base_premium": 4000,
+          "min_sum_insured": null,
+          "max_sum_insured": null,
+          "requires_sum_insured": false,
+          "requires_tonnage": true,
+          "max_tonnage": 31,
+          "requires_passenger_count": false,
+          "requires_passenger_type": false,
+          "requires_financial_interest": true,
+          "requires_vehicle_identification_method": true,
+          "requires_vehicle_make_model": true,
+          "requires_year_of_manufacture": true,
+          "requires_vehicle_valuation": false,
+          "requires_windscreen_value": false,
+          "requires_radio_value": false,
+          "supports_optional_addons": false,
+          "allows_financed_vehicles": true,
+          "requires_kyc_documents": true,
+          "requires_manual_underwriting": false,
+          "time_period": null,
+          "sort_order": 1
+        },
+        {
+          "subcategory_code": "SPECIAL_AMBULANCE_COMP",
+          "subcategory_name": "SPECIAL_AMBULANCE_COMP",
+          "product_type": "THIRD_PARTY",
+          "pricing_model": "FIXED",
+          "cover_type": "COMPREHENSIVE",
+          "name": "Commercial Ambulance Comprehensive",
+          "description": "Comprehensive coverage for commercial ambulances",
+          "has_fixed_premium": false,
+          "base_premium": null,
+          "min_sum_insured": 500000,
+          "max_sum_insured": 10000000,
+          "requires_sum_insured": true,
+          "requires_tonnage": false,
+          "max_tonnage": 31,
+          "requires_passenger_count": false,
+          "requires_passenger_type": false,
+          "requires_financial_interest": true,
+          "requires_vehicle_identification_method": true,
+          "requires_vehicle_make_model": true,
+          "requires_year_of_manufacture": true,
+          "requires_vehicle_valuation": false,
+          "requires_windscreen_value": false,
+          "requires_radio_value": false,
+          "supports_optional_addons": false,
+          "allows_financed_vehicles": true,
+          "requires_kyc_documents": true,
+          "requires_manual_underwriting": false,
+          "time_period": null,
+          "sort_order": 4
+        },
+        {
+          "subcategory_code": "SPECIAL_INSTITUTIONAL_TP",
+          "subcategory_name": "SPECIAL_INSTITUTIONAL_TP",
+          "product_type": "THIRD_PARTY",
+          "pricing_model": "FIXED",
+          "cover_type": "THIRD_PARTY",
+          "name": "Commercial Institutional Third-Party",
+          "description": "Third party coverage for institutional vehicles (Number of passengers, Passenger type)",
+          "has_fixed_premium": true,
+          "base_premium": 5500,
+          "min_sum_insured": null,
+          "max_sum_insured": null,
+          "requires_sum_insured": false,
+          "requires_tonnage": false,
+          "max_tonnage": 31,
+          "requires_passenger_count": true,
+          "requires_passenger_type": true,
+          "requires_financial_interest": true,
+          "requires_vehicle_identification_method": true,
+          "requires_vehicle_make_model": true,
+          "requires_year_of_manufacture": true,
+          "requires_vehicle_valuation": false,
+          "requires_windscreen_value": false,
+          "requires_radio_value": false,
+          "supports_optional_addons": false,
+          "allows_financed_vehicles": true,
+          "requires_kyc_documents": true,
+          "requires_manual_underwriting": false,
+          "time_period": null,
+          "sort_order": 2
+        },
+        {
+          "subcategory_code": "TUKTUK_COMMERCIAL_COMP",
+          "subcategory_name": "TUKTUK_COMMERCIAL_COMP",
+          "product_type": "THIRD_PARTY",
+          "pricing_model": "FIXED",
+          "cover_type": "COMPREHENSIVE",
+          "name": "Commercial TukTuk Comprehensive",
+          "description": "Comprehensive coverage for commercial tuktuks",
+          "has_fixed_premium": false,
+          "base_premium": null,
+          "min_sum_insured": 100000,
+          "max_sum_insured": 2000000,
+          "requires_sum_insured": true,
+          "requires_tonnage": false,
+          "max_tonnage": 31,
+          "requires_passenger_count": false,
+          "requires_passenger_type": false,
+          "requires_financial_interest": true,
+          "requires_vehicle_identification_method": true,
+          "requires_vehicle_make_model": true,
+          "requires_year_of_manufacture": true,
+          "requires_vehicle_valuation": false,
+          "requires_windscreen_value": false,
+          "requires_radio_value": false,
+          "supports_optional_addons": false,
+          "allows_financed_vehicles": true,
+          "requires_kyc_documents": true,
+          "requires_manual_underwriting": false,
+          "time_period": null,
+          "sort_order": 3
+        },
+        {
+          "subcategory_code": "TUKTUK_COMMERCIAL_TP",
+          "subcategory_name": "TUKTUK_COMMERCIAL_TP",
+          "product_type": "THIRD_PARTY",
+          "pricing_model": "FIXED",
+          "cover_type": "THIRD_PARTY",
+          "name": "Commercial TukTuk Third-Party",
+          "description": "Third party coverage for commercial tuktuks",
+          "has_fixed_premium": true,
+          "base_premium": 3000,
+          "min_sum_insured": null,
+          "max_sum_insured": null,
+          "requires_sum_insured": false,
+          "requires_tonnage": false,
+          "max_tonnage": 31,
+          "requires_passenger_count": false,
+          "requires_passenger_type": false,
+          "requires_financial_interest": true,
+          "requires_vehicle_identification_method": true,
+          "requires_vehicle_make_model": true,
+          "requires_year_of_manufacture": true,
+          "requires_vehicle_valuation": false,
+          "requires_windscreen_value": false,
+          "requires_radio_value": false,
+          "supports_optional_addons": false,
+          "allows_financed_vehicles": true,
+          "requires_kyc_documents": true,
+          "requires_manual_underwriting": false,
+          "time_period": null,
+          "sort_order": 2
+        },
+        {
+          "subcategory_code": "TUKTUK_PSV_TP",
+          "subcategory_name": "TUKTUK_PSV_TP",
+          "product_type": "THIRD_PARTY",
+          "pricing_model": "FIXED",
+          "cover_type": "THIRD_PARTY",
+          "name": "PSV Tuk-Tuk Third-Party",
+          "description": "Third party coverage for PSV tuktuks",
+          "has_fixed_premium": true,
+          "base_premium": 3500,
+          "min_sum_insured": null,
+          "max_sum_insured": null,
+          "requires_sum_insured": false,
+          "requires_tonnage": false,
+          "max_tonnage": 31,
+          "requires_passenger_count": true,
+          "requires_passenger_type": false,
+          "requires_financial_interest": true,
+          "requires_vehicle_identification_method": true,
+          "requires_vehicle_make_model": true,
+          "requires_year_of_manufacture": true,
+          "requires_vehicle_valuation": false,
+          "requires_windscreen_value": false,
+          "requires_radio_value": false,
+          "supports_optional_addons": false,
+          "allows_financed_vehicles": true,
+          "requires_kyc_documents": true,
+          "requires_manual_underwriting": false,
+          "time_period": null,
+          "sort_order": 1
+        }
+      ],
+      "total_count": 19
+    }
+  },
+  "covertype_PRIVATE": {
+    "status": 200,
+    "ok": true,
+    "json": {
+      "category": {
+        "id": "02a099fd-e88b-4b61-8f64-0e3eb7ee173f",
+        "code": "PRIVATE",
+        "name": "Private",
+        "description": "Personal vehicles for private use",
+        "icon": "🚗",
+        "requires_tonnage": false,
+        "requires_engine_capacity": false,
+        "requires_passenger_count": false,
+        "requires_passenger_type": false,
+        "requires_carrying_capacity": false,
+        "supports_time_period_variants": false,
+        "min_vehicle_age": 0,
+        "max_vehicle_age": 25,
+        "field_requirements": {
+          "core_fields": [
+            "financial_interest",
+            "vehicle_identification_method",
+            "registration_number",
+            "vehicle_make",
+            "vehicle_model",
+            "year_of_manufacture",
+            "cover_start_date",
+            "kyc_documents"
+          ]
+        },
+        "sort_order": 1,
+        "is_active": true
+      },
+      "cover_types": [
+        {
+          "id": "0ec7085d-da97-4fe1-85cb-a34fe9bd54ab",
+          "code": "PRIVATE_TOR",
+          "name": "TOR For Private",
+          "cover_type": "TOR",
+          "description": "Time on Risk coverage for private vehicles",
+          "has_fixed_premium": true,
+          "base_premium": "1500.00",
+          "requires_sum_insured": false,
+          "min_sum_insured": null,
+          "max_sum_insured": null,
+          "time_period": null,
+          "requires_tonnage": false,
+          "max_tonnage": 31,
+          "requires_passenger_count": false,
+          "requires_passenger_type": false,
+          "requires_financial_interest": false,
+          "requires_vehicle_identification_method": false,
+          "requires_vehicle_make_model": true,
+          "requires_year_of_manufacture": true,
+          "requires_chassis_number": false,
+          "requires_vehicle_valuation": false,
+          "requires_windscreen_value": false,
+          "requires_radio_value": false,
+          "supports_optional_addons": false,
+          "requires_kyc_documents": true,
+          "allows_financed_vehicles": true,
+          "requires_manual_underwriting": false,
+          "category_code": "PRIVATE",
+          "category_name": "Private",
+          "additional_fields": {},
+          "sort_order": 1,
+          "is_active": true
+        },
+        {
+          "id": "d417736b-fdf5-4462-8695-2cff32f4b306",
+          "code": "PRIVATE_THIRD_PARTY",
+          "name": "Private Third-Party",
+          "cover_type": "THIRD_PARTY",
+          "description": "Third party coverage for private vehicles",
+          "has_fixed_premium": true,
+          "base_premium": "3500.00",
+          "requires_sum_insured": false,
+          "min_sum_insured": null,
+          "max_sum_insured": null,
+          "time_period": null,
+          "requires_tonnage": false,
+          "max_tonnage": 31,
+          "requires_passenger_count": false,
+          "requires_passenger_type": false,
+          "requires_financial_interest": true,
+          "requires_vehicle_identification_method": true,
+          "requires_vehicle_make_model": true,
+          "requires_year_of_manufacture": true,
+          "requires_chassis_number": true,
+          "requires_vehicle_valuation": false,
+          "requires_windscreen_value": false,
+          "requires_radio_value": false,
+          "supports_optional_addons": false,
+          "requires_kyc_documents": true,
+          "allows_financed_vehicles": true,
+          "requires_manual_underwriting": false,
+          "category_code": "PRIVATE",
+          "category_name": "Private",
+          "additional_fields": {},
+          "sort_order": 2,
+          "is_active": true
+        },
+        {
+          "id": "9be6fb04-9df8-4775-97df-2b574d9fe7a2",
+          "code": "PRIVATE_THIRD_PARTY_EXT",
+          "name": "Private Third-Party Extendible",
+          "cover_type": "THIRD_PARTY_EXT",
+          "description": "Extendible third party coverage for private vehicles",
+          "has_fixed_premium": true,
+          "base_premium": "4000.00",
+          "requires_sum_insured": false,
+          "min_sum_insured": null,
+          "max_sum_insured": null,
+          "time_period": null,
+          "requires_tonnage": false,
+          "max_tonnage": 31,
+          "requires_passenger_count": false,
+          "requires_passenger_type": false,
+          "requires_financial_interest": true,
+          "requires_vehicle_identification_method": true,
+          "requires_vehicle_make_model": true,
+          "requires_year_of_manufacture": true,
+          "requires_chassis_number": true,
+          "requires_vehicle_valuation": false,
+          "requires_windscreen_value": false,
+          "requires_radio_value": false,
+          "supports_optional_addons": false,
+          "requires_kyc_documents": true,
+          "allows_financed_vehicles": true,
+          "requires_manual_underwriting": false,
+          "category_code": "PRIVATE",
+          "category_name": "Private",
+          "additional_fields": {},
+          "sort_order": 3,
+          "is_active": true
+        },
+        {
+          "id": "03d1f34d-7c87-44ea-905e-dde5472ca238",
+          "code": "PRIVATE_MOTORCYCLE_TP",
+          "name": "Private Motorcycle Third-Party",
+          "cover_type": "THIRD_PARTY",
+          "description": "Third party coverage for private motorcycles",
+          "has_fixed_premium": true,
+          "base_premium": "2500.00",
+          "requires_sum_insured": false,
+          "min_sum_insured": null,
+          "max_sum_insured": null,
+          "time_period": null,
+          "requires_tonnage": false,
+          "max_tonnage": 31,
+          "requires_passenger_count": false,
+          "requires_passenger_type": false,
+          "requires_financial_interest": true,
+          "requires_vehicle_identification_method": true,
+          "requires_vehicle_make_model": true,
+          "requires_year_of_manufacture": true,
+          "requires_chassis_number": true,
+          "requires_vehicle_valuation": false,
+          "requires_windscreen_value": false,
+          "requires_radio_value": false,
+          "supports_optional_addons": false,
+          "requires_kyc_documents": true,
+          "allows_financed_vehicles": true,
+          "requires_manual_underwriting": false,
+          "category_code": "PRIVATE",
+          "category_name": "Private",
+          "additional_fields": {},
+          "sort_order": 4,
+          "is_active": true
+        },
+        {
+          "id": "ecd3a3df-9005-4e2c-a8bb-7899d29e68a8",
+          "code": "PRIVATE_COMPREHENSIVE",
+          "name": "Private Comprehensive",
+          "cover_type": "COMPREHENSIVE",
+          "description": "Full comprehensive coverage for private vehicles",
+          "has_fixed_premium": false,
+          "base_premium": null,
+          "requires_sum_insured": true,
+          "min_sum_insured": "200000.00",
+          "max_sum_insured": "15000000.00",
+          "time_period": null,
+          "requires_tonnage": false,
+          "max_tonnage": 31,
+          "requires_passenger_count": false,
+          "requires_passenger_type": false,
+          "requires_financial_interest": true,
+          "requires_vehicle_identification_method": true,
+          "requires_vehicle_make_model": true,
+          "requires_year_of_manufacture": true,
+          "requires_chassis_number": true,
+          "requires_vehicle_valuation": true,
+          "requires_windscreen_value": true,
+          "requires_radio_value": true,
+          "supports_optional_addons": true,
+          "requires_kyc_documents": true,
+          "allows_financed_vehicles": true,
+          "requires_manual_underwriting": false,
+          "category_code": "PRIVATE",
+          "category_name": "Private",
+          "additional_fields": {
+            "vehicle_valuation": {
+              "type": "number",
+              "required": true
+            },
+            "windscreen_value": {
+              "type": "number",
+              "required": false
+            },
+            "radio_value": {
+              "type": "number",
+              "required": false
+            },
+            "optional_addons": {
+              "type": "checkbox_group",
+              "options": [
+                "excess_protector",
+                "political_violence",
+                "terrorism_cover"
+              ],
+              "required": false
+            }
+          },
+          "sort_order": 5,
+          "is_active": true
+        }
+      ]
+    }
+  },
+  "fields_PRIVATE_TP": {
+    "status": 200,
+    "ok": true,
+    "json": {
+      "category": {
+        "id": "02a099fd-e88b-4b61-8f64-0e3eb7ee173f",
+        "code": "PRIVATE",
+        "name": "Private",
+        "description": "Personal vehicles for private use",
+        "icon": "🚗",
+        "requires_tonnage": false,
+        "requires_engine_capacity": false,
+        "requires_passenger_count": false,
+        "requires_passenger_type": false,
+        "requires_carrying_capacity": false,
+        "supports_time_period_variants": false,
+        "min_vehicle_age": 0,
+        "max_vehicle_age": 25,
+        "field_requirements": {
+          "core_fields": [
+            "financial_interest",
+            "vehicle_identification_method",
+            "registration_number",
+            "vehicle_make",
+            "vehicle_model",
+            "year_of_manufacture",
+            "cover_start_date",
+            "kyc_documents"
+          ]
+        },
+        "sort_order": 1,
+        "is_active": true
+      },
+      "cover_type": {
+        "code": "PRIVATE_THIRD_PARTY",
+        "cover_type": "THIRD_PARTY"
+      },
+      "field_requirements": {
+        "core_fields": {
+          "financial_interest": {
+            "type": "radio",
+            "required": true,
+            "options": [
+              "YES",
+              "NO"
+            ],
+            "label": "Financial Interest"
+          },
+          "vehicle_identification_method": {
+            "type": "radio",
+            "required": true,
+            "options": [
+              "REGISTRATION",
+              "CHASSIS"
+            ],
+            "label": "Vehicle Identification Method"
+          },
+          "registration_number": {
+            "type": "text",
+            "required": true,
+            "label": "Registration Number",
+            "validation": "kenyan_registration"
+          },
+          "vehicle_make": {
+            "type": "dropdown",
+            "required": true,
+            "label": "Vehicle Make",
+            "data_source": "vehicle_makes"
+          },
+          "vehicle_model": {
+            "type": "dropdown",
+            "required": true,
+            "label": "Vehicle Model",
+            "data_source": "vehicle_models",
+            "depends_on": "vehicle_make"
+          },
+          "year_of_manufacture": {
+            "type": "dropdown",
+            "required": true,
+            "label": "Year of Manufacture",
+            "min_year": 2000,
+            "max_year": 2025
+          },
+          "cover_start_date": {
+            "type": "date",
+            "required": true,
+            "label": "Cover Start Date",
+            "min_date": "today",
+            "max_date": "today+30d",
+            "validation": {
+              "no_backdating": true,
+              "max_days_forward": 30,
+              "default_policy_term_days": 365
+            }
+          }
+        },
+        "category_fields": {},
+        "cover_type_fields": {},
+        "payment_fields": {
+          "payment_provider": {
+            "type": "radio",
+            "required": true,
+            "options": [
+              "MPESA",
+              "DPO_PAY"
+            ],
+            "label": "Payment Method"
+          },
+          "phone_number": {
+            "type": "tel",
+            "required": true,
+            "label": "Phone Number",
+            "validation": "kenyan_mobile"
+          }
+        },
+        "kyc_fields": {
+          "national_id": {
+            "type": "file_upload",
+            "required": true,
+            "label": "National ID",
+            "accepted_formats": [
+              "pdf",
+              "jpg",
+              "png"
+            ]
+          },
+          "kra_pin": {
+            "type": "file_upload",
+            "required": true,
+            "label": "KRA PIN Certificate",
+            "accepted_formats": [
+              "pdf",
+              "jpg",
+              "png"
+            ]
+          },
+          "logbook": {
+            "type": "file_upload",
+            "required": true,
+            "label": "Vehicle Logbook",
+            "accepted_formats": [
+              "pdf",
+              "jpg",
+              "png"
+            ]
+          }
+        }
+      }
+    }
+  },
+  "addons_PRIVATE_TP": {
+    "status": 200,
+    "ok": true,
+    "json": {
+      "addons": [],
+      "source": "default",
+      "applicability": "non-comprehensive"
+    }
+  },
+  "calc_PRIVATE_TP": {
+    "status": 200,
+    "ok": true,
+    "json": {
+      "category": "PRIVATE",
+      "cover_type": "THIRD_PARTY",
+      "underwriter_code": null,
+      "policy_term": {
+        "start_date": "2025-09-29",
+        "end_date": "2026-09-29",
+        "duration_days": 365
+      },
+      "premium_breakdown": {
+        "base_premium": 3500,
+        "training_levy": 8.75,
+        "pcf_levy": 8.75,
+        "stamp_duty": 40,
+        "total_levies": 57.5,
+        "total_premium": 3557.5
+      },
+      "base_premium": 3500,
+      "total_premium": 3557.5
+    }
+  },
+  "calc_PRIVATE_TOR": {
+    "status": 200,
+    "ok": true,
+    "json": {
+      "category": "PRIVATE",
+      "cover_type": "TOR",
+      "underwriter_code": null,
+      "policy_term": {
+        "start_date": "2025-09-29",
+        "end_date": "2025-10-29",
+        "duration_days": 30
+      },
+      "premium_breakdown": {
+        "base_premium": 1500,
+        "training_levy": 3.75,
+        "pcf_levy": 3.75,
+        "stamp_duty": 40,
+        "total_levies": 47.5,
+        "total_premium": 1547.5
+      },
+      "base_premium": 1500,
+      "total_premium": 1547.5
+    }
+  },
+  "compare_PRIVATE_TP": {
+    "status": 200,
+    "ok": true,
+    "json": {
+      "comparisons": [
+        {
+          "underwriter_code": "MADISON",
+          "result": {
+            "category": "PRIVATE",
+            "cover_type": "PRIVATE_THIRD_PARTY",
+            "underwriter_id": "aa85d49e-06a2-40ec-9a22-e09b453f8066",
+            "underwriter_code": "MADISON",
+            "underwriter_name": "Madison Insurance",
+            "market_position": "budget",
+            "features": {
+              "pricing": {
+                "PRIVATE_TP": {
+                  "base_premium": 3000,
+                  "pricing_type": "fixed"
+                },
+                "PRIVATE_TOR": {
+                  "base_premium": 1500,
+                  "pricing_type": "fixed"
+                },
+                "MOTORCYCLE_TP": {
+                  "base_premium": 2500,
+                  "pricing_type": "fixed"
+                },
+                "TUKTUK_PSV_TP": {
+                  "base_premium": 3500,
+                  "pricing_type": "fixed"
+                },
+                "COMMERCIAL_TOR": {
+                  "base_premium": 1760,
+                  "pricing_type": "fixed"
+                },
+                "MOTORCYCLE_TOR": {
+                  "base_premium": 800,
+                  "pricing_type": "fixed"
+                },
+                "MOTORCYCLE_PSV_TP": {
+                  "base_premium": 3500,
+                  "pricing_type": "fixed"
+                },
+                "PRIVATE_THIRD_PARTY": {
+                  "base_premium": 2975,
+                  "pricing_type": "fixed"
+                },
+                "TUKTUK_COMMERCIAL_TP": {
+                  "base_premium": 3500,
+                  "pricing_type": "fixed"
+                },
+                "MOTORCYCLE_PRIVATE_TP": {
+                  "base_premium": 3500,
+                  "pricing_type": "fixed"
+                },
+                "PRIVATE_COMPREHENSIVE": {
+                  "rate": 0.03,
+                  "min_premium": 15000,
+                  "pricing_type": "percentage"
+                },
+                "PRIVATE_MOTORCYCLE_TP": {
+                  "base_premium": 2380,
+                  "pricing_type": "fixed"
+                },
+                "TUKTUK_COMMERCIAL_COMP": {
+                  "rate": 0.03,
+                  "min_premium": 13800,
+                  "pricing_type": "percentage"
+                },
+                "COMMERCIAL_OWN_GOODS_TP": {
+                  "base_premium": 3825,
+                  "pricing_type": "fixed"
+                },
+                "MOTORCYCLE_PRIVATE_COMP": {
+                  "rate": 0.03,
+                  "min_premium": 13800,
+                  "pricing_type": "percentage"
+                },
+                "PRIVATE_THIRD_PARTY_EXT": {
+                  "base_premium": 4500,
+                  "pricing_type": "fixed"
+                },
+                "MOTORCYCLE_COMPREHENSIVE": {
+                  "rate": 0.025,
+                  "min_premium": 8000,
+                  "pricing_type": "percentage"
+                },
+                "COMMERCIAL_OWN_GOODS_COMP": {
+                  "rate": 0.0322,
+                  "min_premium": 13800,
+                  "pricing_type": "percentage"
+                },
+                "COMMERCIAL_GENERAL_CARTAGE_TP": {
+                  "base_premium": 4420,
+                  "pricing_type": "fixed"
+                }
+              },
+              "addon_overrides": {},
+              "market_position": "budget"
+            },
+            "rating": 4,
+            "policy_term": {
+              "start_date": "2025-09-29",
+              "end_date": "2026-09-29",
+              "duration_days": 365
+            },
+            "premium_breakdown": {
+              "base_premium": 2975,
+              "training_levy": 7.44,
+              "pcf_levy": 7.44,
+              "stamp_duty": 40,
+              "total_levies": 54.88,
+              "total_premium": 3029.88
+            },
+            "base_premium": 2975,
+            "total_premium": 3029.88
+          }
+        },
+        {
+          "underwriter_code": "UAP",
+          "result": {
+            "category": "PRIVATE",
+            "cover_type": "PRIVATE_THIRD_PARTY",
+            "underwriter_id": "cb192689-b1f2-4afd-b08a-c2bc2e6cc864",
+            "underwriter_code": "UAP",
+            "underwriter_name": "UAP Insurance",
+            "market_position": "competitive",
+            "features": {
+              "pricing": {
+                "PRIVATE_TOR": {
+                  "base_premium": 1500,
+                  "pricing_type": "fixed"
+                },
+                "PSV_UBER_TP": {
+                  "base_premium": 5500,
+                  "pricing_type": "fixed"
+                },
+                "PSV_UBER_COMP": {
+                  "rate": 0.038,
+                  "min_premium": 15000,
+                  "pricing_type": "percentage"
+                },
+                "COMMERCIAL_TOR": {
+                  "base_premium": 2000,
+                  "pricing_type": "fixed"
+                },
+                "PSV_MATATU_1M_TP": {
+                  "base_premium": 3500,
+                  "pricing_type": "fixed"
+                },
+                "PRIVATE_THIRD_PARTY": {
+                  "base_premium": 3500,
+                  "pricing_type": "fixed"
+                },
+                "PRIVATE_COMPREHENSIVE": {
+                  "rate": 0.03,
+                  "min_premium": 15000,
+                  "pricing_type": "percentage"
+                },
+                "PRIVATE_MOTORCYCLE_TP": {
+                  "base_premium": 2800,
+                  "pricing_type": "fixed"
+                },
+                "COMMERCIAL_OWN_GOODS_TP": {
+                  "base_premium": 4500,
+                  "pricing_type": "fixed"
+                },
+                "PRIVATE_THIRD_PARTY_EXT": {
+                  "base_premium": 4500,
+                  "pricing_type": "fixed"
+                },
+                "COMMERCIAL_OWN_GOODS_COMP": {
+                  "rate": 0.035,
+                  "min_premium": 15000,
+                  "pricing_type": "percentage"
+                },
+                "COMMERCIAL_GENERAL_CARTAGE_TP": {
+                  "base_premium": 5200,
+                  "pricing_type": "fixed"
+                }
+              },
+              "market_position": "competitive"
+            },
+            "rating": 4,
+            "policy_term": {
+              "start_date": "2025-09-29",
+              "end_date": "2026-09-29",
+              "duration_days": 365
+            },
+            "premium_breakdown": {
+              "base_premium": 3500,
+              "training_levy": 8.75,
+              "pcf_levy": 8.75,
+              "stamp_duty": 40,
+              "total_levies": 57.5,
+              "total_premium": 3557.5
+            },
+            "base_premium": 3500,
+            "total_premium": 3557.5
+          }
+        },
+        {
+          "underwriter_code": "BRITAM",
+          "result": {
+            "category": "PRIVATE",
+            "cover_type": "PRIVATE_THIRD_PARTY",
+            "underwriter_id": "2ccc38e1-d8c1-42e1-acca-19bbc0dd3c28",
+            "underwriter_code": "BRITAM",
+            "underwriter_name": "Britam Insurance",
+            "market_position": "premium",
+            "features": {
+              "pricing": {
+                "PRIVATE_TOR": {
+                  "base_premium": 1725,
+                  "pricing_type": "fixed"
+                },
+                "PSV_UBER_TP": {
+                  "base_premium": 6160,
+                  "pricing_type": "fixed"
+                },
+                "PSV_UBER_COMP": {
+                  "rate": 0.04104,
+                  "min_premium": 16200.000000000002,
+                  "pricing_type": "percentage"
+                },
+                "COMMERCIAL_TOR": {
+                  "base_premium": 2300,
+                  "pricing_type": "fixed"
+                },
+                "PSV_MATATU_1M_TP": {
+                  "base_premium": 3500,
+                  "pricing_type": "fixed"
+                },
+                "MOTORCYCLE_PSV_TP": {
+                  "base_premium": 3500,
+                  "pricing_type": "fixed"
+                },
+                "PRIVATE_THIRD_PARTY": {
+                  "base_premium": 3920,
+                  "pricing_type": "fixed"
+                },
+                "MOTORCYCLE_PRIVATE_TP": {
+                  "base_premium": 3500,
+                  "pricing_type": "fixed"
+                },
+                "PRIVATE_COMPREHENSIVE": {
+                  "rate": 0.0324,
+                  "min_premium": 16200.000000000002,
+                  "pricing_type": "percentage"
+                },
+                "PRIVATE_MOTORCYCLE_TP": {
+                  "base_premium": 3136,
+                  "pricing_type": "fixed"
+                },
+                "COMMERCIAL_OWN_GOODS_TP": {
+                  "base_premium": 5040,
+                  "pricing_type": "fixed"
+                },
+                "MOTORCYCLE_PRIVATE_COMP": {
+                  "rate": 0.03,
+                  "min_premium": 16200.000000000002,
+                  "pricing_type": "percentage"
+                },
+                "PRIVATE_THIRD_PARTY_EXT": {
+                  "base_premium": 4500,
+                  "pricing_type": "fixed"
+                },
+                "COMMERCIAL_OWN_GOODS_COMP": {
+                  "rate": 0.0378,
+                  "min_premium": 16200.000000000002,
+                  "pricing_type": "percentage"
+                },
+                "COMMERCIAL_GENERAL_CARTAGE_TP": {
+                  "base_premium": 5824,
+                  "pricing_type": "fixed"
+                }
+              },
+              "market_position": "premium"
+            },
+            "rating": 4,
+            "policy_term": {
+              "start_date": "2025-09-29",
+              "end_date": "2026-09-29",
+              "duration_days": 365
+            },
+            "premium_breakdown": {
+              "base_premium": 3920,
+              "training_levy": 9.8,
+              "pcf_levy": 9.8,
+              "stamp_duty": 40,
+              "total_levies": 59.6,
+              "total_premium": 3979.6
+            },
+            "base_premium": 3920,
+            "total_premium": 3979.6
+          }
+        },
+        {
+          "underwriter_code": "CIC",
+          "result": {
+            "category": "PRIVATE",
+            "cover_type": "PRIVATE_THIRD_PARTY",
+            "underwriter_id": "39667f07-51d1-483b-a430-3fc2b52b05b9",
+            "underwriter_code": "CIC",
+            "underwriter_name": "CIC Insurance Group",
+            "market_position": "premium",
+            "features": {
+              "pricing": {
+                "PRIVATE_TOR": {
+                  "base_premium": 1725,
+                  "pricing_type": "fixed"
+                },
+                "PSV_UBER_TP": {
+                  "base_premium": 6160,
+                  "pricing_type": "fixed"
+                },
+                "PSV_UBER_COMP": {
+                  "rate": 0.04104,
+                  "min_premium": 16200.000000000002,
+                  "pricing_type": "percentage"
+                },
+                "TUKTUK_PSV_TP": {
+                  "base_premium": 3500,
+                  "pricing_type": "fixed"
+                },
+                "COMMERCIAL_TOR": {
+                  "base_premium": 2300,
+                  "pricing_type": "fixed"
+                },
+                "PSV_MATATU_1M_TP": {
+                  "base_premium": 3500,
+                  "pricing_type": "fixed"
+                },
+                "MOTORCYCLE_PSV_TP": {
+                  "base_premium": 3500,
+                  "pricing_type": "fixed"
+                },
+                "PRIVATE_THIRD_PARTY": {
+                  "base_premium": 3920,
+                  "pricing_type": "fixed"
+                },
+                "TUKTUK_COMMERCIAL_TP": {
+                  "base_premium": 3500,
+                  "pricing_type": "fixed"
+                },
+                "MOTORCYCLE_PRIVATE_TP": {
+                  "base_premium": 3500,
+                  "pricing_type": "fixed"
+                },
+                "PRIVATE_COMPREHENSIVE": {
+                  "rate": 0.0324,
+                  "min_premium": 16200.000000000002,
+                  "pricing_type": "percentage"
+                },
+                "PRIVATE_MOTORCYCLE_TP": {
+                  "base_premium": 3136,
+                  "pricing_type": "fixed"
+                },
+                "TUKTUK_COMMERCIAL_COMP": {
+                  "rate": 0.03,
+                  "min_premium": 16200.000000000002,
+                  "pricing_type": "percentage"
+                },
+                "COMMERCIAL_OWN_GOODS_TP": {
+                  "base_premium": 5040,
+                  "pricing_type": "fixed"
+                },
+                "MOTORCYCLE_PRIVATE_COMP": {
+                  "rate": 0.03,
+                  "min_premium": 16200.000000000002,
+                  "pricing_type": "percentage"
+                },
+                "PRIVATE_THIRD_PARTY_EXT": {
+                  "base_premium": 4500,
+                  "pricing_type": "fixed"
+                },
+                "COMMERCIAL_OWN_GOODS_COMP": {
+                  "rate": 0.0378,
+                  "min_premium": 16200.000000000002,
+                  "pricing_type": "percentage"
+                },
+                "COMMERCIAL_GENERAL_CARTAGE_TP": {
+                  "base_premium": 5824,
+                  "pricing_type": "fixed"
+                }
+              },
+              "market_position": "premium"
+            },
+            "rating": 4,
+            "policy_term": {
+              "start_date": "2025-09-29",
+              "end_date": "2026-09-29",
+              "duration_days": 365
+            },
+            "premium_breakdown": {
+              "base_premium": 3920,
+              "training_levy": 9.8,
+              "pcf_levy": 9.8,
+              "stamp_duty": 40,
+              "total_levies": 59.6,
+              "total_premium": 3979.6
+            },
+            "base_premium": 3920,
+            "total_premium": 3979.6
+          }
+        },
+        {
+          "underwriter_code": "JUBILEE",
+          "result": {
+            "category": "PRIVATE",
+            "cover_type": "PRIVATE_THIRD_PARTY",
+            "underwriter_id": "14900c1c-4327-4366-a1e9-585699b1a495",
+            "underwriter_code": "JUBILEE",
+            "underwriter_name": "Jubilee Insurance",
+            "market_position": "budget",
+            "features": {
+              "dmvic": true,
+              "pricing": {
+                "PRIVATE_TOR": {
+                  "base_premium": 1320,
+                  "pricing_type": "fixed"
+                },
+                "PSV_UBER_TP": {
+                  "base_premium": 4675,
+                  "pricing_type": "fixed"
+                },
+                "PSV_UBER_COMP": {
+                  "rate": 0.03496,
+                  "min_premium": 13800,
+                  "pricing_type": "percentage"
+                },
+                "TUKTUK_PSV_TP": {
+                  "base_premium": 3500,
+                  "pricing_type": "fixed"
+                },
+                "COMMERCIAL_TOR": {
+                  "base_premium": 1760,
+                  "pricing_type": "fixed"
+                },
+                "PSV_MATATU_1M_TP": {
+                  "base_premium": 3500,
+                  "pricing_type": "fixed"
+                },
+                "PRIVATE_THIRD_PARTY": {
+                  "base_premium": 2975,
+                  "pricing_type": "fixed"
+                },
+                "TUKTUK_COMMERCIAL_TP": {
+                  "base_premium": 3500,
+                  "pricing_type": "fixed"
+                },
+                "PRIVATE_COMPREHENSIVE": {
+                  "rate": 0.0276,
+                  "min_premium": 13800,
+                  "pricing_type": "percentage"
+                },
+                "PRIVATE_MOTORCYCLE_TP": {
+                  "base_premium": 2380,
+                  "pricing_type": "fixed"
+                },
+                "TUKTUK_COMMERCIAL_COMP": {
+                  "rate": 0.03,
+                  "min_premium": 13800,
+                  "pricing_type": "percentage"
+                },
+                "COMMERCIAL_OWN_GOODS_TP": {
+                  "base_premium": 3825,
+                  "pricing_type": "fixed"
+                },
+                "PRIVATE_THIRD_PARTY_EXT": {
+                  "base_premium": 4500,
+                  "pricing_type": "fixed"
+                },
+                "COMMERCIAL_OWN_GOODS_COMP": {
+                  "rate": 0.0322,
+                  "min_premium": 13800,
+                  "pricing_type": "percentage"
+                },
+                "COMMERCIAL_GENERAL_CARTAGE_TP": {
+                  "base_premium": 4420,
+                  "pricing_type": "fixed"
+                }
+              },
+              "market_position": "budget"
+            },
+            "rating": 4,
+            "policy_term": {
+              "start_date": "2025-09-29",
+              "end_date": "2026-09-29",
+              "duration_days": 365
+            },
+            "premium_breakdown": {
+              "base_premium": 2975,
+              "training_levy": 7.44,
+              "pcf_levy": 7.44,
+              "stamp_duty": 40,
+              "total_levies": 54.88,
+              "total_premium": 3029.88
+            },
+            "base_premium": 2975,
+            "total_premium": 3029.88
+          }
+        },
+        {
+          "underwriter_code": "APA",
+          "result": {
+            "category": "PRIVATE",
+            "cover_type": "PRIVATE_THIRD_PARTY",
+            "underwriter_id": "acff5e40-a95b-4dd1-bc06-8e210e1e95bc",
+            "underwriter_code": "APA",
+            "underwriter_name": "APA Insurance",
+            "market_position": "competitive",
+            "features": {
+              "dmvic": true,
+              "pricing": {
+                "PRIVATE_TOR": {
+                  "base_premium": 1500,
+                  "pricing_type": "fixed"
+                },
+                "PSV_UBER_TP": {
+                  "base_premium": 5500,
+                  "pricing_type": "fixed"
+                },
+                "PSV_UBER_COMP": {
+                  "rate": 0.038,
+                  "min_premium": 15000,
+                  "pricing_type": "percentage"
+                },
+                "TUKTUK_PSV_TP": {
+                  "base_premium": 3500,
+                  "pricing_type": "fixed"
+                },
+                "COMMERCIAL_TOR": {
+                  "base_premium": 2000,
+                  "pricing_type": "fixed"
+                },
+                "PSV_MATATU_1M_TP": {
+                  "base_premium": 3500,
+                  "pricing_type": "fixed"
+                },
+                "MOTORCYCLE_PSV_TP": {
+                  "base_premium": 3500,
+                  "pricing_type": "fixed"
+                },
+                "PRIVATE_THIRD_PARTY": {
+                  "base_premium": 3500,
+                  "pricing_type": "fixed"
+                },
+                "TUKTUK_COMMERCIAL_TP": {
+                  "base_premium": 3500,
+                  "pricing_type": "fixed"
+                },
+                "MOTORCYCLE_PRIVATE_TP": {
+                  "base_premium": 3500,
+                  "pricing_type": "fixed"
+                },
+                "PRIVATE_COMPREHENSIVE": {
+                  "rate": 0.03,
+                  "min_premium": 15000,
+                  "pricing_type": "percentage"
+                },
+                "PRIVATE_MOTORCYCLE_TP": {
+                  "base_premium": 2800,
+                  "pricing_type": "fixed"
+                },
+                "TUKTUK_COMMERCIAL_COMP": {
+                  "rate": 0.03,
+                  "min_premium": 15000,
+                  "pricing_type": "percentage"
+                },
+                "COMMERCIAL_OWN_GOODS_TP": {
+                  "base_premium": 4500,
+                  "pricing_type": "fixed"
+                },
+                "MOTORCYCLE_PRIVATE_COMP": {
+                  "rate": 0.03,
+                  "min_premium": 15000,
+                  "pricing_type": "percentage"
+                },
+                "PRIVATE_THIRD_PARTY_EXT": {
+                  "base_premium": 4500,
+                  "pricing_type": "fixed"
+                },
+                "COMMERCIAL_OWN_GOODS_COMP": {
+                  "rate": 0.035,
+                  "min_premium": 15000,
+                  "pricing_type": "percentage"
+                },
+                "COMMERCIAL_GENERAL_CARTAGE_TP": {
+                  "base_premium": 5200,
+                  "pricing_type": "fixed"
+                }
+              },
+              "market_position": "competitive"
+            },
+            "rating": 4,
+            "policy_term": {
+              "start_date": "2025-09-29",
+              "end_date": "2026-09-29",
+              "duration_days": 365
+            },
+            "premium_breakdown": {
+              "base_premium": 3500,
+              "training_levy": 8.75,
+              "pcf_levy": 8.75,
+              "stamp_duty": 40,
+              "total_levies": 57.5,
+              "total_premium": 3557.5
+            },
+            "base_premium": 3500,
+            "total_premium": 3557.5
+          }
+        }
+      ],
+      "count": 6
+    }
+  },
+  "underwriters_PRIVATE": {
+    "status": 200,
+    "ok": true,
+    "json": {
+      "underwriters": [
+        {
+          "name": "Madison Insurance",
+          "code": "MADISON",
+          "rating": 0,
+          "supported_categories": [
+            "PRIVATE",
+            "COMMERCIAL",
+            "MOTORCYCLE",
+            "TUKTUK"
+          ]
+        },
+        {
+          "name": "UAP Insurance",
+          "code": "UAP",
+          "rating": 0,
+          "supported_categories": [
+            "PRIVATE",
+            "COMMERCIAL",
+            "PSV"
+          ]
+        },
+        {
+          "name": "Britam Insurance",
+          "code": "BRITAM",
+          "rating": 0,
+          "supported_categories": [
+            "PRIVATE",
+            "COMMERCIAL",
+            "PSV",
+            "MOTORCYCLE"
+          ]
+        },
+        {
+          "name": "CIC Insurance Group",
+          "code": "CIC",
+          "rating": 0,
+          "supported_categories": [
+            "PRIVATE",
+            "COMMERCIAL",
+            "PSV",
+            "MOTORCYCLE",
+            "TUKTUK"
+          ]
+        },
+        {
+          "name": "Jubilee Insurance",
+          "code": "JUBILEE",
+          "rating": 0,
+          "supported_categories": [
+            "PRIVATE",
+            "COMMERCIAL",
+            "PSV",
+            "TUKTUK"
+          ]
+        },
+        {
+          "name": "APA Insurance",
+          "code": "APA",
+          "rating": 0,
+          "supported_categories": [
+            "PRIVATE",
+            "COMMERCIAL",
+            "PSV",
+            "MOTORCYCLE",
+            "TUKTUK"
+          ]
+        }
+      ],
+      "count": 6,
+      "source": "database"
+    }
+  },
+  "underwriters_PRIVATE_TP": {
+    "status": 200,
+    "ok": true,
+    "json": {
+      "underwriters": [
+        {
+          "name": "Madison Insurance",
+          "code": "MADISON",
+          "rating": 0,
+          "supported_categories": [
+            "PRIVATE",
+            "COMMERCIAL",
+            "MOTORCYCLE",
+            "TUKTUK"
+          ]
+        },
+        {
+          "name": "UAP Insurance",
+          "code": "UAP",
+          "rating": 0,
+          "supported_categories": [
+            "PRIVATE",
+            "COMMERCIAL",
+            "PSV"
+          ]
+        },
+        {
+          "name": "Britam Insurance",
+          "code": "BRITAM",
+          "rating": 0,
+          "supported_categories": [
+            "PRIVATE",
+            "COMMERCIAL",
+            "PSV",
+            "MOTORCYCLE"
+          ]
+        },
+        {
+          "name": "CIC Insurance Group",
+          "code": "CIC",
+          "rating": 0,
+          "supported_categories": [
+            "PRIVATE",
+            "COMMERCIAL",
+            "PSV",
+            "MOTORCYCLE",
+            "TUKTUK"
+          ]
+        },
+        {
+          "name": "Jubilee Insurance",
+          "code": "JUBILEE",
+          "rating": 0,
+          "supported_categories": [
+            "PRIVATE",
+            "COMMERCIAL",
+            "PSV",
+            "TUKTUK"
+          ]
+        },
+        {
+          "name": "APA Insurance",
+          "code": "APA",
+          "rating": 0,
+          "supported_categories": [
+            "PRIVATE",
+            "COMMERCIAL",
+            "PSV",
+            "MOTORCYCLE",
+            "TUKTUK"
+          ]
+        }
+      ],
+      "count": 6,
+      "source": "database"
+    }
+  },
+  "underwriters_PRIVATE_TOR": {
+    "status": 200,
+    "ok": true,
+    "json": {
+      "underwriters": [
+        {
+          "name": "Madison Insurance",
+          "code": "MADISON",
+          "rating": 0,
+          "supported_categories": [
+            "PRIVATE",
+            "COMMERCIAL",
+            "MOTORCYCLE",
+            "TUKTUK"
+          ]
+        },
+        {
+          "name": "UAP Insurance",
+          "code": "UAP",
+          "rating": 0,
+          "supported_categories": [
+            "PRIVATE",
+            "COMMERCIAL",
+            "PSV"
+          ]
+        },
+        {
+          "name": "Britam Insurance",
+          "code": "BRITAM",
+          "rating": 0,
+          "supported_categories": [
+            "PRIVATE",
+            "COMMERCIAL",
+            "PSV",
+            "MOTORCYCLE"
+          ]
+        },
+        {
+          "name": "CIC Insurance Group",
+          "code": "CIC",
+          "rating": 0,
+          "supported_categories": [
+            "PRIVATE",
+            "COMMERCIAL",
+            "PSV",
+            "MOTORCYCLE",
+            "TUKTUK"
+          ]
+        },
+        {
+          "name": "Jubilee Insurance",
+          "code": "JUBILEE",
+          "rating": 0,
+          "supported_categories": [
+            "PRIVATE",
+            "COMMERCIAL",
+            "PSV",
+            "TUKTUK"
+          ]
+        },
+        {
+          "name": "APA Insurance",
+          "code": "APA",
+          "rating": 0,
+          "supported_categories": [
+            "PRIVATE",
+            "COMMERCIAL",
+            "PSV",
+            "MOTORCYCLE",
+            "TUKTUK"
+          ]
+        }
+      ],
+      "count": 6,
+      "source": "database"
+    }
+  },
+  "subcategories_COMMERCIAL": {
+    "status": 200,
+    "ok": true,
+    "json": {
+      "category": {
+        "id": "fe27c128-972d-4a08-8893-1ad922d882bd",
+        "code": "COMMERCIAL",
+        "name": "Commercial",
+        "description": "Goods carriers and commercial vehicles",
+        "icon": "🚚",
+        "requires_tonnage": true,
+        "requires_engine_capacity": false,
+        "requires_passenger_count": false,
+        "requires_passenger_type": false,
+        "requires_carrying_capacity": false,
+        "supports_time_period_variants": false,
+        "min_vehicle_age": 0,
+        "max_vehicle_age": 20,
+        "field_requirements": {
+          "core_fields": [
+            "financial_interest",
+            "vehicle_identification_method",
+            "registration_number",
+            "vehicle_make",
+            "vehicle_model",
+            "year_of_manufacture",
+            "cover_start_date",
+            "kyc_documents"
+          ],
+          "tonnage": {
+            "type": "number",
+            "max": 31,
+            "required": true
+          }
+        },
+        "sort_order": 2,
+        "is_active": true
+      },
+      "subcategories": [
+        {
+          "subcategory_code": "COMM_TUKTUK_TP",
+          "subcategory_name": "Commercial TukTuk Third Party",
+          "product_type": "third_party",
+          "pricing_model": "FIXED"
+        }
+      ],
+      "total_count": 1
+    }
+  },
+  "covertype_COMMERCIAL": {
+    "status": 200,
+    "ok": true,
+    "json": {
+      "category": {
+        "id": "fe27c128-972d-4a08-8893-1ad922d882bd",
+        "code": "COMMERCIAL",
+        "name": "Commercial",
+        "description": "Goods carriers and commercial vehicles",
+        "icon": "🚚",
+        "requires_tonnage": true,
+        "requires_engine_capacity": false,
+        "requires_passenger_count": false,
+        "requires_passenger_type": false,
+        "requires_carrying_capacity": false,
+        "supports_time_period_variants": false,
+        "min_vehicle_age": 0,
+        "max_vehicle_age": 20,
+        "field_requirements": {
+          "core_fields": [
+            "financial_interest",
+            "vehicle_identification_method",
+            "registration_number",
+            "vehicle_make",
+            "vehicle_model",
+            "year_of_manufacture",
+            "cover_start_date",
+            "kyc_documents"
+          ],
+          "tonnage": {
+            "type": "number",
+            "max": 31,
+            "required": true
+          }
+        },
+        "sort_order": 2,
+        "is_active": true
+      },
+      "cover_types": [
+        {
+          "id": "c4017eb9-9258-487c-809e-073c5ef7e07b",
+          "code": "COMMERCIAL_TOR",
+          "name": "TOR For Commercial",
+          "cover_type": "TOR",
+          "description": "Time on Risk coverage for commercial vehicles (field tonnage up to 31)",
+          "has_fixed_premium": true,
+          "base_premium": "2000.00",
+          "requires_sum_insured": false,
+          "min_sum_insured": null,
+          "max_sum_insured": null,
+          "time_period": null,
+          "requires_tonnage": true,
+          "max_tonnage": 31,
+          "requires_passenger_count": false,
+          "requires_passenger_type": false,
+          "requires_financial_interest": false,
+          "requires_vehicle_identification_method": false,
+          "requires_vehicle_make_model": true,
+          "requires_year_of_manufacture": true,
+          "requires_chassis_number": false,
+          "requires_vehicle_valuation": false,
+          "requires_windscreen_value": false,
+          "requires_radio_value": false,
+          "supports_optional_addons": false,
+          "requires_kyc_documents": true,
+          "allows_financed_vehicles": true,
+          "requires_manual_underwriting": false,
+          "category_code": "COMMERCIAL",
+          "category_name": "Commercial",
+          "additional_fields": {},
+          "sort_order": 1,
+          "is_active": true
+        },
+        {
+          "id": "7b7a9431-ddbb-4d12-a448-947fd2c068b5",
+          "code": "COMMERCIAL_OWN_GOODS_TP",
+          "name": "Own Goods Third-Party",
+          "cover_type": "THIRD_PARTY",
+          "description": "Third party coverage for own goods vehicles (field tonnage up to 31)",
+          "has_fixed_premium": true,
+          "base_premium": "5000.00",
+          "requires_sum_insured": false,
+          "min_sum_insured": null,
+          "max_sum_insured": null,
+          "time_period": null,
+          "requires_tonnage": true,
+          "max_tonnage": 31,
+          "requires_passenger_count": false,
+          "requires_passenger_type": false,
+          "requires_financial_interest": true,
+          "requires_vehicle_identification_method": true,
+          "requires_vehicle_make_model": true,
+          "requires_year_of_manufacture": true,
+          "requires_chassis_number": true,
+          "requires_vehicle_valuation": false,
+          "requires_windscreen_value": false,
+          "requires_radio_value": false,
+          "supports_optional_addons": false,
+          "requires_kyc_documents": true,
+          "allows_financed_vehicles": true,
+          "requires_manual_underwriting": false,
+          "category_code": "COMMERCIAL",
+          "category_name": "Commercial",
+          "additional_fields": {},
+          "sort_order": 2,
+          "is_active": true
+        },
+        {
+          "id": "07e2d491-c749-401b-9cd0-30befe944d79",
+          "code": "COMMERCIAL_GENERAL_CARTAGE_TP",
+          "name": "General Cartage Third-Party",
+          "cover_type": "THIRD_PARTY",
+          "description": "Third party coverage for general cartage vehicles (field tonnage up to 31)",
+          "has_fixed_premium": true,
+          "base_premium": "6000.00",
+          "requires_sum_insured": false,
+          "min_sum_insured": null,
+          "max_sum_insured": null,
+          "time_period": null,
+          "requires_tonnage": true,
+          "max_tonnage": 31,
+          "requires_passenger_count": false,
+          "requires_passenger_type": false,
+          "requires_financial_interest": true,
+          "requires_vehicle_identification_method": true,
+          "requires_vehicle_make_model": true,
+          "requires_year_of_manufacture": true,
+          "requires_chassis_number": true,
+          "requires_vehicle_valuation": false,
+          "requires_windscreen_value": false,
+          "requires_radio_value": false,
+          "supports_optional_addons": false,
+          "requires_kyc_documents": true,
+          "allows_financed_vehicles": true,
+          "requires_manual_underwriting": false,
+          "category_code": "COMMERCIAL",
+          "category_name": "Commercial",
+          "additional_fields": {},
+          "sort_order": 3,
+          "is_active": true
+        },
+        {
+          "id": "6d307313-30ba-4cc7-bc26-651dec4e6bc9",
+          "code": "COMMERCIAL_OWN_GOODS_COMP",
+          "name": "Own Goods Comprehensive",
+          "cover_type": "COMPREHENSIVE",
+          "description": "Comprehensive coverage for own goods vehicles (field tonnage)",
+          "has_fixed_premium": false,
+          "base_premium": null,
+          "requires_sum_insured": true,
+          "min_sum_insured": "500000.00",
+          "max_sum_insured": "8000000.00",
+          "time_period": null,
+          "requires_tonnage": true,
+          "max_tonnage": 31,
+          "requires_passenger_count": false,
+          "requires_passenger_type": false,
+          "requires_financial_interest": true,
+          "requires_vehicle_identification_method": true,
+          "requires_vehicle_make_model": true,
+          "requires_year_of_manufacture": true,
+          "requires_chassis_number": true,
+          "requires_vehicle_valuation": false,
+          "requires_windscreen_value": false,
+          "requires_radio_value": false,
+          "supports_optional_addons": false,
+          "requires_kyc_documents": true,
+          "allows_financed_vehicles": true,
+          "requires_manual_underwriting": false,
+          "category_code": "COMMERCIAL",
+          "category_name": "Commercial",
+          "additional_fields": {
+            "vehicle_valuation": {
+              "type": "number",
+              "required": true
+            },
+            "windscreen_value": {
+              "type": "number",
+              "required": false
+            },
+            "radio_value": {
+              "type": "number",
+              "required": false
+            },
+            "optional_addons": {
+              "type": "checkbox_group",
+              "options": [
+                "excess_protector",
+                "political_violence",
+                "terrorism_cover"
+              ],
+              "required": false
+            }
+          },
+          "sort_order": 4,
+          "is_active": true
+        }
+      ]
+    }
+  }
+}

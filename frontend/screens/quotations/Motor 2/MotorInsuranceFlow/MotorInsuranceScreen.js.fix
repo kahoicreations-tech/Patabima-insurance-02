@@ -1,0 +1,538 @@
+import React, { useState, useEffect, useCallback } from 'react';
+import { View, Text, StyleSheet, Platform, TouchableOpacity, FlatList, TextInput, Alert, KeyboardAvoidingView, ScrollView, SafeAreaView } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useMotorInsurance } from '../../../../contexts/MotorInsuranceContext';
+import motorPricingService from '../../../../services/MotorInsurancePricingService';
+
+// Categories with emoji icons (fallback for offline mode)
+const FALLBACK_CATEGORIES = [
+  { key: 'PRIVATE', title: 'Private', icon: '🚗', desc: 'Personal vehicles' },
+  { key: 'COMMERCIAL', title: 'Commercial', icon: '🚚', desc: 'Goods carriers' },
+  { key: 'PSV', title: 'PSV', icon: '🚌', desc: 'Passenger service' },
+  { key: 'MOTORCYCLE', title: 'Motorcycle', icon: '🏍️', desc: 'Boda & private' },
+  { key: 'TUKTUK', title: 'TukTuk', icon: '🛺', desc: 'Three-wheeler' },
+  { key: 'SPECIAL', title: 'Special Classes', icon: '🚜', desc: 'Agric./institutional' },
+];
+
+// Cover types for Private vehicles based on correct business flow
+const PRIVATE_COVER_TYPES = [
+  { name: 'TOR', type: 'TOR', description: 'Coverage for a specific period', priceFrom: 2000 },
+  { name: 'Third Party', type: 'THIRD_PARTY', description: 'Basic third party coverage', priceFrom: 3000 },
+  { name: 'Third Party with Extensions', type: 'THIRD_PARTY_EXT', description: 'Third party plus additional benefits', priceFrom: 4000 },
+  { name: 'Comprehensive', type: 'COMPREHENSIVE', description: 'Full coverage including own damage', priceFrom: 8000 },
+];
+
+// Helper function to get category icon
+const getCategoryIcon = (categoryCode) => {
+  switch(categoryCode) {
+    case 'PRIVATE': return '🚗';
+    case 'COMMERCIAL': return '🚚';
+    case 'PSV': return '🚌';
+    case 'MOTORCYCLE': return '🏍️';
+    case 'TUKTUK': return '🛺';
+    case 'SPECIAL': return '🚜';
+    default: return '🚗';
+  }
+};
+
+// Helper function to get default description
+const getDefaultDescription = (categoryName) => {
+  return 'Motor vehicle insurance';
+};
+
+// Helper function to get cover types based on category
+const getCoverTypesByCategory = (categoryCode) => {
+  switch (categoryCode) {
+    case 'PRIVATE':
+      return [
+        { code: 'PRIVATE_TOR', name: 'Time On Risk (TOR)', type: 'TOR', description: 'Coverage for a specific period', requirements: ['Sum Insured'] },
+        { code: 'PRIVATE_TP', name: 'Third Party', type: 'THIRD_PARTY', description: 'Basic third party coverage', requirements: [] },
+        { code: 'PRIVATE_TPX', name: 'Third Party with Extensions', type: 'THIRD_PARTY_EXT', description: 'Third party plus additional benefits', requirements: [] },
+        { code: 'PRIVATE_COMP', name: 'Comprehensive', type: 'COMPREHENSIVE', description: 'Full coverage including own damage', requirements: ['Sum Insured'] }
+      ];
+    case 'COMMERCIAL':
+      return [
+        { code: 'COMM_TOR', name: 'Commercial TOR', type: 'TOR', description: 'Time on Risk for commercial vehicles', requirements: ['Tonnage', 'Sum Insured'] },
+        { code: 'COMM_TP', name: 'Commercial Third Party', type: 'THIRD_PARTY', description: 'Third party for commercial vehicles', requirements: ['Tonnage'] },
+        { code: 'COMM_COMP', name: 'Commercial Comprehensive', type: 'COMPREHENSIVE', description: 'Full coverage for commercial vehicles', requirements: ['Tonnage', 'Sum Insured'] }
+      ];
+    case 'PSV':
+      return [
+        { code: 'PSV_TOR', name: 'PSV Time On Risk', type: 'TOR', description: 'TOR for passenger vehicles', requirements: ['Passenger Count'] },
+        { code: 'PSV_TP', name: 'PSV Third Party', type: 'THIRD_PARTY', description: 'Third party for PSV', requirements: ['Passenger Count'] },
+        { code: 'PSV_COMP', name: 'PSV Comprehensive', type: 'COMPREHENSIVE', description: 'Full PSV coverage', requirements: ['Passenger Count', 'Sum Insured'] }
+      ];
+    case 'MOTORCYCLE':
+      return [
+        { code: 'MOTO_TOR', name: 'Motorcycle TOR', type: 'TOR', description: 'TOR for motorcycles', requirements: [] },
+        { code: 'MOTO_TP', name: 'Motorcycle Third Party', type: 'THIRD_PARTY', description: 'Third party for motorcycles', requirements: [] },
+        { code: 'MOTO_COMP', name: 'Motorcycle Comprehensive', type: 'COMPREHENSIVE', description: 'Full motorcycle coverage', requirements: ['Sum Insured'] }
+      ];
+    case 'TUKTUK':
+      return [
+        { code: 'TUKTUK_TOR', name: 'TukTuk TOR', type: 'TOR', description: 'TOR for TukTuk', requirements: [] },
+        { code: 'TUKTUK_TP', name: 'TukTuk Third Party', type: 'THIRD_PARTY', description: 'Third party for TukTuk', requirements: [] },
+        { code: 'TUKTUK_COMP', name: 'TukTuk Comprehensive', type: 'COMPREHENSIVE', description: 'Full TukTuk coverage', requirements: ['Sum Insured'] }
+      ];
+    case 'SPECIAL':
+      return [
+        { code: 'SPECIAL_TOR', name: 'Special Class TOR', type: 'TOR', description: 'TOR for special vehicles', requirements: ['Vehicle Type', 'Sum Insured'] },
+        { code: 'SPECIAL_TP', name: 'Special Class Third Party', type: 'THIRD_PARTY', description: 'Third party for special vehicles', requirements: ['Vehicle Type'] },
+        { code: 'SPECIAL_COMP', name: 'Special Class Comprehensive', type: 'COMPREHENSIVE', description: 'Full coverage for special vehicles', requirements: ['Vehicle Type', 'Sum Insured'] }
+      ];
+    default:
+      return PRIVATE_COVER_TYPES;
+  }
+};
+
+// Component for the Motor Category Grid
+const MotorCategoryGrid = ({ categories, onSelect, bottomPadding = 0, selectedCategory, loading }) => {
+  if (loading) {
+    return (
+      <View style={[styles.loadingContainer, { paddingBottom: bottomPadding }]}>
+        <Text style={styles.loadingText}>Loading categories...</Text>
+      </View>
+    );
+  }
+
+  const renderItem = ({ item }) => (
+    <TouchableOpacity 
+      style={[
+        styles.categoryCard,
+        selectedCategory?.key === item.key && styles.selectedCard
+      ]} 
+      onPress={() => onSelect?.(item)}
+    >
+      <Text style={styles.categoryIcon}>{item.icon}</Text>
+      <Text style={styles.categoryTitle}>{item.title}</Text>
+      <Text style={styles.categoryDesc}>{item.desc}</Text>
+    </TouchableOpacity>
+  );
+
+  return (
+    <View style={{ flex: 1 }}>
+      <FlatList
+        data={categories}
+        numColumns={2}
+        scrollEnabled={false}
+        columnWrapperStyle={{ gap: 12 }}
+        contentContainerStyle={{ gap: 12, paddingBottom: bottomPadding }}
+        keyExtractor={(item) => item.key}
+        renderItem={renderItem}
+      />
+    </View>
+  );
+};
+
+// Component for the Motor Subcategory List
+const MotorSubcategoryList = ({ items = [], onSelect, bottomPadding = 0 }) => {
+  const renderItem = ({ item }) => (
+    <TouchableOpacity style={styles.subcategoryCard} onPress={() => onSelect?.(item)}>
+      <Text style={styles.subcategoryTitle}>{item.name}</Text>
+      <View style={styles.badgesRow}>
+        <Text style={styles.badge}>{item.type}</Text>
+        <Text style={[styles.badge, item.complex ? styles.badgeWarn : styles.badgeOk]}>
+          {item.complex ? 'Complex' : 'Simple'}
+        </Text>
+      </View>
+      {item.requirements?.length > 0 && (
+        <Text style={styles.requirements}>Requires: {item.requirements.join(', ')}</Text>
+      )}
+    </TouchableOpacity>
+  );
+
+  return (
+    <View style={{ flex: 1 }}>
+      <FlatList
+        data={items}
+        scrollEnabled={false}
+        keyExtractor={(item, idx) => item.code || String(idx)}
+        ItemSeparatorComponent={() => <View style={{ height: 8 }} />}
+        contentContainerStyle={{ paddingBottom: bottomPadding }}
+        renderItem={renderItem}
+      />
+    </View>
+  );
+};
+
+// Form Field Component
+const FormField = ({ label, value, onChangeText, placeholder, keyboardType, error }) => (
+  <View style={{ gap: 6 }}>
+    <Text style={styles.label}>{label}</Text>
+    <TextInput
+      style={styles.input}
+      value={value}
+      onChangeText={onChangeText}
+      placeholder={placeholder}
+      keyboardType={keyboardType}
+    />
+    {error && <Text style={styles.error}>{error}</Text>}
+  </View>
+);
+
+// Progress Indicator Component
+const ProgressIndicator = ({ steps = [], current = 0 }) => (
+  <View style={styles.progressRow}>
+    {steps.map((step, idx) => (
+      <View key={step} style={styles.progressStep}>
+        <View style={[styles.progressDot, idx <= current && styles.progressDotActive]}>
+          <Text style={[styles.progressText, idx <= current && styles.progressTextActive]}>
+            {idx + 1}
+          </Text>
+        </View>
+        <Text style={styles.progressStepText}>{step}</Text>
+      </View>
+    ))}
+  </View>
+);
+
+// Navigation Buttons Component
+const NavigationButtons = ({ onPrev, onNext, canNext, onSaveDraft }) => (
+  <View style={styles.navigationButtons}>
+    <TouchableOpacity style={styles.navigationButton} onPress={onPrev}>
+      <Text style={styles.navigationButtonText}>Back</Text>
+    </TouchableOpacity>
+    
+    <TouchableOpacity style={styles.draftButton} onPress={onSaveDraft}>
+      <Text style={styles.draftButtonText}>Save Draft</Text>
+    </TouchableOpacity>
+    
+    <TouchableOpacity
+      style={[styles.navigationButton, styles.navigationButtonNext, !canNext && styles.navigationButtonDisabled]}
+      onPress={canNext ? onNext : undefined}
+    >
+      <Text style={[styles.navigationButtonText, styles.navigationButtonTextNext]}>Next</Text>
+    </TouchableOpacity>
+  </View>
+);
+
+// Main Component
+export default function MotorInsuranceScreen() {
+  const insets = useSafeAreaInsets();
+  const { state, actions } = useMotorInsurance();
+  
+  // Local state for UI navigation and additional fields not in context
+  const [step, setStep] = useState(0);
+  const steps = ['Category', 'Cover Type', 'Registration', 'Provider', 'Client & Vehicle', 'KYC', 'Summary', 'Payment'];
+  const [categories, setCategories] = useState([]); // Start with empty, not fallback
+  const [registration, setRegistration] = useState({
+    number: '',
+    startDate: ''
+  });
+  const [providerDetails, setProviderDetails] = useState({
+    underwriter: '',
+    existingCover: false,
+    policyNumber: ''
+  });
+  const [kycDocuments, setKycDocuments] = useState({
+    nationalId: null,
+    kraPin: null,
+    logbook: null,
+    verified: false
+  });
+  const [payment, setPayment] = useState({
+    method: '',
+    confirmed: false,
+    transactionId: ''
+  });
+
+  // Load categories and underwriters on mount
+  useEffect(() => {
+    const loadInitialData = async () => {
+      try {
+        // Load categories from backend
+        const backendCategories = await motorPricingService.getCategories();
+        console.log('Backend categories response:', backendCategories);
+        if (backendCategories && backendCategories.length > 0) {
+          const formattedCategories = backendCategories.map(cat => {
+            const formattedSubcategories = (cat.subcategories || []).map(sub => {
+              const rawRequirements = sub.pricing_requirements || sub.required_fields || [];
+              const requirements = Array.isArray(rawRequirements)
+                ? rawRequirements
+                : Object.values(rawRequirements || {});
+
+              return {
+                id: sub.id,
+                code: sub.subcategory_code || sub.code,
+                name: sub.subcategory_name || sub.name,
+                type: sub.product_type || sub.cover_type || sub.pricing_model,
+                pricing_model: sub.pricing_model,
+                description: sub.description,
+                requirements,
+                complex: (sub.pricing_model && sub.pricing_model !== 'FIXED') || requirements.length > 0,
+                raw: sub,
+              };
+            });
+
+            return {
+              key: cat.category_code || cat.id,
+              title: cat.category_name,
+              icon: getCategoryIcon(cat.category_code || cat.category_name),
+              desc: cat.description || getDefaultDescription(cat.category_name),
+              subcategories: formattedSubcategories,
+              raw: cat,
+            };
+          });
+          console.log('Formatted categories:', formattedCategories);
+          setCategories(formattedCategories);
+        } else {
+          // If backend returns empty, use fallback
+          setCategories(FALLBACK_CATEGORIES);
+        }
+
+        // Load underwriters using context action
+        actions.loadUnderwriters();
+      } catch (error) {
+        console.error('Error loading initial data:', error);
+        setCategories(FALLBACK_CATEGORIES);
+        Alert.alert('Error', 'Failed to load data. Please check your connection and try again.');
+      }
+    };
+
+    loadInitialData();
+  }, [actions]);
+
+  // Check if can proceed to next step
+  const canProceed = () => {
+    switch(step) {
+      case 0: return state.selectedCategory; // Can proceed when category is selected
+      case 1: return state.selectedSubcategory; // Can proceed when subcategory is selected
+      case 2: return registration.number && registration.startDate;
+      case 3: return providerDetails.underwriter;
+      case 4: return state.clientDetails.fullName && state.clientDetails.phoneNumber && 
+                     state.vehicleDetails.make && state.vehicleDetails.model && state.vehicleDetails.year;
+      case 5: return kycDocuments.nationalId && kycDocuments.kraPin && kycDocuments.logbook;
+      case 6: return true; // Can proceed from summary
+      case 7: return payment.method;
+      default: return true;
+    }
+  };
+
+  const onNext = () => {
+    if (canProceed()) {
+      setStep((s) => Math.min(s + 1, steps.length - 1));
+    }
+  };
+  
+  const onPrev = () => setStep((s) => Math.max(s - 1, 0));
+  
+  const onSaveDraft = () => {
+    console.log('Saving draft...', { state });
+  };
+
+  // Render different steps based on current step index
+  const renderContent = () => {
+    // Step 0: Category Selection
+    if (step === 0) {
+      return (
+        <View style={{ flex: 1 }}>
+          <Text style={styles.stepTitle}>Select Vehicle Category</Text>
+          <MotorCategoryGrid
+            categories={categories}
+            selectedCategory={state.selectedCategory}
+            loading={state.isLoading}
+            onSelect={(category) => { 
+              console.log('Selected category with subcategories:', category);
+              // Ensure subcategories are properly passed
+              actions.setCategorySelection({
+                category: {
+                  ...category,
+                  subcategories: category.subcategories || []
+                },
+                subcategory: null,
+                type: category?.coverType || 'COMPREHENSIVE' // Default to COMPREHENSIVE if not specified
+              });
+              setStep(1); 
+            }}
+            bottomPadding={insets.bottom + 96}
+          />
+        </View>
+      );
+    }
+    
+    // Step 1: Cover Type Selection
+    if (step === 1 && state.selectedCategory) {
+      return (
+        <View style={{ marginTop: 12, flex: 1 }}>
+          <Text style={styles.stepTitle}>Select Cover Type for {state.selectedCategory.title} Vehicle</Text>
+          
+          {/* Render subcategories */}
+          {state.selectedCategory.subcategories?.length > 0 ? (
+            <MotorSubcategoryList
+              items={state.selectedCategory.subcategories}
+              onSelect={(subcategory) => { 
+                actions.setCategorySelection({
+                  category: state.selectedCategory,
+                  subcategory: subcategory,
+                  productType: subcategory.type || subcategory.code
+                });
+                setStep(2); 
+              }}
+              bottomPadding={insets.bottom + 96}
+            />
+          ) : (
+            <MotorSubcategoryList
+              items={getCoverTypesByCategory(state.selectedCategory.key)}
+              onSelect={(subcategory) => { 
+                actions.setCategorySelection({
+                  category: state.selectedCategory,
+                  subcategory: subcategory,
+                  productType: subcategory.type
+                });
+                setStep(2); 
+              }}
+              bottomPadding={insets.bottom + 96}
+            />
+          )}
+        </View>
+      );
+    }
+    
+    // Return empty view for other steps (to be implemented)
+    return <View style={{ flex: 1 }} />;
+  };
+
+  return (
+    <SafeAreaView style={styles.screen}>
+      <View style={styles.content}>
+        <Text style={styles.h1}>Motor Insurance</Text>
+        <ProgressIndicator steps={steps} current={step} />
+        {renderContent()}
+      </View>
+
+      {/* Navigation Footer */}
+      <NavigationButtons
+        onPrev={onPrev}
+        onNext={onNext}
+        canNext={canProceed()}
+        onSaveDraft={onSaveDraft}
+      />
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  screen: { flex: 1, padding: 16, backgroundColor: '#f8f9fa' },
+  content: { flex: 1 },
+  h1: { fontSize: 24, fontWeight: '700', color: '#D5222B', marginBottom: 16 },
+  stepTitle: { fontSize: 18, fontWeight: '600', color: '#2c3e50', marginBottom: 8 },
+  
+  // Progress styles
+  progressRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 16 },
+  progressStep: { alignItems: 'center', flex: 1 },
+  progressDot: { 
+    width: 32, 
+    height: 32, 
+    borderRadius: 16, 
+    backgroundColor: '#e9ecef', 
+    alignItems: 'center', 
+    justifyContent: 'center',
+    marginBottom: 4 
+  },
+  progressDotActive: { backgroundColor: '#D5222B' },
+  progressText: { color: '#495057', fontWeight: '600', fontSize: 14 },
+  progressTextActive: { color: '#fff' },
+  progressStepText: { fontSize: 10, color: '#6c757d', textAlign: 'center' },
+  
+  // Navigation styles
+  navigationButtons: { 
+    flexDirection: 'row', 
+    justifyContent: 'space-between', 
+    paddingVertical: 16, 
+    paddingHorizontal: 8,
+    borderTopWidth: 1,
+    borderTopColor: '#e9ecef',
+    backgroundColor: '#fff'
+  },
+  navigationButton: { 
+    paddingVertical: 12, 
+    paddingHorizontal: 24, 
+    borderRadius: 8, 
+    borderWidth: 1,
+    borderColor: '#ced4da',
+    backgroundColor: '#f8f9fa',
+  },
+  navigationButtonNext: { backgroundColor: '#D5222B', borderColor: '#D5222B' },
+  navigationButtonDisabled: { backgroundColor: '#e9ecef', borderColor: '#ced4da' },
+  navigationButtonText: { fontSize: 16, color: '#495057', fontWeight: '600' },
+  navigationButtonTextNext: { color: '#fff' },
+  draftButton: { paddingVertical: 12, paddingHorizontal: 24 },
+  draftButtonText: { fontSize: 16, color: '#6c757d', textDecorationLine: 'underline' },
+  
+  // Category grid styles
+  categoryCard: { 
+    flex: 1, 
+    backgroundColor: '#fff', 
+    borderRadius: 12, 
+    padding: 16, 
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#e9ecef',
+    shadowColor: '#000',
+    shadowOpacity: 0.04,
+    elevation: 1,
+    minHeight: 120,
+  },
+  categoryIcon: { fontSize: 36, marginBottom: 8 },
+  categoryTitle: { fontSize: 16, fontWeight: '700', color: '#2c3e50', marginBottom: 4 },
+  categoryDesc: { fontSize: 12, color: '#646767', textAlign: 'center' },
+  
+  // Subcategory styles
+  subcategoryCard: { 
+    backgroundColor: '#fff', 
+    borderRadius: 12, 
+    padding: 16, 
+    borderWidth: 1, 
+    borderColor: '#e9ecef',
+    shadowColor: '#000',
+    shadowOpacity: 0.04,
+    elevation: 2
+  },
+  subcategoryTitle: { fontWeight: '700', color: '#2c3e50', marginBottom: 8, fontSize: 16 },
+  badgesRow: { flexDirection: 'row', gap: 8, marginBottom: 8 },
+  badge: { 
+    backgroundColor: '#f1f3f5', 
+    color: '#495057', 
+    paddingHorizontal: 10, 
+    paddingVertical: 4, 
+    borderRadius: 12, 
+    fontSize: 12,
+    fontWeight: '500'
+  },
+  badgeOk: { backgroundColor: '#e7f5ff', color: '#1864ab' },
+  badgeWarn: { backgroundColor: '#fff4e6', color: '#d9480f' },
+  requirements: { color: '#646767', fontSize: 12, fontStyle: 'italic' },
+  
+  // Form styles
+  label: { fontWeight: '600', color: '#495057', fontSize: 14 },
+  input: { 
+    borderWidth: 1, 
+    borderColor: '#ced4da', 
+    borderRadius: 8, 
+    paddingHorizontal: 12, 
+    paddingVertical: 12, 
+    backgroundColor: '#fff',
+    fontSize: 16
+  },
+  error: { color: '#d90429', fontSize: 12 },
+  
+  // Loading styles
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  loadingText: {
+    fontSize: 16,
+    color: '#646767',
+    textAlign: 'center',
+  },
+  
+  // Selected card style
+  selectedCard: {
+    borderColor: '#D5222B',
+    backgroundColor: '#fff5f5',
+    borderWidth: 2,
+  },
+});

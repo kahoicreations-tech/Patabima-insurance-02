@@ -1,0 +1,1 @@
+# Deprecated Generic Quote Flow\n\n`GenericQuoteCreate` and related generic multi-line dynamic quote infrastructure have been removed.\nAll generic line navigation now points to `WIBAQuote` (renders `WIBAQuotationScreen`).\n\nIf reintroducing multi-line dynamic quoting, restore a router component here that selects a screen by `lineCode`.\n

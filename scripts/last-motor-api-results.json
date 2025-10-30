@@ -1,0 +1,74 @@
+﻿{
+    "comprehensive":  {
+                          "calculation_type":  "comprehensive",
+                          "base_premium":  "44000.00",
+                          "mandatory_levies":  {
+                                                   "insurance_training_levy":  "110.00",
+                                                   "pcf_levy":  "110.00",
+                                                   "stamp_duty":  "40.00"
+                                               },
+                          "total_premium":  "44260.00",
+                          "subcategory":  "PRIVATE_COMPREHENSIVE",
+                          "underwriter":  "APA"
+                      },
+    "underwriter":  "APA",
+    "phone":  "799468940",
+    "psv":  {
+                "calculation_type":  "psv",
+                "base_premium":  "7000.00",
+                "mandatory_levies":  {
+                                         "insurance_training_levy":  "17.50",
+                                         "pcf_levy":  "17.50",
+                                         "stamp_duty":  "40.00"
+                                     },
+                "total_premium":  "7075.00",
+                "subcategory":  "PSV_STANDARD",
+                "underwriter":  "APA"
+            },
+    "tonnage":  {
+                    "calculation_type":  "tonnage",
+                    "base_premium":  "5500.00",
+                    "mandatory_levies":  {
+                                             "insurance_training_levy":  "13.75",
+                                             "pcf_levy":  "13.75",
+                                             "stamp_duty":  "40.00"
+                                         },
+                    "total_premium":  "5567.50",
+                    "subcategory":  "COMM_TONNAGE",
+                    "underwriter":  "APA"
+                },
+    "comparisons":  {
+                        "comparisons":  [
+                                            {
+                                                "underwriter_code":  "APA",
+                                                "result":  {
+                                                               "calculation_type":  "comprehensive",
+                                                               "base_premium":  "35000.00",
+                                                               "mandatory_levies":  {
+                                                                                        "insurance_training_levy":  "87.50",
+                                                                                        "pcf_levy":  "87.50",
+                                                                                        "stamp_duty":  "40.00"
+                                                                                    },
+                                                               "total_premium":  "35215.00",
+                                                               "subcategory":  "PRIVATE_COMPREHENSIVE",
+                                                               "underwriter":  "APA"
+                                                           }
+                                            },
+                                            {
+                                                "underwriter_code":  "JUB",
+                                                "result":  {
+                                                               "calculation_type":  "comprehensive",
+                                                               "base_premium":  "37500.00",
+                                                               "mandatory_levies":  {
+                                                                                        "insurance_training_levy":  "93.75",
+                                                                                        "pcf_levy":  "93.75",
+                                                                                        "stamp_duty":  "40.00"
+                                                                                    },
+                                                               "total_premium":  "37727.50",
+                                                               "subcategory":  "PRIVATE_COMPREHENSIVE",
+                                                               "underwriter":  "JUB"
+                                                           }
+                                            }
+                                        ]
+                    }
+}

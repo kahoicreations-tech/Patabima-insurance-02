@@ -1,0 +1,681 @@
+{
+  "pataBimaMotorInsurance": {
+    "metadata": {
+      "version": "1.0",
+      "lastUpdated": "2025-09-30",
+      "currency": "KSH",
+      "country": "Kenya",
+      "totalCategories": 6,
+      "totalProducts": 63,
+      "regulatoryCompliance": {
+        "insuranceTrainingLevy": 0.0025,
+        "policyholdersCompensationFund": 0.0025,
+        "stampDuty": 40
+      }
+    },
+    
+    "categories": {
+      "private": {
+        "categoryId": "PRIVATE",
+        "categoryName": "Private Motor Insurance",
+        "description": "Personal vehicle insurance for individual car owners",
+        "products": {
+          "comprehensive": {
+            "productCode": "PRIVATE_COMPREHENSIVE",
+            "productName": "Private Comprehensive",
+            "productType": "COMPREHENSIVE",
+            "pricingModel": "BRACKET_BASED",
+            "description": "Full coverage including third-party, fire, theft, and accidental damage",
+            "enabled": true,
+            "pricing": {
+              "method": "percentage",
+              "baseRate": 3.5,
+              "minPremium": 15000,
+              "maxPremium": 150000,
+              "brackets": [
+                {
+                  "sumInsuredMin": 0,
+                  "sumInsuredMax": 500000,
+                  "rate": 4.5
+                },
+                {
+                  "sumInsuredMin": 500001,
+                  "sumInsuredMax": 1000000,
+                  "rate": 3.5
+                },
+                {
+                  "sumInsuredMin": 1000001,
+                  "sumInsuredMax": 2000000,
+                  "rate": 3.0
+                },
+                {
+                  "sumInsuredMin": 2000001,
+                  "sumInsuredMax": 5000000,
+                  "rate": 2.5
+                }
+              ]
+            },
+            "features": [
+              "Third Party Liability",
+              "Fire & Theft Protection",
+              "Accidental Damage Cover",
+              "Windscreen Cover",
+              "Courtesy Car",
+              "Personal Accident Cover",
+              "Medical Expenses",
+              "Towing Services"
+            ],
+            "coverage": {
+              "thirdPartyLiability": "Unlimited",
+              "personalAccident": 1000000,
+              "medicalExpenses": 200000,
+              "windscreenCover": 50000
+            }
+          },
+          
+          "thirdParty": {
+            "productCode": "PRIVATE_THIRD_PARTY",
+            "productName": "Private Third Party",
+            "productType": "THIRD_PARTY",
+            "pricingModel": "FIXED",
+            "description": "Basic mandatory third-party liability coverage",
+            "enabled": true,
+            "pricing": {
+              "method": "fixed",
+              "fixedPremium": 4500,
+              "minPremium": 4500,
+              "maxPremium": 4500
+            },
+            "features": [
+              "Third Party Liability",
+              "Legal Liability Coverage"
+            ],
+            "coverage": {
+              "thirdPartyLiability": "Unlimited"
+            }
+          },
+          
+          "timeOnRisk": {
+            "productCode": "PRIVATE_TOR",
+            "productName": "Private Time On Risk",
+            "productType": "TOR",
+            "pricingModel": "PRORATED",
+            "description": "Temporary coverage calculated per day/week/month",
+            "enabled": true,
+            "pricing": {
+              "method": "daily_rate",
+              "dailyRate": 150,
+              "weeklyRate": 900,
+              "monthlyRate": 3500,
+              "minPremium": 150,
+              "maxDuration": 30
+            },
+            "features": [
+              "Short-term Coverage",
+              "Flexible Duration",
+              "Third Party Protection",
+              "Quick Activation"
+            ],
+            "coverage": {
+              "thirdPartyLiability": "Unlimited",
+              "maxDuration": "30 days"
+            }
+          }
+        }
+      },
+      
+      "commercial": {
+        "categoryId": "COMMERCIAL",
+        "categoryName": "Commercial Motor Insurance",
+        "description": "Business vehicle insurance for commercial operations",
+        "products": {
+          "generalCartageComprehensive": {
+            "productCode": "COMMERCIAL_GENERAL_CARTAGE_COMP",
+            "productName": "Commercial General Cartage Comprehensive",
+            "productType": "COMPREHENSIVE",
+            "pricingModel": "TONNAGE_BASED",
+            "description": "Full coverage for commercial goods transportation vehicles",
+            "enabled": true,
+            "pricing": {
+              "method": "tonnage_scale",
+              "tonnageRates": [
+                {
+                  "tonnageMin": 0,
+                  "tonnageMax": 3,
+                  "rate": 5.5,
+                  "minPremium": 25000
+                },
+                {
+                  "tonnageMin": 3.1,
+                  "tonnageMax": 7,
+                  "rate": 6.0,
+                  "minPremium": 35000
+                },
+                {
+                  "tonnageMin": 7.1,
+                  "tonnageMax": 15,
+                  "rate": 6.5,
+                  "minPremium": 50000
+                },
+                {
+                  "tonnageMin": 15.1,
+                  "tonnageMax": 20,
+                  "rate": 7.0,
+                  "minPremium": 75000
+                },
+                {
+                  "tonnageMin": 20.1,
+                  "tonnageMax": 999,
+                  "rate": 7.5,
+                  "minPremium": 100000
+                }
+              ]
+            },
+            "features": [
+              "Commercial Goods Coverage",
+              "Third Party Liability",
+              "Vehicle Damage Protection",
+              "Business Interruption",
+              "Driver Coverage",
+              "Loading/Unloading Cover"
+            ],
+            "coverage": {
+              "thirdPartyLiability": "Unlimited",
+              "goodsInTransit": "As per sum insured",
+              "driverAccident": 500000
+            }
+          },
+          
+          "ownGoodsThirdParty": {
+            "productCode": "COMMERCIAL_OWN_GOODS_TP",
+            "productName": "Commercial Own Goods Third Party",
+            "productType": "THIRD_PARTY",
+            "pricingModel": "TONNAGE_BASED",
+            "description": "Basic coverage for vehicles carrying own business goods",
+            "enabled": true,
+            "pricing": {
+              "method": "tonnage_fixed",
+              "tonnageRates": [
+                {
+                  "tonnageMin": 0,
+                  "tonnageMax": 3,
+                  "fixedPremium": 8500
+                },
+                {
+                  "tonnageMin": 3.1,
+                  "tonnageMax": 7,
+                  "fixedPremium": 12000
+                },
+                {
+                  "tonnageMin": 7.1,
+                  "tonnageMax": 15,
+                  "fixedPremium": 18000
+                },
+                {
+                  "tonnageMin": 15.1,
+                  "tonnageMax": 999,
+                  "fixedPremium": 25000
+                }
+              ]
+            },
+            "features": [
+              "Third Party Liability",
+              "Own Goods Transportation",
+              "Commercial Use Authorization"
+            ],
+            "coverage": {
+              "thirdPartyLiability": "Unlimited"
+            }
+          }
+        }
+      },
+      
+      "psv": {
+        "categoryId": "PSV",
+        "categoryName": "Public Service Vehicle",
+        "description": "Insurance for passenger transport vehicles",
+        "products": {
+          "psvComprehensive": {
+            "productCode": "PSV_COMPREHENSIVE",
+            "productName": "PSV Comprehensive",
+            "productType": "COMPREHENSIVE",
+            "pricingModel": "SEATING_CAPACITY",
+            "description": "Full coverage for public transport vehicles",
+            "enabled": true,
+            "pricing": {
+              "method": "passenger_capacity",
+              "capacityRates": [
+                {
+                  "seatingMin": 1,
+                  "seatingMax": 14,
+                  "rate": 8.0,
+                  "minPremium": 45000
+                },
+                {
+                  "seatingMin": 15,
+                  "seatingMax": 25,
+                  "rate": 9.0,
+                  "minPremium": 65000
+                },
+                {
+                  "seatingMin": 26,
+                  "seatingMax": 51,
+                  "rate": 10.0,
+                  "minPremium": 85000
+                },
+                {
+                  "seatingMin": 52,
+                  "seatingMax": 999,
+                  "rate": 12.0,
+                  "minPremium": 120000
+                }
+              ]
+            },
+            "features": [
+              "Passenger Liability Coverage",
+              "Third Party Protection",
+              "Vehicle Comprehensive Cover",
+              "Public Liability",
+              "Passenger Personal Accident",
+              "Medical Expenses"
+            ],
+            "coverage": {
+              "thirdPartyLiability": "Unlimited",
+              "passengerAccident": 1000000,
+              "medicalExpenses": 300000,
+              "publicLiability": 2000000
+            }
+          },
+          
+          "psvThirdParty": {
+            "productCode": "PSV_THIRD_PARTY",
+            "productName": "PSV Third Party",
+            "productType": "THIRD_PARTY",
+            "pricingModel": "SEATING_CAPACITY",
+            "description": "Basic third-party coverage for PSV operators",
+            "enabled": true,
+            "pricing": {
+              "method": "passenger_fixed",
+              "capacityRates": [
+                {
+                  "seatingMin": 1,
+                  "seatingMax": 14,
+                  "fixedPremium": 12000
+                },
+                {
+                  "seatingMin": 15,
+                  "seatingMax": 25,
+                  "fixedPremium": 18000
+                },
+                {
+                  "seatingMin": 26,
+                  "seatingMax": 51,
+                  "fixedPremium": 25000
+                },
+                {
+                  "seatingMin": 52,
+                  "seatingMax": 999,
+                  "fixedPremium": 35000
+                }
+              ]
+            },
+            "features": [
+              "Third Party Liability",
+              "Passenger Legal Liability",
+              "Public Transport Authorization"
+            ],
+            "coverage": {
+              "thirdPartyLiability": "Unlimited",
+              "passengerLiability": "Unlimited"
+            }
+          }
+        }
+      },
+      
+      "motorcycle": {
+        "categoryId": "MOTORCYCLE",
+        "categoryName": "Motorcycle Insurance",
+        "description": "Insurance coverage for motorcycles and scooters",
+        "products": {
+          "motorcycleComprehensive": {
+            "productCode": "MOTORCYCLE_COMPREHENSIVE",
+            "productName": "Motorcycle Comprehensive",
+            "productType": "COMPREHENSIVE",
+            "pricingModel": "ENGINE_CAPACITY",
+            "description": "Full coverage for motorcycles including theft protection",
+            "enabled": true,
+            "pricing": {
+              "method": "engine_cc",
+              "ccRates": [
+                {
+                  "ccMin": 0,
+                  "ccMax": 150,
+                  "rate": 6.0,
+                  "minPremium": 8000
+                },
+                {
+                  "ccMin": 151,
+                  "ccMax": 250,
+                  "rate": 6.5,
+                  "minPremium": 10000
+                },
+                {
+                  "ccMin": 251,
+                  "ccMax": 500,
+                  "rate": 7.0,
+                  "minPremium": 12000
+                },
+                {
+                  "ccMin": 501,
+                  "ccMax": 9999,
+                  "rate": 7.5,
+                  "minPremium": 15000
+                }
+              ]
+            },
+            "features": [
+              "Third Party Liability",
+              "Theft Protection",
+              "Fire & Accidental Damage",
+              "Personal Accident Cover",
+              "Medical Expenses"
+            ],
+            "coverage": {
+              "thirdPartyLiability": "Unlimited",
+              "personalAccident": 500000,
+              "medicalExpenses": 100000
+            }
+          },
+          
+          "motorcycleThirdParty": {
+            "productCode": "MOTORCYCLE_THIRD_PARTY",
+            "productName": "Motorcycle Third Party",
+            "productType": "THIRD_PARTY",
+            "pricingModel": "ENGINE_CAPACITY",
+            "description": "Basic third-party coverage for motorcycles",
+            "enabled": true,
+            "pricing": {
+              "method": "engine_fixed",
+              "ccRates": [
+                {
+                  "ccMin": 0,
+                  "ccMax": 150,
+                  "fixedPremium": 2500
+                },
+                {
+                  "ccMin": 151,
+                  "ccMax": 250,
+                  "fixedPremium": 3200
+                },
+                {
+                  "ccMin": 251,
+                  "ccMax": 500,
+                  "fixedPremium": 4000
+                },
+                {
+                  "ccMin": 501,
+                  "ccMax": 9999,
+                  "fixedPremium": 5000
+                }
+              ]
+            },
+            "features": [
+              "Third Party Liability",
+              "Legal Protection"
+            ],
+            "coverage": {
+              "thirdPartyLiability": "Unlimited"
+            }
+          }
+        }
+      },
+      
+      "tuktuk": {
+        "categoryId": "TUKTUK",
+        "categoryName": "TukTuk Insurance",
+        "description": "Specialized insurance for three-wheeler vehicles",
+        "products": {
+          "tuktukComprehensive": {
+            "productCode": "TUKTUK_COMPREHENSIVE",
+            "productName": "TukTuk Comprehensive",
+            "productType": "COMPREHENSIVE",
+            "pricingModel": "PASSENGER_CAPACITY",
+            "description": "Full coverage for three-wheeler commercial vehicles",
+            "enabled": true,
+            "pricing": {
+              "method": "passenger_rate",
+              "passengerRates": [
+                {
+                  "passengerMin": 1,
+                  "passengerMax": 3,
+                  "rate": 7.5,
+                  "minPremium": 12000
+                },
+                {
+                  "passengerMin": 4,
+                  "passengerMax": 6,
+                  "rate": 8.0,
+                  "minPremium": 15000
+                },
+                {
+                  "passengerMin": 7,
+                  "passengerMax": 999,
+                  "rate": 8.5,
+                  "minPremium": 18000
+                }
+              ]
+            },
+            "features": [
+              "Third Party Liability",
+              "Vehicle Damage Cover",
+              "Passenger Protection",
+              "Commercial Use Cover",
+              "Personal Accident"
+            ],
+            "coverage": {
+              "thirdPartyLiability": "Unlimited",
+              "passengerAccident": 300000,
+              "driverAccident": 300000
+            }
+          },
+          
+          "tuktukThirdParty": {
+            "productCode": "TUKTUK_THIRD_PARTY",
+            "productName": "TukTuk Third Party",
+            "productType": "THIRD_PARTY",
+            "pricingModel": "FIXED",
+            "description": "Basic coverage for three-wheeler operations",
+            "enabled": true,
+            "pricing": {
+              "method": "fixed",
+              "fixedPremium": 6500,
+              "minPremium": 6500,
+              "maxPremium": 6500
+            },
+            "features": [
+              "Third Party Liability",
+              "Commercial Authorization"
+            ],
+            "coverage": {
+              "thirdPartyLiability": "Unlimited"
+            }
+          }
+        }
+      },
+      
+      "special": {
+        "categoryId": "SPECIAL",
+        "categoryName": "Special Classes",
+        "description": "Specialized vehicles and unique use cases",
+        "products": {
+          "tractorComprehensive": {
+            "productCode": "SPECIAL_TRACTOR_COMP",
+            "productName": "Tractor Comprehensive",
+            "productType": "COMPREHENSIVE",
+            "pricingModel": "HORSEPOWER_BASED",
+            "description": "Agricultural tractor insurance with implements cover",
+            "enabled": true,
+            "pricing": {
+              "method": "horsepower_rate",
+              "horsepowerRates": [
+                {
+                  "hpMin": 0,
+                  "hpMax": 50,
+                  "rate": 4.5,
+                  "minPremium": 18000
+                },
+                {
+                  "hpMin": 51,
+                  "hpMax": 100,
+                  "rate": 5.0,
+                  "minPremium": 25000
+                },
+                {
+                  "hpMin": 101,
+                  "hpMax": 999,
+                  "rate": 5.5,
+                  "minPremium": 35000
+                }
+              ]
+            },
+            "features": [
+              "Agricultural Use Cover",
+              "Implements Protection",
+              "Third Party Liability",
+              "Fire & Theft",
+              "Breakdown Assistance"
+            ],
+            "coverage": {
+              "thirdPartyLiability": "Unlimited",
+              "implementsCover": "As per sum insured",
+              "breakdownAssistance": "Included"
+            }
+          },
+          
+          "institutionalVehicle": {
+            "productCode": "SPECIAL_INSTITUTIONAL",
+            "productName": "Institutional Vehicle",
+            "productType": "COMPREHENSIVE",
+            "pricingModel": "USAGE_BASED",
+            "description": "Insurance for school buses, hospital vehicles, etc.",
+            "enabled": true,
+            "pricing": {
+              "method": "institutional_rate",
+              "baseRate": 6.0,
+              "minPremium": 30000,
+              "maxPremium": 200000,
+              "usageMultipliers": {
+                "school_bus": 1.2,
+                "hospital_ambulance": 1.5,
+                "government_official": 0.9,
+                "ngo_vehicle": 0.95
+              }
+            },
+            "features": [
+              "Institutional Coverage",
+              "Third Party Liability",
+              "Passenger Protection",
+              "Public Liability",
+              "Equipment Cover"
+            ],
+            "coverage": {
+              "thirdPartyLiability": "Unlimited",
+              "publicLiability": 5000000,
+              "equipmentCover": "As per schedule"
+            }
+          }
+        }
+      }
+    },
+    
+    "underwriters": {
+      "cic": {
+        "underwriterId": "CIC",
+        "underwriterName": "CIC Insurance Group",
+        "commissionRate": 15.0,
+        "paymentTerms": "30 days",
+        "supportedProducts": ["ALL"],
+        "contactInfo": {
+          "phone": "+254700000000",
+          "email": "motor@cic.co.ke",
+          "website": "www.cic.co.ke"
+        }
+      },
+      "britam": {
+        "underwriterId": "BRITAM",
+        "underwriterName": "Britam Insurance",
+        "commissionRate": 12.5,
+        "paymentTerms": "45 days",
+        "supportedProducts": ["PRIVATE", "COMMERCIAL", "PSV"],
+        "contactInfo": {
+          "phone": "+254722000000",
+          "email": "motor@britam.com",
+          "website": "www.britam.com"
+        }
+      },
+      "jubilee": {
+        "underwriterId": "JUBILEE",
+        "underwriterName": "Jubilee Insurance",
+        "commissionRate": 14.0,
+        "paymentTerms": "30 days",
+        "supportedProducts": ["ALL"],
+        "contactInfo": {
+          "phone": "+254733000000",
+          "email": "motor@jubilee.co.ke",
+          "website": "www.jubilee.co.ke"
+        }
+      }
+    },
+    
+    "calculationEngine": {
+      "mandatoryLevies": {
+        "insuranceTrainingLevy": {
+          "rate": 0.0025,
+          "description": "0.25% of gross premium",
+          "authority": "Insurance Regulatory Authority"
+        },
+        "policyholdersCompensationFund": {
+          "rate": 0.0025,
+          "description": "0.25% of gross premium",
+          "authority": "Insurance Regulatory Authority"
+        },
+        "stampDuty": {
+          "amount": 40,
+          "description": "Fixed KSh 40 per policy",
+          "authority": "Kenya Revenue Authority"
+        }
+      },
+      
+      "premiumCalculationExample": {
+        "product": "PRIVATE_COMPREHENSIVE",
+        "sumInsured": 1500000,
+        "calculations": {
+          "step1_basicPremium": {
+            "sumInsured": 1500000,
+            "applicableRate": 3.0,
+            "basicPremium": 45000
+          },
+          "step2_mandatoryLevies": {
+            "itl": 112.5,
+            "pcf": 112.5,
+            "stampDuty": 40,
+            "totalLevies": 265
+          },
+          "step3_finalPremium": {
+            "basicPremium": 45000,
+            "mandatoryLevies": 265,
+            "totalPremium": 45265
+          }
+        }
+      }
+    },
+    
+    "apiEndpoints": {
+      "quotation": "/api/v1/quotation/motor/",
+      "pricing": "/api/v1/pricing/calculate/",
+      "underwriters": "/api/v1/underwriters/compare/",
+      "products": "/api/v1/products/motor/",
+      "categories": "/api/v1/categories/motor/"
+    }
+  }
+}

@@ -1,0 +1,153 @@
+﻿{
+    "summary":  {
+                    "successful":  9,
+                    "total_tests":  9,
+                    "failed":  0
+                },
+    "timestamp":  "2025-09-23 20:10:54",
+    "test_results":  {
+                         "Motorcycle_Comprehensive":  {
+                                                          "calculation_type":  "comprehensive",
+                                                          "base_premium":  "15000.00",
+                                                          "mandatory_levies":  {
+                                                                                   "insurance_training_levy":  "37.50",
+                                                                                   "pcf_levy":  "37.50",
+                                                                                   "stamp_duty":  "40.00"
+                                                                               },
+                                                          "total_premium":  "15115.00",
+                                                          "subcategory":  "MOTORCYCLE_COMPREHENSIVE",
+                                                          "underwriter":  "APA"
+                                                      },
+                         "Private_TP":  {
+                                            "calculation_type":  "third_party",
+                                            "base_premium":  "5000.00",
+                                            "mandatory_levies":  {
+                                                                     "insurance_training_levy":  "12.50",
+                                                                     "pcf_levy":  "12.50",
+                                                                     "stamp_duty":  "40.00"
+                                                                 },
+                                            "total_premium":  "5065.00",
+                                            "subcategory":  "PRIVATE_TP",
+                                            "underwriter":  "APA"
+                                        },
+                         "Commercial_Tonnage":  {
+                                                    "calculation_type":  "tonnage",
+                                                    "base_premium":  "5500.00",
+                                                    "mandatory_levies":  {
+                                                                             "insurance_training_levy":  "13.75",
+                                                                             "pcf_levy":  "13.75",
+                                                                             "stamp_duty":  "40.00"
+                                                                         },
+                                                    "total_premium":  "5567.50",
+                                                    "subcategory":  "COMM_TONNAGE",
+                                                    "underwriter":  "APA"
+                                                },
+                         "Comparison_Private_Comp":  {
+                                                         "comparisons":  [
+                                                                             {
+                                                                                 "underwriter_code":  "APA",
+                                                                                 "result":  {
+                                                                                                "calculation_type":  "comprehensive",
+                                                                                                "base_premium":  "45000.00",
+                                                                                                "mandatory_levies":  {
+                                                                                                                         "insurance_training_levy":  "112.50",
+                                                                                                                         "pcf_levy":  "112.50",
+                                                                                                                         "stamp_duty":  "40.00"
+                                                                                                                     },
+                                                                                                "total_premium":  "45265.00",
+                                                                                                "subcategory":  "PRIVATE_COMPREHENSIVE",
+                                                                                                "underwriter":  "APA"
+                                                                                            }
+                                                                             },
+                                                                             {
+                                                                                 "underwriter_code":  "JUB",
+                                                                                 "result":  {
+                                                                                                "calculation_type":  "comprehensive",
+                                                                                                "base_premium":  "48750.00",
+                                                                                                "mandatory_levies":  {
+                                                                                                                         "insurance_training_levy":  "121.88",
+                                                                                                                         "pcf_levy":  "121.88",
+                                                                                                                         "stamp_duty":  "40.00"
+                                                                                                                     },
+                                                                                                "total_premium":  "49033.76",
+                                                                                                "subcategory":  "PRIVATE_COMPREHENSIVE",
+                                                                                                "underwriter":  "JUB"
+                                                                                            }
+                                                                             }
+                                                                         ]
+                                                     },
+                         "Boda_Boda_TP":  {
+                                              "calculation_type":  "third_party",
+                                              "base_premium":  "5500.00",
+                                              "mandatory_levies":  {
+                                                                       "insurance_training_levy":  "13.75",
+                                                                       "pcf_levy":  "13.75",
+                                                                       "stamp_duty":  "40.00"
+                                                                   },
+                                              "total_premium":  "5567.50",
+                                              "subcategory":  "BODA_BODA_TP",
+                                              "underwriter":  "APA"
+                                          },
+                         "Private_Comprehensive":  {
+                                                       "calculation_type":  "comprehensive",
+                                                       "base_premium":  "45000.00",
+                                                       "mandatory_levies":  {
+                                                                                "insurance_training_levy":  "112.50",
+                                                                                "pcf_levy":  "112.50",
+                                                                                "stamp_duty":  "40.00"
+                                                                            },
+                                                       "total_premium":  "45265.00",
+                                                       "subcategory":  "PRIVATE_COMPREHENSIVE",
+                                                       "underwriter":  "APA"
+                                                   },
+                         "Own_Goods_TP":  {
+                                              "calculation_type":  "third_party",
+                                              "base_premium":  "6000.00",
+                                              "mandatory_levies":  {
+                                                                       "insurance_training_levy":  "15.00",
+                                                                       "pcf_levy":  "15.00",
+                                                                       "stamp_duty":  "40.00"
+                                                                   },
+                                              "total_premium":  "6070.00",
+                                              "subcategory":  "OWN_GOODS_TP",
+                                              "underwriter":  "APA"
+                                          },
+                         "Courier_TP":  {
+                                            "calculation_type":  "third_party",
+                                            "base_premium":  "5500.00",
+                                            "mandatory_levies":  {
+                                                                     "insurance_training_levy":  "13.75",
+                                                                     "pcf_levy":  "13.75",
+                                                                     "stamp_duty":  "40.00"
+                                                                 },
+                                            "total_premium":  "5567.50",
+                                            "subcategory":  "COURIER_TP",
+                                            "underwriter":  "APA"
+                                        },
+                         "Own_Goods_Comp":  {
+                                                "calculation_type":  "comprehensive",
+                                                "base_premium":  "54000.00",
+                                                "mandatory_levies":  {
+                                                                         "insurance_training_levy":  "135.00",
+                                                                         "pcf_levy":  "135.00",
+                                                                         "stamp_duty":  "40.00"
+                                                                     },
+                                                "total_premium":  "54310.00",
+                                                "subcategory":  "OWN_GOODS_COMP",
+                                                "underwriter":  "APA"
+                                            },
+                         "Private_TOR":  {
+                                             "calculation_type":  "fixed",
+                                             "base_premium":  "650.00",
+                                             "mandatory_levies":  {
+                                                                      "insurance_training_levy":  "1.62",
+                                                                      "pcf_levy":  "1.62",
+                                                                      "stamp_duty":  "40.00"
+                                                                  },
+                                             "total_premium":  "693.24",
+                                             "subcategory":  "PRIVATE_TOR",
+                                             "underwriter":  "APA"
+                                         }
+                     },
+    "phone":  "776037404"
+}

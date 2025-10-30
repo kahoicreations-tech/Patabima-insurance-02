@@ -1,0 +1,736 @@
+{
+  "timestamp": "2025-09-28 12:28:02",
+  "car_value": 2000000.0,
+  "phone": "761133308",
+  "currency": "KSh",
+  "premium_options": {
+    "Multi_Underwriter_Comparison": {
+      "comparisons": [
+        {
+          "underwriter_code": "MADISON",
+          "result": {
+            "category": "PRIVATE",
+            "cover_type": "PRIVATE_COMPREHENSIVE",
+            "underwriter_id": "aa85d49e-06a2-40ec-9a22-e09b453f8066",
+            "underwriter_code": "MADISON",
+            "underwriter_name": "Madison Insurance",
+            "market_position": "budget",
+            "features": {
+              "pricing": {
+                "PRIVATE_TOR": {
+                  "base_premium": 1320.0,
+                  "pricing_type": "fixed"
+                },
+                "TUKTUK_PSV_TP": {
+                  "base_premium": 3500.0,
+                  "pricing_type": "fixed"
+                },
+                "COMMERCIAL_TOR": {
+                  "base_premium": 1760.0,
+                  "pricing_type": "fixed"
+                },
+                "MOTORCYCLE_PSV_TP": {
+                  "base_premium": 3500.0,
+                  "pricing_type": "fixed"
+                },
+                "PRIVATE_THIRD_PARTY": {
+                  "base_premium": 2975.0,
+                  "pricing_type": "fixed"
+                },
+                "TUKTUK_COMMERCIAL_TP": {
+                  "base_premium": 3500.0,
+                  "pricing_type": "fixed"
+                },
+                "MOTORCYCLE_PRIVATE_TP": {
+                  "base_premium": 3500.0,
+                  "pricing_type": "fixed"
+                },
+                "PRIVATE_COMPREHENSIVE": {
+                  "rate": 0.0276,
+                  "min_premium": 13800.0,
+                  "pricing_type": "percentage"
+                },
+                "PRIVATE_MOTORCYCLE_TP": {
+                  "base_premium": 2380.0,
+                  "pricing_type": "fixed"
+                },
+                "TUKTUK_COMMERCIAL_COMP": {
+                  "rate": 0.03,
+                  "min_premium": 13800.0,
+                  "pricing_type": "percentage"
+                },
+                "COMMERCIAL_OWN_GOODS_TP": {
+                  "base_premium": 3825.0,
+                  "pricing_type": "fixed"
+                },
+                "MOTORCYCLE_PRIVATE_COMP": {
+                  "rate": 0.03,
+                  "min_premium": 13800.0,
+                  "pricing_type": "percentage"
+                },
+                "PRIVATE_THIRD_PARTY_EXT": {
+                  "base_premium": 4500.0,
+                  "pricing_type": "fixed"
+                },
+                "COMMERCIAL_OWN_GOODS_COMP": {
+                  "rate": 0.0322,
+                  "min_premium": 13800.0,
+                  "pricing_type": "percentage"
+                },
+                "COMMERCIAL_GENERAL_CARTAGE_TP": {
+                  "base_premium": 4420.0,
+                  "pricing_type": "fixed"
+                }
+              },
+              "market_position": "budget"
+            },
+            "rating": 4.0,
+            "policy_term": {
+              "start_date": "2025-09-28",
+              "end_date": "2026-09-28",
+              "duration_days": 365
+            },
+            "premium_breakdown": {
+              "base_premium": 55200.0,
+              "training_levy": 138.0,
+              "pcf_levy": 138.0,
+              "stamp_duty": 40.0,
+              "total_levies": 316.0,
+              "total_premium": 55516.0
+            },
+            "base_premium": 55200.0,
+            "total_premium": 55516.0
+          }
+        },
+        {
+          "underwriter_code": "UAP",
+          "result": {
+            "category": "PRIVATE",
+            "cover_type": "PRIVATE_COMPREHENSIVE",
+            "underwriter_id": "cb192689-b1f2-4afd-b08a-c2bc2e6cc864",
+            "underwriter_code": "UAP",
+            "underwriter_name": "UAP Insurance",
+            "market_position": "competitive",
+            "features": {
+              "pricing": {
+                "PRIVATE_TOR": {
+                  "base_premium": 1500.0,
+                  "pricing_type": "fixed"
+                },
+                "PSV_UBER_TP": {
+                  "base_premium": 5500.0,
+                  "pricing_type": "fixed"
+                },
+                "PSV_UBER_COMP": {
+                  "rate": 0.038,
+                  "min_premium": 15000.0,
+                  "pricing_type": "percentage"
+                },
+                "COMMERCIAL_TOR": {
+                  "base_premium": 2000.0,
+                  "pricing_type": "fixed"
+                },
+                "PSV_MATATU_1M_TP": {
+                  "base_premium": 3500.0,
+                  "pricing_type": "fixed"
+                },
+                "PRIVATE_THIRD_PARTY": {
+                  "base_premium": 3500.0,
+                  "pricing_type": "fixed"
+                },
+                "PRIVATE_COMPREHENSIVE": {
+                  "rate": 0.03,
+                  "min_premium": 15000.0,
+                  "pricing_type": "percentage"
+                },
+                "PRIVATE_MOTORCYCLE_TP": {
+                  "base_premium": 2800.0,
+                  "pricing_type": "fixed"
+                },
+                "COMMERCIAL_OWN_GOODS_TP": {
+                  "base_premium": 4500.0,
+                  "pricing_type": "fixed"
+                },
+                "PRIVATE_THIRD_PARTY_EXT": {
+                  "base_premium": 4500.0,
+                  "pricing_type": "fixed"
+                },
+                "COMMERCIAL_OWN_GOODS_COMP": {
+                  "rate": 0.035,
+                  "min_premium": 15000.0,
+                  "pricing_type": "percentage"
+                },
+                "COMMERCIAL_GENERAL_CARTAGE_TP": {
+                  "base_premium": 5200.0,
+                  "pricing_type": "fixed"
+                }
+              },
+              "market_position": "competitive"
+            },
+            "rating": 4.0,
+            "policy_term": {
+              "start_date": "2025-09-28",
+              "end_date": "2026-09-28",
+              "duration_days": 365
+            },
+            "premium_breakdown": {
+              "base_premium": 60000.0,
+              "training_levy": 150.0,
+              "pcf_levy": 150.0,
+              "stamp_duty": 40.0,
+              "total_levies": 340.0,
+              "total_premium": 60340.0
+            },
+            "base_premium": 60000.0,
+            "total_premium": 60340.0
+          }
+        },
+        {
+          "underwriter_code": "BRITAM",
+          "result": {
+            "category": "PRIVATE",
+            "cover_type": "PRIVATE_COMPREHENSIVE",
+            "underwriter_id": "2ccc38e1-d8c1-42e1-acca-19bbc0dd3c28",
+            "underwriter_code": "BRITAM",
+            "underwriter_name": "Britam Insurance",
+            "market_position": "premium",
+            "features": {
+              "pricing": {
+                "PRIVATE_TOR": {
+                  "base_premium": 1725.0,
+                  "pricing_type": "fixed"
+                },
+                "PSV_UBER_TP": {
+                  "base_premium": 6160.0,
+                  "pricing_type": "fixed"
+                },
+                "PSV_UBER_COMP": {
+                  "rate": 0.04104,
+                  "min_premium": 16200.000000000002,
+                  "pricing_type": "percentage"
+                },
+                "COMMERCIAL_TOR": {
+                  "base_premium": 2300.0,
+                  "pricing_type": "fixed"
+                },
+                "PSV_MATATU_1M_TP": {
+                  "base_premium": 3500.0,
+                  "pricing_type": "fixed"
+                },
+                "MOTORCYCLE_PSV_TP": {
+                  "base_premium": 3500.0,
+                  "pricing_type": "fixed"
+                },
+                "PRIVATE_THIRD_PARTY": {
+                  "base_premium": 3920.0,
+                  "pricing_type": "fixed"
+                },
+                "MOTORCYCLE_PRIVATE_TP": {
+                  "base_premium": 3500.0,
+                  "pricing_type": "fixed"
+                },
+                "PRIVATE_COMPREHENSIVE": {
+                  "rate": 0.0324,
+                  "min_premium": 16200.000000000002,
+                  "pricing_type": "percentage"
+                },
+                "PRIVATE_MOTORCYCLE_TP": {
+                  "base_premium": 3136.0,
+                  "pricing_type": "fixed"
+                },
+                "COMMERCIAL_OWN_GOODS_TP": {
+                  "base_premium": 5040.0,
+                  "pricing_type": "fixed"
+                },
+                "MOTORCYCLE_PRIVATE_COMP": {
+                  "rate": 0.03,
+                  "min_premium": 16200.000000000002,
+                  "pricing_type": "percentage"
+                },
+                "PRIVATE_THIRD_PARTY_EXT": {
+                  "base_premium": 4500.0,
+                  "pricing_type": "fixed"
+                },
+                "COMMERCIAL_OWN_GOODS_COMP": {
+                  "rate": 0.0378,
+                  "min_premium": 16200.000000000002,
+                  "pricing_type": "percentage"
+                },
+                "COMMERCIAL_GENERAL_CARTAGE_TP": {
+                  "base_premium": 5824.0,
+                  "pricing_type": "fixed"
+                }
+              },
+              "market_position": "premium"
+            },
+            "rating": 4.0,
+            "policy_term": {
+              "start_date": "2025-09-28",
+              "end_date": "2026-09-28",
+              "duration_days": 365
+            },
+            "premium_breakdown": {
+              "base_premium": 64800.0,
+              "training_levy": 162.0,
+              "pcf_levy": 162.0,
+              "stamp_duty": 40.0,
+              "total_levies": 364.0,
+              "total_premium": 65164.0
+            },
+            "base_premium": 64800.0,
+            "total_premium": 65164.0
+          }
+        },
+        {
+          "underwriter_code": "CIC",
+          "result": {
+            "category": "PRIVATE",
+            "cover_type": "PRIVATE_COMPREHENSIVE",
+            "underwriter_id": "39667f07-51d1-483b-a430-3fc2b52b05b9",
+            "underwriter_code": "CIC",
+            "underwriter_name": "CIC Insurance Group",
+            "market_position": "premium",
+            "features": {
+              "pricing": {
+                "PRIVATE_TOR": {
+                  "base_premium": 1725.0,
+                  "pricing_type": "fixed"
+                },
+                "PSV_UBER_TP": {
+                  "base_premium": 6160.0,
+                  "pricing_type": "fixed"
+                },
+                "PSV_UBER_COMP": {
+                  "rate": 0.04104,
+                  "min_premium": 16200.000000000002,
+                  "pricing_type": "percentage"
+                },
+                "TUKTUK_PSV_TP": {
+                  "base_premium": 3500.0,
+                  "pricing_type": "fixed"
+                },
+                "COMMERCIAL_TOR": {
+                  "base_premium": 2300.0,
+                  "pricing_type": "fixed"
+                },
+                "PSV_MATATU_1M_TP": {
+                  "base_premium": 3500.0,
+                  "pricing_type": "fixed"
+                },
+                "MOTORCYCLE_PSV_TP": {
+                  "base_premium": 3500.0,
+                  "pricing_type": "fixed"
+                },
+                "PRIVATE_THIRD_PARTY": {
+                  "base_premium": 3920.0,
+                  "pricing_type": "fixed"
+                },
+                "TUKTUK_COMMERCIAL_TP": {
+                  "base_premium": 3500.0,
+                  "pricing_type": "fixed"
+                },
+                "MOTORCYCLE_PRIVATE_TP": {
+                  "base_premium": 3500.0,
+                  "pricing_type": "fixed"
+                },
+                "PRIVATE_COMPREHENSIVE": {
+                  "rate": 0.0324,
+                  "min_premium": 16200.000000000002,
+                  "pricing_type": "percentage"
+                },
+                "PRIVATE_MOTORCYCLE_TP": {
+                  "base_premium": 3136.0,
+                  "pricing_type": "fixed"
+                },
+                "TUKTUK_COMMERCIAL_COMP": {
+                  "rate": 0.03,
+                  "min_premium": 16200.000000000002,
+                  "pricing_type": "percentage"
+                },
+                "COMMERCIAL_OWN_GOODS_TP": {
+                  "base_premium": 5040.0,
+                  "pricing_type": "fixed"
+                },
+                "MOTORCYCLE_PRIVATE_COMP": {
+                  "rate": 0.03,
+                  "min_premium": 16200.000000000002,
+                  "pricing_type": "percentage"
+                },
+                "PRIVATE_THIRD_PARTY_EXT": {
+                  "base_premium": 4500.0,
+                  "pricing_type": "fixed"
+                },
+                "COMMERCIAL_OWN_GOODS_COMP": {
+                  "rate": 0.0378,
+                  "min_premium": 16200.000000000002,
+                  "pricing_type": "percentage"
+                },
+                "COMMERCIAL_GENERAL_CARTAGE_TP": {
+                  "base_premium": 5824.0,
+                  "pricing_type": "fixed"
+                }
+              },
+              "market_position": "premium"
+            },
+            "rating": 4.0,
+            "policy_term": {
+              "start_date": "2025-09-28",
+              "end_date": "2026-09-28",
+              "duration_days": 365
+            },
+            "premium_breakdown": {
+              "base_premium": 64800.0,
+              "training_levy": 162.0,
+              "pcf_levy": 162.0,
+              "stamp_duty": 40.0,
+              "total_levies": 364.0,
+              "total_premium": 65164.0
+            },
+            "base_premium": 64800.0,
+            "total_premium": 65164.0
+          }
+        },
+        {
+          "underwriter_code": "JUBILEE",
+          "result": {
+            "category": "PRIVATE",
+            "cover_type": "PRIVATE_COMPREHENSIVE",
+            "underwriter_id": "14900c1c-4327-4366-a1e9-585699b1a495",
+            "underwriter_code": "JUBILEE",
+            "underwriter_name": "Jubilee Insurance",
+            "market_position": "budget",
+            "features": {
+              "dmvic": true,
+              "pricing": {
+                "PRIVATE_TOR": {
+                  "base_premium": 1320.0,
+                  "pricing_type": "fixed"
+                },
+                "PSV_UBER_TP": {
+                  "base_premium": 4675.0,
+                  "pricing_type": "fixed"
+                },
+                "PSV_UBER_COMP": {
+                  "rate": 0.03496,
+                  "min_premium": 13800.0,
+                  "pricing_type": "percentage"
+                },
+                "TUKTUK_PSV_TP": {
+                  "base_premium": 3500.0,
+                  "pricing_type": "fixed"
+                },
+                "COMMERCIAL_TOR": {
+                  "base_premium": 1760.0,
+                  "pricing_type": "fixed"
+                },
+                "PSV_MATATU_1M_TP": {
+                  "base_premium": 3500.0,
+                  "pricing_type": "fixed"
+                },
+                "PRIVATE_THIRD_PARTY": {
+                  "base_premium": 2975.0,
+                  "pricing_type": "fixed"
+                },
+                "TUKTUK_COMMERCIAL_TP": {
+                  "base_premium": 3500.0,
+                  "pricing_type": "fixed"
+                },
+                "PRIVATE_COMPREHENSIVE": {
+                  "rate": 0.0276,
+                  "min_premium": 13800.0,
+                  "pricing_type": "percentage"
+                },
+                "PRIVATE_MOTORCYCLE_TP": {
+                  "base_premium": 2380.0,
+                  "pricing_type": "fixed"
+                },
+                "TUKTUK_COMMERCIAL_COMP": {
+                  "rate": 0.03,
+                  "min_premium": 13800.0,
+                  "pricing_type": "percentage"
+                },
+                "COMMERCIAL_OWN_GOODS_TP": {
+                  "base_premium": 3825.0,
+                  "pricing_type": "fixed"
+                },
+                "PRIVATE_THIRD_PARTY_EXT": {
+                  "base_premium": 4500.0,
+                  "pricing_type": "fixed"
+                },
+                "COMMERCIAL_OWN_GOODS_COMP": {
+                  "rate": 0.0322,
+                  "min_premium": 13800.0,
+                  "pricing_type": "percentage"
+                },
+                "COMMERCIAL_GENERAL_CARTAGE_TP": {
+                  "base_premium": 4420.0,
+                  "pricing_type": "fixed"
+                }
+              },
+              "market_position": "budget"
+            },
+            "rating": 4.0,
+            "policy_term": {
+              "start_date": "2025-09-28",
+              "end_date": "2026-09-28",
+              "duration_days": 365
+            },
+            "premium_breakdown": {
+              "base_premium": 55200.0,
+              "training_levy": 138.0,
+              "pcf_levy": 138.0,
+              "stamp_duty": 40.0,
+              "total_levies": 316.0,
+              "total_premium": 55516.0
+            },
+            "base_premium": 55200.0,
+            "total_premium": 55516.0
+          }
+        },
+        {
+          "underwriter_code": "APA",
+          "result": {
+            "category": "PRIVATE",
+            "cover_type": "PRIVATE_COMPREHENSIVE",
+            "underwriter_id": "acff5e40-a95b-4dd1-bc06-8e210e1e95bc",
+            "underwriter_code": "APA",
+            "underwriter_name": "APA Insurance",
+            "market_position": "competitive",
+            "features": {
+              "dmvic": true,
+              "pricing": {
+                "PRIVATE_TOR": {
+                  "base_premium": 1500.0,
+                  "pricing_type": "fixed"
+                },
+                "PSV_UBER_TP": {
+                  "base_premium": 5500.0,
+                  "pricing_type": "fixed"
+                },
+                "PSV_UBER_COMP": {
+                  "rate": 0.038,
+                  "min_premium": 15000.0,
+                  "pricing_type": "percentage"
+                },
+                "TUKTUK_PSV_TP": {
+                  "base_premium": 3500.0,
+                  "pricing_type": "fixed"
+                },
+                "COMMERCIAL_TOR": {
+                  "base_premium": 2000.0,
+                  "pricing_type": "fixed"
+                },
+                "PSV_MATATU_1M_TP": {
+                  "base_premium": 3500.0,
+                  "pricing_type": "fixed"
+                },
+                "MOTORCYCLE_PSV_TP": {
+                  "base_premium": 3500.0,
+                  "pricing_type": "fixed"
+                },
+                "PRIVATE_THIRD_PARTY": {
+                  "base_premium": 3500.0,
+                  "pricing_type": "fixed"
+                },
+                "TUKTUK_COMMERCIAL_TP": {
+                  "base_premium": 3500.0,
+                  "pricing_type": "fixed"
+                },
+                "MOTORCYCLE_PRIVATE_TP": {
+                  "base_premium": 3500.0,
+                  "pricing_type": "fixed"
+                },
+                "PRIVATE_COMPREHENSIVE": {
+                  "rate": 0.03,
+                  "min_premium": 15000.0,
+                  "pricing_type": "percentage"
+                },
+                "PRIVATE_MOTORCYCLE_TP": {
+                  "base_premium": 2800.0,
+                  "pricing_type": "fixed"
+                },
+                "TUKTUK_COMMERCIAL_COMP": {
+                  "rate": 0.03,
+                  "min_premium": 15000.0,
+                  "pricing_type": "percentage"
+                },
+                "COMMERCIAL_OWN_GOODS_TP": {
+                  "base_premium": 4500.0,
+                  "pricing_type": "fixed"
+                },
+                "MOTORCYCLE_PRIVATE_COMP": {
+                  "rate": 0.03,
+                  "min_premium": 15000.0,
+                  "pricing_type": "percentage"
+                },
+                "PRIVATE_THIRD_PARTY_EXT": {
+                  "base_premium": 4500.0,
+                  "pricing_type": "fixed"
+                },
+                "COMMERCIAL_OWN_GOODS_COMP": {
+                  "rate": 0.035,
+                  "min_premium": 15000.0,
+                  "pricing_type": "percentage"
+                },
+                "COMMERCIAL_GENERAL_CARTAGE_TP": {
+                  "base_premium": 5200.0,
+                  "pricing_type": "fixed"
+                }
+              },
+              "market_position": "competitive"
+            },
+            "rating": 4.0,
+            "policy_term": {
+              "start_date": "2025-09-28",
+              "end_date": "2026-09-28",
+              "duration_days": 365
+            },
+            "premium_breakdown": {
+              "base_premium": 60000.0,
+              "training_levy": 150.0,
+              "pcf_levy": 150.0,
+              "stamp_duty": 40.0,
+              "total_levies": 340.0,
+              "total_premium": 60340.0
+            },
+            "base_premium": 60000.0,
+            "total_premium": 60340.0
+          }
+        }
+      ],
+      "count": 6
+    },
+    "Private_Third_Party": {
+      "category": "PRIVATE",
+      "cover_type": "PRIVATE_TP",
+      "underwriter_code": "APA",
+      "policy_term": {
+        "start_date": "2025-09-28",
+        "end_date": "2026-09-28",
+        "duration_days": 365
+      },
+      "premium_breakdown": {
+        "base_premium": 0.0,
+        "training_levy": 0.0,
+        "pcf_levy": 0.0,
+        "stamp_duty": 0.0,
+        "total_levies": 0.0,
+        "total_premium": 0.0
+      },
+      "base_premium": 0.0,
+      "total_premium": 0.0
+    },
+    "Saloon_Comprehensive": {
+      "category": "PRIVATE",
+      "cover_type": "PRIVATE_SALOON_COMP",
+      "underwriter_code": "APA",
+      "policy_term": {
+        "start_date": "2025-09-28",
+        "end_date": "2026-09-28",
+        "duration_days": 365
+      },
+      "premium_breakdown": {
+        "base_premium": 0.0,
+        "training_levy": 0.0,
+        "pcf_levy": 0.0,
+        "stamp_duty": 0.0,
+        "total_levies": 0.0,
+        "total_premium": 0.0
+      },
+      "base_premium": 0.0,
+      "total_premium": 0.0
+    },
+    "Mini_Third_Party": {
+      "category": "PRIVATE",
+      "cover_type": "PRIVATE_MINI_TP",
+      "underwriter_code": "APA",
+      "policy_term": {
+        "start_date": "2025-09-28",
+        "end_date": "2026-09-28",
+        "duration_days": 365
+      },
+      "premium_breakdown": {
+        "base_premium": 0.0,
+        "training_levy": 0.0,
+        "pcf_levy": 0.0,
+        "stamp_duty": 0.0,
+        "total_levies": 0.0,
+        "total_premium": 0.0
+      },
+      "base_premium": 0.0,
+      "total_premium": 0.0
+    },
+    "Executive_Comprehensive": {
+      "category": "PRIVATE",
+      "cover_type": "PRIVATE_EXECUTIVE_COMP",
+      "underwriter_code": "APA",
+      "policy_term": {
+        "start_date": "2025-09-28",
+        "end_date": "2026-09-28",
+        "duration_days": 365
+      },
+      "premium_breakdown": {
+        "base_premium": 0.0,
+        "training_levy": 0.0,
+        "pcf_levy": 0.0,
+        "stamp_duty": 0.0,
+        "total_levies": 0.0,
+        "total_premium": 0.0
+      },
+      "base_premium": 0.0,
+      "total_premium": 0.0
+    },
+    "Private_Comprehensive": {
+      "category": "PRIVATE",
+      "cover_type": "PRIVATE_COMPREHENSIVE",
+      "underwriter_code": "APA",
+      "policy_term": {
+        "start_date": "2025-09-28",
+        "end_date": "2026-09-28",
+        "duration_days": 365
+      },
+      "premium_breakdown": {
+        "base_premium": 60000.0,
+        "training_levy": 150.0,
+        "pcf_levy": 150.0,
+        "stamp_duty": 40.0,
+        "total_levies": 340.0,
+        "total_premium": 60340.0
+      },
+      "base_premium": 60000.0,
+      "total_premium": 60340.0
+    },
+    "Private_TOR": {
+      "category": "PRIVATE",
+      "cover_type": "PRIVATE_TOR",
+      "underwriter_code": "APA",
+      "policy_term": {
+        "start_date": "2025-09-28",
+        "end_date": "2026-09-28",
+        "duration_days": 365
+      },
+      "premium_breakdown": {
+        "base_premium": 1500.0,
+        "training_levy": 3.75,
+        "pcf_levy": 3.75,
+        "stamp_duty": 40.0,
+        "total_levies": 47.5,
+        "total_premium": 1547.5
+      },
+      "base_premium": 1500.0,
+      "total_premium": 1547.5
+    }
+  },
+  "summary": [
+    {
+      "Premium": 1547.5,
+      "Product": "Private TOR",
+      "Type": null
+    },
+    {
+      "Premium": 60340.0,
+      "Product": "Private Comprehensive",
+      "Type": null
+    }
+  ]
+}

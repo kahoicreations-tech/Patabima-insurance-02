@@ -1,0 +1,192 @@
+================================================
+PATABIMA EC2 ADMIN SETUP - MANUAL COMMANDS
+================================================
+
+Connect to your EC2 instance (however you normally do), then run these commands:
+
+============================================
+STEP 1: Install and Configure Nginx
+============================================
+
+# Install Nginx
+sudo apt-get update
+sudo apt-get install -y nginx
+
+# Create directories for media and static files
+sudo mkdir -p /var/www/patabima/media/campaign_banners
+sudo mkdir -p /var/www/patabima/staticfiles
+sudo chown -R ubuntu:ubuntu /var/www/patabima
+
+# Create Nginx configuration
+sudo tee /etc/nginx/sites-available/patabima > /dev/null <<'EOF'
+server {
+    listen 80;
+    server_name ec2-34-203-241-81.compute-1.amazonaws.com;
+    client_max_body_size 100M;
+
+    # Security headers
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-XSS-Protection "1; mode=block" always;
+
+    # Static files
+    location /static/ {
+        alias /var/www/patabima/staticfiles/;
+        expires 30d;
+        add_header Cache-Control "public, immutable";
+    }
+
+    # Media files
+    location /media/ {
+        alias /var/www/patabima/media/;
+        expires 7d;
+        add_header Cache-Control "public";
+        add_header Access-Control-Allow-Origin *;
+        add_header Access-Control-Allow-Methods "GET, OPTIONS";
+    }
+
+    # Proxy to Gunicorn
+    location / {
+        proxy_pass http://127.0.0.1:8000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_connect_timeout 60s;
+        proxy_send_timeout 60s;
+        proxy_read_timeout 60s;
+    }
+}
+EOF
+
+# Enable the site
+sudo ln -sf /etc/nginx/sites-available/patabima /etc/nginx/sites-enabled/
+sudo rm -f /etc/nginx/sites-enabled/default
+
+# Test configuration
+sudo nginx -t
+
+# Restart Nginx
+sudo systemctl restart nginx
+sudo systemctl enable nginx
+
+============================================
+STEP 2: Copy Media Files (Campaign Images)
+============================================
+
+# Find your Django project directory
+cd ~
+find . -name "manage.py" -type f 2>/dev/null | head -1
+
+# Once you find it (example: ./patabima/insurance-app/manage.py), copy media files:
+# Replace the path below with your actual Django project path
+sudo cp -r ~/patabima/insurance-app/media/* /var/www/patabima/media/ 2>/dev/null || echo "No media files found"
+
+# OR if media is in a different location:
+sudo cp -r ~/insurance-app/media/* /var/www/patabima/media/ 2>/dev/null
+
+# Fix permissions
+sudo chown -R ubuntu:ubuntu /var/www/patabima/media
+sudo chmod -R 755 /var/www/patabima/media
+
+============================================
+STEP 3: Collect Django Static Files
+============================================
+
+# Navigate to Django project
+cd ~/patabima/insurance-app  # Or your actual path
+
+# Activate virtual environment if you have one
+source ~/venv/bin/activate  # Or: source ../venv/bin/activate
+
+# Collect static files
+python manage.py collectstatic --noinput
+
+# Copy to Nginx directory
+sudo cp -r staticfiles/* /var/www/patabima/staticfiles/
+sudo chown -R ubuntu:ubuntu /var/www/patabima/staticfiles
+
+============================================
+STEP 4: Verify Everything Works
+============================================
+
+# Check Nginx is running
+sudo systemctl status nginx
+
+# Check Gunicorn is running
+ps aux | grep gunicorn
+
+# Test locally
+curl -I http://localhost/admin/
+
+# Test health endpoint
+curl http://localhost/api/v1/health/
+
+# Check if campaign images exist
+ls -lh /var/www/patabima/media/campaign_banners/
+
+============================================
+STEP 5: Open Port 80 in Security Group
+============================================
+
+Go to AWS Console:
+1. EC2 → Instances → Select your instance
+2. Security → Security Groups → Click the security group
+3. Inbound rules → Edit inbound rules
+4. Add rule:
+   - Type: HTTP
+   - Port: 80
+   - Source: 0.0.0.0/0
+5. Save rules
+
+============================================
+AFTER SETUP - YOUR ADMIN LINK
+============================================
+
+✅ Admin Panel:
+http://ec2-34-203-241-81.compute-1.amazonaws.com/admin/
+
+✅ API Health:
+http://ec2-34-203-241-81.compute-1.amazonaws.com/api/v1/health/
+
+✅ Motor Categories:
+http://ec2-34-203-241-81.compute-1.amazonaws.com/api/v1/motor/categories
+
+✅ Campaign Images (example):
+http://ec2-34-203-241-81.compute-1.amazonaws.com/media/campaign_banners/2148410809_1.jpg
+
+============================================
+TROUBLESHOOTING
+============================================
+
+If admin returns 502 Bad Gateway:
+sudo systemctl restart gunicorn
+sudo systemctl status gunicorn
+
+If Nginx won't start:
+sudo nginx -t
+sudo tail -f /var/log/nginx/error.log
+
+If images still 404:
+ls -lh /var/www/patabima/media/campaign_banners/
+sudo chown -R ubuntu:ubuntu /var/www/patabima/media
+sudo chmod -R 755 /var/www/patabima/media
+
+Check Nginx logs:
+sudo tail -f /var/log/nginx/access.log
+sudo tail -f /var/log/nginx/error.log
+
+============================================
+IMPORTANT NOTES
+============================================
+
+1. Port 8000 still works and will continue to work:
+   http://ec2-34-203-241-81.compute-1.amazonaws.com:8000/admin/
+
+2. After Nginx setup, you can optionally remove :8000 from your .env:
+   EXPO_PUBLIC_API_BASE_URL=http://ec2-34-203-241-81.compute-1.amazonaws.com
+   (But current setup with :8000 works fine too)
+
+3. Campaign images will stop returning 404 once media files are copied
+
+4. Your app is already working perfectly - this just adds the standard port 80 access

@@ -1,0 +1,108 @@
+# EAS Build Ignore File
+
+# Files and directories listed here will be excluded from EAS builds
+
+# Video files - keep locally but exclude from builds to reduce size
+
+_.mp4
+_.mov
+_.avi
+_.mkv
+_.webm
+frontend/assets/_.mp4
+frontend/assets/\*.mov
+assets/videos/
+
+# Documentation - not needed in build
+
+docs/
+\*.md
+!README.md
+
+# Archive and backup files
+
+\_archive/
+_.zip
+_.tar.gz
+\*.backup
+insurance-app-update.tar.gz
+
+# Development and testing
+
+tests/
+_.test.js
+_.test.ts
+**tests**/
+
+# AWS deployment files (not needed for mobile app build)
+
+aws-config/
+deployment/
+infrastructure/
+lambda_build/
+lambda-deployed/
+amplify/
+docker-compose.yml
+Dockerfile
+
+# Backend Django app (not needed for mobile build)
+
+insurance-app/
+backend/
+
+# Local development tools
+
+LocalPilotMCP/
+mcp-servers/
+
+# Scripts (not needed in production app)
+
+scripts/
+
+# Git and IDE
+
+.git/
+.github/
+.vscode/
+
+# Environment files (handled separately)
+
+.env.\*
+!.env.production
+
+# Build artifacts
+
+out/
+dist/
+build/
+_.apk
+_.aab
+\*.ipa
+
+# Unnecessary data files
+
+data/
+
+# Large design and media files
+
+_.psd
+_.sketch
+_.fig
+_.xd
+\*.pdf
+!app.json
+
+# Temporary files
+
+tmp/
+temp/
+_.tmp
+.DS_Store
+Thumbs.db
+_.log
+\*.cache
+.cache/
+
+# Source files (only compiled frontend needed)
+
+src/
