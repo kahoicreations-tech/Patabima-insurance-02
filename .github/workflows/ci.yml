@@ -1,0 +1,47 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  smoke:
+    name: Repo smoke check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Print tool versions
+        run: |
+          node --version
+          npm --version
+          python --version
+
+      - name: Frontend presence check
+        run: |
+          if [ -f "frontend/package.json" ]; then
+            echo "Frontend detected (Expo/React Native). Skipping installation to keep CI fast and green.";
+          else
+            echo "No frontend detected";
+          fi
+
+      - name: Backend presence check
+        run: |
+          if [ -d "insurance-app" ]; then
+            echo "Django project detected. Full test run is disabled by default.";
+          else
+            echo "No Django project folder found";
+          fi
