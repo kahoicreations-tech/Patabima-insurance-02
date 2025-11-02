@@ -2,48 +2,7 @@
 
 This folder contains all technical documentation for the PataBima insurance platform.
 
-**Last Updated**: October 30, 2025
-
-## 📁 New Documentation Organization
-
-The documentation has been reorganized into thematic folders for easier navigation:
-
-### 1. **admin-guides/** - Admin & Management (5 files)
-Admin panel usage, pricing workflows, and administrative tasks.
-
-### 2. **api-docs/** - API Documentation & Testing (4 files)
-API endpoint documentation, testing results, and integration guides.
-
-### 3. **pricing-system/** - Pricing & Premium Calculations (11 files)
-Pricing logic, premium calculations, and pricing builder tools.
-
-### 4. **extendible-products/** - Extendible Products & TOR (9 files)
-Extendible insurance products, Time on Risk (TOR), and related features.
-
-### 5. **claims/** - Claims Processing (2 files)
-Claims submission, workflow, and management documentation.
-
-### 6. **email-system/** - Email & Communication (3 files)
-AWS SES email implementation and email system configuration.
-
-### 7. **project-organization/** - Project Structure (9 files)
-Project restructuring, organization plans, and structure guides.
-
-### 8. **ocr-document-extraction/** - OCR & Document Processing (3 files)
-OCR implementation and document auto-fill features.
-
-### 9. **navigation-ui/** - Navigation & UI (6 files)
-UI enhancements, navigation redesign, and interface improvements.
-
-### 10. **wireframes-assets/** - Wireframes, PDFs & Visual Assets (9 files)
-Wireframes, pricing logic documents, insurance forms, and images.
-
-### 11. **general-guides/** - General Implementation & Features (40+ files)
-Comprehensive guides covering authentication, deployment, motor insurance, non-motor insurance, and various implementations.
-
----
-
-## 📁 Original Documentation Structure
+## 📁 Documentation Structure
 
 ### 🎯 [Features](./features/)
 

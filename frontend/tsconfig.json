@@ -4,6 +4,18 @@
     "allowJs": true,
     "checkJs": false,
     "skipLibCheck": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["*"],
+      "@screens/*": ["screens/*"],
+      "@components/*": ["components/*"],
+      "@contexts/*": ["contexts/*"],
+      "@services/*": ["services/*"],
+      "@constants/*": ["constants/*"],
+      "@theme/*": ["theme/*"],
+      "@utils/*": ["utils/*"],
+      "@shared/*": ["shared/*"]
+    },
     "types": [],
     "typeRoots": []
   }

@@ -1,53 +1,99 @@
-# � PataBima Insurance Agency Mobile App
+# 📱 PataBima Insurance Agency Mobile App
 
-[![React Native](https://img.shields.io/badge/React%20Native-0.79.5-blue.svg)](https://reactnative.dev/)
-[![Expo](https://img.shields.io/badge/Expo-53.0.20-000020.svg)](https://expo.dev/)
+[![React Native](https://img.shields.io/badge/React%20Native-0.79.6-blue.svg)](https://reactnative.dev/)
+[![Expo](https://img.shields.io/badge/Expo-SDK%2053-000020.svg)](https://expo.dev/)
+[![Django](https://img.shields.io/badge/Django-REST%20API-092E20.svg)](https://www.djangoproject.com/)
 [![AWS](https://img.shields.io/badge/AWS-Amplify-FF9900.svg)](https://aws.amazon.com/amplify/)
 
-## � Overview
+## 🎯 Overview
 
-PataBima is a comprehensive React Native mobile application designed for insurance sales agents to manage quotations, track commissions, view policies, and handle upcoming renewals and extensions. The app provides a modern, user-friendly interface for insurance professionals in Kenya.
+PataBima is a comprehensive React Native Expo application for insurance sales agents in Kenya. The app enables agents to generate quotations, compare underwriter pricing, process payments, and manage policies across multiple insurance categories with sophisticated pricing calculations. The system handles 60+ motor insurance products with real-time premium calculations, mandatory regulatory levies, and dynamic form generation.
+
+**Key Features:**
+- 60+ motor insurance products across 6 categories
+- Real-time premium calculations with caching (12h TTL)
+- Multi-underwriter comparison (7 providers)
+- Payment integration (M-PESA, DPO Pay)
+- Policy lifecycle management (renewals & extensions)
+- Agent commission tracking
+- Offline-capable with data synchronization
+
+📚 **[View Complete Project Structure](PROJECT_STRUCTURE.md)**
 
 ## 🚀 Quick Start
 
 ### Prerequisites
 
-- Node.js (v18 or later)
-- npm or yarn
-- Expo CLI
-- React Native development environment
+- **Node.js** v18 or later
+- **npm** or **yarn**
+- **Expo CLI** (~SDK 53)
+- **Python** 3.8+ (for backend)
+- **PostgreSQL** (for backend database)
 
-### Installation
+### Frontend Setup
 
-```bash
-# Clone the repository
-git clone [repository-url]
-
-# Navigate to project directory
-cd "PATA BIMA AGENCY - Copy"
+```powershell
+# Navigate to frontend directory
+cd frontend
 
 # Install dependencies
 npm install
 
-# Start the development server
+# Start Expo development server
 npm start
+
+# Run on specific platform
+npm run android    # Android
+npm run ios        # iOS
+npm run web        # Web
 ```
+
+### Backend Setup
+
+```powershell
+# Navigate to backend directory
+cd insurance-app
+
+# Create virtual environment
+python -m venv venv
+
+# Activate virtual environment
+# Windows:
+.\venv\Scripts\activate
+# macOS/Linux:
+source venv/bin/activate
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Run migrations
+python manage.py migrate
+
+# Start Django server
+python manage.py runserver
+```
+
+📖 **For detailed setup instructions, see [QUICK_START.md](docs/deployment/QUICK_START.md)**
 
 ## 🏗️ Project Structure
 
+The project is organized into clear, logical directories:
+
 ```
-📁 PataBima/
-├── 📁 frontend/                    # Main React Native application
-│   ├── 📁 screens/                # Screen components
-│   │   ├── 📁 main/              # Core app screens
-│   │   ├── 📁 auth/              # Authentication flow
-│   │   ├── 📁 quotations/        # Insurance quotations
-│   │   └── 📁 admin/             # Administrative screens
-│   ├── 📁 components/            # Reusable UI components
-│   ├── 📁 navigation/            # Navigation configuration
-│   ├── 📁 services/              # API services
-│   └── 📁 contexts/              # React Context providers
-├── 📁 backend/                    # AWS/API configuration
+PATABIMA01/
+├── frontend/          # React Native Expo app (SDK 53)
+├── backend/           # Django REST API
+├── docs/              # All project documentation
+│   ├── deployment/    # Deployment guides
+│   ├── troubleshooting/  # Issue resolution
+│   └── features/      # Feature specifications
+├── scripts/           # Utility scripts (diagnostics, fixes, tests)
+├── deployment/        # Deployment configs and archives
+├── infrastructure/    # AWS infrastructure as code
+└── data/              # Sample and seed data
+```
+
+📚 **[View Complete Project Structure →](PROJECT_STRUCTURE.md)**
 ├── 📁 docs/                      # Organized documentation
 │   ├── 📁 build-guides/         # Build & APK guides
 │   ├── 📁 setup-guides/         # Setup instructions

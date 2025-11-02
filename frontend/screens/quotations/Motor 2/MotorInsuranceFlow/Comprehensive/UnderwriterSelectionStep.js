@@ -227,14 +227,16 @@ export default function UnderwriterSelectionStep({
         errorMessage = 'Please enter the Sum Insured (vehicle value) to get pricing from underwriters.';
       } else if (err.message && err.message.includes('network')) {
         errorMessage = 'Network error. Please check your internet connection and try again.';
-      } else if (err.message && err.message.includes('timeout')) {
-        errorMessage = 'Request timed out. Please try again.';
+      } else if (err.message && (err.message.includes('timeout') || err.message.includes('timed out'))) {
+        errorMessage = 'Request timed out. The server is taking longer than expected. Please try again.';
       } else if (err.message) {
         errorMessage += err.message;
       } else {
         errorMessage += 'Please check your inputs and try again.';
       }
       
+      console.error('❌ UnderwriterSelectionStep Error:', errorMessage);
+      console.error('Full error:', err);
       setError(errorMessage);
     } finally {
       setLoading(false);

@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "PataBima Agency ",
+    "name": "PataBima Agency",
     "slug": "patabima-agent",
     "version": "1.0.1",
     "orientation": "portrait",
@@ -65,8 +65,7 @@
       "eas": {
         "projectId": "05038c89-0d3b-4bba-a357-c3fa6af17848"
       },
-      "docsPipelineEnabled": true,
-      "apiUrl": "http://ec2-34-203-241-81.compute-1.amazonaws.com"
+      "docsPipelineEnabled": true
     },
     "plugins": [
       "expo-secure-store"

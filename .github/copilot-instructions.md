@@ -8,8 +8,9 @@ PataBima is a comprehensive React Native Expo application for insurance sales ag
 
 ## Technology Stack
 
-- **Frontend**: React Native with Expo SDK 53
-- **Navigation**: React Navigation v6 (Bottom Tabs + Native Stack)
+- **Frontend**: React Native 0.79.6 with Expo SDK 53.0.23 (STABLE - Do NOT upgrade to SDK 54 without approval)
+- **React**: 19.0.0
+- **Navigation**: React Navigation v7 (Bottom Tabs + Native Stack)
 - **Backend**: Django REST API with PostgreSQL database
 - **State Management**: React Context API with reducers for complex state
 - **UI Components**: React Native built-in components with custom styling
@@ -17,6 +18,16 @@ PataBima is a comprehensive React Native Expo application for insurance sales ag
 - **Payment Integration**: M-PESA, DPO Pay, and other Kenya payment gateways
 - **Real-time Calculations**: Dynamic premium calculation engine
 - **Data Validation**: Form validation with TypeScript interfaces
+- **Caching**: Two-tier cache (Memory Map + AsyncStorage) with TTL
+
+### SDK Version Policy
+**IMPORTANT**: This project uses **Expo SDK 53.0.23** and should remain on this version for stability. SDK 54 upgrade requires:
+- Full regression testing of 60+ motor insurance products
+- Revalidation of custom React Native patches (FlatList.js, ScrollView.js)
+- Payment flow testing (M-PESA, DPO Pay)
+- Approval from lead developer and product owner
+
+See `SDK_COMPARISON_ANALYSIS.md` for detailed upgrade analysis. Next SDK review: Q1 2026.
 
 ## App Features
 
@@ -287,6 +298,406 @@ Based on the comprehensive implementation and wireframes:
 - **API Optimization**: Implement request caching and background sync
 - **Memory Management**: Proper cleanup of subscriptions and listeners
 - **Bundle Size**: Monitor and optimize bundle size for faster app startup
+
+## How The System Actually Works
+
+### Architecture Overview
+
+PataBima follows a **service-oriented architecture** with clear separation between:
+- **Presentation Layer**: React Native components and screens
+- **State Management Layer**: Context API providers with reducers
+- **Service Layer**: Centralized API clients and business logic
+- **Caching Layer**: Two-tier cache (memory + AsyncStorage) with TTL
+- **Backend Layer**: Django REST API with PostgreSQL
+
+### State Management Implementation
+
+The app uses **React Context API with reducers** for complex state management (not Redux). Key patterns:
+
+#### Motor Insurance Context Pattern
+
+```javascript
+// frontend/contexts/MotorInsuranceContext.js
+const initialState = {
+  selectedCategory: null,
+  selectedSubcategory: null,
+  vehicleDetails: {},
+  pricingInputs: {},
+  subcategoryFormData: {}, // Per-subcategory isolation
+  availableUnderwriters: [],
+  pricingComparison: [],
+  calculatedPremium: null,
+  currentStep: 0,
+  selectedAddons: [],
+  // History for undo/redo
+  past: [],
+  future: []
+};
+
+function reducer(state, action) {
+  switch (action.type) {
+    case 'SET_CATEGORY_SELECTION':
+      // Save current form data before switching
+      // Restore saved data for new subcategory
+      return saveForHistory(state, newState);
+    case 'UPDATE_VEHICLE_DETAILS':
+      // Merge updates, preserve selectedUnderwriter object
+      return { ...state, vehicleDetails: { ...state.vehicleDetails, ...action.payload } };
+    // ... other actions
+  }
+}
+```
+
+**Key Implementation Details:**
+- **Per-subcategory form data isolation**: When switching between subcategories, form data is saved and restored to prevent data bleeding
+- **History management**: Uses `past` and `future` arrays for undo/redo functionality
+- **Memoized actions**: All action functions use `useCallback` to prevent unnecessary re-renders
+- **Refs for performance**: Critical flags use `useRef` instead of state to avoid triggering re-renders (e.g., `underwriterSelectedRef`, `hasComparisonsRef`)
+
+### API Client Architecture
+
+#### DjangoAPIService Singleton Pattern
+
+```javascript
+// frontend/services/DjangoAPIService.js
+class DjangoAPIService {
+  constructor() {
+    this.baseUrl = API_CONFIG.BASE_URL;
+    this.token = null;
+    this.refreshToken = null;
+    this._authLocked = false; // Freeze calls on auth failure
+    this._inflight = new Map(); // Deduplicate identical requests
+    this._queuedRequests = []; // Queue during token refresh
+  }
+
+  async makeRequest(endpoint, options = {}) {
+    // 1. Check auth lock
+    if (this._authLocked && !options._allowWhenLocked) {
+      throw new Error('Authentication locked');
+    }
+
+    // 2. Auto-load token from storage if missing
+    if (!this.token && !this._authLocked) {
+      const token = await SecureTokenStorage.getAccessToken();
+      if (token) this.token = token;
+    }
+
+    // 3. Build request with auth header
+    const headers = {
+      'Content-Type': 'application/json',
+      'Authorization': this.token ? `Bearer ${this.token}` : undefined
+    };
+
+    // 4. Network-aware retry (try alternative hosts on failure)
+    try {
+      const response = await fetch(url, { method, headers, body });
+      
+      // 5. Handle 401 with token refresh
+      if (response.status === 401) {
+        await this.refreshAccessToken();
+        return this.makeRequest(endpoint, { ...options, _retry: true });
+      }
+
+      return await response.json();
+    } catch (error) {
+      // 6. Auto-switch between localhost/emulator/LAN on network errors
+      if (retryCount === 0) {
+        const nextBase = this.findAlternativeHost();
+        if (nextBase) {
+          this.updateBaseUrl(nextBase);
+          return this.makeRequest(endpoint, { ...options, _retryCount: 1 });
+        }
+      }
+      throw error;
+    }
+  }
+
+  async tryEndpoints(endpoints, options) {
+    // Resilient endpoint probing - tries multiple candidates
+    for (const ep of endpoints) {
+      try {
+        return await this.makeRequest(ep, { ...options, _suppressErrorLog: true });
+      } catch (e) {
+        if (e.message.includes('401') && options._breakOn401) throw e;
+        continue; // Try next candidate
+      }
+    }
+    throw new Error('No candidate endpoints succeeded');
+  }
+}
+```
+
+**Key Patterns:**
+- **Singleton instance**: One global service shared across app
+- **Auto token management**: Loads token from storage, auto-refreshes on 401
+- **Request deduplication**: `_inflight` Map prevents duplicate simultaneous requests
+- **Network resilience**: Auto-switches between localhost/emulator/LAN hosts
+- **Endpoint discovery**: `tryEndpoints()` probes multiple API versions/paths
+- **Auth lock mechanism**: Freezes protected calls after hard auth failure
+
+### Caching Strategy
+
+#### Two-Tier SimpleCache Implementation
+
+```javascript
+// frontend/services/SimpleCache.js
+const MEMORY = new Map(); // Fast in-memory tier
+const DEFAULT_TTL_MS = 24 * 60 * 60 * 1000; // 24h
+
+async function getCache(key) {
+  // 1. Check memory first (fast)
+  const mem = MEMORY.get(PREFIX + key);
+  if (mem && mem.expiresAt > Date.now()) {
+    return mem.value;
+  }
+
+  // 2. Check AsyncStorage (persistent)
+  const raw = await AsyncStorage.getItem(PREFIX + key);
+  if (raw) {
+    const parsed = JSON.parse(raw);
+    if (parsed.expiresAt > Date.now()) {
+      // Repopulate memory cache
+      MEMORY.set(PREFIX + key, { value: parsed.value, expiresAt: parsed.expiresAt });
+      return parsed.value;
+    }
+  }
+  return null;
+}
+
+async function setCache(key, value, ttlMs = DEFAULT_TTL_MS) {
+  const expiresAt = Date.now() + ttlMs;
+  const entry = { value, expiresAt };
+  
+  // Write to both tiers
+  MEMORY.set(PREFIX + key, entry);
+  await AsyncStorage.setItem(PREFIX + key, JSON.stringify(entry));
+}
+
+function makeKey(parts) {
+  // Create stable cache keys from dynamic data
+  return parts.filter(p => p != null && p !== '').map(String).join('|');
+}
+```
+
+**Cache Key Design Pattern:**
+```javascript
+// Example: Motor pricing comparison cache key
+const cacheKey = makeKey([
+  'UW_SUBCAT',
+  subcategoryCode,
+  Math.floor(sumInsured / 50000) * 50000, // Bucket to 50k increments
+  tonnage || 0,
+  capacity || 0
+]);
+```
+
+**TTL Settings by Data Type:**
+- Motor categories/subcategories: **7 days** (MotorCategoryCache)
+- Pricing comparisons: **12 hours** (pricing changes frequently)
+- Underwriter lists: **6 hours** (availability changes)
+- User profile: **5 minutes** (AppDataContext)
+- Quotations: **2 minutes** (frequent updates)
+
+**Bucketing Strategy:**
+- **Sum Insured**: Rounded to nearest 50k to reduce cache misses
+- **Tonnage/Capacity**: Exact values (limited range)
+- **Dates**: Stored as ISO strings for consistency
+
+### Motor Insurance Pricing Flow
+
+#### Real-time Premium Calculation Pipeline
+
+```javascript
+// frontend/services/MotorInsurancePricingService.js
+
+// 1. Transform form inputs to backend format
+const payload = transformPricingRequest(coverType, inputs);
+// Extracts: category, subcategory, sum_insured, vehicle_year, tonnage, etc.
+
+// 2. Generate cache key with bucketing
+const cacheKey = makeKey([
+  'UW_SUBCAT',
+  subcategoryCode,
+  Math.floor(sumInsured / 50000) * 50000,
+  tonnage || 0,
+  capacity || 0
+]);
+
+// 3. Check cache (12h TTL)
+if (!options.forceRefresh) {
+  const cached = await SimpleCache.get(cacheKey);
+  if (cached) return cached;
+}
+
+// 4. Call backend comparison API
+const res = await djangoAPI.compareMotorPricing(payload);
+
+// 5. Enhance backend response with computed levies
+const enhanced = res.comparisons.map(comp => {
+  const pricing = normalizePricingResponse(comp.result);
+  const levies = computeLevies(pricing.base_premium);
+  
+  return {
+    underwriter_code: comp.underwriter_code,
+    underwriter_name: comp.underwriter_name,
+    base_premium: pricing.base_premium,
+    total_premium: pricing.base_premium + levies.totalLevies,
+    breakdown: {
+      base: pricing.base_premium,
+      itl: levies.itl,
+      pcf: levies.pcf,
+      stamp_duty: levies.stampDuty
+    }
+  };
+});
+
+// 6. Sort by price (lowest first)
+enhanced.sort((a, b) => a.total_premium - b.total_premium);
+
+// 7. Cache result (12h)
+await SimpleCache.set(cacheKey, enhanced, 12 * 60 * 60 * 1000);
+
+return enhanced;
+```
+
+#### Levy Calculation (Applied to ALL Products)
+
+```javascript
+// frontend/utils/pricingCalculations.js
+const LEVY_RATES = {
+  ITL: 0.0025,    // 0.25% Insurance Training Levy
+  PCF: 0.0025,    // 0.25% Policyholders Compensation Fund
+  STAMP_DUTY: 40  // KSh 40 fixed stamp duty
+};
+
+function computeLevies(premium) {
+  const itl = round2(premium * LEVY_RATES.ITL);
+  const pcf = round2(premium * LEVY_RATES.PCF);
+  const stampDuty = LEVY_RATES.STAMP_DUTY;
+  
+  return {
+    itl,
+    pcf,
+    stampDuty,
+    totalLevies: round2(itl + pcf + stampDuty)
+  };
+}
+```
+
+**Critical Implementation Notes:**
+- Levies are **always calculated on frontend** to ensure consistency
+- Backend returns `base_premium`, frontend adds levies to get `total_premium`
+- `round2()` function ensures 2 decimal precision for currency
+- Stamp duty is **fixed KSh 40** regardless of premium amount
+
+### Form Handling Patterns
+
+#### Dynamic Form with Refs-Based State Gating
+
+```javascript
+// frontend/screens/Motor 2/VehicleDetails/DynamicVehicleForm.js
+
+const DynamicVehicleForm = ({ selectedProduct, onChange }) => {
+  const [formData, setFormData] = useState(initialData);
+  
+  // Critical: Use refs to prevent re-render loops
+  const underwriterSelectedRef = useRef(false);
+  const hasComparisonsRef = useRef(false);
+  const comparisonTriggerRef = useRef(null);
+  const comparisonTimeoutRef = useRef(null);
+
+  // Debounced auto-comparison (1 second delay)
+  const handleFieldChange = (field, value) => {
+    const newData = { ...formData, [field]: value };
+    setFormData(newData);
+    onChange(newData);
+
+    // Clear existing timeout
+    if (comparisonTimeoutRef.current) {
+      clearTimeout(comparisonTimeoutRef.current);
+    }
+
+    // Only trigger comparison if pricing-critical fields changed
+    const comparisonKey = makeComparisonKey(newData);
+    if (comparisonKey !== lastComparisonData) {
+      comparisonTimeoutRef.current = setTimeout(() => {
+        triggerUnderwriterComparison(newData);
+      }, 1000); // 1 second debounce
+    }
+  };
+
+  // Comparison key: only pricing-critical fields
+  const makeComparisonKey = (data) => {
+    return JSON.stringify({
+      sum_insured: data.sum_insured,
+      tonnage: data.tonnage,
+      capacity: data.passengerCapacity,
+      year: data.year
+    });
+  };
+
+  // MemoizedTextInput to prevent keyboard dismissal
+  const MemoizedTextInput = useMemo(() => {
+    return ({ field, label, ...props }) => (
+      <TextInput
+        value={formData[field] || ''}
+        onChangeText={(val) => handleFieldChange(field, val)}
+        placeholder={label}
+        {...props}
+      />
+    );
+  }, [formData]);
+
+  return (
+    <ScrollView>
+      {fields.map(field => (
+        <MemoizedTextInput key={field.key} field={field.key} label={field.label} />
+      ))}
+    </ScrollView>
+  );
+};
+```
+
+**Key Patterns:**
+- **Refs for flags**: `underwriterSelectedRef`, `hasComparisonsRef` avoid state re-renders
+- **Debounced comparison**: 1 second delay before triggering backend call
+- **Comparison key design**: Only include pricing-critical fields (not cosmetic fields like color)
+- **MemoizedTextInput**: Prevents keyboard dismissal on parent re-renders
+- **Field locking**: TOR/Third-Party with logbook data locks fields with `isAutoFilled` flag
+
+### Performance Optimizations
+
+#### Implemented Patterns
+
+1. **Request Deduplication**:
+   ```javascript
+   // DjangoAPIService._inflight Map
+   const key = `${method}:${url}:${bodyHash}`;
+   if (this._inflight.has(key)) {
+     return this._inflight.get(key); // Return existing promise
+   }
+   ```
+
+2. **Lazy Loading**:
+   - Motor categories loaded on-demand, cached for 7 days
+   - Subcategories pre-fetched in background
+   - Underwriter lists fetched per category, cached 6h
+
+3. **Memoization**:
+   - `useMemo` for expensive computations (premium calculations, vehicle data transformations)
+   - `useCallback` for all context actions
+   - `React.memo` for list item components
+
+4. **Cache TTL Tuning**:
+   - Static data (categories): 7 days
+   - Semi-static (underwriters): 6 hours
+   - Dynamic (pricing): 12 hours (background refresh)
+   - User data: 5 minutes
+
+5. **Bundle Size Optimization**:
+   - Conditional imports with `require()` for heavy libraries
+   - Lazy screen loading with React Navigation
+   - Image optimization with `expo-optimize`
 
 ## AWS Integration Notes
 

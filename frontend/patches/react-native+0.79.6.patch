@@ -1,0 +1,68 @@
+diff --git a/node_modules/react-native/Libraries/Components/ScrollView/ScrollView.js b/node_modules/react-native/Libraries/Components/ScrollView/ScrollView.js
+index 6cae74b..9fa54f2 100644
+--- a/node_modules/react-native/Libraries/Components/ScrollView/ScrollView.js
++++ b/node_modules/react-native/Libraries/Components/ScrollView/ScrollView.js
+@@ -49,7 +49,26 @@ import Commands from './ScrollViewCommands';
+ import ScrollViewContext, {HORIZONTAL, VERTICAL} from './ScrollViewContext';
+ import ScrollViewStickyHeader from './ScrollViewStickyHeader';
+ import invariant from 'invariant';
+-import memoize from 'memoize-one';
++// PATCHED: Removed memoize-one import and replaced with inline implementation
++// Original: import memoize from 'memoize-one';
++const memoize = (fn) => {
++  let lastArgs = null;
++  let lastResult = null;
++  return function(...args) {
++    if (lastArgs === null || !shallowEqual(args, lastArgs)) {
++      lastArgs = args;
++      lastResult = fn.apply(this, args);
++    }
++    return lastResult;
++  };
++};
++const shallowEqual = (a, b) => {
++  if (a.length !== b.length) return false;
++  for (let i = 0; i < a.length; i++) {
++    if (a[i] !== b[i]) return false;
++  }
++  return true;
++};
+ import nullthrows from 'nullthrows';
+ import * as React from 'react';
+ 
+diff --git a/node_modules/react-native/Libraries/Lists/FlatList.js b/node_modules/react-native/Libraries/Lists/FlatList.js
+index d1240ae..1f7fb21 100644
+--- a/node_modules/react-native/Libraries/Lists/FlatList.js
++++ b/node_modules/react-native/Libraries/Lists/FlatList.js
+@@ -21,7 +21,26 @@ import * as ReactNativeFeatureFlags from '../../src/private/featureflags/ReactNa
+ import {type ScrollResponderType} from '../Components/ScrollView/ScrollView';
+ import View from '../Components/View/View';
+ import VirtualizedLists from '@react-native/virtualized-lists';
+-import memoizeOne from 'memoize-one';
++// PATCHED: Removed memoize-one import and replaced with inline implementation
++// Original: import memoizeOne from 'memoize-one';
++const memoizeOne = (fn) => {
++  let lastArgs = null;
++  let lastResult = null;
++  return function(...args) {
++    if (lastArgs === null || !shallowEqual(args, lastArgs)) {
++      lastArgs = args;
++      lastResult = fn.apply(this, args);
++    }
++    return lastResult;
++  };
++};
++const shallowEqual = (a, b) => {
++  if (a.length !== b.length) return false;
++  for (let i = 0; i < a.length; i++) {
++    if (a[i] !== b[i]) return false;
++  }
++  return true;
++};
+ import React from 'react';
+ 
+const StyleSheet = require('../StyleSheet/StyleSheet').default;
+
+@@
+-  _memoizedRenderer: ReturnType<typeof memoizeOne> = memoizeOne(this._renderer);
++  _memoizedRenderer = memoizeOne(this._renderer);

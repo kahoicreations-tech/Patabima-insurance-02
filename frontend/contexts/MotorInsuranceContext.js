@@ -122,24 +122,56 @@ function reducer(state, action) {
         selectedUnderwriter: newSelectedUnderwriter,
         subcategoryFormData: vehicleSubcategoryFormData
       });
-    case 'UPDATE_PRICING_INPUTS':
-      const updatedPricingInputs = { ...state.pricingInputs, ...action.payload };
+    case 'UPDATE_PRICING_INPUTS': {
+      // Deep-merge clientDetails to avoid losing nested fields on updates
+      const incomingClientDetails = action.payload?.clientDetails;
+      const mergedClientDetails = incomingClientDetails
+        ? { ...(state.pricingInputs?.clientDetails || {}), ...(incomingClientDetails || {}) }
+        : (state.pricingInputs?.clientDetails || undefined);
+
+      // Build next pricingInputs with shallow merge + optional deep clientDetails
+      const nextPricingInputsBase = { ...state.pricingInputs, ...action.payload };
+      if (incomingClientDetails) {
+        nextPricingInputsBase.clientDetails = mergedClientDetails;
+      }
+
+      // Mirror vehicle make/model from clientDetails into top-level pricingInputs
+      if (mergedClientDetails) {
+        if (mergedClientDetails.vehicle_make) {
+          nextPricingInputsBase.vehicle_make = mergedClientDetails.vehicle_make;
+        }
+        if (mergedClientDetails.vehicle_model) {
+          nextPricingInputsBase.vehicle_model = mergedClientDetails.vehicle_model;
+        }
+      }
+
+      // Also mirror into vehicleDetails to keep downstream steps consistent
+      let nextVehicleDetails = state.vehicleDetails;
+      if (mergedClientDetails && (mergedClientDetails.vehicle_make || mergedClientDetails.vehicle_model)) {
+        nextVehicleDetails = {
+          ...state.vehicleDetails,
+          ...(mergedClientDetails.vehicle_make ? { make: mergedClientDetails.vehicle_make } : {}),
+          ...(mergedClientDetails.vehicle_model ? { model: mergedClientDetails.vehicle_model } : {}),
+        };
+      }
+
       let pricingSubcategoryFormData = { ...state.subcategoryFormData };
-      
       // Also save to subcategory-specific storage
       const pricingSubcategoryCode = state.selectedSubcategory?.subcategory_code;
       if (pricingSubcategoryCode) {
         pricingSubcategoryFormData[pricingSubcategoryCode] = {
           ...pricingSubcategoryFormData[pricingSubcategoryCode],
-          pricingInputs: updatedPricingInputs
+          pricingInputs: nextPricingInputsBase
         };
       }
-      
+
       return saveForHistory(state, { 
         ...state, 
-        pricingInputs: updatedPricingInputs,
+        pricingInputs: nextPricingInputsBase,
+        vehicleDetails: nextVehicleDetails,
         subcategoryFormData: pricingSubcategoryFormData
       });
+    }
     case 'UPDATE_CLIENT_DETAILS':
       return saveForHistory(state, { ...state, clientDetails: { ...state.clientDetails, ...action.payload } });
     case 'UPDATE_EXTRACTED_DOCUMENTS':

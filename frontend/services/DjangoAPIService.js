@@ -803,7 +803,13 @@ class DjangoAPIService {
 
   // Compare motor pricing across multiple underwriters
   async compareMotorPricing(payload, options = {}) {
-    const bodyOptions = { method: 'POST', body: JSON.stringify(payload), ...options };
+    // Increase timeout to 60 seconds for motor pricing comparison (complex calculations)
+    const bodyOptions = { 
+      method: 'POST', 
+      body: JSON.stringify(payload), 
+      timeoutMs: 60000, // 60 seconds for complex pricing calculations
+      ...options 
+    };
     const candidates = [
       // Public app compare endpoints (working)
       '/api/v1/public_app/insurance/compare_motor_pricing',

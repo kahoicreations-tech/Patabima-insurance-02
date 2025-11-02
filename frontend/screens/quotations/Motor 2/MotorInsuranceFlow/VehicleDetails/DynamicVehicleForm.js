@@ -1,8 +1,42 @@
-import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef, memo } from 'react';
 import { View, ScrollView, Text, TextInput, StyleSheet, TouchableOpacity, ActivityIndicator, Platform } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import motorPricingService from '../../../../../services/MotorInsurancePricingService';
 import { VEHICLE_MAKES, getModelsForMake } from '../../../../../constants/vehicleCatalog';
+
+// Memoized TextInput component to prevent re-creation and focus loss
+const MemoizedTextInput = memo(({ 
+  fieldKey, 
+  value, 
+  onChangeText, 
+  placeholder, 
+  keyboardType, 
+  autoCapitalize, 
+  style,
+  hasError 
+}) => {
+  return (
+    <TextInput
+      key={fieldKey}
+      style={[style, hasError && styles.inputError]}
+      value={value}
+      onChangeText={onChangeText}
+      placeholder={placeholder}
+      keyboardType={keyboardType}
+      autoCapitalize={autoCapitalize}
+      blurOnSubmit={false}
+      returnKeyType="next"
+    />
+  );
+}, (prevProps, nextProps) => {
+  // Custom comparison - only re-render if relevant props change
+  return (
+    prevProps.value === nextProps.value &&
+    prevProps.hasError === nextProps.hasError &&
+    prevProps.placeholder === nextProps.placeholder
+  );
+});
 
 const DynamicPolicyForm = ({ selectedProduct, onDataChange, initialData = {}, values, onChange, errors = {}, productType, onUnderwriterComparison, onUnderwriterSelection }) => {
   const [formData, setFormData] = useState(initialData || values || {});
@@ -14,9 +48,40 @@ const DynamicPolicyForm = ({ selectedProduct, onDataChange, initialData = {}, va
   const [selectedUnderwriter, setSelectedUnderwriter] = useState(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
   
+  // State for accordion-style dropdowns
+  const [expandedDropdown, setExpandedDropdown] = useState(null); // Track which dropdown is open
+  
   // Ref to track comparison trigger and prevent duplicates
   const comparisonTriggerRef = useRef(null);
   const comparisonTimeoutRef = useRef(null);
+  const lastComparisonKeyRef = useRef(null);
+  
+  // Debounced parent notifier to avoid parent re-renders on every keystroke
+  const notifyTimeoutRef = useRef(null);
+  const latestFormRef = useRef(formData);
+  
+  // Track if underwriter has been selected (prevents re-fetch after selection)
+  const underwriterSelectedRef = useRef(false);
+  const hasComparisonsRef = useRef(false);
+
+  // Update refs when values change (without triggering re-renders)
+  useEffect(() => {
+    latestFormRef.current = formData;
+    underwriterSelectedRef.current = Boolean(formData?.underwriter);
+  }, [formData]);
+
+  useEffect(() => {
+    hasComparisonsRef.current = underwriterComparisons.length > 0;
+  }, [underwriterComparisons.length]);
+
+  // Cleanup debounce timer on unmount
+  useEffect(() => {
+    return () => {
+      if (notifyTimeoutRef.current) {
+        clearTimeout(notifyTimeoutRef.current);
+      }
+    };
+  }, []);
 
   // Check if a field should be locked (TOR/Third Party with auto-filled data)
   const isFieldLocked = useCallback((fieldKey) => {
@@ -62,11 +127,15 @@ const DynamicPolicyForm = ({ selectedProduct, onDataChange, initialData = {}, va
     return formData.identificationType === 'Chassis Number' ? 'Enter chassis number' : 'e.g., KDA 123A';
   }, [formData.identificationType]);
 
-  const getFormFields = () => {
+  const getFormFields = useMemo(() => {
+    // Call functions directly instead of including them in dependencies
+    const identLabel = formData.identificationType === 'Chassis Number' ? 'Chassis Number' : 'Vehicle Registration';
+    const identPlaceholder = formData.identificationType === 'Chassis Number' ? 'Enter chassis number' : 'e.g., KDA 123A';
+    
     const fields = [
       { key: 'financialInterest', label: 'Financial Interest', type: 'radio', required: true, options: ['Yes', 'No'] },
       { key: 'identificationType', label: 'Vehicle Identification Type', type: 'radio', required: true, options: ['Vehicle Registration', 'Chassis Number'] },
-      { key: 'registrationNumber', label: getIdentificationLabel(), type: 'text', required: true, placeholder: getIdentificationPlaceholder() },
+      { key: 'registrationNumber', label: identLabel, type: 'text', required: true, placeholder: identPlaceholder },
       { key: 'cover_start_date', label: 'Cover Start Date', type: 'date', required: true, defaultValue: new Date().toISOString().split('T')[0] },
     ];
 
@@ -80,29 +149,67 @@ const DynamicPolicyForm = ({ selectedProduct, onDataChange, initialData = {}, va
       subcategoryCode.includes('third_party') ||
       subcategoryCode.includes('third-party')
     );
+    
+    const isComprehensive = (
+      coverageType.includes('comp') ||
+      subcategoryCode.includes('comp')
+    );
 
     if (!isThirdPartyLike) {
-      // Make as dropdown
+      // Make as dropdown - add "Others" option
+      const makeOptions = [...VEHICLE_MAKES, 'Others'];
       fields.push(
-        { key: 'make', label: 'Vehicle Make', type: 'select', required: true, options: VEHICLE_MAKES }
+        { key: 'make', label: 'Vehicle Make', type: 'select', required: true, options: makeOptions }
       );
-      // Model depends on selected make; if no list available, fall back to text
-      const models = getModelsForMake(formData.make);
+      
+      // If "Others" is selected for make, show text input
+      if (formData.make === 'Others') {
+        fields.push({ key: 'make_other', label: 'Specify Vehicle Make', type: 'text', required: true, placeholder: 'Enter vehicle make' });
+      }
+      
+      // Model depends on selected make; if no list available or "Others" selected, fall back to text
+      const models = formData.make === 'Others' ? null : getModelsForMake(formData.make);
       if (models && models.length > 0) {
-        fields.push({ key: 'model', label: 'Vehicle Model', type: 'select', required: true, options: models });
+        // Add "Others" option to models
+        const modelOptions = [...models, 'Others'];
+        fields.push({ key: 'model', label: 'Vehicle Model', type: 'select', required: true, options: modelOptions });
+        
+        // If "Others" is selected for model, show text input
+        if (formData.model === 'Others') {
+          fields.push({ key: 'model_other', label: 'Specify Vehicle Model', type: 'text', required: true, placeholder: 'Enter vehicle model' });
+        }
       } else {
         fields.push({ key: 'model', label: 'Vehicle Model', type: 'text', required: true, placeholder: 'Axio' });
       }
       fields.push({ key: 'year', label: 'Year of Manufacture', type: 'number', required: true, placeholder: '2016' });
+      
+      // For Comprehensive products, add sum_insured field here in Vehicle Details
+      if (isComprehensive) {
+        fields.push({ 
+          key: 'sum_insured', 
+          label: 'Sum Insured (Vehicle Value)', 
+          type: 'formatted_number', 
+          required: true, 
+          placeholder: 'e.g., 1 500 000',
+          help: 'Enter the current market value of your vehicle'
+        });
+      }
     }
 
     // Placeholder to render the underwriter list in this step (except for comprehensive)
     fields.push({ key: 'underwriter', label: 'Available Underwriters', type: 'underwriter', required: false });
 
     return fields;
-  };
+  }, [
+    selectedProduct?.subcategory_code, 
+    selectedProduct?.coverage_type,
+    formData.make,
+    formData.model,
+    formData.identificationType
+  ]);
 
   // Check if we can trigger underwriter comparison
+  // Memoize only the pricing-relevant fields to prevent unnecessary re-triggers
   const canCompareUnderwriters = useCallback(() => {
     if (!selectedProduct || !selectedProduct.category || !selectedProduct.coverage_type) {
       return false;
@@ -112,12 +219,16 @@ const DynamicPolicyForm = ({ selectedProduct, onDataChange, initialData = {}, va
     
     // Check basic required fields including cover start date
     const hasRequired = requiredFields.every(field => formData[field] && formData[field].toString().trim());
-    if (!hasRequired) return false;
+    if (!hasRequired) {
+      return false;
+    }
 
     // For comprehensive insurance, need sum_insured
     const isComprehensive = selectedProduct.coverage_type?.toLowerCase().includes('comprehensive');
     // Disable underwriter comparison on Vehicle Details for Comprehensive to avoid duplication
-    if (isComprehensive) return false;
+    if (isComprehensive) {
+      return false;
+    }
 
     // For commercial, need tonnage
     const isCommercial = selectedProduct.category?.toLowerCase() === 'commercial';
@@ -132,10 +243,21 @@ const DynamicPolicyForm = ({ selectedProduct, onDataChange, initialData = {}, va
     }
 
     return true;
-  }, [selectedProduct, formData]);
+  }, [
+    selectedProduct, 
+    // Only depend on fields that affect pricing, NOT underwriter selection
+    formData.registrationNumber,
+    formData.cover_start_date,
+    formData.tonnage,
+    formData.passengerCapacity,
+    formData.sum_insured,
+    formData.engineCapacity
+  ]);
 
   // Memoize comparison trigger data to prevent unnecessary calls
   // This creates a stable signature of the data that triggers comparison
+  // CRITICAL: Do NOT include formData.underwriter in the key or dependencies
+  // so that selecting an underwriter does not schedule a new comparison
   const comparisonKey = useMemo(() => {
     if (!selectedProduct) return null;
     // Do not trigger comparisons from the Vehicle Details step for Comprehensive
@@ -146,6 +268,7 @@ const DynamicPolicyForm = ({ selectedProduct, onDataChange, initialData = {}, va
     const coverType = selectedProduct?.coverage_type?.toUpperCase();
     
     // Create signature with only the fields that affect pricing
+    // Exclude underwriter selection to prevent re-scheduling comparison on every click
     return JSON.stringify({
       subcategory: subcategory_code,
       category: category,
@@ -176,6 +299,12 @@ const DynamicPolicyForm = ({ selectedProduct, onDataChange, initialData = {}, va
       return;
     }
 
+    // Extra safety: if user already selected an underwriter and we still have comparisons, do nothing
+    // This prevents any late-triggered compare from toggling loading state and causing a visual blink
+    if (hasComparisonsRef.current && underwriterSelectedRef.current) {
+      return;
+    }
+
     // Use subcategory_code directly if available, otherwise fall back to category + coverType
     const subcategory_code = selectedProduct?.subcategory_code || selectedProduct?.code;
     const category = selectedProduct?.category?.toUpperCase();
@@ -197,7 +326,7 @@ const DynamicPolicyForm = ({ selectedProduct, onDataChange, initialData = {}, va
       return;
     }
     
-    setComparingUnderwriters(true);
+  setComparingUnderwriters(true);
     setComparisonError(null);
     setLastComparisonData(currentDataSignature);
 
@@ -229,11 +358,24 @@ const DynamicPolicyForm = ({ selectedProduct, onDataChange, initialData = {}, va
       }
 
       console.log('Underwriter comparisons received:', comparisons);
-      setUnderwriterComparisons(comparisons);
       
-      // Notify parent if callback provided
-      if (onUnderwriterComparison) {
-        onUnderwriterComparison(comparisons);
+      // Check if we got empty comparisons - this means no pricing configured for this product
+      if (!comparisons || comparisons.length === 0) {
+        const productName = selectedProduct?.subcategory_name || selectedProduct?.name || 'this product';
+        setComparisonError(`No underwriter pricing available for ${productName}. This product may not be configured yet. Please contact support or select a different product.`);
+        setUnderwriterComparisons([]);
+        // Reset the signature on error so it can be retried
+        setLastComparisonData(null);
+        lastComparisonKeyRef.current = null;
+        comparisonTriggerRef.current = null;
+      } else {
+        setUnderwriterComparisons(comparisons);
+        setComparisonError(null); // Clear any previous errors
+        
+        // Notify parent if callback provided
+        if (onUnderwriterComparison) {
+          onUnderwriterComparison(comparisons);
+        }
       }
 
     } catch (error) {
@@ -242,6 +384,8 @@ const DynamicPolicyForm = ({ selectedProduct, onDataChange, initialData = {}, va
       setUnderwriterComparisons([]);
       // Reset the signature on error so it can be retried
       setLastComparisonData(null);
+      lastComparisonKeyRef.current = null;
+      comparisonTriggerRef.current = null;
     } finally {
       setComparingUnderwriters(false);
     }
@@ -253,30 +397,62 @@ const DynamicPolicyForm = ({ selectedProduct, onDataChange, initialData = {}, va
     if (selectedProduct?.coverage_type?.toLowerCase().includes('comprehensive')) {
       return;
     }
+    
+    // Skip if no comparison key (not ready yet)
+    if (!comparisonKey) {
+      lastComparisonKeyRef.current = null;
+      return;
+    }
+
+    // Prevent duplicate calls - check if this key was already processed
+    // This prevents re-triggering when formData changes but pricing inputs haven't
+    if (comparisonTriggerRef.current === comparisonKey) {
+      // Silent skip - don't log to reduce console noise
+      return;
+    }
+
+    if (lastComparisonKeyRef.current === comparisonKey) {
+      return;
+    }
+
+    // Check if we can trigger comparison (call inline to avoid dependency issues)
+    const canCompare = canCompareUnderwriters();
+    if (!canCompare) {
+      return;
+    }
+
+    // If we already have comparisons and an underwriter is selected, don't re-fetch
+    // Use refs to check current state without adding to dependencies
+    if (hasComparisonsRef.current && underwriterSelectedRef.current) {
+      console.log('⏭️  Skipping comparison - underwriter already selected:', latestFormRef.current?.underwriter);
+      return;
+    }
+
     // Clear any existing timeout
     if (comparisonTimeoutRef.current) {
       clearTimeout(comparisonTimeoutRef.current);
     }
 
-    // Check if we can and should trigger comparison
-    if (!comparisonKey || !canCompareUnderwriters()) {
-      return;
-    }
+    // Mark this key as being processed BEFORE setting timeout
+    // This prevents duplicate timeouts from being created
+  comparisonTriggerRef.current = comparisonKey;
+  lastComparisonKeyRef.current = comparisonKey;
+    console.log('🧮 comparisonKey changed → scheduling comparison', {
+      comparisonKey,
+      formSignature: {
+        registration: formData.registrationNumber,
+        coverDate: formData.cover_start_date,
+        tonnage: formData.tonnage,
+        capacity: formData.passengerCapacity,
+        sumInsured: formData.sum_insured
+      }
+    });
 
-    // Prevent duplicate calls - check if this key was already processed
-    if (comparisonTriggerRef.current === comparisonKey) {
-      console.log('⏭️ Skipping duplicate underwriter comparison (already fetched)');
-      return;
-    }
-
-    // Mark this key as being processed
-    comparisonTriggerRef.current = comparisonKey;
-
-    // Longer debounce (3 seconds) to reduce unnecessary API calls while user is still typing
+    // Shorter debounce (1 second) to load underwriters faster
     comparisonTimeoutRef.current = setTimeout(() => {
-      console.log('🔄 Auto-triggering underwriter comparison (debounced 3s)');
+      console.log('🔄 Auto-triggering underwriter comparison (debounced 1s)');
       triggerUnderwriterComparison();
-    }, 3000);
+    }, 1000);
 
     // Cleanup on unmount or when dependencies change
     return () => {
@@ -284,17 +460,71 @@ const DynamicPolicyForm = ({ selectedProduct, onDataChange, initialData = {}, va
         clearTimeout(comparisonTimeoutRef.current);
       }
     };
-  }, [comparisonKey, canCompareUnderwriters, triggerUnderwriterComparison, selectedProduct?.coverage_type]);
+  }, [
+    comparisonKey, 
+    selectedProduct?.coverage_type, 
+    triggerUnderwriterComparison,
+    canCompareUnderwriters,
+    formData.registrationNumber,
+    formData.cover_start_date,
+    formData.tonnage,
+    formData.passengerCapacity,
+    formData.sum_insured
+  ]);
 
 
 
   const handleInputChange = (key, value) => {
     // Format currency inputs
-    if (getFormFields().find(f => f.key === key)?.type === 'currency') {
+    if (getFormFields.find(f => f.key === key)?.type === 'currency') {
       value = value.replace(/[^0-9]/g, '');
     }
 
-    const newFormData = { ...formData, [key]: value };
+  const newFormData = { ...formData, [key]: value };
+
+    // If a pricing-critical field changes, clear any previously selected underwriter
+    // Note: 'underwriter' is NOT included here because selecting an underwriter should persist
+    const pricingCriticalKeys = [
+      'registrationNumber',
+      'cover_start_date',
+      'tonnage',
+      'passengerCapacity',
+      'sum_insured',
+      'engineCapacity'
+    ];
+    if (pricingCriticalKeys.includes(key)) {
+      if (newFormData.underwriter) {
+        delete newFormData.underwriter;
+      }
+      if (selectedUnderwriter) {
+        setSelectedUnderwriter(null);
+      }
+      // Reset the ref to allow new comparison
+      underwriterSelectedRef.current = false;
+      // Reset comparison tracking refs to allow fresh comparison
+      comparisonTriggerRef.current = null;
+      lastComparisonKeyRef.current = null;
+    }
+
+    // If the user just selected an underwriter, freeze any pending auto-compare
+    if (key === 'underwriter') {
+      // Mark selection in ref immediately to short-circuit auto-compare effect
+      underwriterSelectedRef.current = true;
+      // Cancel any scheduled comparison triggered before selection
+      if (comparisonTimeoutRef.current) {
+        clearTimeout(comparisonTimeoutRef.current);
+        comparisonTimeoutRef.current = null;
+      }
+      // Ensure the current comparison key is treated as already processed
+      if (comparisonKey) {
+        comparisonTriggerRef.current = comparisonKey;
+        lastComparisonKeyRef.current = comparisonKey;
+      }
+      // Also stop any active spinner just in case
+      if (comparingUnderwriters) {
+        setComparingUnderwriters(false);
+      }
+    }
     
     // When make changes, reset model if it's no longer valid for the selected make
     if (key === 'make') {
@@ -302,9 +532,20 @@ const DynamicPolicyForm = ({ selectedProduct, onDataChange, initialData = {}, va
       if (allowedModels.length > 0 && !allowedModels.includes(newFormData.model)) {
         newFormData.model = ''; // Clear model when make changes and current model is invalid
       }
+      // If switching away from "Others", clear make_other field
+      if (value !== 'Others') {
+        delete newFormData.make_other;
+      }
     }
     
-    setFormData(newFormData);
+    // If model changed and not "Others", clear model_other field
+    if (key === 'model' && value !== 'Others') {
+      delete newFormData.model_other;
+    }
+    
+  // Update local state immediately for instant UI feedback
+  setFormData(newFormData);
+  latestFormRef.current = newFormData;
 
     // Real-time validation
     const error = validateField(key, value);
@@ -313,9 +554,14 @@ const DynamicPolicyForm = ({ selectedProduct, onDataChange, initialData = {}, va
       [key]: error
     }));
 
-    // Notify parent component
+    // Notify parent component with a small debounce to prevent focus loss
+    if (notifyTimeoutRef.current) {
+      clearTimeout(notifyTimeoutRef.current);
+    }
     if (onDataChange) {
-      onDataChange(newFormData);
+      notifyTimeoutRef.current = setTimeout(() => {
+        onDataChange(latestFormRef.current);
+      }, 250);
     }
     if (onChange) {
       onChange(newFormData);
@@ -323,7 +569,7 @@ const DynamicPolicyForm = ({ selectedProduct, onDataChange, initialData = {}, va
   };
 
   const validateField = (key, value) => {
-    const field = getFormFields().find(f => f.key === key);
+    const field = getFormFields.find(f => f.key === key);
     if (!field) return null;
 
     if (field.required && (!value || value.toString().trim() === '')) {
@@ -385,41 +631,71 @@ const DynamicPolicyForm = ({ selectedProduct, onDataChange, initialData = {}, va
     
     switch (field.type) {
       case 'select':
+        const isExpanded = expandedDropdown === field.key;
+        const selectedValue = formData[field.key];
+        const selectedLabel = field.options?.find(opt => {
+          const optVal = typeof opt === 'string' ? opt : (opt.value ?? opt.label);
+          return optVal === selectedValue;
+        });
+        const displayText = selectedLabel 
+          ? (typeof selectedLabel === 'string' ? selectedLabel : (selectedLabel.label ?? selectedLabel.value))
+          : 'Select ' + field.label;
+
         return (
           <View key={field.key} style={styles.fieldContainer}>
             <Text style={styles.label}>
               {field.label} {field.required && <Text style={styles.required}>*</Text>}
             </Text>
-            {/* Scrollable dropdown-style select */}
-            <View style={styles.selectContainer}>
-              <ScrollView 
-                style={styles.selectScrollView}
-                nestedScrollEnabled={true}
-                showsVerticalScrollIndicator={true}
-              >
-                {(field.options || []).map((option, index) => {
-                  const optionText = typeof option === 'string' ? option : (option.label ?? String(option.value ?? option));
-                  const optionValue = typeof option === 'string' ? option : (option.value ?? option.label ?? String(option));
-                  return (
-                    <TouchableOpacity
-                      key={`${field.key}-${index}`}
-                      style={[
-                        styles.selectOption,
-                        formData[field.key] === optionValue && styles.selectedOption
-                      ]}
-                      onPress={() => handleInputChange(field.key, optionValue)}
-                    >
-                      <Text style={[
-                        styles.selectText,
-                        formData[field.key] === optionValue && styles.selectedText
-                      ]}>
-                        {optionText}
-                      </Text>
-                    </TouchableOpacity>
-                  );
-                })}
-              </ScrollView>
-            </View>
+            
+            {/* Collapsed dropdown trigger */}
+            <TouchableOpacity
+              style={[styles.dropdownTrigger, validationErrors[field.key] && styles.inputError]}
+              onPress={() => setExpandedDropdown(isExpanded ? null : field.key)}
+            >
+              <Text style={[styles.dropdownTriggerText, !selectedValue && styles.placeholderText]}>
+                {displayText}
+              </Text>
+              <Text style={styles.dropdownArrow}>{isExpanded ? '▲' : '▼'}</Text>
+            </TouchableOpacity>
+
+            {/* Expanded dropdown options */}
+            {isExpanded && (
+              <View style={styles.dropdownOptionsContainer}>
+                <ScrollView 
+                  style={styles.dropdownScrollView}
+                  nestedScrollEnabled={true}
+                  showsVerticalScrollIndicator={true}
+                >
+                  {(field.options || []).map((option, index) => {
+                    const optionText = typeof option === 'string' ? option : (option.label ?? String(option.value ?? option));
+                    const optionValue = typeof option === 'string' ? option : (option.value ?? option.label ?? String(option));
+                    const isSelected = formData[field.key] === optionValue;
+                    
+                    return (
+                      <TouchableOpacity
+                        key={`${field.key}-${index}`}
+                        style={[
+                          styles.dropdownOption,
+                          isSelected && styles.selectedOption
+                        ]}
+                        onPress={() => {
+                          handleInputChange(field.key, optionValue);
+                          setExpandedDropdown(null); // Close dropdown after selection
+                        }}
+                      >
+                        <Text style={[
+                          styles.dropdownOptionText,
+                          isSelected && styles.selectedText
+                        ]}>
+                          {optionText}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </ScrollView>
+              </View>
+            )}
+
             {field.help && (
               <Text style={styles.helpText}>{field.help}</Text>
             )}
@@ -514,24 +790,68 @@ const DynamicPolicyForm = ({ selectedProduct, onDataChange, initialData = {}, va
           return null;
         }
         
-        // Show loading state
-        if (comparingUnderwriters) {
+        // Show loading state - only when actively comparing
+        const canCompare = canCompareUnderwriters();
+        const hasSelectedUnderwriter = formData[field.key] || selectedUnderwriter;
+        const isLoading = comparingUnderwriters;
+        
+        if (isLoading) {
           return (
             <View key={field.key} style={styles.fieldContainer}>
               <Text style={styles.label}>
                 {field.label} {field.required && <Text style={styles.required}>*</Text>}
               </Text>
               <View style={styles.loadingContainer}>
-                <ActivityIndicator size="small" color="#D5222B" />
-                <Text style={styles.loadingText}>Comparing underwriter prices...</Text>
+                <ActivityIndicator size="large" color="#D5222B" />
+                <Text style={styles.loadingText}>Loading underwriter prices...</Text>
               </View>
             </View>
           );
         }
         
-        // Only show underwriters if comparisons are available
-        if (underwriterComparisons.length === 0) {
-          return null;
+        // Show error if comparison failed or returned no results
+        if (comparisonError) {
+          return (
+            <View key={field.key} style={styles.fieldContainer}>
+              <Text style={styles.label}>
+                {field.label} <Text style={styles.required}>*</Text>
+              </Text>
+              <View style={styles.errorContainer}>
+                <Ionicons name="alert-circle" size={24} color="#DC2626" />
+                <Text style={styles.errorText}>{comparisonError}</Text>
+                <TouchableOpacity 
+                  style={styles.retryButton} 
+                  onPress={() => {
+                    setComparisonError(null);
+                    setLastComparisonData(null);
+                    lastComparisonKeyRef.current = null;
+                    comparisonTriggerRef.current = null;
+                    // Re-trigger comparison using the unified path
+                    triggerUnderwriterComparison();
+                  }}
+                >
+                  <Ionicons name="refresh-outline" size={20} color="#fff" />
+                  <Text style={styles.retryButtonText}>Retry</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          );
+        }
+        
+        // Show message if no comparisons available yet and form not ready
+        if (underwriterComparisons.length === 0 && !canCompare) {
+          return (
+            <View key={field.key} style={styles.fieldContainer}>
+              <Text style={styles.label}>
+                {field.label} <Text style={styles.required}>*</Text>
+              </Text>
+              <View style={styles.noUnderwritersContainer}>
+                <Text style={styles.noUnderwritersText}>
+                  Please fill in the required fields above to compare underwriter prices
+                </Text>
+              </View>
+            </View>
+          );
         }
         
         return (
@@ -562,7 +882,7 @@ const DynamicPolicyForm = ({ selectedProduct, onDataChange, initialData = {}, va
                       onUnderwriterSelection(comparison);
                     }
                   }}
-                  activeOpacity={0.7}
+                  activeOpacity={0.9}
                 >
                   <View style={styles.underwriterOptionContent}>
                     <View style={styles.underwriterHeader}>
@@ -682,22 +1002,36 @@ const DynamicPolicyForm = ({ selectedProduct, onDataChange, initialData = {}, va
         const dynamicLabel = field.key === 'registrationNumber' ? getIdentificationLabel() : field.label;
         const dynamicPlaceholder = field.key === 'registrationNumber' ? getIdentificationPlaceholder() : (field.placeholder || `Enter ${field.label.toLowerCase()}`);
         
+        // Format number with spaces for sum_insured
+        const isFormattedNumber = field.type === 'formatted_number';
+        const displayValue = isFormattedNumber && formData[field.key] 
+          ? formData[field.key].toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ')
+          : (formData[field.key] || '');
+        
+        // Create stable handler to prevent TextInput recreation and focus loss
+        const handleTextChange = useCallback((value) => {
+          const cleanValue = isFormattedNumber ? value.replace(/\s/g, '') : value;
+          handleInputChange(field.key, cleanValue);
+        }, [field.key, isFormattedNumber]);
+        
         return (
           <View key={field.key} style={styles.fieldContainer}>
             <Text style={styles.label}>
               {dynamicLabel} {field.required && <Text style={styles.required}>*</Text>}
             </Text>
-            <TextInput
-              style={[
-                styles.input,
-                validationErrors[field.key] && styles.inputError
-              ]}
-              value={formData[field.key] || ''}
-              onChangeText={(value) => handleInputChange(field.key, value)}
+            <MemoizedTextInput
+              fieldKey={field.key}
+              value={displayValue}
+              onChangeText={handleTextChange}
               placeholder={dynamicPlaceholder}
-              keyboardType={field.type === 'number' || field.type === 'currency' ? 'numeric' : 'default'}
+              keyboardType={field.type === 'number' || field.type === 'currency' || field.type === 'formatted_number' ? 'numeric' : 'default'}
               autoCapitalize={field.key === 'registrationNumber' ? 'characters' : 'words'}
+              style={styles.input}
+              hasError={!!validationErrors[field.key]}
             />
+            {field.help && (
+              <Text style={styles.helpText}>{field.help}</Text>
+            )}
             {validationErrors[field.key] && (
               <Text style={styles.errorText}>{validationErrors[field.key]}</Text>
             )}
@@ -724,37 +1058,18 @@ const DynamicPolicyForm = ({ selectedProduct, onDataChange, initialData = {}, va
     setSelectedUnderwriter(null);
     setComparisonError(null);
     setLastComparisonData(null);
+    lastComparisonKeyRef.current = null;
+    comparisonTriggerRef.current = null;
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedProduct?.id, selectedProduct?.subcategory_code, selectedProduct?.code, productType]);
 
-  // Trigger underwriter comparison when form data is ready
-  useEffect(() => {
-    if (canCompareUnderwriters() && !comparingUnderwriters && underwriterComparisons.length === 0) {
-      // Only trigger if we don't already have comparisons
-      // Debounce the comparison to avoid too many API calls
-      const timeoutId = setTimeout(triggerUnderwriterComparison, 1500);
-      return () => clearTimeout(timeoutId);
-    }
-  }, [
-    // Only depend on essential form data changes, not the functions themselves
-    selectedProduct?.coverage_type,
-    selectedProduct?.category,
-    selectedProduct?.subcategory_code, // Add subcategory_code to trigger on subcategory change
-    selectedProduct?.code, // Also check for 'code' field as backup
-    formData.registrationNumber,
-    formData.sum_insured,
-    formData.tonnage,
-    formData.passengerCapacity,
-    formData.cover_start_date, // Add cover_start_date to trigger underwriter comparison
-    canCompareUnderwriters,
-    comparingUnderwriters,
-    underwriterComparisons.length
-  ]);
+  // Underwriter auto-trigger is handled by the earlier effect using `comparisonKey` + 1s debounce.
+  // The previous duplicate effect caused double fetches and two spinners, so it has been removed.
   // Legacy support for simple form rendering
   if (!selectedProduct && productType) {
     return (
       <View style={styles.legacyContainer}>
-        {getFormFields().map(renderField)}
+        {getFormFields.map(renderField)}
         {errors.form && <Text style={styles.errorText}>{errors.form}</Text>}
       </View>
     );
@@ -769,9 +1084,15 @@ const DynamicPolicyForm = ({ selectedProduct, onDataChange, initialData = {}, va
   }
 
   return (
-    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+    <ScrollView 
+      style={styles.container} 
+      contentContainerStyle={{ paddingBottom: 24 }}
+      showsVerticalScrollIndicator={false}
+      keyboardShouldPersistTaps="handled"
+      keyboardDismissMode={Platform.OS === 'ios' ? 'on-drag' : 'interactive'}
+    >
       <View style={styles.formContainer}>
-        {getFormFields().map(renderField)}
+        {getFormFields.map(renderField)}
       </View>
     </ScrollView>
   );
@@ -847,6 +1168,58 @@ const styles = StyleSheet.create({
   },
   placeholderText: {
     color: '#6c757d',
+  },
+  // Accordion-style dropdown trigger (collapsed state)
+  dropdownTrigger: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#ced4da',
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    minHeight: 44,
+  },
+  dropdownTriggerText: {
+    fontSize: 15,
+    color: '#212529',
+    flex: 1,
+  },
+  dropdownArrow: {
+    fontSize: 12,
+    color: '#646767',
+    marginLeft: 8,
+  },
+  // Dropdown options container (expanded state)
+  dropdownOptionsContainer: {
+    backgroundColor: '#fff',
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: '#ced4da',
+    marginTop: 4,
+    maxHeight: 200,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  dropdownScrollView: {
+    maxHeight: 200,
+  },
+  dropdownOption: {
+    padding: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e9ecef',
+    minHeight: 44,
+    justifyContent: 'center',
+    backgroundColor: '#fff',
+  },
+  dropdownOptionText: {
+    fontSize: 15,
+    color: '#212529',
   },
   selectContainer: {
     backgroundColor: '#fff',
@@ -1247,7 +1620,31 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#6c757d',
   },
+  noUnderwritersContainer: {
+    padding: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#fff3cd',
+    borderRadius: 8,
+    marginTop: 8,
+    borderWidth: 1,
+    borderColor: '#ffc107',
+  },
+  noUnderwritersText: {
+    fontSize: 14,
+    color: '#856404',
+    textAlign: 'center',
+  },
 
 });
 
-export default DynamicPolicyForm;
+// Memoize to prevent re-renders when parent updates
+export default React.memo(DynamicPolicyForm, (prevProps, nextProps) => {
+  // Only re-render if these specific props change
+  return (
+    prevProps.selectedProduct?.id === nextProps.selectedProduct?.id &&
+    prevProps.selectedProduct?.subcategory_code === nextProps.selectedProduct?.subcategory_code &&
+    prevProps.productType === nextProps.productType &&
+    prevProps.initialData === nextProps.initialData
+  );
+});

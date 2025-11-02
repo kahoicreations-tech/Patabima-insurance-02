@@ -163,7 +163,8 @@ export default function PersonalAccidentQuotationScreen({ navigation }) {
         <View style={{ width: 40 }} />
       </View>
 
-      <ScrollView contentContainerStyle={[styles.scroll, { paddingBottom: insets.bottom + 100 }]} showsVerticalScrollIndicator={false}>        {/* Age */}
+      <ScrollView contentContainerStyle={[styles.scroll, { paddingBottom: insets.bottom + 100 }]} showsVerticalScrollIndicator={false}>
+        {/* Age */}
         <View style={styles.fieldBlock}>
           <Subtitle2 style={styles.label}>Age</Subtitle2>
           <TextInput

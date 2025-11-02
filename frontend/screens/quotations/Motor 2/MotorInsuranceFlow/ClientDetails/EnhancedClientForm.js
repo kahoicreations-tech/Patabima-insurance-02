@@ -7,10 +7,28 @@ export default function EnhancedClientForm({
   onChange, 
   errors = {}, 
   extractedData = {},
-  onValidationChange
+  onValidationChange,
+  selectedProduct,
+  vehicleData
 }) {
-  const update = (k, v) => onChange?.({ ...(values || {}), [k]: v });
+  const update = (k, v) => {
+    console.log('EnhancedClientForm update called:', k, '=', v);
+    console.log('Current values:', values);
+    const newValues = { ...(values || {}), [k]: v };
+    console.log('New values to send:', newValues);
+    onChange?.(newValues);
+  };
   const hasAppliedExtractedData = useRef(false);
+
+  // Prefer values from Vehicle Details step when present (keeps UX consistent)
+  useEffect(() => {
+    if (!vehicleData) return;
+    const patch = {};
+    if (!values.vehicle_make && vehicleData.make) patch.vehicle_make = vehicleData.make;
+    if (!values.vehicle_model && vehicleData.model) patch.vehicle_model = vehicleData.model;
+    if (Object.keys(patch).length) onChange?.({ ...(values || {}), ...patch });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [vehicleData?.make, vehicleData?.model]);
   
   // Validate required fields and document extraction completeness
   const validateFields = () => {
@@ -166,7 +184,11 @@ export default function EnhancedClientForm({
   };
 
   return (
-    <ScrollView contentContainerStyle={{ gap: 12, paddingBottom: 120 }}>
+    <ScrollView 
+      contentContainerStyle={{ gap: 12, paddingBottom: 120 }}
+      keyboardShouldPersistTaps="always"
+      keyboardDismissMode="none"
+    >
       {/* Document Extraction Status Notice */}
       {Object.keys(extractedData).length === 0 && (
         <View style={styles.warningNotice}>
@@ -250,6 +272,7 @@ export default function EnhancedClientForm({
         value={values.vehicle_make}
         options={VEHICLE_MAKES}
         onValueChange={(v) => {
+          console.log('Make selected:', v);
           update('vehicle_make', v);
           // Clear model when make changes
           if (values.vehicle_model && v !== values.vehicle_make) {
@@ -258,6 +281,7 @@ export default function EnhancedClientForm({
         }}
         placeholder="Select vehicle make"
         status={getFieldStatus('vehicle_make', 'make')}
+        disabled={false}
       />
       
       {/* Vehicle Model - Dropdown Select (depends on Make) */}
@@ -265,7 +289,10 @@ export default function EnhancedClientForm({
         label="Model" 
         value={values.vehicle_model}
         options={values.vehicle_make ? getModelsForMake(values.vehicle_make) : []}
-        onValueChange={(v) => update('vehicle_model', v)}
+        onValueChange={(v) => {
+          console.log('Model selected:', v);
+          update('vehicle_model', v);
+        }}
         placeholder={values.vehicle_make ? "Select vehicle model" : "Select make first"}
         disabled={!values.vehicle_make}
         status={getFieldStatus('vehicle_model', 'model')}
@@ -313,8 +340,14 @@ function SelectField({ label, error, status, value, options, onValueChange, plac
           getStatusStyle(),
           disabled && styles.disabledSelect
         ]}
-        onPress={() => !disabled && setIsOpen(!isOpen)}
+        onPress={() => {
+          console.log('SelectField pressed:', label, 'disabled:', disabled, 'options:', options?.length);
+          if (!disabled) {
+            setIsOpen(!isOpen);
+          }
+        }}
         disabled={disabled}
+        activeOpacity={0.7}
       >
         <Text style={[
           styles.dropdownButtonText,
@@ -324,24 +357,25 @@ function SelectField({ label, error, status, value, options, onValueChange, plac
         </Text>
         <Text style={styles.dropdownArrow}>{isOpen ? '▲' : '▼'}</Text>
       </TouchableOpacity>
-
-      {/* Dropdown Options (only visible when open) */}
+      {/* Inline dropdown (same UX as Vehicle Details) */}
       {isOpen && !disabled && options && options.length > 0 && (
         <View style={styles.dropdownList}>
           <ScrollView 
             style={styles.dropdownScrollView}
             nestedScrollEnabled={true}
+            keyboardShouldPersistTaps="always"
             showsVerticalScrollIndicator={true}
           >
             {options.map((option, index) => {
               const optionText = typeof option === 'string' ? option : (option.label ?? String(option.value ?? option));
               const optionValue = typeof option === 'string' ? option : (option.value ?? option.label ?? String(option));
+              const selected = value === optionValue;
               return (
                 <TouchableOpacity
                   key={`${label}-${index}`}
                   style={[
                     styles.dropdownOption,
-                    value === optionValue && styles.selectedDropdownOption
+                    selected && styles.selectedDropdownOption
                   ]}
                   onPress={() => {
                     onValueChange(optionValue);
@@ -350,11 +384,11 @@ function SelectField({ label, error, status, value, options, onValueChange, plac
                 >
                   <Text style={[
                     styles.dropdownOptionText,
-                    value === optionValue && styles.selectedDropdownOptionText
+                    selected && styles.selectedDropdownOptionText
                   ]}>
                     {optionText}
                   </Text>
-                  {value === optionValue && (
+                  {selected && (
                     <Text style={styles.checkmark}>✓</Text>
                   )}
                 </TouchableOpacity>
@@ -402,7 +436,12 @@ function Field({ label, error, style, status, ...inputProps }) {
   return (
     <View style={{ gap: 6 }}>
       <Text style={styles.label}>{label}</Text>
-      <TextInput style={[styles.input, getStatusStyle(), style]} {...inputProps} />
+      <TextInput 
+        style={[styles.input, getStatusStyle(), style]} 
+        {...inputProps} 
+        blurOnSubmit={false}
+        returnKeyType="next"
+      />
       {status && status !== 'complete' && (
         <Text style={[
           styles.statusText,

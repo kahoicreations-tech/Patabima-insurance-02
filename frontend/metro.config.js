@@ -22,25 +22,23 @@ function makeBlockList(patterns) {
 
 const config = getDefaultConfig(__dirname);
 
-// Properly exclude large non-frontend folders to speed up bundling and file watching
-const patterns = [
-  /_archive\/.*/,
-  /docs\/.*/,
-  /documentss\/.*/,
-  /scripts\/.*/,
-  /insurance-app\/.*/,
-  /backend\/.*/,
-  /amplify\/.*/,
-  // Large local environment folders inside the frontend project
-  /venv\/.*/,
-  /\.venv\/.*/,
-  /dist\/.*/,
-  /coverage\/.*/,
-  /android\/.*/,
-  /ios\/.*/,
-  /\.expo\/.*/,
-  // NOTE: Do NOT exclude generic /src/ — it would block node_modules/expo/src
+// Helper to escape paths for safe usage in RegExp
+function escapeForRegExp(p) {
+  return p.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+// Exclude heavy, non-frontend folders using ABSOLUTE paths only
+// This avoids accidental matches like "axios" (contains "ios") or any "dist" inside node_modules
+const repoRoot = path.resolve(__dirname, '..');
+const absoluteExcludes = [
+  path.resolve(repoRoot, '_archive'),
+  path.resolve(repoRoot, 'docs'),
+  path.resolve(repoRoot, 'documentss'),
+  path.resolve(repoRoot, 'insurance-app'),
+  path.resolve(repoRoot, 'backend'),
+  path.resolve(repoRoot, 'amplify'),
 ];
+const patterns = absoluteExcludes.map((absPath) => new RegExp(`${escapeForRegExp(absPath)}[\\/].*`));
 const blockListRE = makeBlockList(patterns);
 
 // Ensure resolver exists and assign the proper field used by current Metro
@@ -50,20 +48,13 @@ config.resolver.blockList = blockListRE;
 // Performance optimizations for faster startup
 config.maxWorkers = 2; // Limit CPU usage for faster startup
 
-// Optimize file watching performance - include node_modules for memoize-one fix
-config.watchFolders = [
-  __dirname,
-  path.resolve(__dirname, 'node_modules')
-];
-
-// Optimize resolver performance
+// Optimize resolver performance (keep defaults reasonable)
 config.resolver.platforms = ['ios', 'android', 'web'];
 config.resolver.sourceExts = ['js', 'jsx', 'ts', 'tsx', 'json'];
 
-// Fix React Native 0.79.6 memoize-one resolution bug
-// Explicitly map memoize-one to its installed location
-config.resolver.extraNodeModules = {
-  'memoize-one': path.resolve(__dirname, 'node_modules/memoize-one')
-};
+// Enable package exports to support modern libraries like axios
+config.resolver.unstable_enablePackageExports = true;
+
+// Keep defaults for main fields to let Expo choose the right entry points
 
 module.exports = config;

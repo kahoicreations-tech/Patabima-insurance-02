@@ -42,6 +42,7 @@ import DjangoTestScreen from '../screens/testing/DjangoTestScreen';
 import DiagnosticsScreen from '../screens/testing/DiagnosticsScreen';
 import { MotorInsuranceScreen } from '../screens/quotations/Motor 2';
 import PolicySuccess from '../screens/quotations/Motor 2/MotorInsuranceFlow/Success/PolicySuccess';
+import QuoteSuccessScreen from '../screens/quotations/Motor 2/QuoteSuccessScreen';
 
 
 
@@ -100,6 +101,7 @@ const AppNavigator = () => {
             {/* Motor 2 Insurance Flow - NEW */}
             <Stack.Screen name="Motor2Flow" component={MotorInsuranceScreen} />
             <Stack.Screen name="PolicySuccess" component={PolicySuccess} />
+            <Stack.Screen name="QuoteSuccess" component={QuoteSuccessScreen} />
             
             <Stack.Screen name="InsuranceReceipt" component={InsuranceReceipt} options={{ animation: 'slide_from_right' }} />
             

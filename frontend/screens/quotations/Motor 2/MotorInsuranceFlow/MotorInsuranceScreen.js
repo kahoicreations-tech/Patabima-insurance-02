@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
-import { View, Text, ScrollView, StyleSheet, KeyboardAvoidingView, Platform, TouchableOpacity, FlatList, TextInput, Alert, SafeAreaView, StatusBar as RNStatusBar, Modal, LayoutAnimation, UIManager } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, KeyboardAvoidingView, Platform, TouchableOpacity, FlatList, TextInput, Alert, SafeAreaView, StatusBar as RNStatusBar, Modal, LayoutAnimation, UIManager, ActivityIndicator } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -35,6 +35,7 @@ import EnhancedClientForm from './ClientDetails/EnhancedClientForm';
 import EnhancedPayment from './Payment/EnhancedPayment';
 import UnderwriterSelectionStep from './Comprehensive/UnderwriterSelectionStep';
 import PolicySubmission from './Submission/PolicySubmission';
+import MotorInsuranceContainer from './MotorInsuranceContainer';
 
 // ============================================================================
 // DMVIC SIMULATION CONFIG - Set to true to test existing cover screen
@@ -410,20 +411,12 @@ const ProgressIndicator = ({ steps = [], current = 0 }) => {
 
 const NavigationButtons = ({ onNext, onBack, canNext, showBackOnFirstStep = false, isFirstStep, onHome, validationMessage, insets }) => (
   <View style={styles.navRow}>
-    {/* Show validation message when can't proceed */}
-    {!canNext && validationMessage && (
-      <View style={styles.validationMessageContainer}>
-        <Ionicons name="warning" size={16} color="#D5222B" />
-        <Text style={styles.validationMessage}>{validationMessage}</Text>
-      </View>
-    )}
-    
-    <View style={[styles.navigationButtonsContainer, { paddingBottom: insets.bottom + 16 }]}>
+    <View style={[styles.navigationButtonsContainer, { paddingBottom: insets.bottom + 8 }]}>
       {/* Show back button when not on first step, or home button on first step if requested */}
       {!isFirstStep ? (
         <TouchableOpacity style={styles.backButton} onPress={onBack} activeOpacity={0.75}>
           <Ionicons name="chevron-back" size={20} color="#495057" />
-          <Text style={styles.backButtonText}>Go back</Text>
+          <Text style={styles.backButtonText}>Back</Text>
         </TouchableOpacity>
       ) : (showBackOnFirstStep && (
         <TouchableOpacity style={styles.backButton} onPress={onHome} activeOpacity={0.75}>
@@ -440,7 +433,7 @@ const NavigationButtons = ({ onNext, onBack, canNext, showBackOnFirstStep = fals
           disabled={!canNext}
           activeOpacity={0.75}
         >
-          <Text style={styles.nextButtonText}>Next Step</Text>
+          <Text style={styles.nextButtonText}>Next</Text>
           <Ionicons name="chevron-forward" size={20} color="#fff" />
         </TouchableOpacity>
       )}
@@ -487,7 +480,9 @@ const getCoverTypesByCategory = (categoryCode) => {
   }
 };
 
-export default function MotorInsuranceScreen({ route }) {
+export default function MotorInsuranceScreen(props) {
+  // Temporary delegation to the new container during refactor
+  return <MotorInsuranceContainer {...props} />;
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
   const { state, actions } = useMotorInsurance();
@@ -665,8 +660,10 @@ export default function MotorInsuranceScreen({ route }) {
     const isComprehensive = norm === 'COMPREHENSIVE' || norm === 'COMP' || norm.includes('COMPREHENSIVE');
 
     if (isComprehensive) {
-      // Comprehensive flow: Category -> Subcategory -> Vehicle Details -> Vehicle Verification -> Underwriters -> Add-ons -> Payment -> Submission
-      return ['Category', 'Subcategory', 'Vehicle Details', 'Vehicle Verification', 'Underwriters', 'Add-ons', 'Payment', 'Submission'];
+      // Comprehensive flow: Category -> Subcategory -> Vehicle Details -> Underwriters -> Add-ons -> Client Details -> Submission
+      // Note: Vehicle Verification (step 3) is skipped in navigation logic
+      // Note: No Payment step for comprehensive (direct quote generation)
+      return ['Category', 'Subcategory', 'Vehicle Details', 'Vehicle Verification', 'Underwriters', 'Add-ons', 'Client Details', 'Submission'];
     }
 
     // Standard flow: Category -> Subcategory -> Vehicle Details -> Vehicle Verification -> Documents -> Client Details -> Payment -> Submission
@@ -714,6 +711,77 @@ export default function MotorInsuranceScreen({ route }) {
       }, 100);
     }
   }, [startAtPayment, draftData, draftQuoteId, paymentInitialized, steps, actions]);
+
+  // Handle Comprehensive quote submission (save as draft, not policy)
+  const [comprehensiveQuoteSaved, setComprehensiveQuoteSaved] = useState(false);
+  useEffect(() => {
+    const sel = state.selectedSubcategory;
+    const rawType = sel?.coverage_type ?? sel?.type ?? '';
+    const norm = typeof rawType === 'string' ? rawType.toUpperCase().trim() : '';
+    const isComprehensive = norm === 'COMPREHENSIVE' || norm === 'COMP' || norm.includes('COMPREHENSIVE');
+    const submissionStepIndex = isComprehensive ? 7 : 7;
+
+    if (isComprehensive && step === submissionStepIndex && !comprehensiveQuoteSaved) {
+      const saveComprehensiveQuote = async () => {
+        try {
+          console.log('[MotorInsuranceScreen] Saving comprehensive quote as draft...');
+          
+          // Prepare quote data
+          const quoteData = {
+            vehicleRegistration: state.vehicleDetails?.registrationNumber || state.vehicleDetails?.registration || '',
+            vehicleMake: state.vehicleDetails?.make || '',
+            vehicleModel: state.vehicleDetails?.model || '',
+            vehicleYear: state.vehicleDetails?.year || '',
+            sumInsured: state.vehicleDetails?.sum_insured || 0,
+            category: state.selectedCategory?.name || '',
+            subcategory: state.selectedSubcategory?.name || '',
+            coverageType: state.selectedSubcategory?.coverage_type || 'Comprehensive',
+            underwriterName: state.selectedUnderwriter?.name || state.selectedUnderwriter?.underwriter_name || '',
+            underwriterId: state.selectedUnderwriter?.id || state.selectedUnderwriter?.underwriter_id || '',
+            totalPremium: state.selectedUnderwriter?.total_premium || 0,
+            premiumBreakdown: state.selectedUnderwriter?.breakdown || {},
+            clientName: state.pricingInputs?.clientDetails?.fullName || state.pricingInputs?.clientDetails?.full_name || '',
+            clientEmail: state.pricingInputs?.clientDetails?.email || '',
+            clientPhone: state.pricingInputs?.clientDetails?.phone || '',
+            selectedAddons: state.selectedAddons || [],
+            addonsPremium: state.addonsPremium || 0,
+            status: 'draft',
+            createdAt: new Date().toISOString(),
+          };
+
+          console.log('[MotorInsuranceScreen] Quote data:', quoteData);
+
+          // Save to AsyncStorage as draft
+          const quoteId = `QUOTE-${Date.now()}`;
+          await AsyncStorage.setItem(`draft_quote_${quoteId}`, JSON.stringify(quoteData));
+          
+          setComprehensiveQuoteSaved(true);
+
+          // Navigate to Quote Success screen
+          navigation.navigate('QuoteSuccess', {
+            quoteId: quoteId,
+            quoteData: quoteData
+          });
+
+          // Reset motor insurance context after navigation
+          setTimeout(() => {
+            actions.resetFlow && actions.resetFlow();
+          }, 500);
+        } catch (error) {
+          console.error('[MotorInsuranceScreen] Error saving comprehensive quote:', error);
+          Alert.alert(
+            'Error',
+            'Failed to save quote. Please try again.',
+            [
+              { text: 'OK', onPress: () => setStep(7) }
+            ]
+          );
+        }
+      };
+
+      saveComprehensiveQuote();
+    }
+  }, [step, state, comprehensiveQuoteSaved, actions, navigation]);
 
   const [categories, setCategories] = useState([]); // Start with empty, loaded from backend only
   const [categoriesLoading, setCategoriesLoading] = useState(true);
@@ -1095,16 +1163,22 @@ export default function MotorInsuranceScreen({ route }) {
         return !!state.selectedSubcategory;
       
       case 2: {
-        // Vehicle Details - check essential visible fields from the form
+        // Vehicle Details - check ALL visible fields from the form based on product type
         const v = state.vehicleDetails || {};
         const p = state.pricingInputs || {};
         
-        console.log('🔍 Vehicle validation check:', { vehicleDetails: v, pricingInputs: p });
+        console.log('🔍 Vehicle validation check:', { 
+          vehicleDetails: v, 
+          pricingInputs: p, 
+          selectedUnderwriter: state.selectedUnderwriter,
+          selectedSubcategory: state.selectedSubcategory
+        });
 
-        // Check the main fields that are visible in the form
+        // Check the main fields that are ALWAYS visible in the form
         const hasRegistration = !!(
           v.registrationNumber?.trim() || p.registrationNumber?.trim() ||
-          v.Registration_Number?.trim() || p.Registration_Number?.trim()
+          v.Registration_Number?.trim() || p.Registration_Number?.trim() ||
+          v.registration_number?.trim() || p.registration_number?.trim()
         );
         const hasFinancialInterest = (
           v.financialInterest === true || v.financialInterest === 'Yes' ||
@@ -1120,12 +1194,106 @@ export default function MotorInsuranceScreen({ route }) {
           v.Cover_Start_Date || p.Cover_Start_Date
         );
         
+        // Check product-specific required fields
+        const productCode = state.selectedSubcategory?.code || state.selectedSubcategory?.subcategory_code || '';
+        const categoryCode = state.selectedCategory?.code || '';
+        
+        // For comprehensive products, sum_insured is NOW entered in Vehicle Details step
+        let hasSumInsured = true;
+        if (isComp) {
+          hasSumInsured = !!(
+            v.sum_insured || p.sum_insured ||
+            v.Sum_Insured || p.Sum_Insured
+          );
+        }
+        
+        // For comprehensive products, also need make, model, and year
+        let hasMake = true;
+        let hasModel = true;
+        let hasYear = true;
+        if (isComp) {
+          hasMake = !!(
+            v.make || p.make ||
+            v.Make || p.Make ||
+            v.vehicle_make || p.vehicle_make
+          );
+          hasModel = !!(
+            v.model || p.model ||
+            v.Model || p.Model ||
+            v.vehicle_model || p.vehicle_model ||
+            v.model_other || p.model_other  // Support "Others" option
+          );
+          hasYear = !!(
+            v.year || p.year ||
+            v.Year || p.Year ||
+            v.vehicle_year || p.vehicle_year
+          );
+        }
+        
+        // For commercial vehicles, check tonnage
+        let hasTonnage = true;
+        if (categoryCode === 'COMMERCIAL' || categoryCode === 'COMM') {
+          hasTonnage = !!(
+            v.tonnage || p.tonnage ||
+            v.Tonnage || p.Tonnage
+          );
+        }
+        
+        // For PSV/TukTuk, check passenger capacity
+        let hasPassengerCapacity = true;
+        if (categoryCode === 'PSV' || categoryCode === 'TUKTUK') {
+          hasPassengerCapacity = !!(
+            v.passengerCapacity || p.passengerCapacity ||
+            v.passenger_count || p.passenger_count ||
+            v.Passenger_Count || p.Passenger_Count
+          );
+        }
+        
+        // For motorcycles, check engine capacity
+        let hasEngineCapacity = true;
+        if (categoryCode === 'MOTORCYCLE') {
+          hasEngineCapacity = !!(
+            v.engineCapacity || p.engineCapacity ||
+            v.engine_capacity || p.engine_capacity ||
+            v.Engine_Capacity || p.Engine_Capacity
+          );
+        }
+        
+        // CRITICAL: Must select underwriter (but NOT for Comprehensive - they select later)
+        // For Comprehensive products, underwriter selection happens in ComprehensiveOptionsScreen
+        const hasUnderwriter = isComp ? true : !!state.selectedUnderwriter;
+        
         console.log('📋 Field validation:', {
-          hasRegistration, hasFinancialInterest, hasIdentificationType, hasCoverDate
+          hasRegistration, 
+          hasFinancialInterest, 
+          hasIdentificationType, 
+          hasCoverDate, 
+          hasSumInsured: isComp ? hasSumInsured : 'N/A (not Comprehensive)',
+          hasMake: isComp ? hasMake : 'N/A (not Comprehensive)',
+          hasModel: isComp ? hasModel : 'N/A (not Comprehensive)',
+          hasYear: isComp ? hasYear : 'N/A (not Comprehensive)',
+          hasTonnage: (categoryCode === 'COMMERCIAL' || categoryCode === 'COMM') ? hasTonnage : 'N/A',
+          hasPassengerCapacity: (categoryCode === 'PSV' || categoryCode === 'TUKTUK') ? hasPassengerCapacity : 'N/A',
+          hasEngineCapacity: categoryCode === 'MOTORCYCLE' ? hasEngineCapacity : 'N/A',
+          hasUnderwriter,
+          isComprehensive: isComp
         });
 
-        // Simplified validation - just check the main visible fields
-        return hasRegistration && hasFinancialInterest && hasIdentificationType && hasCoverDate;
+        // All required fields must be filled AND underwriter must be selected
+        // Note: For Comprehensive, underwriter selection happens in next step
+        // Note: sum_insured, make, model, year ARE checked here for Comprehensive (entered in Vehicle Details)
+        return hasRegistration && 
+               hasFinancialInterest && 
+               hasIdentificationType && 
+               hasCoverDate && 
+               hasSumInsured && 
+               hasMake &&
+               hasModel &&
+               hasYear &&
+               hasTonnage && 
+               hasPassengerCapacity && 
+               hasEngineCapacity && 
+               hasUnderwriter;
       }
       
       case 3: {
@@ -1160,9 +1328,8 @@ export default function MotorInsuranceScreen({ route }) {
       }
       
       case 5: {
-        // Client Details Step - strict validation for all required fields
         if (isComp) {
-          // For comprehensive flow - add-ons step (no validation needed)
+          // For comprehensive flow - Add-ons step (step 5) - optional, always pass
           return true;
         } else {
           // For non-comprehensive flow - client details validation
@@ -1195,15 +1362,38 @@ export default function MotorInsuranceScreen({ route }) {
       }
       
       case 6: {
-        // Payment Step - must have selected payment method
-        const p = state.pricingInputs || {};
-        const hasPaymentMethod = !!(p.paymentMethod?.trim());
-        return hasPaymentMethod;
+        if (isComp) {
+          // For comprehensive flow - Client Details step (step 6)
+          const cd = state.pricingInputs?.clientDetails || {};
+          
+          // Check required fields - email is ALWAYS required
+          // fullName and phone are optional for comprehensive (backend updated)
+          const hasEmail = !!(cd.email?.trim());
+          
+          console.log('📋 Comprehensive Client Details validation:', {
+            clientDetails: cd,
+            hasEmail,
+            note: 'fullName and phone are optional for Comprehensive'
+          });
+          
+          // Only email is required for comprehensive
+          return hasEmail;
+        } else {
+          // For non-comprehensive flow - payment step validation
+          const p = state.pricingInputs || {};
+          const hasPaymentMethod = !!(p.paymentMethod?.trim());
+          return hasPaymentMethod;
+        }
       }
       
       case 7:
-        // Submission step - allow if reached this far
-        return true;
+        if (isComp) {
+          // For comprehensive flow - submission step (auto-pass)
+          return true;
+        } else {
+          // Non-comprehensive flow - submission step (auto-pass)
+          return true;
+        }
       
       default:
         return false; // Default to false for unknown steps
@@ -1212,8 +1402,109 @@ export default function MotorInsuranceScreen({ route }) {
 
   // Function to get specific validation message for current step
   const getValidationMessage = () => {
-    // Always return empty string to remove all validation messages
-    return "";
+    const rawType = state.selectedSubcategory?.coverage_type || state.selectedSubcategory?.type || '';
+    const isComp = typeof rawType === 'string' && rawType.toUpperCase().includes('COMP');
+    
+    switch (step) {
+      case 0:
+        if (!state.selectedCategory) return "Please select a vehicle category";
+        return "";
+      
+      case 1:
+        if (!state.selectedSubcategory) return "Please select a coverage type";
+        return "";
+      
+      case 2: {
+        const v = state.vehicleDetails || {};
+        const p = state.pricingInputs || {};
+        const categoryCode = state.selectedCategory?.code || '';
+        
+        const hasRegistration = !!(
+          v.registrationNumber?.trim() || p.registrationNumber?.trim() ||
+          v.Registration_Number?.trim() || p.Registration_Number?.trim() ||
+          v.registration_number?.trim() || p.registration_number?.trim()
+        );
+        const hasFinancialInterest = (
+          v.financialInterest === true || v.financialInterest === 'Yes' ||
+          p.financialInterest === true || p.financialInterest === 'Yes' ||
+          v.Financial_Interest === true || v.Financial_Interest === 'Yes'
+        );
+        const hasIdentificationType = !!(
+          v.identificationType?.trim() || p.identificationType?.trim() ||
+          v.Vehicle_Identification_Type?.trim() || p.Vehicle_Identification_Type?.trim()
+        );
+        const hasCoverDate = !!(
+          v.cover_start_date || p.cover_start_date ||
+          v.Cover_Start_Date || p.Cover_Start_Date
+        );
+        
+        // Product-specific validations
+        const hasSumInsured = !!(v.sum_insured || p.sum_insured || v.Sum_Insured || p.Sum_Insured);
+        const hasMake = !!(v.make || p.make || v.Make || p.Make || v.vehicle_make || p.vehicle_make);
+        const hasModel = !!(v.model || p.model || v.Model || p.Model || v.vehicle_model || p.vehicle_model || v.model_other || p.model_other);
+        const hasYear = !!(v.year || p.year || v.Year || p.Year || v.vehicle_year || p.vehicle_year);
+        const hasTonnage = !!(v.tonnage || p.tonnage || v.Tonnage || p.Tonnage);
+        const hasPassengerCapacity = !!(
+          v.passengerCapacity || p.passengerCapacity ||
+          v.passenger_count || p.passenger_count ||
+          v.Passenger_Count || p.Passenger_Count
+        );
+        const hasEngineCapacity = !!(
+          v.engineCapacity || p.engineCapacity ||
+          v.engine_capacity || p.engine_capacity ||
+          v.Engine_Capacity || p.Engine_Capacity
+        );
+        const hasUnderwriter = !!state.selectedUnderwriter;
+        
+        // Priority order of validation messages
+        if (!hasRegistration) return "Please enter registration number";
+        if (!hasFinancialInterest) return "Please select financial interest";
+        if (!hasIdentificationType) return "Please select identification type";
+        if (!hasCoverDate) return "Please select cover start date";
+        
+        // Product-specific required fields
+        if (isComp && !hasSumInsured) return "Please enter sum insured (vehicle value)";
+        if (isComp && !hasMake) return "Please select vehicle make";
+        if (isComp && !hasModel) return "Please select vehicle model";
+        if (isComp && !hasYear) return "Please enter year of manufacture";
+        if ((categoryCode === 'COMMERCIAL' || categoryCode === 'COMM') && !hasTonnage) return "Please enter vehicle tonnage";
+        if ((categoryCode === 'PSV' || categoryCode === 'TUKTUK') && !hasPassengerCapacity) return "Please enter passenger capacity";
+        if (categoryCode === 'MOTORCYCLE' && !hasEngineCapacity) return "Please enter engine capacity";
+        
+        if (!hasUnderwriter) return "Please select an underwriter";
+        return "";
+      }
+      
+      case 4: {
+        if (isComp && !state.selectedUnderwriter) {
+          return "Please select an underwriter";
+        }
+        return "";
+      }
+      
+      case 5: {
+        if (!isComp) {
+          const cd = state.pricingInputs?.clientDetails || {};
+          if (!cd.first_name?.trim()) return "Please enter client first name";
+          if (!cd.last_name?.trim()) return "Please enter client last name";
+          if (!cd.kra_pin?.trim()) return "Please enter KRA PIN";
+          if (!cd.id_number?.trim()) return "Please enter ID number";
+          if (!cd.vehicle_registration?.trim()) return "Please enter vehicle registration";
+          if (!cd.chassis_number?.trim()) return "Please enter chassis number";
+          if (!cd.vehicle_make?.trim()) return "Please enter vehicle make";
+        }
+        return "";
+      }
+      
+      case 6: {
+        const p = state.pricingInputs || {};
+        if (!p.paymentMethod?.trim()) return "Please select a payment method";
+        return "";
+      }
+      
+      default:
+        return "";
+    }
   };
 
   const onNext = async () => {
@@ -1336,8 +1627,12 @@ export default function MotorInsuranceScreen({ route }) {
       console.log('Pre-apply extracted data on Next failed:', e?.message || e);
     }
 
-    // SIMULATED PAYMENT PROCESSING (Step 6 → Step 7)
-    if (step === 6) {
+    // SIMULATED PAYMENT PROCESSING (Step 6 → Step 7) - NON-COMPREHENSIVE ONLY
+    // Check if this is a Comprehensive product - skip payment simulation if so
+    const rawTypePayment = state.selectedSubcategory?.coverage_type || state.selectedSubcategory?.type || '';
+    const isComprehensiveProduct = typeof rawTypePayment === 'string' && rawTypePayment.toUpperCase().includes('COMP');
+    
+    if (step === 6 && !isComprehensiveProduct) {
       console.log('\n' + '='.repeat(80));
       console.log('💳 SIMULATED PAYMENT PROCESSING - onNext called at Step 6');
       console.log('='.repeat(80));
@@ -1467,16 +1762,34 @@ export default function MotorInsuranceScreen({ route }) {
 
     if (canProceed()) {
       LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-      setStep((s) => Math.min(s + 1, steps.length - 1));
+      
+      // Skip Vehicle Verification (step 3) for Comprehensive products
+      const rawType = state.selectedSubcategory?.coverage_type || state.selectedSubcategory?.type || '';
+      const isComp = typeof rawType === 'string' && rawType.toUpperCase().includes('COMP');
+      
+      if (step === 2 && isComp) {
+        // Skip from Vehicle Details (step 2) directly to Comprehensive Options (step 4)
+        console.log('⏭️  Skipping Vehicle Verification for Comprehensive product');
+        setStep(4);
+      } else {
+        setStep((s) => Math.min(s + 1, steps.length - 1));
+      }
     }
   };
 
   const onBack = () => {
     if (step > 0) {
       LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-      // Special handling: Skip step 3 (Vehicle Verification) when going back if no existing cover
-      if (step === 4 && (verificationStatus === 'not_found' || !existingCoverData)) {
+      
+      const rawType = state.selectedSubcategory?.coverage_type || state.selectedSubcategory?.type || '';
+      const isComp = typeof rawType === 'string' && rawType.toUpperCase().includes('COMP');
+      
+      // Skip step 3 (Vehicle Verification) when going back if:
+      // 1. No existing cover found, OR
+      // 2. Comprehensive product (doesn't use verification)
+      if (step === 4 && (isComp || verificationStatus === 'not_found' || !existingCoverData)) {
         // Skip step 3 and go directly to step 2 (Vehicle Details)
+        console.log('⏮️  Skipping Vehicle Verification step (going back)');
         setStep(2);
       } else {
         setStep((s) => Math.max(s - 1, 0));
@@ -1537,38 +1850,51 @@ export default function MotorInsuranceScreen({ route }) {
     state.selectedCategory?.category_code,
   ]);
 
-  const vehicleDataMemo = useMemo(() => ({
-    // Prefer values from vehicleDetails, but fall back to clientDetails/pricingInputs when absent
-    registration:
-      state.vehicleDetails.registrationNumber ||
-      state.vehicleDetails.registration ||
-      state.pricingInputs?.clientDetails?.vehicle_registration ||
-      state.pricingInputs?.registration ||
-      state.pricingInputs?.vehicle_registration,
-    make:
-      state.vehicleDetails.make ||
-      state.pricingInputs?.clientDetails?.vehicle_make ||
-      state.pricingInputs?.make,
-    model:
-      state.vehicleDetails.model ||
-      state.pricingInputs?.clientDetails?.vehicle_model ||
-      state.pricingInputs?.model,
-    year:
-      state.vehicleDetails.year ||
-      state.pricingInputs?.clientDetails?.vehicle_year ||
-      state.pricingInputs?.year,
-    sum_insured: state.vehicleDetails.sum_insured || state.pricingInputs.sumInsured,
-    // Add-on value fields for comprehensive coverage
-    windscreen_value: state.vehicleDetails.windscreen_value,
-    radio_cassette_value: state.vehicleDetails.radio_cassette_value,
-    vehicle_accessories_value: state.vehicleDetails.vehicle_accessories_value,
-    // Spread last to keep any additional fields available to consumers
-    ...state.vehicleDetails,
-  }), [
+  const vehicleDataMemo = useMemo(() => {
+    // Use "other" values when "Others" is selected
+    const effectiveMake = state.vehicleDetails.make === 'Others' 
+      ? state.vehicleDetails.make_other 
+      : state.vehicleDetails.make;
+    
+    const effectiveModel = state.vehicleDetails.model === 'Others'
+      ? state.vehicleDetails.model_other
+      : state.vehicleDetails.model;
+    
+    return {
+      // Prefer values from vehicleDetails, but fall back to clientDetails/pricingInputs when absent
+      registration:
+        state.vehicleDetails.registrationNumber ||
+        state.vehicleDetails.registration ||
+        state.pricingInputs?.clientDetails?.vehicle_registration ||
+        state.pricingInputs?.registration ||
+        state.pricingInputs?.vehicle_registration,
+      make:
+        effectiveMake ||
+        state.pricingInputs?.clientDetails?.vehicle_make ||
+        state.pricingInputs?.make,
+      model:
+        effectiveModel ||
+        state.pricingInputs?.clientDetails?.vehicle_model ||
+        state.pricingInputs?.model,
+      year:
+        state.vehicleDetails.year ||
+        state.pricingInputs?.clientDetails?.vehicle_year ||
+        state.pricingInputs?.year,
+      sum_insured: state.vehicleDetails.sum_insured || state.pricingInputs.sumInsured,
+      // Add-on value fields for comprehensive coverage
+      windscreen_value: state.vehicleDetails.windscreen_value,
+      radio_cassette_value: state.vehicleDetails.radio_cassette_value,
+      vehicle_accessories_value: state.vehicleDetails.vehicle_accessories_value,
+      // Spread last to keep any additional fields available to consumers
+      ...state.vehicleDetails,
+    };
+  }, [
     state.vehicleDetails.registrationNumber,
     state.vehicleDetails.registration,
     state.vehicleDetails.make,
+    state.vehicleDetails.make_other,
     state.vehicleDetails.model,
+    state.vehicleDetails.model_other,
     state.vehicleDetails.year,
     state.vehicleDetails.sum_insured,
     state.vehicleDetails.windscreen_value,
@@ -1588,8 +1914,17 @@ export default function MotorInsuranceScreen({ route }) {
 
   // Render different steps based on current step index
   const renderContent = () => {
+    // Consolidated product and coverage type calculations (moved to top)
+    const selectedProduct = state.selectedSubcategory;
+    const rawTypeRC = selectedProduct?.coverage_type ?? selectedProduct?.type ?? '';
+    const normRC = typeof rawTypeRC === 'string' ? rawTypeRC.toUpperCase().trim() : '';
+    const isComprehensive = normRC === 'COMPREHENSIVE' || normRC === 'COMP' || normRC.includes('COMPREHENSIVE');
+    
+    // Determine submission step index based on flow
+    const submissionStepIndex = isComprehensive ? 7 : 7;
+    
     // Priority: Render submission step first to prevent flash of earlier steps
-    if (step === 7) {
+    if (step === submissionStepIndex) {
       // Extract client details with fallbacks
       const clientDetails = {
         full_name: state.pricingInputs?.full_name 
@@ -1788,8 +2123,21 @@ export default function MotorInsuranceScreen({ route }) {
         agent_id: state.agentId || 'AGENT-DEFAULT',
       };
 
-      console.log('Step 7: Rendering PolicySubmission with data:', policyData);
+      console.log('Step 7/8: Rendering submission with data:', policyData);
 
+      // For Comprehensive: Create draft quote instead of policy
+      if (isComprehensive) {
+        return (
+          <View style={styles.stepContainer}>
+            <View style={styles.submissionContainer}>
+              <ActivityIndicator size="large" color="#D5222B" />
+              <Text style={styles.submissionText}>Saving your quote...</Text>
+            </View>
+          </View>
+        );
+      }
+
+      // For Non-Comprehensive: Create policy directly
       return (
         <PolicySubmission
           policyData={policyData}
@@ -1825,7 +2173,7 @@ export default function MotorInsuranceScreen({ route }) {
               'Submission Error',
               error.message || 'Failed to create policy. Please try again.',
               [
-                { text: 'Retry', onPress: () => setStep(6) },
+                { text: 'Retry', onPress: () => setStep(isComprehensive ? 7 : 6) },
                 { text: 'Cancel', onPress: () => navigation.goBack() }
               ]
             );
@@ -1833,12 +2181,6 @@ export default function MotorInsuranceScreen({ route }) {
         />
       );
     }
-    
-    // Consolidated product and coverage type calculations
-  const selectedProduct = state.selectedSubcategory;
-  const rawTypeRC = selectedProduct?.coverage_type ?? selectedProduct?.type ?? '';
-  const normRC = typeof rawTypeRC === 'string' ? rawTypeRC.toUpperCase().trim() : '';
-  const isComprehensive = normRC === 'COMPREHENSIVE' || normRC === 'COMP' || normRC.includes('COMPREHENSIVE');
     
     // Step 0: Category Selection
     if (step === 0) {
@@ -2050,7 +2392,6 @@ export default function MotorInsuranceScreen({ route }) {
         <View style={styles.stepContainer}>
           <View style={styles.stepHeader}>
             <Text style={styles.stepTitle}>Policy Details</Text>
-            <Text style={styles.stepSubtitle}>Enter your vehicle information for {getReadableCoverageName(state.selectedSubcategory)}</Text>
           </View>
           <DynamicPolicyForm
             selectedProduct={selectedProductMemo}
@@ -2345,7 +2686,7 @@ export default function MotorInsuranceScreen({ route }) {
       );
     }
 
-    // Step 5: Add-ons Selection (for comprehensive only)
+    // Step 5: Add-ons Selection (comprehensive) OR Client Details (non-comprehensive)
     if (step === 5) {
       if (isComprehensive) {
         // Add-ons Selection Step for Comprehensive
@@ -2353,12 +2694,12 @@ export default function MotorInsuranceScreen({ route }) {
           <View style={styles.stepContainer}>
             <Text style={styles.stepTitle}>Additional Coverage</Text>
             <AddonSelectionStep
-            selectedProduct={selectedProductMemo}
-            vehicleData={vehicleDataMemo}
-            underwriter={state.selectedUnderwriter}
-            selectedAddons={state.selectedAddons || []}
-            onAddonsChange={(addons) => actions.setSelectedAddons && actions.setSelectedAddons(addons)}
-            onNext={() => setStep(6)}
+              selectedProduct={selectedProductMemo}
+              vehicleData={vehicleDataMemo}
+              underwriter={state.selectedUnderwriter}
+              selectedAddons={state.selectedAddons || []}
+              onAddonsChange={(addons) => actions.setSelectedAddons && actions.setSelectedAddons(addons)}
+              onNext={() => setStep(6)}
             />
           </View>
         );
@@ -2366,7 +2707,7 @@ export default function MotorInsuranceScreen({ route }) {
       // For non-comprehensive, step 5 will be Client Details (handled below)
     }
 
-    // Step 5: Client Details (non-comprehensive only)
+    // Step 5: Client Details (non-comprehensive only - full form)
     if (!isComprehensive && step === 5) {
       // Debug logging to see what data we have
       console.log('=== CLIENT DETAILS DATA SOURCE DEBUG ===');
@@ -2449,10 +2790,83 @@ export default function MotorInsuranceScreen({ route }) {
       );
     }
 
-  // Step 6: Payment (both flows)
-  const paymentStep = 6;
-    
-    if (step === paymentStep) {
+    // Step 6: Client Details (comprehensive only)
+    if (isComprehensive && step === 6) {
+      const clientDetails = state.pricingInputs?.clientDetails || {};
+      
+      return (
+        <View style={styles.stepContainer}>
+          <Text style={styles.stepTitle}>Client Information</Text>
+          <Text style={styles.stepSubtitle}>
+            Enter the policy owner's details
+          </Text>
+          
+          <ScrollView style={styles.formScrollView}>
+            {/* Email - REQUIRED */}
+            <View style={styles.fieldContainer}>
+              <Text style={styles.label}>
+                Email <Text style={styles.required}>*</Text>
+              </Text>
+              <TextInput
+                style={styles.input}
+                value={clientDetails.email || ''}
+                onChangeText={(text) => {
+                  actions.updatePricingInputs({
+                    clientDetails: { ...clientDetails, email: text }
+                  });
+                }}
+                placeholder="e.g., john.doe@example.com"
+                keyboardType="email-address"
+                autoCapitalize="none"
+              />
+              <Text style={styles.helpText}>Email is required for sending policy documents</Text>
+            </View>
+
+            {/* Full Name - OPTIONAL */}
+            <View style={styles.fieldContainer}>
+              <Text style={styles.label}>Full Name (Optional)</Text>
+              <TextInput
+                style={styles.input}
+                value={clientDetails.fullName || clientDetails.full_name || ''}
+                onChangeText={(text) => {
+                  actions.updatePricingInputs({
+                    clientDetails: { ...clientDetails, fullName: text, full_name: text }
+                  });
+                }}
+                placeholder="e.g., John Doe"
+                autoCapitalize="words"
+              />
+            </View>
+
+            {/* Phone - OPTIONAL */}
+            <View style={styles.fieldContainer}>
+              <Text style={styles.label}>Phone Number (Optional)</Text>
+              <TextInput
+                style={styles.input}
+                value={clientDetails.phone || clientDetails.phone_number || ''}
+                onChangeText={(text) => {
+                  actions.updatePricingInputs({
+                    clientDetails: { ...clientDetails, phone: text, phone_number: text }
+                  });
+                }}
+                placeholder="e.g., 0712345678"
+                keyboardType="phone-pad"
+              />
+            </View>
+
+            <View style={styles.infoBox}>
+              <Text style={styles.infoText}>
+                ℹ️ Only email is required for comprehensive quotes. You can add more details later when converting to a policy.
+              </Text>
+            </View>
+          </ScrollView>
+        </View>
+      );
+    }
+
+  // Step 6: Payment (non-comprehensive only)
+  if (!isComprehensive && step === 6) {
+      // Non-Comprehensive Payment Step
       // Use the selected underwriter's backend totals/breakdown verbatim
       // Align keys with backend: premium_breakdown provides base_premium, training_levy, pcf_levy, stamp_duty
       const effectivePremium = state.selectedUnderwriter ? (() => {
@@ -2513,7 +2927,7 @@ export default function MotorInsuranceScreen({ route }) {
       );
     }
 
-    // Return empty view for undefined steps
+  // Step 7: Submission (both comprehensive and non-comprehensive)
     return <View style={{ flex: 1 }} />;
   };
 
@@ -2588,7 +3002,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   
-  content: { flex: 1, paddingHorizontal: Spacing.md, paddingTop: 0 },  // Reduced paddingTop to 0 for tighter spacing
+  content: { flex: 1, paddingHorizontal: Spacing.md, paddingTop: 0, paddingBottom: 8 },  // Minimal padding for footer buttons
   
   // Subcategory Header
   subcategoryHeader: {
@@ -3360,12 +3774,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 16,
+    paddingHorizontal: 16,
+    paddingTop: 8,
     backgroundColor: '#fff',
     borderTopWidth: 1,
     borderTopColor: '#e9ecef',
-    gap: 16,
+    gap: 12,
   },
   backButton: { 
     flexDirection: 'row',
@@ -3374,11 +3788,11 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent', 
     borderWidth: 1, 
     borderColor: '#ced4da', 
-    paddingVertical: 12, 
-    paddingHorizontal: 20,
+    paddingVertical: 10, 
+    paddingHorizontal: 16,
     borderRadius: 8, 
-    minWidth: 100,
-    gap: 6,
+    minWidth: 90,
+    gap: 4,
   },
   backButtonText: { 
     color: '#495057', 
@@ -3390,12 +3804,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#D5222B', 
-    paddingVertical: 14, 
-    paddingHorizontal: 24,
+    paddingVertical: 12, 
+    paddingHorizontal: 20,
     borderRadius: 8, 
     flex: 1,
     maxWidth: 200,
-    gap: 6,
+    gap: 4,
   },
   navButtonContent: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   nextButtonDisabled: { backgroundColor: '#ced4da' },
@@ -3829,25 +4243,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 
-  // Validation message styles
-  validationMessageContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#fff5f5',
-    borderWidth: 1,
-    borderColor: '#fecaca',
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 16,
-    gap: 8,
-  },
-  validationMessage: {
-    flex: 1,
-    fontSize: 14,
-    color: '#D5222B',
-    fontWeight: '500',
-  },
-
   underwriterPlaceholder: {
     backgroundColor: '#f8f9fa',
     borderRadius: 8,
@@ -4060,5 +4455,62 @@ const styles = StyleSheet.create({
     fontSize: Typography.fontSize.sm,
     color: Colors.text,
     marginRight: Spacing.xs,
+  },
+  
+  // Client Form Styles (Comprehensive)
+  formScrollView: {
+    flex: 1,
+  },
+  fieldContainer: {
+    marginBottom: Spacing.lg,
+  },
+  label: {
+    fontSize: Typography.fontSize.md,
+    fontWeight: Typography.fontWeight.semiBold,
+    color: Colors.textPrimary,
+    marginBottom: Spacing.xs,
+  },
+  required: {
+    color: Colors.error,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: Colors.border,
+    borderRadius: Spacing.borderRadius.md,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.sm,
+    fontSize: Typography.fontSize.md,
+    color: Colors.textPrimary,
+    backgroundColor: Colors.white,
+  },
+  helpText: {
+    fontSize: Typography.fontSize.sm,
+    color: Colors.textSecondary,
+    marginTop: Spacing.xs,
+  },
+  infoBox: {
+    backgroundColor: '#E3F2FD',
+    borderLeftWidth: 4,
+    borderLeftColor: '#2196F3',
+    borderRadius: Spacing.borderRadius.md,
+    padding: Spacing.md,
+    marginTop: Spacing.md,
+  },
+  infoText: {
+    fontSize: Typography.fontSize.sm,
+    color: '#1565C0',
+    lineHeight: Typography.lineHeight.sm,
+  },
+  submissionContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: Spacing.xl,
+  },
+  submissionText: {
+    fontSize: Typography.fontSize.lg,
+    fontWeight: Typography.fontWeight.semiBold,
+    color: Colors.textPrimary,
+    marginTop: Spacing.lg,
   },
 });

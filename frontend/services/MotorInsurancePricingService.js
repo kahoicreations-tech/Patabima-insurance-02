@@ -1,4 +1,5 @@
 import djangoAPI from './DjangoAPIService';
+import SimpleCache, { makeKey } from './SimpleCache';
 import { transformPricingRequest, normalizePricingResponse } from '../utils/pricingCalculations';
 import { PRODUCT_TYPES } from '../constants/motorInsuranceConfig';
 
@@ -40,6 +41,10 @@ function getSubcategoryCode(category, coverType) {
 }
 
 class MotorInsurancePricingService {
+  // Public: allow manual cache flush for pricing data
+  async clearPricingCache() {
+    await SimpleCache.clearAll();
+  }
   async getCategories(options = {}) {
     // Fetch categories from backend database only - no fallback data
     try {
@@ -151,6 +156,24 @@ class MotorInsurancePricingService {
     };
 
     try {
+      // Cache key: subcategory + pricing-critical fields bucketed as needed
+      const tonnage = inputs?.tonnage || inputs?.vehicle_tonnage;
+      const capacity = inputs?.passengerCapacity || inputs?.passenger_capacity;
+      // For comprehensive, sum_insured matters; for TP/TOR, base is fixed, so we can cache per subcategory
+      const sumInsuredRaw = Number(inputs?.sum_insured || inputs?.vehicle_value || 0);
+      const isComprehensive = String(inputs?.cover_type || '').toUpperCase().includes('COMP')
+        || String(subcategoryCode || '').toUpperCase().includes('COMP');
+      // Bucket sum insured to 50k to keep key cardinality reasonable
+      const sumBucket = isComprehensive && sumInsuredRaw > 0 ? Math.floor(sumInsuredRaw / 50000) * 50000 : 0;
+
+      const cacheKey = makeKey(['UW_SUBCAT', subcategoryCode, tonnage || 0, capacity || 0, sumBucket]);
+      if (!options.forceRefresh) {
+        const cached = await SimpleCache.get(cacheKey);
+        if (cached) {
+          if (__DEV__) console.log(`[CACHE] compareUnderwritersBySubcategory hit → ${cacheKey}`);
+          return cached;
+        }
+      }
       console.log(`[compareUnderwritersBySubcategory] Using subcategory: ${subcategoryCode}`);
       console.log('compareUnderwritersBySubcategory payload:', JSON.stringify(payload, null, 2));
       console.log('compareUnderwritersBySubcategory original inputs:', JSON.stringify(inputs, null, 2));
@@ -216,8 +239,11 @@ class MotorInsurancePricingService {
       // Sort by total premium (lowest first)
   enhanced.sort((a, b) => (a.total_premium || 0) - (b.total_premium || 0));
       
-      console.log('Enhanced underwriter comparisons (subcategory-based):', enhanced);
-      return enhanced;
+  console.log('Enhanced underwriter comparisons (subcategory-based):', enhanced);
+  // Store for 12 hours by default unless caller overrides
+  const ttlMs = options.ttlMs || (12 * 60 * 60 * 1000);
+  await SimpleCache.set(cacheKey, enhanced, ttlMs);
+  return enhanced;
       
     } catch (e) {
       console.error('compareUnderwritersBySubcategory error:', e);
@@ -238,7 +264,7 @@ class MotorInsurancePricingService {
     
     // NOTE: Spread transformPricingRequest FIRST, then explicitly set category/subcategory
     // so they don't get overwritten to undefined by the spread.
-    const transformed = transformPricingRequest(coverType, inputs);
+  const transformed = transformPricingRequest(coverType, inputs);
     const payload = {
       ...transformed,
       category: category?.toUpperCase(),
@@ -258,6 +284,22 @@ class MotorInsurancePricingService {
     }
 
     try {
+      // Build cache key from category + subcategory + pricing-critical inputs
+      const tonnage = inputs?.tonnage || inputs?.vehicle_tonnage;
+      const capacity = inputs?.passengerCapacity || inputs?.passenger_capacity;
+      const engine = inputs?.engine_size || inputs?.engine_capacity;
+      const sumInsuredRaw = Number(inputs?.sum_insured || inputs?.vehicle_value || 0);
+      const isComprehensive = String(coverType || '').toUpperCase().includes('COMP')
+        || String(subcategory || '').toUpperCase().includes('COMP');
+      const sumBucket = isComprehensive && sumInsuredRaw > 0 ? Math.floor(sumInsuredRaw / 50000) * 50000 : 0;
+      const cacheKey = makeKey(['UW_COVER', category, subcategory, tonnage || 0, capacity || 0, engine || 0, sumBucket]);
+      if (!options.forceRefresh) {
+        const cached = await SimpleCache.get(cacheKey);
+        if (cached) {
+          if (__DEV__) console.log(`[CACHE] compareUnderwritersByCoverType hit → ${cacheKey}`);
+          return cached;
+        }
+      }
       console.log('compareUnderwritersByCoverType payload:', JSON.stringify(payload, null, 2));
       console.log('compareUnderwritersByCoverType original inputs:', JSON.stringify(inputs, null, 2));
       const res = await djangoAPI.compareMotorPricing(payload, options);
@@ -320,8 +362,10 @@ class MotorInsurancePricingService {
       // Sort by total premium (lowest first)
   enhanced.sort((a, b) => (a.total_premium || 0) - (b.total_premium || 0));
       
-      console.log('Enhanced underwriter comparisons:', enhanced);
-      return enhanced;
+  console.log('Enhanced underwriter comparisons:', enhanced);
+  const ttlMs = options.ttlMs || (12 * 60 * 60 * 1000);
+  await SimpleCache.set(cacheKey, enhanced, ttlMs);
+  return enhanced;
       
     } catch (e) {
       console.error('compareUnderwritersByCoverType error:', e);

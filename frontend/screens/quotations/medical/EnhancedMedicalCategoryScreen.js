@@ -11,13 +11,14 @@ import {
   TouchableOpacity,
   ScrollView,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { Heading4, Body1, Body2, Subtitle2 } from '../../../components/typography/Text';
 import { BRAND, UI, SPACING, BORDER_RADIUS } from '../../../theme';
 
 const EnhancedMedicalCategoryScreen = ({ navigation }) => {
+  const insets = useSafeAreaInsets();
   
   const handleCategorySelect = (category) => {
     // Navigate to the appropriate medical quotation screen based on category
@@ -33,7 +34,7 @@ const EnhancedMedicalCategoryScreen = ({ navigation }) => {
       <StatusBar style="light" />
       
       {/* Red Header Bar */}
-      <View style={styles.header}>
+  <View style={[styles.header, { paddingTop: insets.top }]}>
         <TouchableOpacity 
           style={styles.backButton}
           onPress={() => navigation.goBack()}
@@ -48,9 +49,10 @@ const EnhancedMedicalCategoryScreen = ({ navigation }) => {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
+        <View style={styles.topSpacer} />
+        
         {/* Main Content */}
-        <View style={styles.content}>
-          <Heading4 style={styles.title}>Select Medical Insurance Type</Heading4>
+        <Heading4 style={styles.title}>Select Medical Insurance Type</Heading4>
           <Body1 style={styles.subtitle}>
             Choose the appropriate insurance category for your needs
           </Body1>
@@ -88,8 +90,7 @@ const EnhancedMedicalCategoryScreen = ({ navigation }) => {
               </Body2>
             </View>
           </TouchableOpacity>
-        </View>
-      </ScrollView>
+        </ScrollView>
     </SafeAreaView>
   );
 };
@@ -121,11 +122,10 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   scrollContent: {
-    flexGrow: 1,
-    paddingBottom: SPACING.xl,
+    padding: 16,
   },
-  content: {
-    padding: SPACING.lg,
+  topSpacer: {
+    height: SPACING.sm,
   },
   title: {
     marginBottom: SPACING.xs,
