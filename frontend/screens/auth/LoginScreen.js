@@ -61,15 +61,18 @@ export default function LoginScreen() {
         return;
       }
       
-      // Normalize phone number (strip leading 0 if 10 digits)
+      // Normalize phone number - ADD leading 0 if missing (10 digits required)
       const cleanPhoneNumber = phoneNumber.replace(/\D/g, '');
-      const normalizedPhone = cleanPhoneNumber.startsWith('0') && cleanPhoneNumber.length === 10
-        ? cleanPhoneNumber.substring(1)
-        : cleanPhoneNumber;
+      let normalizedPhone = cleanPhoneNumber;
+      
+      // Add leading 0 if user entered 9 digits
+      if (cleanPhoneNumber.length === 9 && !cleanPhoneNumber.startsWith('0')) {
+        normalizedPhone = '0' + cleanPhoneNumber;
+      }
 
-      // Validate normalized phone is 9 digits
-      if (normalizedPhone.length !== 9) {
-        Alert.alert('Error', 'Please enter a valid phone number (9 or 10 digits)');
+      // Validate normalized phone is 10 digits with leading 0
+      if (normalizedPhone.length !== 10 || !normalizedPhone.startsWith('0')) {
+        Alert.alert('Error', 'Please enter a valid Kenyan phone number (0712345678)');
         return;
       }
 

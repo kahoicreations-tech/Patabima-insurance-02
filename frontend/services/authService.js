@@ -35,12 +35,19 @@ class AuthService {
     
     const cleaned = phone.replace(/\D/g, '');
     
-    // Check for valid Kenyan phone number
-    if (cleaned.length < 9 || cleaned.length > 12) {
-      return { valid: false, error: 'Please enter a valid phone number' };
+    // Must be 9 or 10 digits for Kenyan numbers
+    if (cleaned.length === 9) {
+      // Accept 9 digits and add leading 0
+      return { valid: true, formatted: '0' + cleaned };
+    } else if (cleaned.length === 10 && cleaned.startsWith('0')) {
+      // Accept 10 digits with leading 0
+      return { valid: true, formatted: cleaned };
+    } else if (cleaned.length === 12 && cleaned.startsWith('254')) {
+      // Accept international format and convert
+      return { valid: true, formatted: '0' + cleaned.substring(3) };
     }
     
-    return { valid: true, formatted: this.formatPhoneNumber(phone) };
+    return { valid: false, error: 'Please enter a valid Kenyan phone number (0712345678)' };
   }
 
   validateEmail(email) {
@@ -120,20 +127,24 @@ class AuthService {
   }
 
   /**
-   * Format phone number to Kenyan standard (254XXXXXXXXX)
+   * Format phone number to Kenyan standard (0XXXXXXXXX - 10 digits with leading 0)
    */
   formatPhoneNumber(number) {
     let cleaned = number.replace(/\D/g, '');
     
-    // Handle different formats
-    if (cleaned.startsWith('0')) {
-      cleaned = '254' + cleaned.substring(1);
-    } else if (cleaned.startsWith('254')) {
-      // Already in correct format
-    } else if (cleaned.startsWith('+254')) {
-      cleaned = cleaned.substring(1);
-    } else if (cleaned.length === 9) {
-      cleaned = '254' + cleaned;
+    // Add leading 0 if 9 digits
+    if (cleaned.length === 9 && !cleaned.startsWith('0')) {
+      cleaned = '0' + cleaned;
+    }
+    
+    // Already 10 digits with leading 0
+    if (cleaned.length === 10 && cleaned.startsWith('0')) {
+      return cleaned;
+    }
+    
+    // Remove country code if present: 254712345678 -> 0712345678
+    if (cleaned.startsWith('254') && cleaned.length === 12) {
+      cleaned = '0' + cleaned.substring(3);
     }
     
     return cleaned;

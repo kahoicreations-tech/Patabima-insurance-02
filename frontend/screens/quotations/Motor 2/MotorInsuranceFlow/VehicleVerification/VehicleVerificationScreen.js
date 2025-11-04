@@ -1,289 +1,272 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Colors } from '../../../../../constants/Colors';
-import { Typography } from '../../../../../constants/Typography';
-import { Spacing } from '../../../../../constants/Spacing';
 
 /**
  * Vehicle Verification Screen
  * Displays DMVIC check results showing existing cover information
- * Matches Figma design with shield icon, policy details, and action buttons
+ * Matches CategorySelectionStep.js drawer design with handle, header, and bottom actions
  */
 const VehicleVerificationScreen = ({ 
   existingCoverData, 
   onAdjustStartDate, 
   onSubmitDebitNote 
 }) => {
-  if (!existingCoverData || !existingCoverData.exists) {
+  console.log('🎨 [VehicleVerificationScreen] Rendering with data:', existingCoverData);
+  
+  if (!existingCoverData) {
+    console.log('❌ [VehicleVerificationScreen] No existing cover data, returning null');
     return null; // Auto-skip if no existing cover
   }
 
   const policy = existingCoverData.policy || {};
+  console.log('📋 [VehicleVerificationScreen] Policy data:', policy);
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
-      {/* Top Section - Document Status */}
-      <View style={styles.documentStatusSection}>
-        <Text style={styles.sectionTitle}>Client Details</Text>
-        <Text style={styles.sectionSubtitle}>Client Details as Per</Text>
-        
-        <View style={styles.documentItem}>
-          <Ionicons name="close-circle" size={20} color={Colors.error} />
-          <Text style={styles.documentText}>Logbook</Text>
-        </View>
-        
-        <View style={styles.documentItem}>
-          <View style={styles.redDot} />
-          <Text style={styles.documentText}>KRA PIN Certificate</Text>
-        </View>
-
-        <Text style={[styles.sectionTitle, styles.marginTop]}>Vehicle Details as Per</Text>
-        
-        <View style={styles.documentChip}>
-          <Text style={styles.documentChipText}>Logbook</Text>
-          <Ionicons name="checkmark-circle" size={20} color={Colors.error} />
+    <View style={styles.container}>
+      {/* Drawer Handle */}
+      <View style={styles.drawerHandle} />
+      
+      {/* Icon Circle - Moved to top */}
+      <View style={styles.resultContainer}>
+        <View style={[styles.resultIconCircle, styles.warningCircle]}>
+          <Ionicons name="shield-checkmark" size={40} color="#ff9800" />
         </View>
       </View>
 
-      {/* Main Card - Existing Cover Details */}
-      <View style={styles.existingCoverCard}>
-        {/* Shield Icon */}
-        <View style={styles.iconContainer}>
-          <Ionicons name="shield-checkmark-outline" size={64} color={Colors.text} />
+      {/* Header */}
+      <View style={styles.drawerHeader}>
+        <Text style={styles.drawerTitle}>Vehicle Has Existing Cover</Text>
+        <Text style={styles.drawerSubtitle}>
+          Please adjust the start date to begin after the existing cover expires
+        </Text>
+      </View>
+
+      {/* Scrollable Content */}
+      <ScrollView 
+        style={styles.drawerContent} 
+        contentContainerStyle={styles.scrollContentContainer}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Policy Details Card */}
+        <View style={styles.policyDetailsCard}>
+          <View style={styles.policyDetailRow}>
+            <Text style={styles.policyDetailLabel}>Vehicle Registration</Text>
+            <Text style={styles.policyDetailValue}>
+              {policy.vehicle_registration || 'N/A'}
+            </Text>
+          </View>
+
+          <View style={[styles.policyDetailRow, styles.noBorder]}>
+            <Text style={styles.policyDetailLabel}>Active Certificate Number</Text>
+            <Text style={styles.policyDetailValue}>
+              {policy.certificate_number || policy.policy_number || 'N/A'}
+            </Text>
+          </View>
+
+          <View style={[styles.policyDetailRow, styles.noBorder]}>
+            <Text style={styles.policyDetailLabel}>Issued By</Text>
+            <Text style={styles.policyDetailValue}>
+              {policy.insurer || 'N/A'}
+            </Text>
+          </View>
+
+          <View style={[styles.policyDetailRow, styles.noBorder]}>
+            <Text style={styles.policyDetailLabel}>Expiry Date</Text>
+            <Text style={styles.policyDetailValue}>
+              {policy.expiry_date || 'N/A'}
+            </Text>
+          </View>
         </View>
 
-        {/* Title */}
-        <Text style={styles.cardTitle}>Vehicle Has Existing Cover</Text>
-
-        {/* Info Message */}
-        <View style={styles.infoMessageContainer}>
-          <Text style={styles.infoMessage}>
-            Please adjust the start date of the new policy to begin after the existing cover expires
+        {/* Info Box */}
+        <View style={styles.infoBox}>
+          <Ionicons name="information-circle" size={18} color="#2196F3" style={{ marginTop: 2 }} />
+          <Text style={styles.infoBoxText}>
+            The new policy start date will be automatically adjusted to begin one day after the existing cover expires.
           </Text>
         </View>
+      </ScrollView>
 
-        {/* Policy Details */}
-        <View style={styles.detailsContainer}>
-          <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Vehicle Registration</Text>
-            <Text style={styles.detailValue}>
-              {policy.vehicle_registration || 'KDN 423IA'}
-            </Text>
-          </View>
-
-          <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Active Certificate Number</Text>
-            <Text style={styles.detailValue}>
-              {policy.certificate_number || policy.policy_number || 'CHB432123'}
-            </Text>
-          </View>
-
-          <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Issued By</Text>
-            <Text style={styles.detailValue}>
-              {policy.insurer || 'CIC'}
-            </Text>
-          </View>
-
-          <View style={[styles.detailRow, styles.lastDetailRow]}>
-            <Text style={styles.detailLabel}>Expiry Date</Text>
-            <Text style={styles.detailValue}>
-              {policy.expiry_date || '13/04/2026'}
-            </Text>
-          </View>
-        </View>
-
-        {/* Action Buttons */}
+      {/* Action Buttons - Fixed at bottom */}
+      <View style={styles.drawerActions}>
         <TouchableOpacity 
-          style={styles.adjustDateButton}
+          style={[styles.drawerButton, styles.drawerButtonSecondary]}
           onPress={onAdjustStartDate}
-          activeOpacity={0.7}
+          activeOpacity={0.8}
         >
-          <Text style={styles.adjustDateButtonText}>Adjust Start Date</Text>
+          <Text style={styles.drawerButtonSecondaryText}>Adjust Start Date</Text>
         </TouchableOpacity>
 
         <TouchableOpacity 
-          style={styles.submitDebitNoteButton}
+          style={[styles.drawerButton, styles.drawerButtonPrimary]}
           onPress={onSubmitDebitNote}
-          activeOpacity={0.7}
+          activeOpacity={0.8}
         >
-          <Text style={styles.submitDebitNoteButtonText}>Submit Debit Note</Text>
+          <Text style={styles.drawerButtonPrimaryText}>Submit Debit Note</Text>
         </TouchableOpacity>
       </View>
-    </ScrollView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
-  },
-  contentContainer: {
-    padding: Spacing.padding.screen,
-  },
-  
-  // Document Status Section
-  documentStatusSection: {
-    marginBottom: Spacing.lg,
-  },
-  sectionTitle: {
-    fontSize: Typography.fontSize.lg,
-    fontWeight: Typography.fontWeight.bold,
-    color: Colors.text,
-    marginBottom: Spacing.xs,
-  },
-  sectionSubtitle: {
-    fontSize: Typography.fontSize.sm,
-    color: Colors.textSecondary,
-    marginBottom: Spacing.sm,
-  },
-  marginTop: {
-    marginTop: Spacing.md,
-  },
-  documentItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: Spacing.xs,
-  },
-  documentText: {
-    fontSize: Typography.fontSize.md,
-    color: Colors.text,
-    marginLeft: Spacing.xs,
-  },
-  redDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: Colors.error,
-  },
-  documentChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#FFF5F5',
-    borderWidth: 1,
-    borderColor: Colors.error,
-    borderRadius: 9999, // Fully rounded pill
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-    alignSelf: 'flex-start',
-  },
-  documentChipText: {
-    fontSize: Typography.fontSize.md,
-    color: Colors.text,
-    marginRight: Spacing.xs,
+    backgroundColor: '#FFFFFF',
   },
 
-  // Existing Cover Card
-  existingCoverCard: {
-    backgroundColor: '#FFF5F5',
-    borderRadius: Spacing.borderRadius.lg,
-    padding: Spacing.padding.lg,
-    alignItems: 'center',
-    marginTop: Spacing.md,
-  },
-  iconContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: Colors.white,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: Spacing.lg,
-    // Add subtle shadow for depth
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  cardTitle: {
-    fontSize: Typography.fontSize.xl,
-    fontWeight: Typography.fontWeight.bold,
-    color: Colors.text,
-    textAlign: 'center',
-    marginBottom: Spacing.lg,
-  },
-  infoMessageContainer: {
-    backgroundColor: Colors.white,
-    borderRadius: 9999, // Fully rounded pill shape
-    paddingHorizontal: Spacing.lg,
-    paddingVertical: Spacing.md,
-    marginBottom: Spacing.xl,
-    width: '100%',
-  },
-  infoMessage: {
-    fontSize: Typography.fontSize.sm,
-    color: Colors.text,
-    textAlign: 'center',
-    lineHeight: 20,
+  // Drawer Handle
+  drawerHandle: {
+    width: 40,
+    height: 4,
+    backgroundColor: '#D1D5DB',
+    borderRadius: 2,
+    alignSelf: 'center',
+    marginTop: 12,
+    marginBottom: 12,
   },
 
-  // Policy Details
-  detailsContainer: {
-    width: '100%',
-    backgroundColor: Colors.white,
-    borderRadius: Spacing.borderRadius.lg,
-    padding: Spacing.padding.lg,
-    marginBottom: Spacing.xl,
-    // Add subtle shadow
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
-  },
-  detailRow: {
-    paddingVertical: Spacing.md,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
-  },
-  lastDetailRow: {
+  // Drawer Header
+  drawerHeader: {
+    paddingHorizontal: 20,
+    paddingBottom: 12,
+    backgroundColor: '#FFFFFF',
     borderBottomWidth: 0,
   },
-  detailLabel: {
-    fontSize: Typography.fontSize.sm,
-    color: Colors.textSecondary,
-    marginBottom: Spacing.xs,
-    fontWeight: Typography.fontWeight.medium,
+  drawerTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#111827',
+    marginBottom: 6,
+    textAlign: 'center',
   },
-  detailValue: {
-    fontSize: Typography.fontSize.md,
-    fontWeight: Typography.fontWeight.semibold,
-    color: Colors.text,
+  drawerSubtitle: {
+    fontSize: 13,
+    color: '#6B7280',
+    fontWeight: '400',
+    textAlign: 'center',
+    lineHeight: 18,
   },
 
-  // Action Buttons
-  adjustDateButton: {
-    width: '100%',
-    backgroundColor: Colors.white,
-    borderWidth: 2,
-    borderColor: Colors.primary,
-    borderRadius: Spacing.borderRadius.lg,
-    paddingVertical: Spacing.md,
-    marginBottom: Spacing.md,
+  // Scrollable Content
+  drawerContent: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+  },
+  scrollContentContainer: {
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+  },
+
+  // Result Container (Icon Circle)
+  resultContainer: {
+    alignItems: 'center',
+    paddingVertical: 12,
+  },
+  resultIconCircle: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  adjustDateButtonText: {
-    fontSize: Typography.fontSize.md,
-    fontWeight: Typography.fontWeight.bold,
-    color: Colors.primary,
+  warningCircle: {
+    backgroundColor: '#FFF3E0',
   },
-  submitDebitNoteButton: {
+
+  // Policy Details Card
+  policyDetailsCard: {
     width: '100%',
-    backgroundColor: Colors.primary,
-    borderRadius: Spacing.borderRadius.lg,
-    paddingVertical: Spacing.md,
+    backgroundColor: '#F9FAFB',
+    borderRadius: 12,
+    padding: 16,
+    marginTop: 8,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  policyDetailRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
+  },
+  noBorder: {
+    borderBottomWidth: 0,
+  },
+  policyDetailLabel: {
+    fontSize: 13,
+    color: '#6B7280',
+    fontWeight: '500',
+    flex: 1,
+  },
+  policyDetailValue: {
+    fontSize: 14,
+    color: '#111827',
+    fontWeight: '600',
+    flex: 1,
+    textAlign: 'right',
+  },
+
+  // Info Box
+  infoBox: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    backgroundColor: '#EFF6FF',
+    borderLeftWidth: 3,
+    borderLeftColor: '#3B82F6',
+    borderRadius: 8,
+    padding: 12,
+    marginTop: 4,
+    marginBottom: 12,
+    gap: 10,
+  },
+  infoBoxText: {
+    flex: 1,
+    fontSize: 12,
+    color: '#1E40AF',
+    lineHeight: 17,
+    fontWeight: '400',
+  },
+
+  // Action Buttons - Fixed at bottom
+  drawerActions: {
+    flexDirection: 'row',
+    gap: 12,
+    paddingHorizontal: 20,
+    paddingTop: 12,
+    paddingBottom: 20,
+    borderTopWidth: 1,
+    borderTopColor: '#E5E7EB',
+    backgroundColor: '#FFFFFF',
+  },
+  drawerButton: {
+    flex: 1,
+    paddingVertical: 13,
+    borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  submitDebitNoteButtonText: {
-    fontSize: Typography.fontSize.md,
-    fontWeight: Typography.fontWeight.bold,
-    color: Colors.white,
+  drawerButtonSecondary: {
+    backgroundColor: '#F3F4F6',
+    borderWidth: 1,
+    borderColor: '#D1D5DB',
+  },
+  drawerButtonSecondaryText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#374151',
+  },
+  drawerButtonPrimary: {
+    backgroundColor: '#D5222B',
+  },
+  drawerButtonPrimaryText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#FFFFFF',
   },
 });
 

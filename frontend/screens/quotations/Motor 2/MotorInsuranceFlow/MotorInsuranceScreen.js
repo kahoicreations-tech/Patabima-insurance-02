@@ -797,6 +797,9 @@ export default function MotorInsuranceScreen(props) {
   const [verificationStatus, setVerificationStatus] = useState(null); // null | 'checking' | 'found' | 'not_found'
   const [existingCoverData, setExistingCoverData] = useState(null); // Stores DMVIC verification result
   const [existingCoverDrawerVisible, setExistingCoverDrawerVisible] = useState(false); // Controls bottom drawer visibility
+  // Cross-platform modal for entering registration when checking existing cover
+  const [showCheckPolicyModal, setShowCheckPolicyModal] = useState(false);
+  const [checkPolicyInput, setCheckPolicyInput] = useState('');
 
   // Use context for client data source to persist across steps
   const clientDataSource = state.clientDataSource || 'logbook';
@@ -2285,28 +2288,8 @@ export default function MotorInsuranceScreen(props) {
             <TouchableOpacity
               style={[styles.checkPolicyButton, verificationStatus === 'checking' && { opacity: 0.6 }]}
               onPress={() => {
-                Alert.prompt(
-                  'Check Vehicle For Existing Cover',
-                  'Please enter vehicle registration number:',
-                  [
-                    {
-                      text: 'Cancel',
-                      style: 'cancel',
-                    },
-                    {
-                      text: 'Check',
-                      onPress: (text) => {
-                        if (text && text.trim()) {
-                          setRegistration(prev => ({ ...prev, number: text.trim().toUpperCase() }));
-                          verifyExistingPolicy();
-                        }
-                      },
-                    },
-                  ],
-                  'plain-text',
-                  registration.number,
-                  'default'
-                );
+                setCheckPolicyInput((registration.number || '').toUpperCase());
+                setShowCheckPolicyModal(true);
               }}
               disabled={verificationStatus === 'checking'}
             >
@@ -2325,6 +2308,56 @@ export default function MotorInsuranceScreen(props) {
             {verificationStatus === 'not_found' && (
               <Text style={styles.verificationNotFound}>❌ No active policy found</Text>
             )}
+            
+            {/* Registration input modal (Android/iOS compatible) */}
+            <Modal
+              visible={showCheckPolicyModal}
+              transparent
+              animationType="slide"
+              onRequestClose={() => setShowCheckPolicyModal(false)}
+            >
+              <View style={styles.modalOverlay}>
+                <View style={styles.modalCard}>
+                  <Text style={styles.modalTitle}>Check Vehicle For Existing Cover</Text>
+                  <Text style={styles.modalSubtitle}>Enter vehicle registration number</Text>
+                  <View style={styles.modalInputRow}>
+                    <Ionicons name="car-sport" size={20} color="#D5222B" />
+                    <TextInput
+                      style={styles.modalTextInput}
+                      value={checkPolicyInput}
+                      onChangeText={(t) => setCheckPolicyInput(t.toUpperCase())}
+                      autoCapitalize="characters"
+                      placeholder="e.g., KDA 123A"
+                    />
+                  </View>
+                  <View style={styles.modalActions}>
+                    <TouchableOpacity
+                      style={[styles.modalButton, styles.modalCancel]}
+                      onPress={() => setShowCheckPolicyModal(false)}
+                    >
+                      <Text style={styles.modalCancelText}>Cancel</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[styles.modalButton, styles.modalConfirm, (!checkPolicyInput || verificationStatus === 'checking') && { opacity: 0.6 }]}
+                      disabled={!checkPolicyInput || verificationStatus === 'checking'}
+                      onPress={async () => {
+                        const trimmed = (checkPolicyInput || '').trim().toUpperCase();
+                        if (!trimmed) return;
+                        setRegistration(prev => ({ ...prev, number: trimmed }));
+                        setShowCheckPolicyModal(false);
+                        await verifyExistingPolicy();
+                      }}
+                    >
+                      {verificationStatus === 'checking' ? (
+                        <ActivityIndicator size="small" color="#FFFFFF" />
+                      ) : (
+                        <Text style={styles.modalConfirmText}>Check</Text>
+                      )}
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </View>
+            </Modal>
           </View>
         </View>
       );
@@ -3391,7 +3424,7 @@ const styles = StyleSheet.create({
     borderTopRightRadius: Spacing.borderRadius.xl,
     paddingTop: Spacing.sm,
     paddingBottom: Platform.OS === 'ios' ? Spacing.xl : Spacing.lg,
-    maxHeight: '85%',
+    maxHeight: '70%', // Reduced from 85% to avoid covering navigation buttons
     ...Platform.select({
       ios: {
         shadowColor: Colors.shadow,
@@ -3577,6 +3610,74 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     textAlign: 'center',
     letterSpacing: 0.3,
+  },
+  
+  // Modal styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  modalCard: {
+    width: '100%',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 16,
+    gap: 10,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#111827',
+  },
+  modalSubtitle: {
+    fontSize: 13,
+    color: '#6B7280',
+    marginTop: -2,
+  },
+  modalInputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    backgroundColor: '#FFFFFF',
+    marginTop: 8,
+  },
+  modalTextInput: {
+    flex: 1,
+    fontSize: 16,
+    color: '#111827',
+  },
+  modalActions: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    gap: 12,
+    marginTop: 8,
+  },
+  modalButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 8,
+  },
+  modalCancel: {
+    backgroundColor: '#F3F4F6',
+  },
+  modalCancelText: {
+    color: '#111827',
+    fontWeight: '600',
+  },
+  modalConfirm: {
+    backgroundColor: '#D5222B',
+  },
+  modalConfirmText: {
+    color: '#FFFFFF',
+    fontWeight: '700',
   },
   
   // Category grid styles (matching HomePage category cards)

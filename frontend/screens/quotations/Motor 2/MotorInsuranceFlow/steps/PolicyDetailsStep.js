@@ -3,7 +3,7 @@ import { View, StyleSheet, KeyboardAvoidingView, Platform, TouchableWithoutFeedb
 import DynamicVehicleForm from '../VehicleDetails/DynamicVehicleForm';
 import { useMotorInsurance } from '@contexts/MotorInsuranceContext';
 
-export default function VehicleDetailsStep() {
+export default function PolicyDetailsStep() {
   const { state, actions } = useMotorInsurance();
   
   // Use ref to hold latest callback without causing re-renders

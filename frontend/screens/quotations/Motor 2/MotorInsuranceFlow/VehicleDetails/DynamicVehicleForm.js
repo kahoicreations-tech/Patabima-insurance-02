@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import motorPricingService from '../../../../../services/MotorInsurancePricingService';
 import { VEHICLE_MAKES, getModelsForMake } from '../../../../../constants/vehicleCatalog';
+import djangoAPI from '../../../../../services/DjangoAPIService';
 
 // Memoized TextInput component to prevent re-creation and focus loss
 const MemoizedTextInput = memo(({ 
@@ -1635,7 +1636,6 @@ const styles = StyleSheet.create({
     color: '#856404',
     textAlign: 'center',
   },
-
 });
 
 // Memoize to prevent re-renders when parent updates

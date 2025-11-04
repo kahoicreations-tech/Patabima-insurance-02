@@ -28,13 +28,18 @@ export default function SignupScreen() {
     message: '' 
   });
 
-  // Normalize phone number - accepts both 9 and 10 digits (with leading 0)
+  // Normalize phone number - accepts both 9 and 10 digits, returns 10 with leading 0
   const normalizePhoneNumber = (phone) => {
     const cleanPhone = phone.replace(/\D/g, ''); // Remove non-digits
     
-    // If starts with 0 and is 10 digits, strip the 0
-    if (cleanPhone.startsWith('0') && cleanPhone.length === 10) {
-      return cleanPhone.slice(1); // Return 9 digits
+    // If 9 digits, add leading 0
+    if (cleanPhone.length === 9 && !cleanPhone.startsWith('0')) {
+      return '0' + cleanPhone; // Return 10 digits with 0
+    }
+    
+    // If 10 digits with leading 0, return as-is
+    if (cleanPhone.length === 10 && cleanPhone.startsWith('0')) {
+      return cleanPhone;
     }
     
     return cleanPhone;
@@ -59,30 +64,30 @@ export default function SignupScreen() {
       setPhoneValidation({ 
         isValidating: false, 
         isValid: false, 
-        message: 'Enter 9 digits (712345678) or 10 digits (0712345678)' 
+        message: 'Enter Kenyan phone number (0712345678)' 
       });
       return;
     }
     
-    if (normalizedPhone.length !== 9) {
+    if (normalizedPhone.length !== 10 || !normalizedPhone.startsWith('0')) {
       setPhoneValidation({ 
         isValidating: false, 
         isValid: false, 
-        message: 'Phone number must be 9 digits without leading 0' 
+        message: 'Phone number must be 10 digits with leading 0' 
       });
       return;
     }
     
-    if (!/^\d{9}$/.test(normalizedPhone)) {
+    if (!/^0\d{9}$/.test(normalizedPhone)) {
       setPhoneValidation({ 
         isValidating: false, 
         isValid: false, 
-        message: 'Phone number must contain only digits' 
+        message: 'Invalid phone number format' 
       });
       return;
     }
     
-    // Check availability with backend (use normalized 9-digit format)
+    // Check availability with backend (use normalized 10-digit format)
     try {
       setPhoneValidation({ isValidating: true, isValid: null, message: 'Checking availability...' });
       
@@ -122,17 +127,17 @@ export default function SignupScreen() {
       return;
     }
 
-    // Normalize and validate phone number (accepts 9 or 10 digits)
+    // Normalize and validate phone number (accepts 9 or 10 digits, returns 10 with 0)
     const normalizedPhone = normalizePhoneNumber(phoneNumber);
     
-    if (normalizedPhone.length !== 9) {
-      Alert.alert('Error', 'Please enter a valid phone number (e.g., 712345678 or 0712345678)');
+    if (normalizedPhone.length !== 10 || !normalizedPhone.startsWith('0')) {
+      Alert.alert('Error', 'Please enter a valid Kenyan phone number (0712345678)');
       return;
     }
 
-    // Ensure phone number contains only digits
-    if (!/^\d{9}$/.test(normalizedPhone)) {
-      Alert.alert('Error', 'Phone number must contain only digits');
+    // Ensure phone number matches expected format
+    if (!/^0\d{9}$/.test(normalizedPhone)) {
+      Alert.alert('Error', 'Phone number must be 10 digits starting with 0');
       return;
     }
 
@@ -149,7 +154,7 @@ export default function SignupScreen() {
     setIsLoading(true);
     try {
       const signupData = {
-        phonenumber: normalizedPhone, // Use normalized 9-digit phone
+        phonenumber: normalizedPhone, // Use normalized 10-digit phone with 0
         password: password,
         confirm_password: confirmPassword,
         user_role: selectedRole,

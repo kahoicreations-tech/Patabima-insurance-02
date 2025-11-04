@@ -55,7 +55,8 @@ if ($LASTEXITCODE -ne 0) {
 
 if ($LASTEXITCODE -eq 0) {
     Write-Host "   ✓ Dependencies installed successfully" -ForegroundColor Green
-} else {
+}
+else {
     Write-Host ""
     Write-Host "❌ Installation failed. Please check errors above." -ForegroundColor Red
     exit 1
@@ -69,7 +70,8 @@ npx expo install --fix
 
 if ($LASTEXITCODE -eq 0) {
     Write-Host "   ✓ Expo dependencies verified" -ForegroundColor Green
-} else {
+}
+else {
     Write-Host "   ⚠️  expo install --fix had warnings (this is usually OK)" -ForegroundColor Yellow
 }
 
@@ -80,7 +82,8 @@ Write-Host "👁️  Step 5: Clearing watchman cache..." -ForegroundColor Yellow
 if (Get-Command watchman -ErrorAction SilentlyContinue) {
     watchman watch-del-all
     Write-Host "   ✓ Watchman cache cleared" -ForegroundColor Green
-} else {
+}
+else {
     Write-Host "   ⓘ Watchman not installed (skip)" -ForegroundColor Gray
 }
 

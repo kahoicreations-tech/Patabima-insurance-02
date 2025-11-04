@@ -108,6 +108,15 @@ const API_CONFIG = {
       ADMIN_LIST: '/api/v1/public_app/admin/manual_quotes',
       ADMIN_DETAIL: (reference) => `/api/v1/public_app/admin/manual_quotes/${reference}`,
       ADMIN_UPDATE: (reference) => `/api/v1/public_app/admin/manual_quotes/${reference}`
+    },
+    // DMVIC Integration endpoints
+    DMVIC: {
+      SEARCH_VEHICLE: '/api/insurance/dmvic/search-vehicle/',
+      VALIDATE_DOUBLE_INSURANCE: '/api/insurance/dmvic/validate-double-insurance/',
+      PREVIEW_CERTIFICATE: '/api/insurance/dmvic/preview-certificate/',
+      ISSUE_CERTIFICATE: '/api/insurance/dmvic/issue-certificate/',
+      CONFIRM_ISSUANCE: '/api/insurance/dmvic/confirm-issuance/',
+      GET_CERTIFICATE_PDF: '/api/insurance/dmvic/get-certificate-pdf/',
     }
   }
 };
