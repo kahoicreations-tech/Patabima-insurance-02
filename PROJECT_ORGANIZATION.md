@@ -1,6 +1,7 @@
 # PataBima Project Organization Plan
 
 ## Current Structure Issues
+
 - 30+ temporary Python scripts in root directory
 - Multiple diagnostic and fix scripts scattered
 - Deployment artifacts (zips, tarballs) cluttering root
@@ -78,7 +79,9 @@ PATABIMA01/
 ## File Reorganization Plan
 
 ### 1. Move Test & Diagnostic Scripts
+
 **From Root → scripts/diagnostics/**
+
 - check_admin_display.py
 - check_extendible_policies.py
 - check_extendible_policy.py
@@ -112,6 +115,7 @@ PATABIMA01/
 - test_underwriter_http.py
 
 **From Root → scripts/fixes/**
+
 - calculate_extendible_levies.py
 - find_20k_config.py
 - fix_madison_extendible.py
@@ -121,29 +125,36 @@ PATABIMA01/
 - fix_policy_927901_amounts.py
 
 **From Root → scripts/tests/**
+
 - test_comprehensive_quote_save.js
 - test-extendible-backend.js
 - TEST_DUPLICATE_FETCH_FIX.js
 
 ### 2. Organize Documentation
+
 **From Root → docs/troubleshooting/**
+
 - BLOCKING_ISSUES_FIXED.md
 - DUPLICATE_FETCH_FIX.md
 - KEYBOARD_DISMISSAL_FIX.md
 - UNDERWRITER_FETCHING_DIAGNOSTIC.md
 
 **From Root → docs/features/**
+
 - MOTOR2_POLICY_CREATION_FLOW_KENYA.md
 - MOTOR2_SUBCATEGORY_PRICING_REPORT.md
 
 **From Root → docs/deployment/**
+
 - SDK53_DOWNGRADE_GUIDE.md
 - QUICK_START.md
 - EC2_ENDPOINT_HEALTH_REPORT.md
 - COMPREHENSIVE_FLOW_TEST_RESULTS.md
 
 ### 3. Archive Old Deployment Files
+
 **From Root → deployment/archives/**
+
 - deploy-minimal.zip
 - deploy.tar.gz
 - insurance-app-deploy-20251021-161411.zip
@@ -151,7 +162,9 @@ PATABIMA01/
 - insurance-app-update.tar.gz
 
 ### 4. Clean Up Root Directory
+
 **Keep in Root:**
+
 - README.md (updated)
 - package.json
 - package-lock.json
@@ -161,12 +174,14 @@ PATABIMA01/
 - Dockerfile
 
 **Remove from Root:**
+
 - out/ (build artifacts)
 - node_modules/ (if exists at root - should only be in frontend/)
 
 ## Implementation Steps
 
 ### Phase 1: Create Directory Structure
+
 ```powershell
 # Create main directories
 New-Item -ItemType Directory -Force -Path "docs/api"
@@ -191,20 +206,24 @@ New-Item -ItemType Directory -Force -Path "tests/e2e"
 ```
 
 ### Phase 2: Move Files
+
 Run the provided PowerShell script to move files to their new locations
 
 ### Phase 3: Update References
+
 - Update import paths in code
 - Update documentation links
 - Update .gitignore if needed
 - Update CI/CD pipelines
 
 ### Phase 4: Clean Up
+
 - Remove empty directories
 - Archive outdated files
 - Update README with new structure
 
 ## Benefits
+
 1. **Better Organization**: Files grouped by purpose
 2. **Easier Navigation**: Clear folder structure
 3. **Cleaner Root**: Only essential files in root
@@ -213,4 +232,5 @@ Run the provided PowerShell script to move files to their new locations
 6. **Scalability**: Easy to add new features/modules
 
 ## Migration Script
+
 See `scripts/deployment/reorganize_project.ps1` for automated migration

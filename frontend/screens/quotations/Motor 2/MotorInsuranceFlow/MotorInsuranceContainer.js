@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useCallback, useEffect } from 'react';
-import { View, StyleSheet, Text, TouchableOpacity, SafeAreaView, StatusBar, ActivityIndicator, Modal, Pressable } from 'react-native';
+import { View, StyleSheet, Text, TouchableOpacity, SafeAreaView, StatusBar, ActivityIndicator, Modal, Pressable, Alert } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useMotorInsurance } from '@contexts/MotorInsuranceContext';
 import { Ionicons } from '@expo/vector-icons';
@@ -39,10 +39,10 @@ export default function MotorInsuranceContainer({ route, navigation }) {
   // Local step state (we keep it local to the container for now)
   const [currentStep, setCurrentStep] = useState(0);
 
-  // DMVIC Verification State
-  const [verificationStatus, setVerificationStatus] = useState(null); // null | 'checking' | 'found' | 'not_found'
-  const [existingCoverData, setExistingCoverData] = useState(null); // DMVIC response data
-  const [showVerificationScreen, setShowVerificationScreen] = useState(false); // Controls verification screen display
+  // Phase 1.3: Removed local DMVIC state - now managed in MotorInsuranceContext
+  // - verificationStatus (removed - inline indicators in Step 3 instead)
+  // - existingCoverData (removed - now state.existingCoverData)
+  // - showVerificationScreen (removed - now state.showVerificationScreen)
 
   // Mount effect placeholder (original cache clearing runs elsewhere in file)
   useEffect(() => {}, []);
@@ -173,174 +173,80 @@ export default function MotorInsuranceContainer({ route, navigation }) {
   const goNext = useCallback(async () => {
     const currentStepName = steps[currentStep];
 
-    // Simply proceed to next step - DMVIC check will happen when entering KYC step
+    // Phase 1.3: CRITICAL Navigation guard - block if existing cover detected
+    // Check BOTH showVerificationScreen flag AND minCoverStartDate presence
+    // minCoverStartDate is only set when existing cover is found
+    if (state.showVerificationScreen || state.minCoverStartDate) {
+      console.error('[MotorContainer] 🚫 Navigation blocked - existing cover must be resolved first');
+      console.error('[MotorContainer] showVerificationScreen:', state.showVerificationScreen);
+      console.error('[MotorContainer] minCoverStartDate:', state.minCoverStartDate);
+      console.error('[MotorContainer] existingCoverData:', state.existingCoverData);
+      
+      // Force show the verification screen
+      if (!state.showVerificationScreen) {
+        console.log('[MotorContainer] Forcing verification screen to show');
+        actions.setShowVerificationScreen(true);
+      }
+      
+      Alert.alert(
+        '⚠️ Existing Cover Detected',
+        'This vehicle has existing cover that expires on ' + 
+        (state.existingCoverData?.expiryDate ? new Date(state.minCoverStartDate).toLocaleDateString() : 'a future date') + 
+        '. You must either:\n\n1. Adjust the cover start date to after the existing cover expires, OR\n2. Submit a debit note to cancel the existing cover\n\nPlease resolve this before continuing.',
+        [{ text: 'OK' }]
+      );
+      return;
+    }
+
+    // Additional check for Policy Details step specifically
+    if (currentStepName === 'Policy Details') {
+      const registrationNumber = 
+        state.vehicleDetails?.registrationNumber || 
+        state.vehicleDetails?.registration_number || 
+        state.vehicleDetails?.Registration_Number;
+      
+      const coverStartDate = 
+        state.vehicleDetails?.cover_start_date || 
+        state.vehicleDetails?.coverStartDate;
+      
+      // If there's a minCoverStartDate constraint, ensure coverStartDate is after it
+      if (state.minCoverStartDate && coverStartDate) {
+        const minDate = new Date(state.minCoverStartDate);
+        const selectedDate = new Date(coverStartDate);
+        
+        if (selectedDate < minDate) {
+          console.error('[MotorContainer] 🚫 Selected cover start date is before minimum allowed date');
+          Alert.alert(
+            '❌ Invalid Cover Start Date',
+            `The selected cover start date (${selectedDate.toLocaleDateString()}) is before the minimum allowed date (${minDate.toLocaleDateString()}).\n\nExisting cover expires on ${new Date(minDate.getTime() - 24*60*60*1000).toLocaleDateString()}. Please select a start date on or after ${minDate.toLocaleDateString()}.`,
+            [{ text: 'OK' }]
+          );
+          return;
+        }
+      }
+    }
+
+    console.log('[MotorContainer] ✅ Navigation allowed to next step');
+    // Proceed to next step
     setCurrentStep((s) => Math.min(s + 1, steps.length - 1));
-  }, [steps, currentStep]);
+  }, [steps, currentStep, state.showVerificationScreen, state.existingCoverData, state.minCoverStartDate, state.vehicleDetails, actions]);
 
   const goBack = useCallback(() => {
-    // If on verification screen, go back to Policy Details
-    if (showVerificationScreen) {
-      setShowVerificationScreen(false);
-      setVerificationStatus(null);
-      setExistingCoverData(null);
+    // Phase 1.3: If context shows verification screen, use context state
+    if (state.showVerificationScreen) {
+      actions.setShowVerificationScreen(false);
       return;
     }
     
     setCurrentStep((s) => Math.max(s - 1, 0));
-  }, [showVerificationScreen]);
+  }, [state.showVerificationScreen, actions]);
 
-  // DMVIC Check: Trigger when entering KYC step
-  useEffect(() => {
-    const currentStepName = steps[currentStep];
-    
-    console.log('🔍 [DMVIC] Step changed:', { currentStepName, currentStep, verificationStatus });
-    
-    // Reset verification status when leaving KYC step
-    if (currentStepName !== 'KYC' && verificationStatus !== null) {
-      console.log('🔄 [DMVIC] Leaving KYC step - resetting verification status');
-      setVerificationStatus(null);
-      setExistingCoverData(null);
-      setShowVerificationScreen(false);
-      return;
-    }
-    
-    if (currentStepName === 'KYC' && verificationStatus === null) {
-      console.log('✅ [DMVIC] Triggering check on KYC step entry');
-      const performDMVICCheck = async () => {
-        try {
-          setVerificationStatus('checking');
-
-          // Extract vehicle data from state
-          const vehicleData = state.vehicleDetails || state.pricingInputs || {};
-          const registrationNumber = vehicleData.registrationNumber || vehicleData.registration;
-
-          if (registrationNumber && registrationNumber.trim()) {
-            // Call DMVIC search-vehicle endpoint (same as "Check Vehicle" button)
-            const response = await djangoAPI.makeRequest('/api/insurance/dmvic/search-vehicle/', {
-              method: 'POST',
-              body: JSON.stringify({
-                registration_number: registrationNumber.trim().toUpperCase()
-              })
-            });
-            
-            console.log('✅ [DMVIC UAT] Response:', JSON.stringify(response, null, 2));
-
-            // Check if existing cover found (based on DMVIC response structure)
-            if (response && response.success && response.vehicle) {
-              const vehicle = response.vehicle;
-              const hasActiveCover = vehicle.has_active_cover || false;
-              const currentPolicy = vehicle.current_policy;
-
-              if (hasActiveCover && currentPolicy) {
-                // Vehicle has active cover - show verification screen
-                console.log('⚠️ [DMVIC] Existing cover found:', currentPolicy);
-                
-                // Transform DMVIC response to expected format
-                const policyData = {
-                  exists: true,
-                  policy: {
-                    policy_number: currentPolicy.policy_number || 'N/A',
-                    vehicle_registration: registrationNumber.toUpperCase(),
-                    insurer: currentPolicy.member_company || 'Unknown Insurer',
-                    cover_type: currentPolicy.class_of_insurance || 'Unknown',
-                    start_date: currentPolicy.cover_start_date || currentPolicy.cover_from || null,
-                    expiry_date: currentPolicy.cover_end_date || currentPolicy.cover_to || null,
-                    certificate_number: currentPolicy.certificate_type || currentPolicy.policy_number || 'N/A',
-                    premium: currentPolicy.premium || null
-                  }
-                };
-
-                setVerificationStatus('found');
-                setExistingCoverData(policyData);
-                
-                console.log('📊 [DMVIC] Policy data set:', JSON.stringify(policyData, null, 2));
-                
-                // Auto-open drawer after short delay
-                setTimeout(() => {
-                  setShowVerificationScreen(true);
-                  console.log('📋 [DMVIC] Auto-opening verification drawer on KYC step');
-                  console.log('📋 [DMVIC] existingCoverData:', JSON.stringify(policyData, null, 2));
-                }, 300);
-              } else {
-                // No active cover or policy found
-                console.log('✓ [DMVIC] No active cover - proceeding');
-                setVerificationStatus('not_found');
-                setExistingCoverData(null);
-              }
-            } else {
-              // DMVIC returned no vehicle or unsuccessful response
-              console.log('✓ [DMVIC] No existing cover - proceeding');
-              setVerificationStatus('not_found');
-              setExistingCoverData(null);
-            }
-          } else {
-            console.log('ℹ️ [DMVIC] No registration number - skipping check');
-            setVerificationStatus('not_found');
-            setExistingCoverData(null);
-          }
-        } catch (error) {
-          // Silently handle errors - don't block user flow
-          console.warn('⚠️ [DMVIC] Check failed (continuing anyway):', error.message);
-          setVerificationStatus('not_found');
-          setExistingCoverData(null);
-        }
-      };
-
-      performDMVICCheck();
-    }
-  }, [currentStep, steps, verificationStatus, state.vehicleDetails, state.pricingInputs]);
-
-  // Auto-open verification drawer after transitioning to KYC step (REMOVED - now handled in DMVIC check)
-  // useEffect(() => {
-  //   const nextStepName = steps[currentStep];
-  //   const previousStepName = steps[currentStep - 1];
-  //   
-  //   if (previousStepName === 'Policy Details' && 
-  //       verificationStatus === 'found' && 
-  //       existingCoverData && 
-  //       !showVerificationScreen) {
-  //     const timer = setTimeout(() => {
-  //       setShowVerificationScreen(true);
-  //       console.log('📋 [DMVIC] Auto-opening verification drawer on step:', nextStepName);
-  //     }, 300);
-  //     
-  //     return () => clearTimeout(timer);
-  //   }
-  // }, [currentStep, steps, verificationStatus, existingCoverData, showVerificationScreen]);
-
-  // Handler for "Adjust Start Date" button on verification screen
+  // Phase 1.3: Handler for "Adjust Start Date" - now uses context state
   const handleAdjustStartDate = useCallback(() => {
     console.log('📅 [DMVIC] User chose to adjust start date');
     
     // Close verification screen
-    setShowVerificationScreen(false);
-    
-    // Calculate minimum date (existing cover expiry + 1 day)
-    if (existingCoverData?.policy?.expiry_date) {
-      try {
-        const expiryDateStr = existingCoverData.policy.expiry_date;
-        
-        // Parse DD/MM/YYYY format
-        let expiryDate;
-        if (expiryDateStr.includes('/')) {
-          const [day, month, year] = expiryDateStr.split('/');
-          expiryDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
-        } else {
-          expiryDate = new Date(expiryDateStr);
-        }
-        
-        const minDate = new Date(expiryDate);
-        minDate.setDate(minDate.getDate() + 1);
-        
-        // Store min date in state for date picker validation
-        console.log('ℹ️ [DMVIC] Existing cover expiry:', expiryDateStr);
-        console.log('ℹ️ [DMVIC] Minimum start date:', minDate.toISOString().split('T')[0]);
-        
-        // TODO: Pass minDate to PolicyDetailsStep via context or state
-      } catch (error) {
-        console.error('❌ [DMVIC] Error parsing date:', error);
-      }
-    }
+    actions.setShowVerificationScreen(false);
     
     // Navigate back to Policy Details step
     const policyDetailsIndex = steps.indexOf('Policy Details');
@@ -348,27 +254,23 @@ export default function MotorInsuranceContainer({ route, navigation }) {
       setCurrentStep(policyDetailsIndex);
     }
     
-    // Clear verification state
-    setVerificationStatus(null);
-    setExistingCoverData(null);
-  }, [existingCoverData, steps]);
+    // Note: minDate calculation now handled in PolicyDetailsStep.processDMVICResult
+  }, [actions, steps]);
 
-  // Handler for "Submit Debit Note" button on verification screen
+  // Phase 1.3: Handler for "Submit Debit Note" - now uses context state
   const handleSubmitDebitNote = useCallback(() => {
     console.log('📝 [DMVIC] User chose to submit debit note');
     
     // Close verification screen
-    setShowVerificationScreen(false);
-    
-    // Clear verification state
-    setVerificationStatus(null);
-    setExistingCoverData(null);
+    actions.setShowVerificationScreen(false);
     
     // TODO: Navigate to debit note submission screen when built
     // For now, show alert
-    if (typeof alert !== 'undefined') {
-      alert('Debit Note Submission', 'This feature will allow you to request cancellation of the existing policy. Coming soon!');
-    }
+    Alert.alert(
+      'Debit Note Submission',
+      'This feature will allow you to request cancellation of the existing policy. Coming soon!',
+      [{ text: 'OK' }]
+    );
     
     // Could also proceed to next step or return to vehicle details
     // For now, let's stay on current step
@@ -480,70 +382,37 @@ export default function MotorInsuranceContainer({ route, navigation }) {
         </View>
       </View>
 
-      {/* Verification Drawer Modal - Shows on top of KYC step */}
+      {/* Phase 1.3: Simplified Modal - No loading drawer, only VehicleVerificationScreen */}
+      {/* Modal now only renders when existing cover found (inline loader in Step 3 instead) */}
       <Modal
-        visible={showVerificationScreen || verificationStatus === 'checking'}
+        visible={state.showVerificationScreen}
         animationType="slide"
         transparent={true}
         onRequestClose={() => {
-          if (verificationStatus !== 'checking') {
-            setShowVerificationScreen(false);
-            setVerificationStatus(null);
-            setExistingCoverData(null);
-          }
+          actions.setShowVerificationScreen(false);
         }}
       >
         <Pressable
           style={styles.backdrop}
           onPress={() => {
-            if (verificationStatus !== 'checking') {
-              setShowVerificationScreen(false);
-              setVerificationStatus(null);
-              setExistingCoverData(null);
-            }
+            actions.setShowVerificationScreen(false);
           }}
         >
           {/* Bottom sheet - stop propagation to prevent backdrop dismiss */}
           <Pressable onPress={(e) => e.stopPropagation()}>
-            <View style={[
-              styles.drawerContainer,
-              verificationStatus === 'checking' && styles.drawerContainerSmall
-            ]}>
-              {verificationStatus === 'checking' ? (
-                <>
-                  <View style={styles.drawerHandle} />
-                  <View style={styles.loadingContent}>
-                    <ActivityIndicator size="large" color="#D5222B" />
-                    <Text style={styles.loadingTitle}>Checking for existing cover...</Text>
-                    <Text style={styles.loadingSubtitle}>Please wait</Text>
-                  </View>
-                </>
-              ) : showVerificationScreen && existingCoverData ? (
-                (() => {
-                  console.log('🎨 [Modal] Rendering VehicleVerificationScreen with:', {
-                    showVerificationScreen,
-                    existingCoverData,
-                    verificationStatus
-                  });
-                  return (
-                    <VehicleVerificationScreen
-                      existingCoverData={existingCoverData}
-                      onAdjustStartDate={handleAdjustStartDate}
-                      onSubmitDebitNote={handleSubmitDebitNote}
-                    />
-                  );
-                })()
+            <View style={styles.drawerContainer}>
+              {state.existingCoverData ? (
+                <VehicleVerificationScreen
+                  existingCoverData={state.existingCoverData}
+                  onAdjustStartDate={handleAdjustStartDate}
+                  onSubmitDebitNote={handleSubmitDebitNote}
+                />
               ) : (
-                (() => {
-                  console.log('❌ [Modal] Not rendering VehicleVerificationScreen:', {
-                    showVerificationScreen,
-                    existingCoverData,
-                    verificationStatus
-                  });
-                  return <View style={{padding: 20, backgroundColor: '#FFFFFF'}}>
-                    <Text style={{color: '#000000', fontSize: 16}}>Debug: No content</Text>
-                  </View>;
-                })()
+                <View style={{padding: 20, backgroundColor: '#FFFFFF'}}>
+                  <Text style={{color: '#666', fontSize: 14, textAlign: 'center'}}>
+                    No existing cover data available
+                  </Text>
+                </View>
               )}
             </View>
           </Pressable>

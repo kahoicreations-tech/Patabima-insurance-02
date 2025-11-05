@@ -9,6 +9,7 @@
 ## Current Project Configuration
 
 ### Dependencies (SDK 53)
+
 ```json
 "expo": "~53.0.23"
 "react": "19.0.0"
@@ -19,6 +20,7 @@
 ```
 
 ### Key Libraries
+
 - **@react-native-async-storage/async-storage**: 2.1.2
 - **@react-native-community/netinfo**: 11.4.1
 - **@react-native-picker/picker**: 2.11.1
@@ -31,28 +33,33 @@
 ## SDK 54 Key Changes & Features
 
 ### React Native Version
+
 - **SDK 53**: React Native 0.79.6
 - **SDK 54**: React Native 0.80.x (Expected - New Architecture Support)
 
 ### Major Improvements in SDK 54
 
 1. **New Architecture (Fabric + TurboModules)**
+
    - Full support for React Native's New Architecture
    - Improved performance and rendering
    - Better TypeScript support
 
 2. **Expo Router Enhancements**
+
    - Better file-based routing
    - Improved navigation performance
    - Enhanced deep linking
 
 3. **Module Updates**
+
    - Updated Expo modules with better stability
    - Improved expo-notifications
    - Better expo-image-picker performance
    - Enhanced expo-camera capabilities
 
 4. **Build Improvements**
+
    - Faster EAS Build times
    - Better caching mechanisms
    - Improved Android build performance
@@ -71,18 +78,20 @@
    - All current features working perfectly
    - React Native 0.79.6 is stable and battle-tested
    - No major bugs or blocking issues
-   
 2. **Custom Patches Working**
+
    - FlatList.js patches applied successfully
    - ScrollView.js patches stable
    - No conflicts with current React Native version
 
 3. **Navigation Stack**
+
    - React Navigation v7 fully compatible
    - Bottom tabs working perfectly
    - Native stack navigation stable
 
 4. **Payment Integrations**
+
    - M-PESA integration working
    - DPO Pay integration stable
    - No breaking changes expected
@@ -95,21 +104,25 @@
 ### ⚠️ Potential Issues with SDK 54 Upgrade
 
 1. **React Native 0.80.x Migration**
+
    - **CRITICAL**: React Native patches need revalidation
    - Custom FlatList/ScrollView patches may need updates
    - New Architecture might affect memoization patterns
 
 2. **Breaking Changes Expected**
+
    - Some Expo modules may have breaking API changes
    - Navigation library compatibility needs verification
    - Third-party packages (react-native-paper, react-native-modal) need testing
 
 3. **Custom Metro Config**
+
    - Current metro.config.js already flagged by expo-doctor
    - SDK 54 might require metro config updates
    - Risk of build failures if not updated properly
 
 4. **Dependency Conflicts**
+
    - React 19.0.0 compatibility with new RN 0.80.x
    - Peer dependency warnings possible
    - Some packages might not be updated yet
@@ -127,22 +140,26 @@
 ### Why SDK 53 is the Best Choice NOW
 
 #### ✅ Stability (Critical for Production)
+
 - **Zero breaking issues** - Everything works perfectly
 - **Battle-tested** - React Native 0.79.6 is stable and mature
 - **No urgent security vulnerabilities** - SDK 53 receives security updates
 - **Production-ready** - Already deployed and proven
 
 #### ✅ Custom Patches are Validated
+
 - FlatList.js and ScrollView.js patches working perfectly
 - No need to revalidate patches for new React Native version
 - Risk-free environment for current customizations
 
 #### ✅ Time to Market
+
 - **No migration time needed** - Focus on features, not upgrades
 - **No regression testing** - Avoid 2-3 weeks of testing
 - **No risk of breaking changes** - Keep moving forward with business logic
 
 #### ✅ Package Ecosystem Stability
+
 - All current packages fully compatible
 - No dependency conflicts
 - Third-party libraries tested and working
@@ -162,18 +179,22 @@
 ### Future Upgrade Triggers (6-12 months)
 
 1. **Security Update Required**
+
    - If SDK 53 stops receiving security patches
    - Critical vulnerability discovered in RN 0.79.x
 
 2. **New Expo Features Needed**
+
    - Specific SDK 54 feature becomes business-critical
    - Required for app store compliance
 
 3. **Package Dependencies Require It**
+
    - Critical third-party package drops SDK 53 support
    - New payment gateway requires SDK 54
 
 4. **Performance Improvements Proven**
+
    - Real-world benchmarks show significant gains
    - New Architecture benefits proven in production apps
 
@@ -186,19 +207,23 @@
 ## Migration Plan (If/When Needed)
 
 ### Phase 1: Preparation (Week 1-2)
+
 1. Create SDK 54 migration branch
 2. Update package.json dependencies
 3. Run `npx expo install --fix`
 4. Review all deprecation warnings
 
 ### Phase 2: Testing (Week 3-4)
+
 1. **Critical Path Testing**
+
    - Motor insurance flow (all 60+ products)
    - Payment processing (M-PESA, DPO Pay)
    - Quotation generation
    - Policy management
 
 2. **Patch Validation**
+
    - Test FlatList.js patches
    - Test ScrollView.js patches
    - Verify memoization still works
@@ -211,6 +236,7 @@
    - Premium calculation speed
 
 ### Phase 3: Deployment (Week 5-6)
+
 1. Beta testing with select agents
 2. Monitor crash reports
 3. Gradual rollout
@@ -225,18 +251,21 @@
 ## Action Items
 
 ### Immediate (Now)
+
 - [x] ✅ **STAY ON SDK 53** - Confirmed as best choice
 - [ ] Update copilot-instructions.md with SDK version policy
 - [ ] Document upgrade decision for stakeholders
 - [ ] Add SDK version monitoring to CI/CD
 
 ### Short-term (Next 3 months)
+
 - [ ] Monitor SDK 54 adoption in React Native community
 - [ ] Track any critical security issues in SDK 53
 - [ ] Test SDK 54 in isolated environment (no production impact)
 - [ ] Document any new features in SDK 54 that become relevant
 
 ### Long-term (6-12 months)
+
 - [ ] Reassess SDK 54 when React Native 0.80.x is mature
 - [ ] Plan upgrade during low-traffic period
 - [ ] Allocate dedicated testing resources
@@ -247,12 +276,14 @@
 ## Metro Config Issue Resolution
 
 ### Current Issue (Flagged by expo-doctor)
+
 ```
 ✖ Check for issues with Metro config
 - "resolver.sourceExts" and "resolver.assetExts" miss values from Expo's default extensions
 ```
 
 ### Recommended Fix
+
 This warning is **non-critical** but should be addressed:
 
 ```javascript
@@ -279,6 +310,7 @@ config.resolver = {
 ### ✅ STAY ON EXPO SDK 53
 
 **Rationale**:
+
 1. Production stability is paramount
 2. No compelling features in SDK 54 worth migration risk
 3. Custom patches working perfectly

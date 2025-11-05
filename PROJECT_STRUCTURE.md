@@ -140,6 +140,7 @@ PATABIMA01/
 ## 📊 File Organization Summary
 
 ### ✅ Organized Files
+
 - **31 diagnostic scripts** → `scripts/diagnostics/`
 - **6 fix scripts** → `scripts/fixes/`
 - **2 test scripts** → `scripts/tests/`
@@ -149,7 +150,9 @@ PATABIMA01/
 - **4 deployment archives** → `deployment/archives/`
 
 ### 📦 Root Directory (Clean)
+
 The root directory now only contains:
+
 - Essential config files (package.json, docker-compose.yml, Dockerfile)
 - Project documentation (README.md, PROJECT_ORGANIZATION.md)
 - Environment template (.env.example)
@@ -159,6 +162,7 @@ The root directory now only contains:
 ## 🔑 Key Technical Decisions
 
 ### Frontend (Expo SDK 53)
+
 - **React Native 0.79.6** (downgraded from 0.81.5 for stability)
 - **React 19.0.0**
 - **patch-package** for memoize-one removal in RN internals
@@ -167,6 +171,7 @@ The root directory now only contains:
 - **MemoizedTextInput** to prevent keyboard dismissal
 
 ### Caching Strategy
+
 - **In-memory Map** + **AsyncStorage** persistence
 - **12-hour TTL** for pricing data
 - **24-hour TTL** for general data
@@ -174,6 +179,7 @@ The root directory now only contains:
 - **Stable cache keys** from pricing-critical fields only
 
 ### Backend
+
 - Django REST Framework
 - PostgreSQL database
 - 60+ motor insurance products across 6 categories
@@ -183,6 +189,7 @@ The root directory now only contains:
 ## 🚀 Quick Commands
 
 ### Frontend
+
 ```powershell
 cd frontend
 npm install                    # Install dependencies
@@ -192,6 +199,7 @@ npm run ios                    # Run on iOS
 ```
 
 ### Backend
+
 ```powershell
 cd insurance-app
 python manage.py runserver     # Start Django server
@@ -200,12 +208,14 @@ python manage.py test          # Run tests
 ```
 
 ### Diagnostic Scripts
+
 ```powershell
 python scripts/diagnostics/check_policy_dates.py
 python scripts/diagnostics/verify_backend_api_data.py
 ```
 
 ### Fix Scripts (⚠️ Use with caution)
+
 ```powershell
 python scripts/fixes/fix_policy_927901.py
 ```
@@ -213,6 +223,7 @@ python scripts/fixes/fix_policy_927901.py
 ## 📝 Maintenance Guidelines
 
 ### Adding New Files
+
 - **Diagnostic scripts** → `scripts/diagnostics/`
 - **Fix scripts** → `scripts/fixes/`
 - **Test scripts** → `scripts/tests/`
@@ -220,11 +231,14 @@ python scripts/fixes/fix_policy_927901.py
 - **Deployment archives** → `deployment/archives/`
 
 ### Cleaning Cache
+
 Frontend cache can be cleared:
+
 - Programmatically: `MotorInsurancePricingService.clearPricingCache()`
 - Manual: Clear AsyncStorage keys prefixed with `PB_CACHE_v1:`
 
 ### Updating Dependencies
+
 ```powershell
 cd frontend
 expo install --fix             # Align all dependencies with SDK
@@ -232,6 +246,7 @@ npm run postinstall            # Apply patches
 ```
 
 ## 🎯 Next Steps
+
 1. Review organized structure
 2. Update any hardcoded paths in scripts
 3. Commit changes: `git add . && git commit -m "Reorganize project structure"`
@@ -239,6 +254,7 @@ npm run postinstall            # Apply patches
 5. Archive old deployment files periodically (>6 months old)
 
 ## 📚 Important Documentation
+
 - **Main README**: `README.md`
 - **Quick Start**: `docs/deployment/QUICK_START.md`
 - **SDK Downgrade**: `docs/deployment/SDK53_DOWNGRADE_GUIDE.md`

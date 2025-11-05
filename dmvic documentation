@@ -1,0 +1,1272 @@
+1 Overview
+1.1 Purpose
+Purpose of this documentation is to share the key operational processes in DMVIC and where all the operational processes are accessible via API. It is very important for each Member company to identify the operational processes for which they will be using APIs. DMVIC API listings with AKI Member company technical personnel such that the potential system integrations with Member Company core systems can be planned and implemented.
+
+1.2 Audience
+Primary audience is as below:
+
+AKI personnel
+Technical committee for DMVIC implementation
+Technical personnel at each of the AKI Member companies
+4.15 Logbook Verify and Submit
+
+Version 1.8.0
+4.15.1Logbook Verify and Submit
+Logbook Verify and Submit
+
+URL: https://uat-api.dmvic.com/api/v5/Integration/ConfirmCertificateIssuance
+
+Method: Post
+
+4.15.1.1 Request Elements
+4.15.1.1.1 Body
+The parameters in the Request Elements are not case sensitive.
+
+#	Parameter	Mandatory
+(Yes / No)	Datatype	Data Format	Validation Message
+1	IssuanceRequestID	Yes	string	AF-AA0009	
+2	IsApproved	Yes	bool		
+2	IsLogBookVerified	Yes	bool		
+3	IsVehicleInspected	Yes	bool		
+4	AdditionalComments	Yes	string		
+5	UserName	Yes	string		Username is Invalid. Please enter the correct username
+Example Body Content:
+
+{
+
+"IssuanceRequestID": "AF-AA0012",
+
+"IsApproved":true,
+
+"IsLogBookVerified":true,
+
+"IsVehicleInspected":true,
+
+"AdditionalComments":"",
+
+"UserName":""
+
+}
+
+4.15.1.1.2 Headers
+#	Parameter name	Mandatory
+(Yes / No)	Datatype	Data Format
+1	Authorization	Yes	string	
+Bearer <<Token received from Login API on Successful login>>
+2	ClientID	Yes	string	
+<<Will be provided in a separate Email>>
+4.15.1.2 Response Elements
+#	Elements	Description	Example
+1	Inputs	Contains the input parameters specified by the query	
+2	Success	Bit value true/false to differentiate if the request is succeeded or not.	true/false
+3	callbackObj	If the request is succeeded, then the Json Object of the following parameters will be returned	
+TransactionNo
+
+actualCNo
+
+Email- CertificatePDF
+
+4	Error		
+ER001 - Input json format is Incorrect
+
+ER002 - Unknown Error
+
+ER003 - Mandatory field is missing
+
+ER004 - Input not valid
+
+ER005 - Double Insurance
+
+ER006 - No sufficient Inventory
+
+ER007 - Data Validation Error
+
+5	APIRequestNumber		O-AA0001
+4.15.1.3 Response JSON (example)
+4.15.1.3.1 Sample Success Response
+{
+
+"Inputs": "{\r\n\"IssuanceRequestID\": \"AF-AA0012\"\r\n}\r\n\r\n ",{
+
+"callbackObj": {
+
+"issueCertificate": {
+
+"TransactionNo": "Q-AP7096",
+
+"actualCNo": "C19240632",
+
+"Email": "chermakannan.k@gmail.com"
+
+}
+
+},
+
+"success": true,
+
+"Error": [],
+
+"APIRequestNumber": "O-IG8297",
+
+"DMVICRefNo": "DMVIC-O-IG8297"
+
+}
+
+4.15.1.3.2 Sample Error Response “ER001 - Input json format is Incorrect”
+{
+
+"IssuanceRequestID": "AF-AA0009",
+
+}
+
+
+DMVIC
+Home
+1.Overview
+2.Technical guidance for APIs supported by DMVIC
+3.Operational Processes and dependencies on apiS
+4.API Specifications
+4.1 DMVIC Login API
+4.2 Search - Member Company
+4.2.1 Vehicle Search - Member Company
+4.3 Data Feed From DMVIC to Member Companies
+4.4 Issue Certificate - Member Company
+4.4.1 For Type A certificates - Member Company
+4.4.2 For Type B certificates - Member Company
+4.4.3 For Type C certificates - Member Company
+4.4.4 For Type D certificates - Member Company
+4.4.5 For Type A Bulk Issuance - Member Company
+4.4.6 For Type B Bulk Issuance - Member Company
+4.4.7 For Type C Bulk Issuance - Member Company
+4.4.8 For Type D Bulk Issuance - Member Company
+4.4.9 Preview Type A certificates - Member Company
+4.4.10 Preview Type B certificates - Member Company
+4.4.11 Preview Type C certificates - Member Company
+4.4.12 Preview Type D certificates - Member Company
+4.4.13 Preview Aviation Certificate - Member Company
+4.4.14 Issuance Aviation Certificate - Member Company
+4.5 Get Certificate PDF
+4.6 Verification of certificates
+4.7 Cancel a Certificate
+4.8 Certificates Inventory - Member Company
+4.8.1 Member company Stock
+4.8.2 Intermediary Stock
+4.9 Validate Certificate - Member Company
+4.9.1 Validate Type A certificates - Member Company
+4.9.2 Validate Type B certificates - Member Company
+4.9.3 Validate Type C certificates - Member Company
+4.9.4 Validate Type D certificates - Member Company
+4.9.5 Validate Aviation certificates - Member Company
+4.10 Bulk Issuance Status
+4.11 Validate Double Insurance
+4.12 Issue Certificate - Intermediary
+4.12.1 For Type A certificates-Intermediary
+4.12.2 For Type B certificates-Intermediary
+4.12.3 For Type C certificates-Intermediary
+4.12.4 For Type D certificates-Intermediary
+4.12.5 For Type A Bulk Issuance-Intermediary
+4.12.6 For Type B Bulk Issuance-Intermediary
+4.12.7 For Type C Bulk Issuance-Intermediary
+4.12.8 For Type D Bulk Issuance-Intermediary
+4.12.9 Preview Type A certificates-Intermediary
+4.12.10 Preview Type B certificates-Intermediary
+4.12.11 Preview Type C certificates-Intermediary
+4.12.12 Preview Type D certificates-Intermediary
+4.13 Validate Certificate-Intermediary
+4.13.1 Validate Type A certificates-Intermediary
+4.13.2 Validate Type B certificates-Intermediary
+4.13.3 Validate Type C certificates-Intermediary
+4.13.4 Validate Type D certificates-Intermediary
+4.14 Certificates Inventory - Intermediary
+4.14.1 Member company Stock-Intermediary
+4.15 Logbook Verify and Submit
+4. API Specifications
+4. API Specifications
+
+Version 1.8.0
+4.1 DMVIC LOGIN API
+
+URL:https://uat-api.dmvic.com/api/V1/Account/Login
+
+Method: Post
+
+Version: 1.8.0
+
+#	Parameter name	Mandatory
+(Yes / No)	Datatype	Data Format	Validation Message
+1	Username	Yes	string	<<Will be provided in a separate Email>>	Username is Invalid. Please enter the correct username
+2	Password	Yes	string	<<Will be provided in a separate Email>>	
+HTTP Post Body
+{
+
+"Username": "xxxxxxx@dmvic.info",
+
+"Password": "*****************"
+
+}
+
+4.1.1 Body
+#	Parameter name	Mandatory
+(Yes / No)	Datatype	Data Format	Validation Message
+1	ClientID	Yes	string	<<Will be provided in a separate Email>>	
+4.1.2 Response Elements
+#	Elements	Description	Example
+1.	Success		
+{
+
+"token": "eyJhbGciOiJSUzI1NiIsImtpZCI6IkI1Qjg1NjFCNDFFMjFBQkQxRjgxQjcyQjNCRUZBRTA5RTc0ODk1RkEiLCJ0eXAiOiJKV1QifQ.eyJyb2xlIjoiSU5TSVNSIiwicHJpbWFyeXNpZCI6IkZBNDc0Nzk2LThDNDgtNDcwQS1CNTE1LTY4QjVGMjExMDAzMyIsInByaW1hcnlncm91cHNpZCI6IjIzIiwibG9naW5oaXN0b3J5IjoiMTU0NCIsImFsbG93ZWRhcGlzIjoiNyw5LDE2LDE4LDE5LDIwLDMwLDMxLDMzLDQzLDQ1LDQ3LDQ4LDUwIiwibmJmIjoxNTUyMTg1MjQ2LCJleHAiOjE1NTI3OTAzNDYsImlhdCI6MTU1MjE4NTU0NiwiaXNzIjoiaHR0cHM6Ly9kZXYtaWRlbnRpdHlwcm92aWRlci5kbXZpYy5jb20vIiwiYXVkIjoiaHR0cHM6Ly9kZXYtaWRlbnRpdHlwcm92aWRlci5kbXZpYy5jb20vIn0.H4aHKQTmsjrraCpDYXwLa-qXkzvDAlkekZLfcKby98o_hGcRY0sYPGq5BQfGlQcUiuquSaFhz8Eiza7fKekufIWkmJSk_IzE1nkFQdUCiqqPqzJZl96I5t4dnB7EoZjJ9gf9vCrq4EaLVzjaGv5qSlVETvPl3W2VFAAzUDYkYpz6fKOIgWwGPDdSWuWs9eSWtVW-iS7NAz1jmeDKH4Y75IzV-UGOcVFec7vw6ne4ioN84OBJWSP01r8A1C2Ifh5SwuAsi_TXOEcfbLE9fFxm_ioQXi99ix-s5Ql3NlTcWxG5B1OKrRANE4wJ5lnmtzcKcLTjwP4cfybnnEYV7LxmaQ",
+
+"loginUserId": "FA474796-8C48-470A-B515-68B5F2110033",
+
+"issueAt": "2019-03-10T02:34:06.715341Z",
+
+"expires": "2019-03-17T02:39:06.715341Z",
+
+"code": 1,
+
+"LoginHistoryId": 1544,
+
+"firstName": "ICEA",
+
+"lastName": "Insurance Issuer",
+
+"loggedinEntityId": 23,
+
+"ApimSubscriptionKey": "366160dc4e8043b1ab927205a0ac32f8",
+
+"IndustryTypeId": 2
+
+}
+
+2.	Error		
+-2 Your password is not set. Please activate your account
+
+-3 Username or password is incorrect
+
+-4 Your account is locked by admin
+
+-5 Your account is blocked
+
+-6 Username doesn't exist. Please enter correct username
+
+-7 Your entity is suspended
+
+-8 Your entity is deactivated
+
+4.1.3 Sample Response
+{
+
+"token": "eyJhbGciOiJSUzI1NiIsImtpZCI6IkI1Qjg1NjFCNDFFMjFBQkQxRjgxQjcyQjNCRUZBRTA5RTc0ODk1RkEiLCJ0eXAiOiJKV1QifQ.eyJyb2xlIjoiSU5TSVNSIiwicHJpbWFyeXNpZCI6IkZBNDc0Nzk2LThDNDgtNDcwQS1CNTE1LTY4QjVGMjExMDAzMyIsInByaW1hcnlncm91cHNpZCI6IjIzIiwibG9naW5oaXN0b3J5IjoiMTU0NCIsImFsbG93ZWRhcGlzIjoiNyw5LDE2LDE4LDE5LDIwLDMwLDMxLDMzLDQzLDQ1LDQ3LDQ4LDUwIiwibmJmIjoxNTUyMTg1MjQ2LCJleHAiOjE1NTI3OTAzNDYsImlhdCI6MTU1MjE4NTU0NiwiaXNzIjoiaHR0cHM6Ly9kZXYtaWRlbnRpdHlwcm92aWRlci5kbXZpYy5jb20vIiwiYXVkIjoiaHR0cHM6Ly9kZXYtaWRlbnRpdHlwcm92aWRlci5kbXZpYy5jb20vIn0.H4aHKQTmsjrraCpDYXwLa-qXkzvDAlkekZLfcKby98o_hGcRY0sYPGq5BQfGlQcUiuquSaFhz8Eiza7fKekufIWkmJSk_IzE1nkFQdUCiqqPqzJZl96I5t4dnB7EoZjJ9gf9vCrq4EaLVzjaGv5qSlVETvPl3W2VFAAzUDYkYpz6fKOIgWwGPDdSWuWs9eSWtVW-iS7NAz1jmeDKH4Y75IzV-UGOcVFec7vw6ne4ioN84OBJWSP01r8A1C2Ifh5SwuAsi_TXOEcfbLE9fFxm_ioQXi99ix-s5Ql3NlTcWxG5B1OKrRANE4wJ5lnmtzcKcLTjwP4cfybnnEYV7LxmaQ",
+
+"loginUserId": "FA474796-8C48-470A-B515-68B5F2110033",
+
+"issueAt": "2019-03-10T02:34:06.715341Z",
+
+"expires": "2019-03-17T02:39:06.715341Z",
+
+"code": 1,
+
+"LoginHistoryId": 1544,
+
+"firstName": "Douglas",
+
+"lastName": "Atandi",
+
+"loggedinEntityId": 23,
+
+"ApimSubscriptionKey": "366160dc4e8043b1ab927205a0ac32f8",
+
+"IndustryTypeId": 2
+
+}
+
+4.1.4 Sample Error Response “-2: Your password is not set. Please activate your account”
+{
+
+"code": -2,
+
+"message": "Your password is not set. Please activate your account"
+
+}
+
+4.1.5 Sample Error Response “-3: Username or password is incorrect"
+{
+
+"code": -3,
+
+"message": "Username or password is incorrect"
+
+}
+
+4.1.6 Sample Error Response “-4: Your account is locked by admin”
+{
+
+"code": -4,
+
+"message": "Your account is locked by admin"
+
+}
+
+4.1.7 Sample Error Response “-5: Your account is blocked”
+{
+
+"code": -5,
+
+"message": "Your account is blocked"
+
+}
+
+4.1.8 Sample Error Response “-6: Username doesn't exist. Please enter correct username”
+{
+
+"code": -6,
+
+"message": "Username doesn't exist. Please enter correct username "
+
+}
+
+4.1.9 Sample Error Response “-7: Your entity is suspended”
+{
+
+"code": -7,
+
+"message": "Your entity is suspended"
+
+}
+
+4.1.10 Sample Error Response “-8: Your entity is deactivated”
+{
+
+"code": -8,
+
+"message": "Your entity is deactivated"
+
+}
+
+4.15 Logbook Verify and Submit
+
+Version 1.8.0
+4.15.1Logbook Verify and Submit
+Logbook Verify and Submit
+
+URL: https://uat-api.dmvic.com/api/v5/Integration/ConfirmCertificateIssuance
+
+Method: Post
+
+4.15.1.1 Request Elements
+4.15.1.1.1 Body
+The parameters in the Request Elements are not case sensitive.
+
+#	Parameter	Mandatory
+(Yes / No)	Datatype	Data Format	Validation Message
+1	IssuanceRequestID	Yes	string	AF-AA0009	
+2	IsApproved	Yes	bool		
+2	IsLogBookVerified	Yes	bool		
+3	IsVehicleInspected	Yes	bool		
+4	AdditionalComments	Yes	string		
+5	UserName	Yes	string		Username is Invalid. Please enter the correct username
+Example Body Content:
+
+{
+
+"IssuanceRequestID": "AF-AA0012",
+
+"IsApproved":true,
+
+"IsLogBookVerified":true,
+
+"IsVehicleInspected":true,
+
+"AdditionalComments":"",
+
+"UserName":""
+
+}
+
+4.15.1.1.2 Headers
+#	Parameter name	Mandatory
+(Yes / No)	Datatype	Data Format
+1	Authorization	Yes	string	
+Bearer <<Token received from Login API on Successful login>>
+2	ClientID	Yes	string	
+<<Will be provided in a separate Email>>
+4.15.1.2 Response Elements
+#	Elements	Description	Example
+1	Inputs	Contains the input parameters specified by the query	
+2	Success	Bit value true/false to differentiate if the request is succeeded or not.	true/false
+3	callbackObj	If the request is succeeded, then the Json Object of the following parameters will be returned	
+TransactionNo
+
+actualCNo
+
+Email- CertificatePDF
+
+4	Error		
+ER001 - Input json format is Incorrect
+
+ER002 - Unknown Error
+
+ER003 - Mandatory field is missing
+
+ER004 - Input not valid
+
+ER005 - Double Insurance
+
+ER006 - No sufficient Inventory
+
+ER007 - Data Validation Error
+
+5	APIRequestNumber		O-AA0001
+4.15.1.3 Response JSON (example)
+4.15.1.3.1 Sample Success Response
+{
+
+"Inputs": "{\r\n\"IssuanceRequestID\": \"AF-AA0012\"\r\n}\r\n\r\n ",{
+
+"callbackObj": {
+
+"issueCertificate": {
+
+"TransactionNo": "Q-AP7096",
+
+"actualCNo": "C19240632",
+
+"Email": "chermakannan.k@gmail.com"
+
+}
+
+},
+
+"success": true,
+
+"Error": [],
+
+"APIRequestNumber": "O-IG8297",
+
+"DMVICRefNo": "DMVIC-O-IG8297"
+
+}
+
+4.15.1.3.2 Sample Error Response “ER001 - Input json format is Incorrect”
+{
+
+"IssuanceRequestID": "AF-AA0009",
+
+}
+
+4.4 Issue Certificate
+
+Version 1.8.0
+4.4 Issue Certificate
+There are 5 different types of certificates that can be issued as part of any insurance company. So, each type has an API for the issuance. This will help insurance companies to understand different types of parameters as API inputs for every certificate Type.
+
+4.4.1 For Type A certificates
+Purpose: To Issue Type A DMVIC certificate from the insurance companies’ core-system via DMVIC API
+
+URL: https://uat-api.dmvic.com/api/v5/Integration/IssuanceTypeACertificate
+
+Method: Post
+
+Version: 1.8.0
+
+Please note that X509 client certificate should be installed in your server and to be attached to the header during every request of API
+4.4.1.1 Request Elements
+4.4.1.1.1 Body
+#	Parameter	Mandatory
+(Yes / No)	Datatype	Data Format	Validation Message
+1	TypeOfCertificate	Yes	int	
+1	Class A - PSV Unmarked
+6	Type A Bus
+7	Type A Matatu
+8	Type A Taxi
+Type of certificate is wrong
+2	IntermediaryIRANumber	No	string	Example: IRA/06/357/2019	
+3	Typeofcover	Yes	int	
+100	Comprehensive (COMP)
+200	Third-party (TPO)
+300	Third-party, Theft & Fire (TPTF)
+Type of Cover is not valid
+4	Policyholder	Yes	string		
+5	policynumber	Yes	string		
+6	Commencingdate	Yes	string	DD/MM/YYYY	
+1	Commencing Date is invalid
+2	For the below types certificate cannot be issued with future dates Type-A Matatu, Type-A Bus. You cannot issue Future date.Kindly change dates
+7	Expiringdate	Yes	string	DD/MM/YYYY	
+8	Registrationnumber	No	string		
+9	Chassisnumber	Yes	string		The chassis number minimum length is 4 and maximum length is 20. Only accepts alphanumeric characters and does not support any special characters
+10	Phonenumber	Yes	string	999999999	Please enter a valid Kenyan number
+11	Bodytype	Yes	string		
+12	Licensedtocarry	Yes	int		
+13	Vehiclemake	No	string		
+14	Vehiclemodel	No	string		
+15	Yearofregistration	Yes	int	
+YYYY
+
+16	Enginenumber	No	string		
+17	Email	Yes	string	<<Email id to which the Certificate pdf will be sent on successful Issuance>>	Email is not valid
+18	SumInsured	Yes (when Comprehensive (COMP) & Third-party, Theft & Fire (TPTF))	int		
+New19	InsuredPIN	Yes	string		Insured PIN number maximum length is 11
+New20	Yearofmanufacture	No	int	YYYY	
+New21	HudumaNumber	No	string	123456789012	
+Example Body Content:
+
+{
+
+"IntermediaryIRANumber": "IRA/06/051/2019",
+
+"TypeOfCertificate": 7,
+
+"Typeofcover": 100,
+
+"Policyholder": "SA",
+
+"policynumber": "SAPOL123",
+
+"Commencingdate": "01/01/2019",
+
+"Expiringdate": "08/08/2019",
+
+"Registrationnumber": "KPL343W",
+
+"Chassisnumber": "JIT123DFREW12123",
+
+"Phonenumber": "789789789",
+
+"Bodytype": "BT",
+
+"Licensedtocarry": 9,
+
+"Vehiclemake": "AUDI",
+
+"Vehiclemodel": "AUDI",
+
+"Enginenumber": "ENG123",
+
+"Email": "xxxxxxx@dmvic.info",
+
+"SumInsured": 100000,
+
+"InsuredPIN": "A123456789A",
+
+"Yearofmanufacture": 2019,
+
+"HudumaNumber": "123456789012"
+
+}
+
+4.4.1.1.2 Headers
+#	Parameter name	Mandatory
+(Yes / No)	Datatype	Data Format
+1	Authorization	Yes	string	
+Bearer <<Token received from Login API on Successful login>>
+2	ClientID	Yes	string	
+<<Will be provided in a separate Email>>
+4.4.1.2 Response Elements
+#	Elements	Description	Example
+1	Inputs	Contains the input parameters specified by the query	
+2	Success	Bit value true/false to differentiate if the request is succeeded or not.	true/false
+3	callbackObj	If the request is succeeded, then the Json Object of the following parameters will be returned	
+TransactionNo
+
+actualCNo
+
+Email- CertificatePDF
+
+4	Error		
+ER001 - Input json format is Incorrect
+
+ER002 - Unknown Error
+
+ER003 - Mandatory field is missing
+
+ER004 - Input not valid
+
+ER005 - Double Insurance
+
+ER006 - No sufficient Inventory
+
+ER007 - Data Validation Error
+
+5	APIRequestNumber		O-AA0001
+4.4.1.3 Response JSON (example)
+4.4.1.3.1 Sample Success Response
+{
+
+"Inputs": {
+
+"IntermediaryIRANumber": "IRA/06/051/2019",
+
+"TypeOfCertificate": 7,
+
+"Typeofcover": 100,
+
+"Policyholder": "SA",
+
+"policynumber": "SAPOL123",
+
+"Commencingdate": "02/02/2019",
+
+"Expiringdate": "07/07/2019",
+
+"Registrationnumber": "KPP343W",
+
+"Chassisnumber": "JIT123DFREW12123",
+
+"Phonenumber": "789789789",
+
+"Bodytype": "BT",
+
+"Licensedtocarry": 9,
+
+"VehicleMake": "AUDI",
+
+"Vehiclemodel": "AUDI",
+
+"Enginenumber": "ENG123",
+
+"Email": "xxxxx@dmvic.info",
+
+"SumInsured": 100000,
+
+"InsuredPIN": "A123456789A",
+
+"Yearofmanufacture": 2019,
+
+"HudumaNumber": "123456789012"
+
+},
+
+"callbackObj": {
+
+"issueCertificate": {
+
+"TransactionNo": "Q-AA0108",
+
+"actualCNo": "A1020703",
+
+"Email": "xxxxx@dmvic.info",
+
+}
+
+},
+
+"success": true,
+
+"Error": [],
+
+"APIRequestNumber": "O-AA0024"
+
+}
+
+4.4.1.3.2 Sample Error Response “ER001 - Input json format is Incorrect”
+{
+
+"Inputs": {
+
+"IntermediaryIRANumber": "IRA/06/051/2019",
+
+"TypeOfCertificate": 7,
+
+"Typeofcover": 100,
+
+"Policyholder": "SA",
+
+"policynumber": "SAPOL123",
+
+"Commencingdate": "01/01/2019",
+
+"Expiringdate": "08/08/2019",
+
+"Registrationnumber": "KPL343W",
+
+"Chassisnumber": "JIT123DFREW12123",
+
+"Phonenumber": "789789789",
+
+"Bodytype": "BT",
+
+"Licensedtocarry": 6,
+
+"VehicleMake": "AUDI",
+
+"Vehiclemodel": "AUDI",
+
+"Enginenumber": "ENG123"”,
+
+"Email": "xxxxx@dmvic.info",
+
+"SumInsured": 100000,
+
+"InsuredPIN": "A123456789A",
+
+"Yearofmanufacture": 2019,
+
+"HudumaNumber": "123456789012"
+
+},
+
+"callbackObj": {},
+
+"success": false,
+
+"Error": [
+
+{
+
+"errorCode": "ER001",
+
+"errorText": "Input json format is incorrect."
+
+}
+
+],
+
+"APIRequestNumber": "O-AA0025"
+
+}
+
+4.4.1.3.3 Sample Error Response - ER003 & ER004
+{
+
+"Inputs": {
+
+"IntermediaryIRANumber": "IRA/06/051/2019",
+
+"TypeOfCertificate": 7,
+
+"Typeofcover": 100,
+
+"Policyholder": "SA",
+
+"policynumber": "",
+
+"Commencingdate": "01/01/2019",
+
+"Expiringdate": "08/08/2019",
+
+"Registrationnumber": "KPL343W",
+
+"Chassisnumber": "JIT123DFREW12123",
+
+"Phonenumber": "789789789",
+
+"Bodytype": "BT",
+
+"Licensedtocarry": 6,
+
+"VehicleMake": "AUDI",
+
+"Vehiclemodel": "AUDI",
+
+"Enginenumber": "ENG123",
+
+"Email": "xxxxx@dmvic.info",
+
+"SumInsured": 100000,
+
+"InsuredPIN": "A123456789A",
+
+"Yearofmanufacture": 2019,
+
+"HudumaNumber": "123456789012"
+
+},
+
+"callbackObj": {},
+
+"success": false,
+
+"Error": [
+
+{
+
+"errorCode": "ER003",
+
+"errorText": "Policy Number is required"
+
+},
+
+{
+
+"errorCode": "ER004",
+
+"errorText": "Matatu certificates are issued for passangers ranging from 7 to a maximum of 35"
+
+}
+
+],
+
+"APIRequestNumber": "O-AA0027"
+
+}
+
+4.4.1.3.4 Sample Error Response “ER005 - Double Insurance”
+{
+
+"Inputs": {
+
+"IntermediaryIRANumber": "IRA/06/051/2019",
+
+"TypeOfCertificate": 7,
+
+"Typeofcover": 100,
+
+"Policyholder": "SA",
+
+"policynumber": "SAPOL123",
+
+"Commencingdate": "02/02/2019",
+
+"Expiringdate": "07/07/2019",
+
+"Registrationnumber": "KPL343W",
+
+"Chassisnumber": "JIT123DFREW12123",
+
+"Phonenumber": "789789789",
+
+"Bodytype": "BT",
+
+"Licensedtocarry": 9,
+
+"VehicleMake": "AUDI",
+
+"Vehiclemodel": "AUDI",
+
+"Enginenumber": "ENG123",
+
+"Email": "xxxxx@dmvic.info",
+
+"SumInsured": 100000,
+
+"InsuredPIN": "A123456789A",
+
+"Yearofmanufacture": 2019,
+
+"HudumaNumber": "123456789012"
+
+},
+
+"callbackObj": {},
+
+"success": false,
+
+"Error": [
+
+{
+
+"errorCode": "ER005",
+
+"errorText": "Double Insurance"
+
+}
+
+],
+
+"APIRequestNumber": "O-AA0023"
+
+}
+
+4.4.1.3.5 Sample Error Response “ER006 -No enough Inventory”
+{
+
+"Inputs": {
+
+"IntermediaryIRANumber": "IRA/06/051/2019",
+
+"TypeOfCertificate": 7,
+
+"Typeofcover": 100,
+
+"Policyholder": "SA",
+
+"policynumber": "SAPOL123",
+
+"Commencingdate": "02/02/2019",
+
+"Expiringdate": "07/07/2019",
+
+"Registrationnumber": "KPL343W",
+
+"Chassisnumber": "JIT123DFREW12123",
+
+"Phonenumber": "789789789",
+
+"Bodytype": "BT",
+
+"Licensedtocarry": 9,
+
+"VehicleMake": "AUDI",
+
+"Vehiclemodel": "AUDI",
+
+"Enginenumber": "ENG123",
+
+"Email": "xxxxx@dmvic.info",
+
+"SumInsured": 100000,
+
+"InsuredPIN": "A123456789A",
+
+"Yearofmanufacture": 2019,
+
+"HudumaNumber": "123456789012"
+
+},
+
+"callbackObj": {},
+
+"success": false,
+
+"Error": [
+
+{
+
+"errorCode": "ER005",
+
+"errorText": "Double Insurance"
+
+}
+
+],
+
+"APIRequestNumber": "O-AA0023"
+
+}
+
+4.4.1.3.6 Sample Error Response -NTSA Response
+{
+
+"Inputs": "{\"intermediaryiranumber\":\"\",\"typeofcover\":100,\"policyholder\":\"SA\",\"policynumber\":\"SAPOL123\",\"commencingdate\":\"22/05/2024\",\"expiringdate\":\"23/05/2024\",\"registrationnumber\":\"KCV056E\",\"chassisnumber\":\"DE3AS-501984\",\"phonenumber\":\"789789789\",\"bodytype\":\"S WAGON\",\"vehiclemake\":\"MAZDA\",\"vehiclemodel\":\"DEMIO\",\"enginenumber\":\"ZJ-A59161\",\"email\":\"xxxxx@dmvic.info\",\"suminsured\":100000,\"insuredpin\":\"A123456789A\",\"yearofmanufacture\":2019,\"hudumanumber\":\"123456789012\"}",
+
+"callbackObj": {
+
+"NTSAResponse": {
+
+"VehicleRegistrationNumber": "KCV056E",
+
+"ChassisNumber": ""DE3AS-501984,
+
+"VehicleRegistrationYear": 0,
+
+"EngineNumber": "ZJ-A59161",
+
+"VehicleMake": "MAZDA",
+
+"VehicleModel": "DEMIO",
+
+"BodyType": "S.WAGON",
+
+"TypeID": 3
+
+}
+
+},
+
+"success": false,
+
+"Error": [
+
+{
+
+"errorCode": "ERR10001",
+
+"errorText": "Please note that the details entered do not match NTSA records"
+
+}
+
+],
+
+"APIRequestNumber": "UAT-OAQ2298",
+
+"DMVICRefNo": null
+
+}
+
+4.15 Logbook Verify and Submit
+
+Version 1.8.0
+4.15.1Logbook Verify and Submit
+Logbook Verify and Submit
+
+URL: https://uat-api.dmvic.com/api/v5/Integration/ConfirmCertificateIssuance
+
+Method: Post
+
+4.15.1.1 Request Elements
+4.15.1.1.1 Body
+The parameters in the Request Elements are not case sensitive.
+
+#	Parameter	Mandatory
+(Yes / No)	Datatype	Data Format	Validation Message
+1	IssuanceRequestID	Yes	string	AF-AA0009	
+2	IsApproved	Yes	bool		
+2	IsLogBookVerified	Yes	bool		
+3	IsVehicleInspected	Yes	bool		
+4	AdditionalComments	Yes	string		
+5	UserName	Yes	string		Username is Invalid. Please enter the correct username
+Example Body Content:
+
+{
+
+"IssuanceRequestID": "AF-AA0012",
+
+"IsApproved":true,
+
+"IsLogBookVerified":true,
+
+"IsVehicleInspected":true,
+
+"AdditionalComments":"",
+
+"UserName":""
+
+}
+
+4.15.1.1.2 Headers
+#	Parameter name	Mandatory
+(Yes / No)	Datatype	Data Format
+1	Authorization	Yes	string	
+Bearer <<Token received from Login API on Successful login>>
+2	ClientID	Yes	string	
+<<Will be provided in a separate Email>>
+4.15.1.2 Response Elements
+#	Elements	Description	Example
+1	Inputs	Contains the input parameters specified by the query	
+2	Success	Bit value true/false to differentiate if the request is succeeded or not.	true/false
+3	callbackObj	If the request is succeeded, then the Json Object of the following parameters will be returned	
+TransactionNo
+
+actualCNo
+
+Email- CertificatePDF
+
+4	Error		
+ER001 - Input json format is Incorrect
+
+ER002 - Unknown Error
+
+ER003 - Mandatory field is missing
+
+ER004 - Input not valid
+
+ER005 - Double Insurance
+
+ER006 - No sufficient Inventory
+
+ER007 - Data Validation Error
+
+5	APIRequestNumber		O-AA0001
+4.15.1.3 Response JSON (example)
+4.15.1.3.1 Sample Success Response
+{
+
+"Inputs": "{\r\n\"IssuanceRequestID\": \"AF-AA0012\"\r\n}\r\n\r\n ",{
+
+"callbackObj": {
+
+"issueCertificate": {
+
+"TransactionNo": "Q-AP7096",
+
+"actualCNo": "C19240632",
+
+"Email": "chermakannan.k@gmail.com"
+
+}
+
+},
+
+"success": true,
+
+"Error": [],
+
+"APIRequestNumber": "O-IG8297",
+
+"DMVICRefNo": "DMVIC-O-IG8297"
+
+}
+
+4.15.1.3.2 Sample Error Response “ER001 - Input json format is Incorrect”
+{
+
+"IssuanceRequestID": "AF-AA0009",
+
+}
+
+4.5 Get Certificate PDF
+
+Version 1.8.0
+Purpose: To fetch the generated PDF document after the successful issuance
+
+URL:https://uat-api.dmvic.com/api/v5/Integration/GetCertificate
+
+Method: Post
+
+Version: 1.8.0
+
+Please note that X509 client certificate should be installed in your server and to be attached to the header during every request of API
+4.5.1 Request Elements
+4.5.1.1 Body
+#	Parameter	Mandatory
+(Yes / No)		Format	Validation Message
+1	CertificateNumber	Yes	string	A1020701	Please enter a valid certificate number
+Example Body Content:
+
+{"CertificateNumber":"A1020701"}
+
+4.5.1.2 Headers
+#	Parameter name	Mandatory
+(Yes / No)	Datatype	Data Format
+1	Authorization	Yes	string	
+Bearer <<Token received from Login API on Successful login>>
+2	ClientID	Yes	string	
+<<Will be provided in a separate Email>>
+4.5.2 Response Elements
+#	Elements	Description	Example
+1	Inputs	Contains the input parameters specified by the query	{HTTP Post Body}
+2	Success	Bit value true/false to differentiate if the request is succeeded or not.	true/false
+3	callbackObj	If the request is succeeded, then the Json Object of the following parameters will be returned	URL
+4	Error		
+ER001 - Input json format is Incorrect
+
+ER002 - Unknown Error
+
+ER003 - Mandatory field is missing
+
+ER008 - InvalidCertificateNo
+
+5	APIRequestNumber		O-AA0001
+4.5.2.1 Response JSON (example)
+{
+
+"Inputs": {
+
+"CertificateNumber": "A1020701"
+
+},
+
+"callbackObj": {
+
+"URL": "https://devdmviccert.blob.core.windows.net/immutable-dmvic-cert/403_E426CCCB8159B6CF314EB4687F158AE08BDED70F.pdf?sv=2018-03-28&sr=b&sig=x2ROe1BSy9wqcy8hwhHovcUqhlkA4x%2BZnMbahlBY2Hc%3D&st=2019-03-10T02%3A19%3A22Z&se=2019-03-10T03%3A20%3A22Z&sp=r"
+
+},
+
+"success": true,
+
+"Error": [],
+
+"APIRequestNumber": "O-AA0057"
+
+}
+
+4.15 Logbook Verify and Submit
+
+Version 1.8.0
+4.15.1Logbook Verify and Submit
+Logbook Verify and Submit
+
+URL: https://uat-api.dmvic.com/api/v5/Integration/ConfirmCertificateIssuance
+
+Method: Post
+
+4.15.1.1 Request Elements
+4.15.1.1.1 Body
+The parameters in the Request Elements are not case sensitive.
+
+#	Parameter	Mandatory
+(Yes / No)	Datatype	Data Format	Validation Message
+1	IssuanceRequestID	Yes	string	AF-AA0009	
+2	IsApproved	Yes	bool		
+2	IsLogBookVerified	Yes	bool		
+3	IsVehicleInspected	Yes	bool		
+4	AdditionalComments	Yes	string		
+5	UserName	Yes	string		Username is Invalid. Please enter the correct username
+Example Body Content:
+
+{
+
+"IssuanceRequestID": "AF-AA0012",
+
+"IsApproved":true,
+
+"IsLogBookVerified":true,
+
+"IsVehicleInspected":true,
+
+"AdditionalComments":"",
+
+"UserName":""
+
+}
+
+4.15.1.1.2 Headers
+#	Parameter name	Mandatory
+(Yes / No)	Datatype	Data Format
+1	Authorization	Yes	string	
+Bearer <<Token received from Login API on Successful login>>
+2	ClientID	Yes	string	
+<<Will be provided in a separate Email>>
+4.15.1.2 Response Elements
+#	Elements	Description	Example
+1	Inputs	Contains the input parameters specified by the query	
+2	Success	Bit value true/false to differentiate if the request is succeeded or not.	true/false
+3	callbackObj	If the request is succeeded, then the Json Object of the following parameters will be returned	
+TransactionNo
+
+actualCNo
+
+Email- CertificatePDF
+
+4	Error		
+ER001 - Input json format is Incorrect
+
+ER002 - Unknown Error
+
+ER003 - Mandatory field is missing
+
+ER004 - Input not valid
+
+ER005 - Double Insurance
+
+ER006 - No sufficient Inventory
+
+ER007 - Data Validation Error
+
+5	APIRequestNumber		O-AA0001
+4.15.1.3 Response JSON (example)
+4.15.1.3.1 Sample Success Response
+{
+
+"Inputs": "{\r\n\"IssuanceRequestID\": \"AF-AA0012\"\r\n}\r\n\r\n ",{
+
+"callbackObj": {
+
+"issueCertificate": {
+
+"TransactionNo": "Q-AP7096",
+
+"actualCNo": "C19240632",
+
+"Email": "chermakannan.k@gmail.com"
+
+}
+
+},
+
+"success": true,
+
+"Error": [],
+
+"APIRequestNumber": "O-IG8297",
+
+"DMVICRefNo": "DMVIC-O-IG8297"
+
+}
+
+4.15.1.3.2 Sample Error Response “ER001 - Input json format is Incorrect”
+{
+
+"IssuanceRequestID": "AF-AA0009",
+
+}

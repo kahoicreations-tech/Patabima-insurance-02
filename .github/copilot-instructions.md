@@ -21,7 +21,9 @@ PataBima is a comprehensive React Native Expo application for insurance sales ag
 - **Caching**: Two-tier cache (Memory Map + AsyncStorage) with TTL
 
 ### SDK Version Policy
+
 **IMPORTANT**: This project uses **Expo SDK 53.0.23** and should remain on this version for stability. SDK 54 upgrade requires:
+
 - Full regression testing of 60+ motor insurance products
 - Revalidation of custom React Native patches (FlatList.js, ScrollView.js)
 - Payment flow testing (M-PESA, DPO Pay)
@@ -89,6 +91,7 @@ Based on the comprehensive implementation and wireframes:
 **Policy States and Transitions:**
 
 1. **Draft** → **Active** (On successful payment)
+
    - Initial state after quote creation
    - Transitions to Active when payment is confirmed
    - Policy number generated (e.g., POL-2025-XXXXXX)
@@ -96,6 +99,7 @@ Based on the comprehensive implementation and wireframes:
    - Cover end date calculated (typically 12 months from start)
 
 2. **Active** → **Renewal Due** (30-90 days before expiry)
+
    - Active policies approaching expiry become eligible for renewal
    - System calculates renewal window: 90 days before expiry (early bird), 30 days (standard)
    - Renewal reminder notifications sent to agents
@@ -107,11 +111,13 @@ Based on the comprehensive implementation and wireframes:
      - Reference to original policy number
 
 3. **Active** → **Expired** (On cover end date)
+
    - Policy automatically transitions to Expired status
    - No longer provides coverage
    - May be eligible for extension (see below)
 
 4. **Expired** → **Extendable** (Grace period for specific cover types)
+
    - **Extension Eligibility Rules:**
      - **Third-Party Only**: Can be extended within 90 days of expiry
      - **Time on Risk (TOR)**: Can be extended within 60 days of expiry
@@ -130,13 +136,13 @@ Based on the comprehensive implementation and wireframes:
 **Business Rules:**
 
 - **Renewal Window**: 90 days before expiry (agents can initiate early renewal)
-- **Extension Window**: 
+- **Extension Window**:
   - Third-Party: 90 days post-expiry
   - TOR: 60 days post-expiry
   - Comprehensive: 0 days (not extendable)
 - **Pricing for Renewals**: Always use current year pricing (may differ from original)
 - **Pricing for Extensions**: Prorated based on remaining days, plus late fee if applicable
-- **Late Fees**: 
+- **Late Fees**:
   - 0-30 days post-expiry: 5% of prorated premium
   - 31-60 days: 10% of prorated premium
   - 61-90 days: 15% of prorated premium
@@ -151,8 +157,8 @@ Based on the comprehensive implementation and wireframes:
   - Display days until expiry prominently
   - "Renew Now" CTA button (primary action)
   - Badge showing renewal eligibility (Early Bird, Standard, Urgent <30 days)
-  
 - **Upcoming Screen - Extensions Tab**:
+
   - Show expired policies eligible for extension
   - Display days since expiry and remaining grace period
   - "Extend Policy" CTA button (warning color if near grace end)
@@ -160,6 +166,7 @@ Based on the comprehensive implementation and wireframes:
   - Warning if grace period ending soon (<7 days)
 
 - **Renewal Flow**:
+
   1. Agent clicks "Renew Now" on policy card
   2. System prefills Motor 2 form with existing policy data
   3. Agent reviews/updates vehicle and client details
@@ -179,6 +186,7 @@ Based on the comprehensive implementation and wireframes:
 **Data Model Requirements:**
 
 - **Policy Model Fields**:
+
   - `status` (draft, active, expired, extended, cancelled)
   - `cover_start` (date)
   - `cover_end` (date)
@@ -304,6 +312,7 @@ Based on the comprehensive implementation and wireframes:
 ### Architecture Overview
 
 PataBima follows a **service-oriented architecture** with clear separation between:
+
 - **Presentation Layer**: React Native components and screens
 - **State Management Layer**: Context API providers with reducers
 - **Service Layer**: Centralized API clients and business logic
@@ -331,24 +340,28 @@ const initialState = {
   selectedAddons: [],
   // History for undo/redo
   past: [],
-  future: []
+  future: [],
 };
 
 function reducer(state, action) {
   switch (action.type) {
-    case 'SET_CATEGORY_SELECTION':
+    case "SET_CATEGORY_SELECTION":
       // Save current form data before switching
       // Restore saved data for new subcategory
       return saveForHistory(state, newState);
-    case 'UPDATE_VEHICLE_DETAILS':
+    case "UPDATE_VEHICLE_DETAILS":
       // Merge updates, preserve selectedUnderwriter object
-      return { ...state, vehicleDetails: { ...state.vehicleDetails, ...action.payload } };
+      return {
+        ...state,
+        vehicleDetails: { ...state.vehicleDetails, ...action.payload },
+      };
     // ... other actions
   }
 }
 ```
 
 **Key Implementation Details:**
+
 - **Per-subcategory form data isolation**: When switching between subcategories, form data is saved and restored to prevent data bleeding
 - **History management**: Uses `past` and `future` arrays for undo/redo functionality
 - **Memoized actions**: All action functions use `useCallback` to prevent unnecessary re-renders
@@ -373,7 +386,7 @@ class DjangoAPIService {
   async makeRequest(endpoint, options = {}) {
     // 1. Check auth lock
     if (this._authLocked && !options._allowWhenLocked) {
-      throw new Error('Authentication locked');
+      throw new Error("Authentication locked");
     }
 
     // 2. Auto-load token from storage if missing
@@ -384,14 +397,14 @@ class DjangoAPIService {
 
     // 3. Build request with auth header
     const headers = {
-      'Content-Type': 'application/json',
-      'Authorization': this.token ? `Bearer ${this.token}` : undefined
+      "Content-Type": "application/json",
+      Authorization: this.token ? `Bearer ${this.token}` : undefined,
     };
 
     // 4. Network-aware retry (try alternative hosts on failure)
     try {
       const response = await fetch(url, { method, headers, body });
-      
+
       // 5. Handle 401 with token refresh
       if (response.status === 401) {
         await this.refreshAccessToken();
@@ -416,18 +429,22 @@ class DjangoAPIService {
     // Resilient endpoint probing - tries multiple candidates
     for (const ep of endpoints) {
       try {
-        return await this.makeRequest(ep, { ...options, _suppressErrorLog: true });
+        return await this.makeRequest(ep, {
+          ...options,
+          _suppressErrorLog: true,
+        });
       } catch (e) {
-        if (e.message.includes('401') && options._breakOn401) throw e;
+        if (e.message.includes("401") && options._breakOn401) throw e;
         continue; // Try next candidate
       }
     }
-    throw new Error('No candidate endpoints succeeded');
+    throw new Error("No candidate endpoints succeeded");
   }
 }
 ```
 
 **Key Patterns:**
+
 - **Singleton instance**: One global service shared across app
 - **Auto token management**: Loads token from storage, auto-refreshes on 401
 - **Request deduplication**: `_inflight` Map prevents duplicate simultaneous requests
@@ -457,7 +474,10 @@ async function getCache(key) {
     const parsed = JSON.parse(raw);
     if (parsed.expiresAt > Date.now()) {
       // Repopulate memory cache
-      MEMORY.set(PREFIX + key, { value: parsed.value, expiresAt: parsed.expiresAt });
+      MEMORY.set(PREFIX + key, {
+        value: parsed.value,
+        expiresAt: parsed.expiresAt,
+      });
       return parsed.value;
     }
   }
@@ -467,7 +487,7 @@ async function getCache(key) {
 async function setCache(key, value, ttlMs = DEFAULT_TTL_MS) {
   const expiresAt = Date.now() + ttlMs;
   const entry = { value, expiresAt };
-  
+
   // Write to both tiers
   MEMORY.set(PREFIX + key, entry);
   await AsyncStorage.setItem(PREFIX + key, JSON.stringify(entry));
@@ -475,23 +495,28 @@ async function setCache(key, value, ttlMs = DEFAULT_TTL_MS) {
 
 function makeKey(parts) {
   // Create stable cache keys from dynamic data
-  return parts.filter(p => p != null && p !== '').map(String).join('|');
+  return parts
+    .filter((p) => p != null && p !== "")
+    .map(String)
+    .join("|");
 }
 ```
 
 **Cache Key Design Pattern:**
+
 ```javascript
 // Example: Motor pricing comparison cache key
 const cacheKey = makeKey([
-  'UW_SUBCAT',
+  "UW_SUBCAT",
   subcategoryCode,
   Math.floor(sumInsured / 50000) * 50000, // Bucket to 50k increments
   tonnage || 0,
-  capacity || 0
+  capacity || 0,
 ]);
 ```
 
 **TTL Settings by Data Type:**
+
 - Motor categories/subcategories: **7 days** (MotorCategoryCache)
 - Pricing comparisons: **12 hours** (pricing changes frequently)
 - Underwriter lists: **6 hours** (availability changes)
@@ -499,6 +524,7 @@ const cacheKey = makeKey([
 - Quotations: **2 minutes** (frequent updates)
 
 **Bucketing Strategy:**
+
 - **Sum Insured**: Rounded to nearest 50k to reduce cache misses
 - **Tonnage/Capacity**: Exact values (limited range)
 - **Dates**: Stored as ISO strings for consistency
@@ -516,11 +542,11 @@ const payload = transformPricingRequest(coverType, inputs);
 
 // 2. Generate cache key with bucketing
 const cacheKey = makeKey([
-  'UW_SUBCAT',
+  "UW_SUBCAT",
   subcategoryCode,
   Math.floor(sumInsured / 50000) * 50000,
   tonnage || 0,
-  capacity || 0
+  capacity || 0,
 ]);
 
 // 3. Check cache (12h TTL)
@@ -533,10 +559,10 @@ if (!options.forceRefresh) {
 const res = await djangoAPI.compareMotorPricing(payload);
 
 // 5. Enhance backend response with computed levies
-const enhanced = res.comparisons.map(comp => {
+const enhanced = res.comparisons.map((comp) => {
   const pricing = normalizePricingResponse(comp.result);
   const levies = computeLevies(pricing.base_premium);
-  
+
   return {
     underwriter_code: comp.underwriter_code,
     underwriter_name: comp.underwriter_name,
@@ -546,8 +572,8 @@ const enhanced = res.comparisons.map(comp => {
       base: pricing.base_premium,
       itl: levies.itl,
       pcf: levies.pcf,
-      stamp_duty: levies.stampDuty
-    }
+      stamp_duty: levies.stampDuty,
+    },
   };
 });
 
@@ -565,26 +591,27 @@ return enhanced;
 ```javascript
 // frontend/utils/pricingCalculations.js
 const LEVY_RATES = {
-  ITL: 0.0025,    // 0.25% Insurance Training Levy
-  PCF: 0.0025,    // 0.25% Policyholders Compensation Fund
-  STAMP_DUTY: 40  // KSh 40 fixed stamp duty
+  ITL: 0.0025, // 0.25% Insurance Training Levy
+  PCF: 0.0025, // 0.25% Policyholders Compensation Fund
+  STAMP_DUTY: 40, // KSh 40 fixed stamp duty
 };
 
 function computeLevies(premium) {
   const itl = round2(premium * LEVY_RATES.ITL);
   const pcf = round2(premium * LEVY_RATES.PCF);
   const stampDuty = LEVY_RATES.STAMP_DUTY;
-  
+
   return {
     itl,
     pcf,
     stampDuty,
-    totalLevies: round2(itl + pcf + stampDuty)
+    totalLevies: round2(itl + pcf + stampDuty),
   };
 }
 ```
 
 **Critical Implementation Notes:**
+
 - Levies are **always calculated on frontend** to ensure consistency
 - Backend returns `base_premium`, frontend adds levies to get `total_premium`
 - `round2()` function ensures 2 decimal precision for currency
@@ -599,7 +626,7 @@ function computeLevies(premium) {
 
 const DynamicVehicleForm = ({ selectedProduct, onChange }) => {
   const [formData, setFormData] = useState(initialData);
-  
+
   // Critical: Use refs to prevent re-render loops
   const underwriterSelectedRef = useRef(false);
   const hasComparisonsRef = useRef(false);
@@ -632,7 +659,7 @@ const DynamicVehicleForm = ({ selectedProduct, onChange }) => {
       sum_insured: data.sum_insured,
       tonnage: data.tonnage,
       capacity: data.passengerCapacity,
-      year: data.year
+      year: data.year,
     });
   };
 
@@ -640,7 +667,7 @@ const DynamicVehicleForm = ({ selectedProduct, onChange }) => {
   const MemoizedTextInput = useMemo(() => {
     return ({ field, label, ...props }) => (
       <TextInput
-        value={formData[field] || ''}
+        value={formData[field] || ""}
         onChangeText={(val) => handleFieldChange(field, val)}
         placeholder={label}
         {...props}
@@ -650,8 +677,12 @@ const DynamicVehicleForm = ({ selectedProduct, onChange }) => {
 
   return (
     <ScrollView>
-      {fields.map(field => (
-        <MemoizedTextInput key={field.key} field={field.key} label={field.label} />
+      {fields.map((field) => (
+        <MemoizedTextInput
+          key={field.key}
+          field={field.key}
+          label={field.label}
+        />
       ))}
     </ScrollView>
   );
@@ -659,6 +690,7 @@ const DynamicVehicleForm = ({ selectedProduct, onChange }) => {
 ```
 
 **Key Patterns:**
+
 - **Refs for flags**: `underwriterSelectedRef`, `hasComparisonsRef` avoid state re-renders
 - **Debounced comparison**: 1 second delay before triggering backend call
 - **Comparison key design**: Only include pricing-critical fields (not cosmetic fields like color)
@@ -670,6 +702,7 @@ const DynamicVehicleForm = ({ selectedProduct, onChange }) => {
 #### Implemented Patterns
 
 1. **Request Deduplication**:
+
    ```javascript
    // DjangoAPIService._inflight Map
    const key = `${method}:${url}:${bodyHash}`;
@@ -679,16 +712,19 @@ const DynamicVehicleForm = ({ selectedProduct, onChange }) => {
    ```
 
 2. **Lazy Loading**:
+
    - Motor categories loaded on-demand, cached for 7 days
    - Subcategories pre-fetched in background
    - Underwriter lists fetched per category, cached 6h
 
 3. **Memoization**:
+
    - `useMemo` for expensive computations (premium calculations, vehicle data transformations)
    - `useCallback` for all context actions
    - `React.memo` for list item components
 
 4. **Cache TTL Tuning**:
+
    - Static data (categories): 7 days
    - Semi-static (underwriters): 6 hours
    - Dynamic (pricing): 12 hours (background refresh)

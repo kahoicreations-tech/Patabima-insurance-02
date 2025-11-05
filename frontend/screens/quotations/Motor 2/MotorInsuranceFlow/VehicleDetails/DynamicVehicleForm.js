@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef, memo } from 'react';
-import { View, ScrollView, Text, TextInput, StyleSheet, TouchableOpacity, ActivityIndicator, Platform } from 'react-native';
+import { View, ScrollView, Text, TextInput, StyleSheet, TouchableOpacity, ActivityIndicator, Platform, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import motorPricingService from '../../../../../services/MotorInsurancePricingService';
@@ -39,7 +39,24 @@ const MemoizedTextInput = memo(({
   );
 });
 
-const DynamicPolicyForm = ({ selectedProduct, onDataChange, initialData = {}, values, onChange, errors = {}, productType, onUnderwriterComparison, onUnderwriterSelection }) => {
+const DynamicPolicyForm = ({ 
+  selectedProduct, 
+  onDataChange, 
+  initialData = {}, 
+  values, 
+  onChange, 
+  errors = {}, 
+  productType, 
+  onUnderwriterComparison, 
+  onUnderwriterSelection,
+  // Phase 1.2: New props for DMVIC integration
+  onRegistrationChange,
+  onCoverDateChange,
+  minCoverStartDate,
+  dmvicLoading,
+  dmvicError,
+  existingCoverData,
+}) => {
   const [formData, setFormData] = useState(initialData || values || {});
   const [validationErrors, setValidationErrors] = useState(errors);
   const [underwriterComparisons, setUnderwriterComparisons] = useState([]);
@@ -57,6 +74,10 @@ const DynamicPolicyForm = ({ selectedProduct, onDataChange, initialData = {}, va
   const comparisonTimeoutRef = useRef(null);
   const lastComparisonKeyRef = useRef(null);
   
+  // Ref for underwriter section auto-scroll
+  const underwriterSectionRef = useRef(null);
+  const scrollViewRef = useRef(null);
+  
   // Debounced parent notifier to avoid parent re-renders on every keystroke
   const notifyTimeoutRef = useRef(null);
   const latestFormRef = useRef(formData);
@@ -68,11 +89,29 @@ const DynamicPolicyForm = ({ selectedProduct, onDataChange, initialData = {}, va
   // Update refs when values change (without triggering re-renders)
   useEffect(() => {
     latestFormRef.current = formData;
-    underwriterSelectedRef.current = Boolean(formData?.underwriter);
+    // ❌ REMOVED: Do NOT update underwriterSelectedRef here - it's managed in handleInputChange
+    // This was causing race condition: useEffect runs after state updates, but onPress
+    // sets the ref immediately. The useEffect would then check formData.underwriter
+    // which might not be updated yet, causing the ref to flip back to false.
+    // underwriterSelectedRef.current = Boolean(formData?.underwriter);
   }, [formData]);
 
   useEffect(() => {
     hasComparisonsRef.current = underwriterComparisons.length > 0;
+    
+    // Auto-scroll to underwriter section when comparisons are loaded
+    if (underwriterComparisons.length > 0 && underwriterSectionRef.current && scrollViewRef.current) {
+      // Small delay to ensure rendering is complete
+      setTimeout(() => {
+        underwriterSectionRef.current?.measureLayout(
+          scrollViewRef.current,
+          (x, y) => {
+            scrollViewRef.current?.scrollTo({ y: y - 20, animated: true });
+          },
+          () => {} // Error callback
+        );
+      }, 300);
+    }
   }, [underwriterComparisons.length]);
 
   // Cleanup debounce timer on unmount
@@ -212,7 +251,19 @@ const DynamicPolicyForm = ({ selectedProduct, onDataChange, initialData = {}, va
   // Check if we can trigger underwriter comparison
   // Memoize only the pricing-relevant fields to prevent unnecessary re-triggers
   const canCompareUnderwriters = useCallback(() => {
+    console.log('🔍 canCompareUnderwriters called with:', {
+      selectedProduct: selectedProduct?.subcategory_name,
+      category: selectedProduct?.category,
+      coverage_type: selectedProduct?.coverage_type,
+      formData: {
+        registrationNumber: formData.registrationNumber,
+        cover_start_date: formData.cover_start_date,
+        allKeys: Object.keys(formData)
+      }
+    });
+
     if (!selectedProduct || !selectedProduct.category || !selectedProduct.coverage_type) {
+      console.log('❌ canCompareUnderwriters: Missing product info');
       return false;
     }
 
@@ -221,6 +272,7 @@ const DynamicPolicyForm = ({ selectedProduct, onDataChange, initialData = {}, va
     // Check basic required fields including cover start date
     const hasRequired = requiredFields.every(field => formData[field] && formData[field].toString().trim());
     if (!hasRequired) {
+      console.log('❌ canCompareUnderwriters: Missing required fields');
       return false;
     }
 
@@ -228,21 +280,25 @@ const DynamicPolicyForm = ({ selectedProduct, onDataChange, initialData = {}, va
     const isComprehensive = selectedProduct.coverage_type?.toLowerCase().includes('comprehensive');
     // Disable underwriter comparison on Vehicle Details for Comprehensive to avoid duplication
     if (isComprehensive) {
+      console.log('❌ canCompareUnderwriters: Comprehensive - disabled on this screen');
       return false;
     }
 
     // For commercial, need tonnage
     const isCommercial = selectedProduct.category?.toLowerCase() === 'commercial';
     if (isCommercial && !formData.tonnage) {
+      console.log('❌ canCompareUnderwriters: Commercial needs tonnage');
       return false;
     }
 
     // For PSV, need passenger capacity
     const isPSV = selectedProduct.category?.toLowerCase() === 'psv';
     if (isPSV && (!formData.passengerCapacity || Number(formData.passengerCapacity) <= 0)) {
+      console.log('❌ canCompareUnderwriters: PSV needs passenger capacity');
       return false;
     }
 
+    console.log('✅ canCompareUnderwriters: ALL CHECKS PASSED!');
     return true;
   }, [
     selectedProduct, 
@@ -475,13 +531,13 @@ const DynamicPolicyForm = ({ selectedProduct, onDataChange, initialData = {}, va
 
 
 
-  const handleInputChange = (key, value) => {
+  const handleInputChange = useCallback((key, value) => {
     // Format currency inputs
     if (getFormFields.find(f => f.key === key)?.type === 'currency') {
       value = value.replace(/[^0-9]/g, '');
     }
 
-  const newFormData = { ...formData, [key]: value };
+    const newFormData = { ...formData, [key]: value };
 
     // If a pricing-critical field changes, clear any previously selected underwriter
     // Note: 'underwriter' is NOT included here because selecting an underwriter should persist
@@ -544,9 +600,9 @@ const DynamicPolicyForm = ({ selectedProduct, onDataChange, initialData = {}, va
       delete newFormData.model_other;
     }
     
-  // Update local state immediately for instant UI feedback
-  setFormData(newFormData);
-  latestFormRef.current = newFormData;
+    // Update local state immediately for instant UI feedback
+    setFormData(newFormData);
+    latestFormRef.current = newFormData;
 
     // Real-time validation
     const error = validateField(key, value);
@@ -554,6 +610,17 @@ const DynamicPolicyForm = ({ selectedProduct, onDataChange, initialData = {}, va
       ...prev,
       [key]: error
     }));
+
+    // Phase 1.2: Trigger DMVIC checks for specific fields
+    if (key === 'registrationNumber' && onRegistrationChange) {
+      console.log('[DynamicVehicleForm] Registration changed, triggering DMVIC check:', value);
+      onRegistrationChange(value);
+    }
+    
+    if (key === 'cover_start_date' && onCoverDateChange) {
+      console.log('[DynamicVehicleForm] Cover date changed, triggering DMVIC check:', value);
+      onCoverDateChange(value);
+    }
 
     // Notify parent component with a small debounce to prevent focus loss
     if (notifyTimeoutRef.current) {
@@ -567,7 +634,18 @@ const DynamicPolicyForm = ({ selectedProduct, onDataChange, initialData = {}, va
     if (onChange) {
       onChange(newFormData);
     }
-  };
+  }, [
+    formData, 
+    selectedUnderwriter, 
+    comparisonKey, 
+    comparingUnderwriters, 
+    onDataChange, 
+    onChange, 
+    getFormFields, 
+    validateField, 
+    onRegistrationChange, 
+    onCoverDateChange
+  ]);
 
   const validateField = (key, value) => {
     const field = getFormFields.find(f => f.key === key);
@@ -609,8 +687,24 @@ const DynamicPolicyForm = ({ selectedProduct, onDataChange, initialData = {}, va
         if (key === 'registrationNumber' && value) {
           const identificationType = formData.identificationType;
           if (identificationType === 'Vehicle Registration') {
+            // Kenyan vehicle registration format validation
+            // Format: KXX 123X or KXX123X (e.g., KAA 123A, KBZ456C)
+            // - Starts with 'K'
+            // - Followed by 2 letters (series code)
+            // - Optional space
+            // - 3 digits
+            // - 1 letter (check letter)
+            const kenyanPlatePattern = /^K[A-Z]{2}\s*\d{3}[A-Z]$/i;
+            const cleanedValue = value.trim().toUpperCase();
+            
+            // First check for basic invalid characters
             if (!/^[A-Z0-9\s]+$/i.test(value)) {
               return 'Registration number contains invalid characters';
+            }
+            
+            // Then validate Kenyan plate format
+            if (!kenyanPlatePattern.test(cleanedValue)) {
+              return 'Invalid Kenyan plate format. Expected: KXX 123X (e.g., KAA 123A)';
             }
           } else if (identificationType === 'Chassis Number') {
             if (!/^[A-Z0-9]+$/i.test(value)) {
@@ -711,6 +805,11 @@ const DynamicPolicyForm = ({ selectedProduct, onDataChange, initialData = {}, va
           const dateValue = formData[field.key] || field.defaultValue;
           const displayDate = dateValue ? new Date(dateValue) : new Date();
           
+          // Phase 1.2: Determine minimum date based on DMVIC or default
+          const minimumDate = (field.key === 'cover_start_date' && minCoverStartDate) 
+            ? new Date(minCoverStartDate)
+            : new Date();
+          
           return (
             <View key={field.key} style={styles.fieldContainer}>
               <Text style={styles.label}>
@@ -729,18 +828,44 @@ const DynamicPolicyForm = ({ selectedProduct, onDataChange, initialData = {}, va
                   value={displayDate}
                   mode="date"
                   display="default"
+                  minimumDate={minimumDate}
                   onChange={(event, selectedDate) => {
                     if (Platform.OS === 'android') {
                       setShowDatePicker(false);
                     }
                     if (event?.type === 'dismissed') return;
                     if (selectedDate) {
+                      // Phase 1.2: Validate against minDate
+                      if (minCoverStartDate && field.key === 'cover_start_date') {
+                        const minDate = new Date(minCoverStartDate);
+                        if (selectedDate < minDate) {
+                          Alert.alert(
+                            'Invalid Date',
+                            `Cover start date must be on or after ${minDate.toLocaleDateString()} due to existing cover.`,
+                            [{ text: 'OK' }]
+                          );
+                          return;
+                        }
+                      }
+                      
                       const formattedDate = selectedDate.toISOString().split('T')[0];
                       handleInputChange(field.key, formattedDate);
+                      
+                      // Phase 1.2: Trigger DMVIC check on cover date change
+                      if (field.key === 'cover_start_date' && onCoverDateChange) {
+                        onCoverDateChange(formattedDate);
+                      }
                     }
                   }}
-                  minimumDate={new Date()}
                 />
+              )}
+              {/* Phase 1.2: Show helper text when minDate is enforced */}
+              {field.key === 'cover_start_date' && minCoverStartDate && (
+                <Text style={styles.helperText}>
+                  ⚠️ Minimum date: {new Date(minCoverStartDate).toLocaleDateString()} (existing cover expires {
+                    new Date(new Date(minCoverStartDate).getTime() - 24 * 60 * 60 * 1000).toLocaleDateString()
+                  })
+                </Text>
               )}
               {validationErrors[field.key] && (
                 <Text style={styles.errorText}>{validationErrors[field.key]}</Text>
@@ -791,32 +916,18 @@ const DynamicPolicyForm = ({ selectedProduct, onDataChange, initialData = {}, va
           return null;
         }
         
-        // Show loading state - only when actively comparing
         const canCompare = canCompareUnderwriters();
-        const hasSelectedUnderwriter = formData[field.key] || selectedUnderwriter;
+        const hasComparisons = underwriterComparisons.length > 0;
         const isLoading = comparingUnderwriters;
-        
-        if (isLoading) {
-          return (
-            <View key={field.key} style={styles.fieldContainer}>
-              <Text style={styles.label}>
-                {field.label} {field.required && <Text style={styles.required}>*</Text>}
-              </Text>
-              <View style={styles.loadingContainer}>
-                <ActivityIndicator size="large" color="#D5222B" />
-                <Text style={styles.loadingText}>Loading underwriter prices...</Text>
-              </View>
-            </View>
-          );
-        }
-        
-        // Show error if comparison failed or returned no results
-        if (comparisonError) {
-          return (
-            <View key={field.key} style={styles.fieldContainer}>
-              <Text style={styles.label}>
-                {field.label} <Text style={styles.required}>*</Text>
-              </Text>
+
+        return (
+          <View key={field.key} style={styles.fieldContainer} ref={underwriterSectionRef}>
+            <Text style={styles.label}>
+              {field.label} {field.required && <Text style={styles.required}>*</Text>}
+            </Text>
+
+            {/* Show error if comparison failed and no previous comparisons to show */}
+            {!isLoading && comparisonError && !hasComparisons && (
               <View style={styles.errorContainer}>
                 <Ionicons name="alert-circle" size={24} color="#DC2626" />
                 <Text style={styles.errorText}>{comparisonError}</Text>
@@ -827,7 +938,6 @@ const DynamicPolicyForm = ({ selectedProduct, onDataChange, initialData = {}, va
                     setLastComparisonData(null);
                     lastComparisonKeyRef.current = null;
                     comparisonTriggerRef.current = null;
-                    // Re-trigger comparison using the unified path
                     triggerUnderwriterComparison();
                   }}
                 >
@@ -835,163 +945,155 @@ const DynamicPolicyForm = ({ selectedProduct, onDataChange, initialData = {}, va
                   <Text style={styles.retryButtonText}>Retry</Text>
                 </TouchableOpacity>
               </View>
-            </View>
-          );
-        }
-        
-        // Show message if no comparisons available yet and form not ready
-        if (underwriterComparisons.length === 0 && !canCompare) {
-          return (
-            <View key={field.key} style={styles.fieldContainer}>
-              <Text style={styles.label}>
-                {field.label} <Text style={styles.required}>*</Text>
-              </Text>
+            )}
+            
+            {/* Show message if no comparisons available yet and form not ready, and not loading */}
+            {!isLoading && !hasComparisons && !canCompare && (
               <View style={styles.noUnderwritersContainer}>
                 <Text style={styles.noUnderwritersText}>
                   Please fill in the required fields above to compare underwriter prices
                 </Text>
               </View>
-            </View>
-          );
-        }
-        
-        return (
-          <View key={field.key} style={styles.fieldContainer}>
-            <Text style={styles.label}>
-              {field.label} {field.required && <Text style={styles.required}>*</Text>}
-            </Text>
-            <View style={styles.underwriterFieldContainer}>
-              {(() => {
-                // For EXT subcategories, only display underwriters that support extendible
-                const isExtProduct = Boolean(selectedProduct?.subcategory_code?.includes('EXT') || selectedProduct?.is_extendible);
-                const displayComparisons = isExtProduct
-                  ? underwriterComparisons.filter(u => u?.is_extendible || !!u?.extendible_config)
-                  : underwriterComparisons;
-                return displayComparisons;
-              })().map((comparison, index) => (
-                <TouchableOpacity 
-                  key={comparison.id || index} 
-                  style={[
-                    styles.underwriterOption,
-                    formData[field.key] === comparison.name && styles.selectedUnderwriterOption
-                  ]}
-                  onPress={() => {
-                    setSelectedUnderwriter(comparison);
-                    handleInputChange(field.key, comparison.name);
-                    // Notify parent component about underwriter selection
-                    if (onUnderwriterSelection) {
-                      onUnderwriterSelection(comparison);
-                    }
-                  }}
-                  activeOpacity={0.9}
-                >
-                  <View style={styles.underwriterOptionContent}>
-                    <View style={styles.underwriterHeader}>
-                      <View style={styles.underwriterInfo}>
+            )}
+
+            {/* Render existing comparisons if available, even when loading */}
+            {(hasComparisons || isLoading) && (
+              <View style={styles.underwriterFieldContainer}>
+                {(() => {
+                  const isExtProduct = Boolean(selectedProduct?.subcategory_code?.includes('EXT') || selectedProduct?.is_extendible);
+                  const displayComparisons = isExtProduct
+                    ? underwriterComparisons.filter(u => u?.is_extendible || !!u?.extendible_config)
+                    : underwriterComparisons;
+                  return displayComparisons;
+                })().map((comparison, index) => (
+                  <TouchableOpacity 
+                    key={comparison.id || index} 
+                    style={[
+                      styles.underwriterOption,
+                      formData[field.key] === comparison.name && styles.selectedUnderwriterOption
+                    ]}
+                    onPress={() => {
+                      setSelectedUnderwriter(comparison);
+                      handleInputChange(field.key, comparison.name);
+                      underwriterSelectedRef.current = true; // Set ref immediately on selection
+                      if (onUnderwriterSelection) {
+                        onUnderwriterSelection(comparison);
+                      }
+                    }}
+                    activeOpacity={0.9}
+                  >
+                    <View style={styles.underwriterOptionContent}>
+                      <View style={styles.underwriterHeader}>
+                        <View style={styles.underwriterInfo}>
+                          <Text style={[
+                            styles.underwriterOptionName,
+                            formData[field.key] === comparison.name && styles.selectedUnderwriterText
+                          ]}>
+                            {comparison.name}
+                          </Text>
+                          <Text style={styles.marketPositionBadge}>
+                            {comparison.market_position || 'Standard'}
+                          </Text>
+                        </View>
                         <Text style={[
-                          styles.underwriterOptionName,
+                          styles.underwriterOptionPrice,
                           formData[field.key] === comparison.name && styles.selectedUnderwriterText
                         ]}>
-                          {comparison.name}
-                        </Text>
-                        <Text style={styles.marketPositionBadge}>
-                          {comparison.market_position || 'Standard'}
+                          KSh {comparison.total_premium?.toLocaleString() || 'N/A'}
                         </Text>
                       </View>
-                      <Text style={[
-                        styles.underwriterOptionPrice,
-                        formData[field.key] === comparison.name && styles.selectedUnderwriterText
-                      ]}>
-                        KSh {comparison.total_premium?.toLocaleString() || 'N/A'}
-                      </Text>
-                    </View>
-                    
-                    {/* Calculation Summary (uses backend breakdown when available) */}
-                    <View style={styles.calculationSummary}>
-                      {(() => {
-                        const base = Number(
-                          comparison.premium_breakdown?.base_premium ??
-                          comparison.breakdown?.base_premium ??
-                          comparison.breakdown?.base ??
-                          comparison.base_premium ??
-                          0
-                        );
-                        const itl = Number(
-                          comparison.premium_breakdown?.training_levy ??
-                          comparison.breakdown?.training_levy ??
-                          comparison.training_levy ??
-                          (base * 0.0025)
-                        );
-                        const pcf = Number(
-                          comparison.premium_breakdown?.pcf_levy ??
-                          comparison.breakdown?.pcf_levy ??
-                          comparison.pcf_levy ??
-                          (base * 0.0025)
-                        );
-                        const stamp = Number(
-                          comparison.premium_breakdown?.stamp_duty ??
-                          comparison.breakdown?.stamp_duty ??
-                          comparison.stamp_duty ??
-                          40
-                        );
-                        const total = Number(
-                          comparison.total_premium ??
-                          comparison.premium_breakdown?.total_premium ??
-                          comparison.totalPremium ??
-                          (base + itl + pcf + stamp)
-                        );
-                        return (
-                          <>
-                            <Text style={styles.calculationLabel}>Calculation Breakdown:</Text>
-                            <View style={styles.calculationRow}>
-                              <Text style={styles.calculationItem}>
-                                Base Premium: KSh {base.toLocaleString()}
-                              </Text>
-                              <Text style={styles.calculationItem}>
-                                Training Levy (0.25%): KSh {itl.toFixed(2)}
-                              </Text>
-                            </View>
-                            <View style={styles.calculationRow}>
-                              <Text style={styles.calculationItem}>
-                                PCF Levy (0.25%): KSh {pcf.toFixed(2)}
-                              </Text>
-                              <Text style={styles.calculationItem}>
-                                Stamp Duty: KSh {stamp.toFixed(2)}
-                              </Text>
-                            </View>
-                            <View style={styles.calculationTotal}>
-                              <Text style={styles.calculationTotalText}>
-                                Total Premium: KSh {total.toLocaleString()}
-                              </Text>
-                            </View>
-                            {/* Show extendible split if available to highlight differences */}
-                            {comparison.extendible_config && (
-                              <View style={{ marginTop: 6 }}>
-                                <Text style={styles.calculationLabel}>Extendible Plan:</Text>
-                                <View style={styles.calculationRow}>
-                                  <Text style={styles.calculationItem}>
-                                    Initial Payment: KSh {Number(comparison.extendible_config.initial_amount || 0).toLocaleString()}
-                                  </Text>
-                                  <Text style={styles.calculationItem}>
-                                    Balance: KSh {Number(
-                                      comparison.extendible_config.balance_amount ??
-                                      Math.max(0, (comparison.extendible_config.total_annual_premium || 0) - (comparison.extendible_config.initial_amount || 0))
-                                    ).toLocaleString()}
-                                  </Text>
-                                </View>
+                      
+                      <View style={styles.calculationSummary}>
+                        {(() => {
+                          const base = Number(
+                            comparison.premium_breakdown?.base_premium ??
+                            comparison.breakdown?.base_premium ??
+                            comparison.breakdown?.base ??
+                            comparison.base_premium ??
+                            0
+                          );
+                          const itl = Number(
+                            comparison.premium_breakdown?.training_levy ??
+                            comparison.breakdown?.training_levy ??
+                            comparison.training_levy ??
+                            (base * 0.0025)
+                          );
+                          const pcf = Number(
+                            comparison.premium_breakdown?.pcf_levy ??
+                            comparison.breakdown?.pcf_levy ??
+                            comparison.pcf_levy ??
+                            (base * 0.0025)
+                          );
+                          const stamp = Number(
+                            comparison.premium_breakdown?.stamp_duty ??
+                            comparison.breakdown?.stamp_duty ??
+                            comparison.stamp_duty ??
+                            40
+                          );
+                          const total = Number(
+                            comparison.total_premium ??
+                            comparison.premium_breakdown?.total_premium ??
+                            comparison.totalPremium ??
+                            (base + itl + pcf + stamp)
+                          );
+                          return (
+                            <>
+                              <Text style={styles.calculationLabel}>Calculation Breakdown:</Text>
+                              <View style={styles.calculationRow}>
+                                <Text style={styles.calculationItem}>
+                                  Base Premium: KSh {base.toLocaleString()}
+                                </Text>
+                                <Text style={styles.calculationItem}>
+                                  Training Levy (0.25%): KSh {itl.toFixed(2)}
+                                </Text>
                               </View>
-                            )}
-                          </>
-                        );
-                      })()}
+                              <View style={styles.calculationRow}>
+                                <Text style={styles.calculationItem}>
+                                  PCF Levy (0.25%): KSh {pcf.toFixed(2)}
+                                </Text>
+                                <Text style={styles.calculationItem}>
+                                  Stamp Duty: KSh {stamp.toFixed(2)}
+                                </Text>
+                              </View>
+                              <View style={styles.calculationTotal}>
+                                <Text style={styles.calculationTotalText}>
+                                  Total Premium: KSh {total.toLocaleString()}
+                                </Text>
+                              </View>
+                              {comparison.extendible_config && (
+                                <View style={{ marginTop: 6 }}>
+                                  <Text style={styles.calculationLabel}>Extendible Plan:</Text>
+                                  <View style={styles.calculationRow}>
+                                    <Text style={styles.calculationItem}>
+                                      Initial Payment: KSh {Number(comparison.extendible_config.initial_amount || 0).toLocaleString()}
+                                    </Text>
+                                    <Text style={styles.calculationItem}>
+                                      Balance: KSh {Number(
+                                        comparison.extendible_config.balance_amount ??
+                                        Math.max(0, (comparison.extendible_config.total_annual_premium || 0) - (comparison.extendible_config.initial_amount || 0))
+                                      ).toLocaleString()}
+                                    </Text>
+                                  </View>
+                                </View>
+                              )}
+                            </>
+                          );
+                        })()}
+                      </View>
                     </View>
+                    {formData[field.key] === comparison.name && (
+                      <Text style={styles.underwriterSelectedIcon}>✓</Text>
+                    )}
+                  </TouchableOpacity>
+                ))}
+                {isLoading && (
+                  <View style={styles.loadingOverlay}>
+                    <ActivityIndicator size="large" color="#D5222B" />
+                    <Text style={styles.loadingText}>Loading underwriter prices...</Text>
                   </View>
-                  {formData[field.key] === comparison.name && (
-                    <Text style={styles.underwriterSelectedIcon}>✓</Text>
-                  )}
-                </TouchableOpacity>
-              ))}
-            </View>
+                )}
+              </View>
+            )}
             {validationErrors[field.key] && (
               <Text style={styles.errorText}>{validationErrors[field.key]}</Text>
             )}
@@ -1009,32 +1111,65 @@ const DynamicPolicyForm = ({ selectedProduct, onDataChange, initialData = {}, va
           ? formData[field.key].toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ')
           : (formData[field.key] || '');
         
-        // Create stable handler to prevent TextInput recreation and focus loss
-        const handleTextChange = useCallback((value) => {
-          const cleanValue = isFormattedNumber ? value.replace(/\s/g, '') : value;
-          handleInputChange(field.key, cleanValue);
-        }, [field.key, isFormattedNumber]);
-        
         return (
           <View key={field.key} style={styles.fieldContainer}>
             <Text style={styles.label}>
               {dynamicLabel} {field.required && <Text style={styles.required}>*</Text>}
             </Text>
-            <MemoizedTextInput
-              fieldKey={field.key}
-              value={displayValue}
-              onChangeText={handleTextChange}
-              placeholder={dynamicPlaceholder}
-              keyboardType={field.type === 'number' || field.type === 'currency' || field.type === 'formatted_number' ? 'numeric' : 'default'}
-              autoCapitalize={field.key === 'registrationNumber' ? 'characters' : 'words'}
-              style={styles.input}
-              hasError={!!validationErrors[field.key]}
-            />
+            {/* Phase 1.2: Registration field with inline DMVIC indicators */}
+            <View style={field.key === 'registrationNumber' ? styles.registrationFieldContainer : null}>
+              <MemoizedTextInput
+                fieldKey={field.key}
+                value={displayValue}
+                onChangeText={(value) => {
+                  const cleanValue = isFormattedNumber ? value.replace(/\s/g, '') : value;
+                  handleInputChange(field.key, cleanValue);
+                }}
+                placeholder={dynamicPlaceholder}
+                keyboardType={field.type === 'number' || field.type === 'currency' || field.type === 'formatted_number' ? 'numeric' : 'default'}
+                autoCapitalize={field.key === 'registrationNumber' ? 'characters' : 'words'}
+                style={[
+                  styles.input,
+                  field.key === 'registrationNumber' && styles.registrationInput
+                ]}
+                hasError={!!validationErrors[field.key]}
+              />
+              {/* Phase 1.2: Inline loading indicator for registration */}
+              {field.key === 'registrationNumber' && dmvicLoading && (
+                <ActivityIndicator 
+                  size="small" 
+                  color="#D5222B" 
+                  style={styles.inlineLoader}
+                />
+              )}
+              {/* Phase 1.2: Checkmark when no existing cover */}
+              {field.key === 'registrationNumber' && !dmvicLoading && existingCoverData?.hasExistingCover === false && formData[field.key] && formData[field.key].length >= 6 && (
+                <Ionicons 
+                  name="checkmark-circle" 
+                  size={24} 
+                  color="#4CAF50" 
+                  style={styles.checkIcon}
+                />
+              )}
+              {/* Phase 1.2: Error icon on DMVIC failure */}
+              {field.key === 'registrationNumber' && dmvicError && (
+                <Ionicons 
+                  name="alert-circle" 
+                  size={24} 
+                  color="#FF9800" 
+                  style={styles.errorIcon}
+                />
+              )}
+            </View>
             {field.help && (
               <Text style={styles.helpText}>{field.help}</Text>
             )}
             {validationErrors[field.key] && (
               <Text style={styles.errorText}>{validationErrors[field.key]}</Text>
+            )}
+            {/* Phase 1.2: Show DMVIC error message */}
+            {field.key === 'registrationNumber' && dmvicError && (
+              <Text style={styles.warningText}>⚠️ {dmvicError} (You can proceed anyway)</Text>
             )}
           </View>
         );
@@ -1044,6 +1179,13 @@ const DynamicPolicyForm = ({ selectedProduct, onDataChange, initialData = {}, va
   // Initialize once when product changes; avoid depending on object props to prevent loops
   useEffect(() => {
     const initialFormData = initialData || values || {};
+    
+    // CRITICAL FIX: Apply default values for fields that have them
+    // If cover_start_date is missing, set it to today's date
+    if (!initialFormData.cover_start_date) {
+      initialFormData.cover_start_date = new Date().toISOString().split('T')[0];
+    }
+    
     // Only update if content actually changed to avoid re-render loops
     const sameKeys = Object.keys(initialFormData).length === Object.keys(formData || {}).length;
     const isSame = sameKeys && Object.keys(initialFormData).every(k => initialFormData[k] === formData[k]);
@@ -1086,6 +1228,7 @@ const DynamicPolicyForm = ({ selectedProduct, onDataChange, initialData = {}, va
 
   return (
     <ScrollView 
+      ref={scrollViewRef}
       style={styles.container} 
       contentContainerStyle={{ paddingBottom: 24 }}
       showsVerticalScrollIndicator={false}
@@ -1635,6 +1778,54 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#856404',
     textAlign: 'center',
+  },
+  // Phase 1.2 & 3.3: DMVIC inline indicator styles
+  registrationFieldContainer: {
+    position: 'relative',
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  registrationInput: {
+    flex: 1,
+  },
+  inlineLoader: {
+    position: 'absolute',
+    right: 12,
+    top: 12,
+  },
+  checkIcon: {
+    position: 'absolute',
+    right: 12,
+    top: 12,
+  },
+  errorIcon: {
+    position: 'absolute',
+    right: 12,
+    top: 12,
+  },
+  helperText: {
+    fontSize: 12,
+    color: '#FF9800',
+    marginTop: 4,
+    fontStyle: 'italic',
+  },
+  warningText: {
+    fontSize: 12,
+    color: '#FF9800',
+    marginTop: 4,
+    fontStyle: 'italic',
+  },
+  loadingOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(255, 255, 255, 0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderRadius: 8,
+    zIndex: 10,
   },
 });
 

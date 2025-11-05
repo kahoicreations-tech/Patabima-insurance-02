@@ -37,7 +37,8 @@ foreach ($dir in $directories) {
     if (!(Test-Path $fullPath)) {
         New-Item -ItemType Directory -Force -Path $fullPath | Out-Null
         Write-Host "  ✅ Created: $dir" -ForegroundColor Green
-    } else {
+    }
+    else {
         Write-Host "  ⏭️  Exists: $dir" -ForegroundColor Gray
     }
 }
@@ -256,7 +257,7 @@ Most scripts require:
 - Python dependencies from backend/requirements.txt
 "@
 
-    "scripts/fixes/README.md" = @"
+    "scripts/fixes/README.md"       = @"
 # Fix Scripts
 
 This directory contains one-time fix scripts used to resolve specific data or configuration issues.
@@ -278,7 +279,7 @@ These scripts modify data. Always:
 4. Document what was fixed in commit message
 "@
 
-    "scripts/tests/README.md" = @"
+    "scripts/tests/README.md"       = @"
 # Test Scripts
 
 This directory contains standalone test scripts for testing specific functionality.

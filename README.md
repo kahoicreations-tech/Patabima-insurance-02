@@ -10,6 +10,7 @@
 PataBima is a comprehensive React Native Expo application for insurance sales agents in Kenya. The app enables agents to generate quotations, compare underwriter pricing, process payments, and manage policies across multiple insurance categories with sophisticated pricing calculations. The system handles 60+ motor insurance products with real-time premium calculations, mandatory regulatory levies, and dynamic form generation.
 
 **Key Features:**
+
 - 60+ motor insurance products across 6 categories
 - Real-time premium calculations with caching (12h TTL)
 - Multi-underwriter comparison (7 providers)
@@ -94,12 +95,13 @@ PATABIMA01/
 ```
 
 📚 **[View Complete Project Structure →](PROJECT_STRUCTURE.md)**
-├── 📁 docs/                      # Organized documentation
-│   ├── 📁 build-guides/         # Build & APK guides
-│   ├── 📁 setup-guides/         # Setup instructions
-│   └── 📁 deployment/           # Deployment guides
-└── 📁 scripts/                   # Build utilities
-```
+├── 📁 docs/ # Organized documentation
+│ ├── 📁 build-guides/ # Build & APK guides
+│ ├── 📁 setup-guides/ # Setup instructions
+│ └── 📁 deployment/ # Deployment guides
+└── 📁 scripts/ # Build utilities
+
+````
 
 ## ✨ Features
 
@@ -178,7 +180,7 @@ npm run web        # Run on web browser
 npm run build:android           # Build Android APK
 npm run build:android:production # Build production APK
 npm run build:ios              # Build iOS app
-```
+````
 
 ### Development Environment
 

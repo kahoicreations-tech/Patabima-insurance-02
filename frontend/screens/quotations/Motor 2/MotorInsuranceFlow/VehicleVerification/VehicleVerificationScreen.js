@@ -1,18 +1,96 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useMotorInsurance } from '@contexts/MotorInsuranceContext';
 
 /**
  * Vehicle Verification Screen
  * Displays DMVIC check results showing existing cover information
- * Matches CategorySelectionStep.js drawer design with handle, header, and bottom actions
+ * Phase 3.1: Enhanced with auto-date adjustment and context integration
  */
 const VehicleVerificationScreen = ({ 
   existingCoverData, 
   onAdjustStartDate, 
   onSubmitDebitNote 
 }) => {
+  const { actions } = useMotorInsurance();
+  
   console.log('🎨 [VehicleVerificationScreen] Rendering with data:', existingCoverData);
+  
+  // Phase 3.1: Enhanced handler with auto-date adjustment
+  const handleAdjustDate = () => {
+    console.log('📅 [VehicleVerificationScreen] Adjust date clicked');
+    
+    if (!existingCoverData?.expiryDate && !existingCoverData?.policy?.expiry_date) {
+      console.warn('⚠️ [VehicleVerificationScreen] No expiry date found');
+      onAdjustStartDate?.();
+      return;
+    }
+    
+    try {
+      // Get expiry date from either structure
+      const expiryDateStr = existingCoverData.expiryDate || existingCoverData.policy?.expiry_date;
+      
+      // Parse date (handles DD/MM/YYYY, YYYY-MM-DD, ISO formats)
+      let expiryDate;
+      if (expiryDateStr.includes('/')) {
+        // DD/MM/YYYY format
+        const [day, month, year] = expiryDateStr.split('/');
+        expiryDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+      } else if (expiryDateStr.includes('-')) {
+        // YYYY-MM-DD or ISO format
+        expiryDate = new Date(expiryDateStr);
+      } else {
+        expiryDate = new Date(expiryDateStr);
+      }
+      
+      // Calculate minimum date (expiry + 1 day)
+      const minDate = new Date(expiryDate);
+      minDate.setDate(minDate.getDate() + 1);
+      
+      const minDateISO = minDate.toISOString().split('T')[0];
+      
+      console.log('ℹ️ [VehicleVerificationScreen] Existing cover expires:', expiryDateStr);
+      console.log('ℹ️ [VehicleVerificationScreen] Setting minimum date to:', minDateISO);
+      
+      // Update context with minimum date constraint
+      actions.setMinCoverStartDate(minDateISO);
+      
+      // Update vehicle details with new cover start date
+      actions.updateVehicleDetails({
+        cover_start_date: minDateISO,
+        coverStartDate: minDateISO,
+      });
+      
+      // Show confirmation
+      Alert.alert(
+        'Cover Start Date Updated',
+        `The policy start date has been adjusted to ${minDate.toLocaleDateString('en-GB')} (one day after existing cover expires).`,
+        [
+          {
+            text: 'OK',
+            onPress: () => {
+              console.log('✅ [VehicleVerificationScreen] Date adjustment confirmed');
+              onAdjustStartDate?.();
+            }
+          }
+        ]
+      );
+      
+    } catch (error) {
+      console.error('❌ [VehicleVerificationScreen] Error parsing date:', error);
+      Alert.alert(
+        'Date Parse Error',
+        'Unable to parse the existing cover expiry date. Please set the start date manually.',
+        [
+          {
+            text: 'OK',
+            onPress: () => onAdjustStartDate?.()
+          }
+        ]
+      );
+    }
+  };
   
   if (!existingCoverData) {
     console.log('❌ [VehicleVerificationScreen] No existing cover data, returning null');
@@ -36,9 +114,9 @@ const VehicleVerificationScreen = ({
 
       {/* Header */}
       <View style={styles.drawerHeader}>
-        <Text style={styles.drawerTitle}>Vehicle Has Existing Cover</Text>
+        <Text style={styles.drawerTitle}>Existing Cover Detected</Text>
         <Text style={styles.drawerSubtitle}>
-          Please adjust the start date to begin after the existing cover expires
+          DMVIC records show this vehicle has active insurance coverage
         </Text>
       </View>
 
@@ -48,8 +126,21 @@ const VehicleVerificationScreen = ({
         contentContainerStyle={styles.scrollContentContainer}
         showsVerticalScrollIndicator={false}
       >
+        {/* Regulatory Notice */}
+        <View style={[styles.infoBox, styles.regulatoryNotice]}>
+          <Ionicons name="shield-checkmark-outline" size={20} color="#2196F3" style={{ marginTop: 2 }} />
+          <View style={{ flex: 1 }}>
+            <Text style={styles.infoBoxTextBold}>DMVIC Regulation</Text>
+            <Text style={styles.infoBoxText}>
+              Insurance policies cannot overlap. The new cover must start after the existing policy expires, as per IRA regulations.
+            </Text>
+          </View>
+        </View>
+
         {/* Policy Details Card */}
         <View style={styles.policyDetailsCard}>
+          <Text style={styles.cardTitle}>Current Policy Details</Text>
+          
           <View style={styles.policyDetailRow}>
             <Text style={styles.policyDetailLabel}>Vehicle Registration</Text>
             <Text style={styles.policyDetailValue}>
@@ -57,33 +148,40 @@ const VehicleVerificationScreen = ({
             </Text>
           </View>
 
-          <View style={[styles.policyDetailRow, styles.noBorder]}>
-            <Text style={styles.policyDetailLabel}>Active Certificate Number</Text>
+          <View style={styles.policyDetailRow}>
+            <Text style={styles.policyDetailLabel}>Certificate Number</Text>
             <Text style={styles.policyDetailValue}>
               {policy.certificate_number || policy.policy_number || 'N/A'}
             </Text>
           </View>
 
-          <View style={[styles.policyDetailRow, styles.noBorder]}>
-            <Text style={styles.policyDetailLabel}>Issued By</Text>
+          <View style={styles.policyDetailRow}>
+            <Text style={styles.policyDetailLabel}>Current Insurer</Text>
             <Text style={styles.policyDetailValue}>
               {policy.insurer || 'N/A'}
             </Text>
           </View>
 
-          <View style={[styles.policyDetailRow, styles.noBorder]}>
-            <Text style={styles.policyDetailLabel}>Expiry Date</Text>
+          <View style={styles.policyDetailRow}>
+            <Text style={styles.policyDetailLabel}>Cover Type</Text>
             <Text style={styles.policyDetailValue}>
-              {policy.expiry_date || 'N/A'}
+              {policy.cover_type || 'N/A'}
+            </Text>
+          </View>
+
+          <View style={[styles.policyDetailRow, styles.noBorder]}>
+            <Text style={styles.policyDetailLabel}>Cover Expires</Text>
+            <Text style={[styles.policyDetailValue, styles.highlightedDate]}>
+              {policy.expiry_date || existingCoverData.expiryDate || 'N/A'}
             </Text>
           </View>
         </View>
 
         {/* Info Box */}
         <View style={styles.infoBox}>
-          <Ionicons name="information-circle" size={18} color="#2196F3" style={{ marginTop: 2 }} />
+          <Ionicons name="information-circle" size={18} color="#4CAF50" style={{ marginTop: 2 }} />
           <Text style={styles.infoBoxText}>
-            The new policy start date will be automatically adjusted to begin one day after the existing cover expires.
+            Click "Adjust Start Date" to automatically update the new policy to begin the day after existing cover expires.
           </Text>
         </View>
       </ScrollView>
@@ -92,7 +190,7 @@ const VehicleVerificationScreen = ({
       <View style={styles.drawerActions}>
         <TouchableOpacity 
           style={[styles.drawerButton, styles.drawerButtonSecondary]}
-          onPress={onAdjustStartDate}
+          onPress={handleAdjustDate}
           activeOpacity={0.8}
         >
           <Text style={styles.drawerButtonSecondaryText}>Adjust Start Date</Text>
@@ -186,6 +284,13 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#E5E7EB',
   },
+  cardTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#111827',
+    marginBottom: 12,
+    letterSpacing: 0.3,
+  },
   policyDetailRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -210,6 +315,11 @@ const styles = StyleSheet.create({
     flex: 1,
     textAlign: 'right',
   },
+  highlightedDate: {
+    color: '#D5222B',
+    fontWeight: '700',
+    fontSize: 15,
+  },
 
   // Info Box
   infoBox: {
@@ -224,12 +334,24 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     gap: 10,
   },
+  regulatoryNotice: {
+    backgroundColor: '#E0F2FE',
+    borderLeftColor: '#0284C7',
+    marginBottom: 16,
+  },
   infoBoxText: {
     flex: 1,
     fontSize: 12,
     color: '#1E40AF',
     lineHeight: 17,
     fontWeight: '400',
+  },
+  infoBoxTextBold: {
+    fontSize: 13,
+    color: '#0C4A6E',
+    fontWeight: '700',
+    marginBottom: 4,
+    letterSpacing: 0.2,
   },
 
   // Action Buttons - Fixed at bottom

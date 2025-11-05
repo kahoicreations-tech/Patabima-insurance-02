@@ -33,6 +33,12 @@ const initialState = {
   selectedAddons: [],
   addonsPremium: 0,
   addonsBreakdown: [],
+  // DMVIC state management (Phase 3.2)
+  dmvicCache: {}, // { regNumber: { result, timestamp } }
+  dmvicCacheTTL: 30 * 60 * 1000, // 30 minutes
+  minCoverStartDate: null, // ISO string or null - minimum date enforced by DMVIC existing cover
+  existingCoverData: null, // { hasExistingCover, expiryDate, policyNumber, underwriter }
+  showVerificationScreen: false, // Controls VehicleVerificationScreen modal visibility
   // History State for undo/redo
   past: [],
   future: [],
@@ -252,6 +258,41 @@ function reducer(state, action) {
       };
       return { ...state, ...next, past: [...state.past, present], future: newFuture };
     }
+    case 'SET_EXISTING_COVER_DATA':
+      return {
+        ...state,
+        existingCoverData: action.payload,
+      };
+    case 'SET_MIN_COVER_START_DATE':
+      return {
+        ...state,
+        minCoverStartDate: action.payload,
+      };
+    case 'SET_SHOW_VERIFICATION_SCREEN':
+      return {
+        ...state,
+        showVerificationScreen: action.payload,
+      };
+    case 'CACHE_DMVIC_RESULT': {
+      return {
+        ...state,
+        dmvicCache: {
+          ...state.dmvicCache,
+          [action.payload.regNumber]: {
+            result: action.payload.result,
+            timestamp: Date.now(),
+          },
+        },
+      };
+    }
+    case 'CLEAR_DMVIC_CACHE':
+      return {
+        ...state,
+        dmvicCache: {},
+        existingCoverData: null,
+        minCoverStartDate: null,
+        showVerificationScreen: false,
+      };
     case 'RESET_FLOW':
       // Reset to completely clean initial state - no data preservation
       return {
@@ -636,6 +677,36 @@ export function MotorInsuranceProvider({ children }) {
       } catch (error) {
         console.warn('⚠️ Failed to clear persisted state:', error);
       }
+    },
+    
+    // DMVIC actions (Phase 3.2)
+    setExistingCoverData: (data) => {
+      dispatch({ type: 'SET_EXISTING_COVER_DATA', payload: data });
+    },
+    
+    setMinCoverStartDate: (date) => {
+      dispatch({ type: 'SET_MIN_COVER_START_DATE', payload: date });
+    },
+    
+    setShowVerificationScreen: (show) => {
+      dispatch({ type: 'SET_SHOW_VERIFICATION_SCREEN', payload: show });
+    },
+    
+    getCachedDMVICResult: (regNumber) => {
+      const cached = state.dmvicCache[regNumber];
+      const isValid = cached && (Date.now() - cached.timestamp < state.dmvicCacheTTL);
+      return isValid ? cached.result : null;
+    },
+    
+    cacheDMVICResult: (regNumber, result) => {
+      dispatch({
+        type: 'CACHE_DMVIC_RESULT',
+        payload: { regNumber, result },
+      });
+    },
+    
+    clearDMVICCache: () => {
+      dispatch({ type: 'CLEAR_DMVIC_CACHE' });
     },
     
     undo: () => dispatch({ type: 'UNDO' }),
