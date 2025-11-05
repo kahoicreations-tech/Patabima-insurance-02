@@ -561,7 +561,8 @@ const DynamicPolicyForm = ({
       nextValue = value.toUpperCase().replace(/\s+/g, ' ');
     }
 
-    const newFormData = { ...formData, [key]: nextValue };
+    // Use latestFormRef.current instead of formData state to avoid dependency
+    const newFormData = { ...latestFormRef.current, [key]: nextValue };
 
     // If a pricing-critical field changes, clear any previously selected underwriter
     // Note: 'underwriter' is NOT included here because selecting an underwriter should persist
@@ -659,19 +660,20 @@ const DynamicPolicyForm = ({
       onChange(newFormData);
     }
   }, [
-    formData, 
+    // Remove formData dependency - use latestFormRef.current inside the callback
+    // This prevents handleInputChange from being recreated on every keystroke
     selectedUnderwriter, 
     comparisonKey, 
     comparingUnderwriters, 
     onDataChange, 
     onChange, 
-    getFormFields, 
-    validateField, 
+    // getFormFields is memoized, so it's stable
+    // validateField is not memoized but needs to be stable - wrap it separately
     onRegistrationChange, 
     onCoverDateChange
   ]);
 
-  const validateField = (key, value) => {
+  const validateField = useCallback((key, value) => {
     const field = getFormFields.find(f => f.key === key);
     if (!field) return null;
 
@@ -709,7 +711,8 @@ const DynamicPolicyForm = ({
         break;
       case 'text':
         if (key === 'registrationNumber' && value) {
-          const identificationType = formData.identificationType;
+          // Use latestFormRef to avoid dependency on formData
+          const identificationType = latestFormRef.current.identificationType;
           if (identificationType === 'Vehicle Registration') {
             // Kenyan vehicle registration format validation
             // Format: KXX 123X or KXX123X (e.g., KAA 123A, KBZ456C)
@@ -740,7 +743,7 @@ const DynamicPolicyForm = ({
     }
 
     return null;
-  };
+  }, [getFormFields]); // Only depend on getFormFields which is already memoized
 
   const renderField = (field) => {
     // Check if this field should be locked
