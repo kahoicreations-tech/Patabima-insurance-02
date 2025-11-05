@@ -305,7 +305,7 @@ export default function MotorInsuranceContainer({ route, navigation }) {
       case 'Add-ons':
         return <AddonSelectionStep />;
       case 'Documents':
-        return <DocumentsStep />;
+        return <DocumentsStep onExtractedData={handleDocumentExtracted} />;
       case 'Client Details':
         return <ClientDetailsStep />;
       case 'Payment':
@@ -315,6 +315,61 @@ export default function MotorInsuranceContainer({ route, navigation }) {
         return <SubmissionStep />;
     }
   };
+
+  // Normalize helper for comparing strings like reg/chassis
+  const normalize = (v) => (v || '').toString().toUpperCase().replace(/\s+/g, '').trim();
+
+  // Handle extracted data from documents and compare with DMVIC/vehicle details
+  const handleDocumentExtracted = useCallback((documentKey, fields) => {
+    try {
+      // Persist extracted fields in context, both under key and merged 'all'
+      const prevAll = state.extractedDocuments?.all || {};
+      actions.updateExtractedDocuments({
+        [documentKey]: fields,
+        all: { ...prevAll, ...fields },
+      });
+
+      // If logbook, compare critical identifiers with current DMVIC/vehicle details
+      if (documentKey === 'logbook') {
+        const dv = state.vehicleDetails || {};
+        const mismatches = [];
+        if (fields.registration_number && dv.registrationNumber && normalize(fields.registration_number) !== normalize(dv.registrationNumber)) {
+          mismatches.push('Registration Number');
+        }
+        if (fields.chassis_number && (dv.chassisNumber || dv.chassis_number) && normalize(fields.chassis_number) !== normalize(dv.chassisNumber || dv.chassis_number)) {
+          mismatches.push('Chassis Number');
+        }
+
+        if (mismatches.length) {
+          Alert.alert(
+            'Data Mismatch Detected',
+            `Logbook vs DMVIC ${mismatches.join(' & ')} differ. Which source should we use?`,
+            [
+              {
+                text: 'Use DMVIC',
+                style: 'cancel',
+              },
+              {
+                text: 'Use Logbook Data',
+                style: 'default',
+                onPress: () => {
+                  const patch = {};
+                  if (fields.registration_number) patch.registrationNumber = fields.registration_number.toUpperCase();
+                  if (fields.chassis_number) patch.chassisNumber = fields.chassis_number.toUpperCase();
+                  if (fields.engine_number) patch.engineNumber = fields.engine_number.toUpperCase();
+                  if (fields.make) patch.make = fields.make;
+                  if (fields.model) patch.model = fields.model;
+                  actions.updateVehicleDetails(patch);
+                },
+              },
+            ]
+          );
+        }
+      }
+    } catch (e) {
+      console.warn('[MotorInsuranceContainer] handleDocumentExtracted error:', e?.message || e);
+    }
+  }, [state.extractedDocuments?.all, state.vehicleDetails]);
 
   return (
     <View style={styles.screen}>

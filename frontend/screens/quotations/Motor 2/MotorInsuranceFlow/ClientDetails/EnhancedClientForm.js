@@ -79,93 +79,55 @@ export default function EnhancedClientForm({
 
   // Apply extracted data on mount or when extractedData changes
   useEffect(() => {
-    if (!extractedData || Object.keys(extractedData).length === 0) {
-      return; // No extracted data to apply
+    if (!extractedData || Object.keys(extractedData).length === 0 || hasAppliedExtractedData.current) {
+      return; // No data or already applied
     }
-    
-    // Apply extracted data to form fields
-    const updated = { ...values };
+
+    const newValues = { ...values };
     let hasChanges = false;
 
-    const shouldOverwrite = (current, incoming, opts = {}) => {
-      const cur = (current ?? '').toString().trim();
-      const inc = (incoming ?? '').toString().trim();
-      if (!inc) return false;
-      if (!cur) return true;
-      // If min length required and current is clearly partial, overwrite
-      if (opts.minLen && cur.length < opts.minLen && inc.length >= opts.minLen) return true;
-      // If current is a prefix of incoming (e.g., 'KCA' vs 'KCA123A'), overwrite
-      if (inc.toUpperCase().startsWith(cur.toUpperCase()) && inc.length > cur.length) return true;
-      return false;
+    const mapping = {
+      owner_name: ['first_name', 'last_name'],
+      kra_pin: 'kra_pin',
+      id_number: 'id_number',
+      email: 'email',
+      phone: 'phone',
+      registration_number: 'vehicle_registration',
+      chassis_number: 'chassis_number',
+      make: 'vehicle_make',
+      model: 'vehicle_model'
     };
-    
-  // Map extracted fields from logbook/ID/KRA to form fields
-    if (extractedData.owner_name) {
-      const name = extractedData.owner_name.trim();
-      const nameParts = name.split(/\s+/);
-      const computedFirst = nameParts[0] || '';
-      const computedLast = nameParts.slice(1).join(' ') || '';
-      const firstHasSpace = (updated.first_name || '').includes(' ');
-      if (!updated.first_name || firstHasSpace || !updated.last_name) {
-        if (computedFirst && updated.first_name !== computedFirst) { updated.first_name = computedFirst; hasChanges = true; }
-        if (computedLast && updated.last_name !== computedLast) { updated.last_name = computedLast; hasChanges = true; }
+
+    for (const [extractedKey, formKey] of Object.entries(mapping)) {
+      if (extractedData[extractedKey]) {
+        if (Array.isArray(formKey)) {
+          const nameParts = extractedData[extractedKey].trim().split(/\s+/);
+          const first = nameParts[0] || '';
+          const last = nameParts.slice(1).join(' ') || '';
+          if (first && newValues[formKey[0]] !== first) {
+            newValues[formKey[0]] = first;
+            hasChanges = true;
+          }
+          if (last && newValues[formKey[1]] !== last) {
+            newValues[formKey[1]] = last;
+            hasChanges = true;
+          }
+        } else {
+          const newValue = extractedData[extractedKey].toString().trim();
+          if (newValues[formKey] !== newValue) {
+            newValues[formKey] = newValue;
+            hasChanges = true;
+          }
+        }
       }
     }
 
-    // Email and phone from documents (if any)
-    if (extractedData.email && shouldOverwrite(updated.email, extractedData.email)) {
-      updated.email = extractedData.email.trim();
-      hasChanges = true;
+    if (hasChanges) {
+      onChange?.(newValues);
+      hasAppliedExtractedData.current = true; // Prevent re-applying
+      console.log('✅ Client form auto-filled from extracted data:', newValues);
     }
-    if (extractedData.phone && shouldOverwrite(updated.phone, extractedData.phone, { minLen: 9 })) {
-      updated.phone = extractedData.phone.toString().trim();
-      hasChanges = true;
-    }
-    
-    if (extractedData.registration_number && shouldOverwrite(updated.vehicle_registration, extractedData.registration_number, { minLen: 6 })) {
-      updated.vehicle_registration = extractedData.registration_number.toUpperCase();
-      hasChanges = true;
-    }
-    
-    if (extractedData.chassis_number && shouldOverwrite(updated.chassis_number, extractedData.chassis_number, { minLen: 6 })) {
-      updated.chassis_number = extractedData.chassis_number.toUpperCase();
-      hasChanges = true;
-    }
-    
-    if (extractedData.kra_pin && shouldOverwrite(updated.kra_pin, extractedData.kra_pin, { minLen: 8 })) {
-      updated.kra_pin = extractedData.kra_pin.toUpperCase();
-      hasChanges = true;
-    }
-    
-    if (extractedData.id_number && shouldOverwrite(updated.id_number, extractedData.id_number, { minLen: 6 })) {
-      updated.id_number = extractedData.id_number;
-      hasChanges = true;
-    }
-    
-    // Make and model from logbook
-    if (extractedData.make && shouldOverwrite(updated.vehicle_make, extractedData.make)) {
-      updated.vehicle_make = extractedData.make;
-      hasChanges = true;
-    }
-    
-    if (extractedData.model && shouldOverwrite(updated.vehicle_model, extractedData.model)) {
-      updated.vehicle_model = extractedData.model;
-      hasChanges = true;
-    }
-
-    // Engine number (keep in values for later submission even if not displayed)
-    if (extractedData.engine_number && shouldOverwrite(updated.engine_number, extractedData.engine_number, { minLen: 6 })) {
-      updated.engine_number = extractedData.engine_number.toUpperCase();
-      hasChanges = true;
-    }
-    
-    // Apply changes if any fields were filled
-    if (hasChanges && !hasAppliedExtractedData.current) {
-      hasAppliedExtractedData.current = true;
-      onChange?.(updated);
-      console.log('✅ Client form auto-filled from extracted data:', updated);
-    }
-  }, [extractedData]); // Re-run when extractedData changes
+  }, [extractedData, values, onChange]);
 
   // Validate on form changes
   useEffect(() => {

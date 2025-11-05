@@ -267,13 +267,31 @@ const DynamicPolicyForm = ({
       return false;
     }
 
-    const requiredFields = ['registrationNumber', 'cover_start_date'];
+  const requiredFields = ['registrationNumber', 'cover_start_date'];
     
     // Check basic required fields including cover start date
     const hasRequired = requiredFields.every(field => formData[field] && formData[field].toString().trim());
     if (!hasRequired) {
       console.log('❌ canCompareUnderwriters: Missing required fields');
       return false;
+    }
+
+    // Validate registration number format to avoid triggering while typing
+    const identificationType = formData.identificationType || 'Vehicle Registration';
+    const regRaw = (formData.registrationNumber || '').toString().trim().toUpperCase();
+    if (identificationType === 'Vehicle Registration') {
+      // Kenyan plate: KXX 123X or KXX123X
+      const kenyanPlatePattern = /^K[A-Z]{2}\s?\d{3}[A-Z]$/;
+      if (!kenyanPlatePattern.test(regRaw)) {
+        console.log('❌ canCompareUnderwriters: Registration not valid yet');
+        return false;
+      }
+    } else if (identificationType === 'Chassis Number') {
+      // Chassis numbers vary; require a reasonable minimum length to avoid early triggers
+      if (regRaw.length < 8) {
+        console.log('❌ canCompareUnderwriters: Chassis too short');
+        return false;
+      }
     }
 
     // For comprehensive insurance, need sum_insured
@@ -537,7 +555,13 @@ const DynamicPolicyForm = ({
       value = value.replace(/[^0-9]/g, '');
     }
 
-    const newFormData = { ...formData, [key]: value };
+    // Normalize registration input: uppercase and collapse internal spaces
+    let nextValue = value;
+    if (key === 'registrationNumber' && typeof value === 'string') {
+      nextValue = value.toUpperCase().replace(/\s+/g, ' ');
+    }
+
+    const newFormData = { ...formData, [key]: nextValue };
 
     // If a pricing-critical field changes, clear any previously selected underwriter
     // Note: 'underwriter' is NOT included here because selecting an underwriter should persist
@@ -613,8 +637,8 @@ const DynamicPolicyForm = ({
 
     // Phase 1.2: Trigger DMVIC checks for specific fields
     if (key === 'registrationNumber' && onRegistrationChange) {
-      console.log('[DynamicVehicleForm] Registration changed, triggering DMVIC check:', value);
-      onRegistrationChange(value);
+      console.log('[DynamicVehicleForm] Registration changed, triggering DMVIC check:', nextValue);
+      onRegistrationChange(nextValue, newFormData.identificationType);
     }
     
     if (key === 'cover_start_date' && onCoverDateChange) {

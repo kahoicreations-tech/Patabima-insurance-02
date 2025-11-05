@@ -1,4 +1,5 @@
-export { default as MotorInsuranceScreen } from './MotorInsuranceFlow/MotorInsuranceScreen';
+// Legacy screen removed in favor of step-based container
+export { default as MotorInsuranceContainer } from './MotorInsuranceFlow/MotorInsuranceContainer';
 export { default as MotorCategoryGrid } from './MotorInsuranceFlow/CategorySelection/MotorCategoryGrid';
 export { default as MotorSubcategoryList } from './MotorInsuranceFlow/CategorySelection/MotorSubcategoryList';
 export { default as DynamicVehicleForm } from './MotorInsuranceFlow/VehicleDetails/DynamicVehicleForm';

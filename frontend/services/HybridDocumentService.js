@@ -108,7 +108,7 @@ export const HybridDocumentService = {
 
     // 1) presign
     notify('preparing', 5);
-    const { data: presign } = await presignUpload({ filename, mimeType, sizeBytes, docType, agentId: options.agentId, quoteId: options.quoteId });
+    const { data: presign } = await presignUpload({ filename, fileType: mimeType, sizeBytes, docType, agentId: options.agentId, quoteId: options.quoteId });
     // 2) PUT to S3
     notify('uploading', 20);
     await putToS3(presign.uploadUrl, presign.headers, { ...file, type: mimeType, size: sizeBytes });
@@ -118,7 +118,7 @@ export const HybridDocumentService = {
     const jobId = submit.jobId;
     // 4) poll status -> DONE
     const started = Date.now();
-    const timeoutMs = 60_000; // 60s cap on client side
+    const timeoutMs = 120_000; // 120s cap on client side
     const intervalMs = 1500;
     notify('processing', 70);
     while (Date.now() - started < timeoutMs) {

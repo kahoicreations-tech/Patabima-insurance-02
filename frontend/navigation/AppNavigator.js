@@ -40,7 +40,7 @@ import { AdminManualQuotePricingScreen } from '../screens/admin';
 import DjangoTestScreen from '../screens/testing/DjangoTestScreen';
 
 import DiagnosticsScreen from '../screens/testing/DiagnosticsScreen';
-import { MotorInsuranceScreen } from '../screens/quotations/Motor 2';
+import MotorInsuranceContainer from '../screens/quotations/Motor 2/MotorInsuranceFlow/MotorInsuranceContainer';
 import PolicySuccess from '../screens/quotations/Motor 2/MotorInsuranceFlow/Success/PolicySuccess';
 import QuoteSuccessScreen from '../screens/quotations/Motor 2/QuoteSuccessScreen';
 
@@ -98,8 +98,8 @@ const AppNavigator = () => {
               }}
             />
             
-            {/* Motor 2 Insurance Flow - NEW */}
-            <Stack.Screen name="Motor2Flow" component={MotorInsuranceScreen} />
+            {/* Motor 2 Insurance Flow - NEW (use container; legacy screen disabled) */}
+            <Stack.Screen name="Motor2Flow" component={MotorInsuranceContainer} />
             <Stack.Screen name="PolicySuccess" component={PolicySuccess} />
             <Stack.Screen name="QuoteSuccess" component={QuoteSuccessScreen} />
             

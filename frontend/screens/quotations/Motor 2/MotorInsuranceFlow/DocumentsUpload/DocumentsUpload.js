@@ -148,20 +148,7 @@ export default function DocumentsUpload({
         setDocuments(newDocuments);
         onDocumentsChange?.(newDocuments);
 
-        // SKIP TEXTRACT PROCESSING FOR NOW - Just mark as uploaded
-        console.log('📄 Document uploaded (Textract skipped):', documentKey);
-        stopProgress(documentKey, 100);
-        setUploading(prev => ({ ...prev, [documentKey]: false }));
-        
-        RNAlert.alert(
-          'Document Uploaded',
-          'Document uploaded successfully. You can manually enter details in the next steps.',
-          [{ text: 'OK' }]
-        );
-        return;
-
         // ORIGINAL CODE (commented out for now):
-        /*
         try {
           const docType = mapDocType(documentKey);
           const response = await HybridDocumentService.processDocument(
@@ -258,6 +245,8 @@ export default function DocumentsUpload({
             console.log('  docType:', result.docType);
             console.log('═══════════════════════════════════════════════════════');
             
+            onExtractedData?.(documentKey, result.fields);
+
             // Store validation state with document
             const validationStatus = validation.valid ? 'verified' : (validation.warning ? 'warning' : 'mismatch');
             
@@ -278,8 +267,14 @@ export default function DocumentsUpload({
             
             // Pass extracted canonical fields to parent for auto-fill
             const canonicalFields = result?.fields || {};
-            if (Object.keys(canonicalFields).length > 0 && onExtractedData) {
-              onExtractedData(documentKey, canonicalFields);
+            if (Object.keys(canonicalFields).length > 0) {
+              if (onExtractedData) {
+                onExtractedData(documentKey, canonicalFields);
+              }
+              // Notify parent/container about extracted fields for this document
+              if (onExtractedData) {
+                onExtractedData(documentKey, canonicalFields);
+              }
             }
             
             // Show validation alert with extracted fields
@@ -350,7 +345,7 @@ export default function DocumentsUpload({
           );
           stopProgress(documentKey, 0);
         }
-        */ // END OF COMMENTED TEXTRACT CODE
+        // END OF COMMENTED TEXTRACT CODE
       }
     } catch (error) {
       console.error('Document picker error:', error);
