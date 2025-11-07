@@ -103,6 +103,20 @@ function validateExtendibleConfig(product, premium) {
   return { isValid: true, config, isExtendible: true };
 }
 
+/**
+ * Map document keys from frontend to backend document types
+ */
+function mapDocTypeToBackend(key) {
+  const mapping = {
+    'logbook': 'logbook',
+    'id_copy': 'national_id',
+    'kra_pin': 'kra_pin',
+    'valuation': 'valuation_report',
+    'business_permit': 'business_permit',
+  };
+  return mapping[key] || 'generic';
+}
+
 function normalizePolicyData(data) {
   const safe = data || {};
   const client = safe.clientDetails || safe.client_details || {};
@@ -113,6 +127,9 @@ function normalizePolicyData(data) {
   const docs = Array.isArray(safe.documents)
     ? safe.documents
     : (Array.isArray(safe.documents?.files) ? safe.documents.files : []);
+
+  // Generate quote ID if not provided
+  const quoteId = safe.quoteId || safe.quote_id || `QUOTE-${Date.now()}`;
 
   // Derive client full name robustly
   const fullName = client.fullName
@@ -137,7 +154,7 @@ function normalizePolicyData(data) {
     || '';
 
   return {
-    quoteId: safe.quoteId || safe.quote_id || null,
+    quoteId,
     clientDetails: {
       fullName,
       email: client.email || client.owner_email || client.email_address || '',
@@ -276,39 +293,140 @@ export default function PolicySubmission({
       // This prevents backend 400s by ensuring we have the minimum required payload
       try {
         const ctx = motorState || {};
+        const ctxVehicle = ctx.vehicleDetails || {};
         const ctxInputs = ctx.pricingInputs || {};
+        const ctxClient = ctxInputs.clientDetails || ctx.clientDetails || {};
+        const ctxPremium = ctx.calculatedPremium || ctx.premium || ctx.selectedUnderwriter || {};
+        const ctxProduct = ctx.selectedSubcategory || ctx.productType || {};
+        const ctxUnderwriter = ctx.selectedUnderwriter || {};
+        
         // Client fallbacks
         composed.clientDetails = composed.clientDetails || {};
         if (!composed.clientDetails.fullName && !composed.clientDetails.full_name) {
-          const first = composed.clientDetails.firstName || composed.clientDetails.first_name || ctxInputs.first_name || ctxInputs.clientDetails?.first_name || '';
-          const last = composed.clientDetails.lastName || composed.clientDetails.last_name || ctxInputs.last_name || ctxInputs.clientDetails?.last_name || '';
+          const first = composed.clientDetails.firstName || composed.clientDetails.first_name || 
+                       ctxClient.first_name || ctxClient.firstName || '';
+          const last = composed.clientDetails.lastName || composed.clientDetails.last_name || 
+                      ctxClient.last_name || ctxClient.lastName || '';
           const combined = `${first} ${last}`.trim();
-          if (combined) composed.clientDetails.fullName = combined;
+          const existing = ctxClient.fullName || ctxClient.full_name || ctxClient.name;
+          composed.clientDetails.fullName = combined || existing || '';
         }
         if (!composed.clientDetails.phone) {
-          composed.clientDetails.phone = ctxInputs.phone
-            || ctxInputs.phone_number
-            || ctxInputs.clientDetails?.phone
-            || ctxInputs.clientDetails?.phone_number
-            || '';
+          composed.clientDetails.phone = ctxClient.phone || ctxClient.phone_number || 
+                                        ctxClient.phoneNumber || '';
         }
+        if (!composed.clientDetails.email) {
+          composed.clientDetails.email = ctxClient.email || '';
+        }
+        if (!composed.clientDetails.kraPin && ctxClient.kra_pin) {
+          composed.clientDetails.kraPin = ctxClient.kra_pin;
+        }
+        if (!composed.clientDetails.idNumber && ctxClient.id_number) {
+          composed.clientDetails.idNumber = ctxClient.id_number;
+        }
+        
         // Vehicle fallbacks
         composed.vehicleDetails = composed.vehicleDetails || {};
         if (!composed.vehicleDetails.registration) {
-          composed.vehicleDetails.registration = ctxInputs.registration
-            || ctxInputs.vehicle_registration
-            || ctxInputs.registration_number
-            || ctxInputs.registrationNumber
-            || ctxInputs.vehicleDetails?.registration
-            || '';
+          composed.vehicleDetails.registration = ctxVehicle.registrationNumber || 
+                                                 ctxVehicle.registration_number ||
+                                                 ctxVehicle.vehicle_registration ||
+                                                 ctxVehicle.registration ||
+                                                 ctxClient.vehicle_registration || '';
         }
+        if (!composed.vehicleDetails.make) {
+          composed.vehicleDetails.make = ctxVehicle.make || ctxClient.vehicle_make || '';
+        }
+        if (!composed.vehicleDetails.model) {
+          composed.vehicleDetails.model = ctxVehicle.model || ctxClient.vehicle_model || '';
+        }
+        if (!composed.vehicleDetails.year) {
+          composed.vehicleDetails.year = ctxVehicle.year || ctxVehicle.vehicle_year || new Date().getFullYear();
+        }
+        if (!composed.vehicleDetails.chassisNumber && ctxVehicle.chassisNumber) {
+          composed.vehicleDetails.chassisNumber = ctxVehicle.chassisNumber;
+        }
+        if (!composed.vehicleDetails.engineNumber && ctxVehicle.engineNumber) {
+          composed.vehicleDetails.engineNumber = ctxVehicle.engineNumber;
+        }
+        if (!composed.vehicleDetails.coverStartDate) {
+          composed.vehicleDetails.coverStartDate = ctxVehicle.cover_start_date || 
+                                                   ctxVehicle.coverStartDate || 
+                                                   new Date().toISOString().split('T')[0];
+        }
+        
         // Product fallbacks
         composed.productDetails = composed.productDetails || {};
         if (!composed.productDetails.category) {
-          composed.productDetails.category = ctx.selectedCategory?.name
-            || ctx.selectedCategory?.category_name
-            || (composed.productDetails.subcategory ? String(composed.productDetails.subcategory).split('_')[0].toUpperCase() : '')
-            || '';
+          composed.productDetails.category = ctxProduct.category || 
+                                            ctx.selectedCategory?.category_code ||
+                                            ctx.selectedCategory?.name ||
+                                            (ctxProduct.subcategory_code ? ctxProduct.subcategory_code.split('_')[0] : '') ||
+                                            '';
+        }
+        if (!composed.productDetails.subcategory) {
+          composed.productDetails.subcategory = ctxProduct.subcategory_code || 
+                                               ctxProduct.code ||
+                                               ctxProduct.name || '';
+        }
+        if (!composed.productDetails.coverageType) {
+          composed.productDetails.coverageType = ctxProduct.coverage_type || 
+                                                ctxProduct.type || '';
+        }
+        
+        // Premium fallbacks
+        composed.premiumBreakdown = composed.premiumBreakdown || {};
+        if (!composed.premiumBreakdown.totalAmount && !composed.premiumBreakdown.total_amount) {
+          composed.premiumBreakdown.totalAmount = ctxPremium.total_premium || 
+                                                  ctxPremium.totalPremium ||
+                                                  ctxUnderwriter.total_premium ||
+                                                  0;
+        }
+        if (!composed.premiumBreakdown.basePremium && !composed.premiumBreakdown.base_premium) {
+          composed.premiumBreakdown.basePremium = ctxPremium.base_premium || 
+                                                 ctxUnderwriter.breakdown?.base_premium ||
+                                                 0;
+        }
+        if (!composed.premiumBreakdown.trainingLevy) {
+          composed.premiumBreakdown.trainingLevy = ctxPremium.training_levy ||
+                                                   ctxUnderwriter.breakdown?.training_levy ||
+                                                   0;
+        }
+        if (!composed.premiumBreakdown.pcfLevy) {
+          composed.premiumBreakdown.pcfLevy = ctxPremium.pcf_levy ||
+                                              ctxUnderwriter.breakdown?.pcf_levy ||
+                                              0;
+        }
+        if (!composed.premiumBreakdown.stampDuty) {
+          composed.premiumBreakdown.stampDuty = ctxPremium.stamp_duty ||
+                                               ctxUnderwriter.breakdown?.stamp_duty ||
+                                               40;
+        }
+        
+        // Underwriter fallbacks
+        if (!composed.underwriterDetails) {
+          composed.underwriterDetails = {
+            name: ctxUnderwriter.name || ctxUnderwriter.underwriter_name || 
+                  ctxVehicle.selectedUnderwriter || ctxVehicle.underwriter || '',
+            code: ctxUnderwriter.code || ctxUnderwriter.underwriter_code || 
+                  ctxUnderwriter.company_code || '',
+            id: ctxUnderwriter.id || ctxUnderwriter.underwriter_id || '',
+          };
+        }
+
+        // Documents fallbacks - convert uploaded documents to array format expected by backend
+        if (!composed.documents || composed.documents.length === 0) {
+          const ctxUploadedDocs = ctx.uploadedDocuments || {};
+          composed.documents = Object.entries(ctxUploadedDocs).map(([key, doc]) => ({
+            type: doc.type || mapDocTypeToBackend(key),
+            document_type: mapDocTypeToBackend(key),
+            name: doc.name || key,
+            s3_key: doc.s3_key,
+            s3_url: doc.s3_url,
+            document_id: doc.document_id,
+            uploaded_at: doc.uploadedAt || doc.uploaded_at || new Date().toISOString(),
+            status: doc.status || 'uploaded',
+          }));
         }
       } catch (e) {
         // Non-fatal; proceed to normalization where more fallbacks apply

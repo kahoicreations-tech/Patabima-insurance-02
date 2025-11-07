@@ -188,6 +188,8 @@ export default function PaymentSummary({ selectedProduct, vehicleData, premium, 
              underwriter?.underwriter_name || 
              underwriter?.company_name ||
              underwriter?.company ||
+             premium?.underwriter_name ||
+             premium?.underwriter ||
              vehicleData?.selectedUnderwriter ||
              'Not selected'}
           </Text>
@@ -196,17 +198,15 @@ export default function PaymentSummary({ selectedProduct, vehicleData, premium, 
         <Text style={styles.policyLine}>
           <Text style={styles.label}>Cover period:</Text>
           <Text style={styles.value}>
-            {vehicleData?.cover_start_date 
-              ? `${new Date(vehicleData.cover_start_date).toLocaleDateString('en-GB', { 
-                  day: 'numeric', 
-                  month: 'long', 
-                  year: 'numeric' 
-                })} - ${new Date(new Date(vehicleData.cover_start_date).getTime() + 365 * 24 * 60 * 60 * 1000).toLocaleDateString('en-GB', { 
-                  day: 'numeric', 
-                  month: 'long', 
-                  year: 'numeric' 
-                })}`
-              : 'Not set'}
+            {(() => {
+              const startRaw = vehicleData?.cover_start_date || normalizedVehicle.coverStart;
+              if (!startRaw) return 'Not set';
+              const start = new Date(startRaw);
+              if (Number.isNaN(start.getTime())) return 'Not set';
+              const end = new Date(start.getTime() + 365 * 24 * 60 * 60 * 1000);
+              const fmt = (d) => d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+              return `${fmt(start)} - ${fmt(end)}`;
+            })()}
           </Text>
         </Text>
 

@@ -19,6 +19,7 @@ const initialState = {
   subcategoryFormData: {}, // { subcategory_code: { vehicleDetails: {}, pricingInputs: {} } }
   clientDetails: {},
   extractedDocuments: {}, // Store extracted document data
+  uploadedDocuments: {}, // Store uploaded document metadata (S3 URLs, document IDs, etc.)
   clientDataSource: 'logbook', // 'logbook' | 'national_id' - determines which document to use for client details
   availableSubcategories: [], // Store loaded subcategories for selected category
   availableUnderwriters: [],
@@ -93,23 +94,39 @@ function reducer(state, action) {
       const updatedVehicleDetails = { ...state.vehicleDetails, ...action.payload };
       let vehicleSubcategoryFormData = { ...state.subcategoryFormData };
       
-      // Handle underwriter synchronization - if selectedUnderwriter is a string,
-      // preserve the current selectedUnderwriter object if it exists
+      // Handle underwriter synchronization - preserve full object when string arrives
+      // Check BOTH 'selectedUnderwriter' and 'underwriter' keys (different components use different keys)
       let newSelectedUnderwriter = state.selectedUnderwriter;
-      if (action.payload.selectedUnderwriter) {
-        // If the payload contains an underwriter string and we don't have an object,
-        // or if the names don't match, preserve existing object if names match
-        if (typeof action.payload.selectedUnderwriter === 'string') {
-          if (state.selectedUnderwriter && 
-              (state.selectedUnderwriter.name === action.payload.selectedUnderwriter ||
-               state.selectedUnderwriter.underwriter_name === action.payload.selectedUnderwriter)) {
-            // Keep the existing full object since names match
-            newSelectedUnderwriter = state.selectedUnderwriter;
+      const uwString = action.payload.selectedUnderwriter || action.payload.underwriter;
+      
+      if (uwString) {
+        if (typeof uwString === 'string') {
+          // String received - check if we already have a full object with matching name
+          if (state.selectedUnderwriter) {
+            const existingName = state.selectedUnderwriter.name || 
+                                state.selectedUnderwriter.underwriter_name || 
+                                state.selectedUnderwriter.company;
+            
+            if (existingName === uwString) {
+              // Names match - preserve the existing full object, don't downgrade to string
+              console.log('[Context] Preserving full underwriter object for:', uwString);
+              newSelectedUnderwriter = state.selectedUnderwriter;
+              // Remove the string from vehicleDetails to avoid confusion
+              delete updatedVehicleDetails.underwriter;
+              delete updatedVehicleDetails.selectedUnderwriter;
+            } else {
+              // Names don't match - this is a different selection (shouldn't happen with proper flow)
+              console.warn('[Context] Underwriter name mismatch:', existingName, 'vs', uwString);
+              newSelectedUnderwriter = state.selectedUnderwriter; // Keep existing for safety
+            }
+          } else {
+            // No existing object - this is likely a partial update, keep as string for now
+            console.log('[Context] No existing underwriter object, accepting string:', uwString);
           }
-          // If no existing object or names don't match, we'll keep it as string for now
         } else {
-          // If payload contains an object, use it
-          newSelectedUnderwriter = action.payload.selectedUnderwriter;
+          // Full object received - use it directly
+          console.log('[Context] Full underwriter object received:', uwString.name || uwString.underwriter_name);
+          newSelectedUnderwriter = uwString;
         }
       }
       
@@ -182,6 +199,8 @@ function reducer(state, action) {
       return saveForHistory(state, { ...state, clientDetails: { ...state.clientDetails, ...action.payload } });
     case 'UPDATE_EXTRACTED_DOCUMENTS':
       return { ...state, extractedDocuments: { ...state.extractedDocuments, ...action.payload } };
+    case 'UPDATE_UPLOADED_DOCUMENTS':
+      return { ...state, uploadedDocuments: { ...state.uploadedDocuments, ...action.payload } };
     case 'SET_CLIENT_DATA_SOURCE':
       return { ...state, clientDataSource: action.payload };
     case 'SET_SUBCATEGORIES':
@@ -195,6 +214,44 @@ function reducer(state, action) {
     case 'SET_UNDERWRITERS':
       return { ...state, availableUnderwriters: action.payload || [] };
     case 'SET_SELECTED_UNDERWRITER':
+      // Prevent noisy re-renders & effect spam when the same underwriter object
+      // (or an equivalent one reconstructed from comparison results) is dispatched repeatedly.
+      // We treat an incoming payload as "same" if key identity props match.
+      try {
+        const incoming = action.payload || null;
+        const existing = state.selectedUnderwriter;
+        if (existing && incoming) {
+          const norm = (uw) => ({
+            code: uw.code || uw.underwriter_code || uw.company_code || uw.id || null,
+            name: uw.name || uw.underwriter_name || uw.company || null,
+            base: Number(
+              uw.base_premium ||
+              uw.premium_breakdown?.base_premium ||
+              uw.breakdown?.base_premium ||
+              uw.breakdown?.base || 0
+            ),
+            total: Number(
+              uw.total_premium ||
+              uw.premium_breakdown?.total_premium ||
+              uw.totalPremium ||
+              uw.premium || 0
+            ),
+          });
+          const a = norm(existing);
+          const b = norm(incoming);
+          const isSame = a.code === b.code && a.name === b.name && a.base === b.base && a.total === b.total;
+          if (isSame) {
+            // Skip state update – silently ignore duplicate selection
+            console.log('[MotorInsuranceContext] Ignoring duplicate underwriter selection:', a.name);
+            return state;
+          } else {
+            console.log('[MotorInsuranceContext] Underwriter changed:', { from: a, to: b });
+          }
+        }
+      } catch (e) {
+        // Non-fatal – fall through to update
+        console.warn('[MotorInsuranceContext] Underwriter dedupe check failed:', e?.message || e);
+      }
       return { ...state, selectedUnderwriter: action.payload || null };
     case 'SET_CALCULATED_PREMIUM':
       return { ...state, calculatedPremium: action.payload };
@@ -395,6 +452,10 @@ export function MotorInsuranceProvider({ children }) {
 
     updateExtractedDocuments: (updates) => {
       dispatch({ type: 'UPDATE_EXTRACTED_DOCUMENTS', payload: updates });
+    },
+
+    updateUploadedDocuments: (updates) => {
+      dispatch({ type: 'UPDATE_UPLOADED_DOCUMENTS', payload: updates });
     },
 
     setClientDataSource: (source) => {

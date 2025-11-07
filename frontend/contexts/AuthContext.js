@@ -28,13 +28,14 @@ export const AuthProvider = ({ children }) => {
     let cancelled = false;
     let timeoutId;
     (async () => {
+      // Reduced timeout from 6s to 3s for faster startup
       timeoutId = setTimeout(() => {
         if (!cancelled) {
-          console.warn('[AuthContext] Auth init timeout fallback fired (6s exceeded)');
+          console.warn('[AuthContext] Auth init timeout fallback fired (3s exceeded)');
           setIsLoading(false);
           setIsAuthenticated(false);
         }
-      }, 6000);
+      }, 3000); // Changed from 6000 to 3000
       await checkAuthStatus();
       if (!cancelled) {
         clearTimeout(timeoutId);

@@ -2,6 +2,31 @@ import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, TextInput, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { VEHICLE_MAKES, getModelsForMake } from '../../../../../constants/vehicleCatalog';
 
+const DEBUG = false; // Toggle verbose console logs for this form
+
+// Validation helper functions
+const validateEmail = (email) => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+};
+
+const validatePhone = (phone) => {
+  // Kenyan phone format: 07XXXXXXXX, 01XXXXXXXX, +2547XXXXXXXX, or 2547XXXXXXXX
+  const phoneRegex = /^(\+254|254|0)?[17]\d{8}$/;
+  return phoneRegex.test(phone.replace(/[\s\-]/g, ''));
+};
+
+const validateKraPin = (kraPin) => {
+  // Format: A000000000X (letter + 9 digits + letter)
+  const kraPinRegex = /^[A-Z]\d{9}[A-Z]$/;
+  return kraPinRegex.test(kraPin.replace(/[\s\-]/g, ''));
+};
+
+const validateIdNumber = (idNumber) => {
+  // Minimum 7 digits, maximum 8 digits
+  return /^\d{7,8}$/.test(idNumber);
+};
+
 export default function EnhancedClientForm({ 
   values = {}, 
   onChange, 
@@ -11,13 +36,65 @@ export default function EnhancedClientForm({
   selectedProduct,
   vehicleData
 }) {
+  const [fieldErrors, setFieldErrors] = useState({});
+  
   const update = (k, v) => {
-    console.log('EnhancedClientForm update called:', k, '=', v);
-    console.log('Current values:', values);
+    if (DEBUG) {
+      try { console.log('EnhancedClientForm update called:', k, '=', v); } catch {}
+    }
+    // Avoid emitting changes when value hasn't changed
+    const prev = values ? values[k] : undefined;
+    if (prev === v) return;
+    
+    // Clear field error when user starts typing
+    if (fieldErrors[k]) {
+      setFieldErrors(prev => ({ ...prev, [k]: null }));
+    }
+    
     const newValues = { ...(values || {}), [k]: v };
-    console.log('New values to send:', newValues);
     onChange?.(newValues);
   };
+  
+  const validateField = (key, value) => {
+    const val = (value || '').toString().trim();
+    
+    switch (key) {
+      case 'email':
+        if (!val) return 'Email is required';
+        if (!validateEmail(val)) return 'Enter valid email address';
+        return null;
+      
+      case 'phone':
+        if (!val) return 'Phone number is required';
+        if (!validatePhone(val)) return 'Enter valid Kenyan phone (e.g., 0712345678)';
+        return null;
+      
+      case 'kra_pin':
+        if (val && !validateKraPin(val)) return 'Enter valid KRA PIN (e.g., A000000000X)';
+        return null;
+      
+      case 'id_number':
+        if (val && !validateIdNumber(val)) return 'Enter valid ID number (7-8 digits)';
+        return null;
+      
+      case 'first_name':
+      case 'last_name':
+        if (!val) return `${key === 'first_name' ? 'First' : 'Last'} name is required`;
+        if (val.length < 2) return 'Name too short (minimum 2 characters)';
+        return null;
+      
+      default:
+        return null;
+    }
+  };
+  
+  const handleBlur = (key) => {
+    const error = validateField(key, values[key]);
+    if (error) {
+      setFieldErrors(prev => ({ ...prev, [key]: error }));
+    }
+  };
+  
   const hasAppliedExtractedData = useRef(false);
 
   // Prefer values from Vehicle Details step when present (keeps UX consistent)
@@ -26,6 +103,15 @@ export default function EnhancedClientForm({
     const patch = {};
     if (!values.vehicle_make && vehicleData.make) patch.vehicle_make = vehicleData.make;
     if (!values.vehicle_model && vehicleData.model) patch.vehicle_model = vehicleData.model;
+    // NEW: Also prefer registration and chassis from DMVIC/Vehicle Details
+    if (!values.vehicle_registration) {
+      const reg = vehicleData.registrationNumber || vehicleData.registration_number || vehicleData.Registration_Number;
+      if (reg) patch.vehicle_registration = String(reg).toUpperCase();
+    }
+    if (!values.chassis_number) {
+      const ch = vehicleData.chassisNumber || vehicleData.chassis_number;
+      if (ch) patch.chassis_number = String(ch).toUpperCase();
+    }
     if (Object.keys(patch).length) onChange?.({ ...(values || {}), ...patch });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [vehicleData?.make, vehicleData?.model]);
@@ -33,19 +119,20 @@ export default function EnhancedClientForm({
   // Validate required fields and document extraction completeness
   const validateFields = () => {
     const requiredFields = [
-      { key: 'first_name', label: 'First Name', fromDoc: 'owner_name' },
-      { key: 'last_name', label: 'Last Name', fromDoc: 'owner_name' },
-      { key: 'kra_pin', label: 'KRA PIN', fromDoc: 'kra_pin' },
-      { key: 'id_number', label: 'ID Number', fromDoc: 'id_number' },
-      { key: 'email', label: 'Email', fromDoc: 'email' },
-      { key: 'phone', label: 'Phone', fromDoc: 'phone' },
-      { key: 'vehicle_registration', label: 'Vehicle Registration', fromDoc: 'registration_number' },
-      { key: 'chassis_number', label: 'Chassis Number', fromDoc: 'chassis_number' },
-      { key: 'vehicle_make', label: 'Vehicle Make', fromDoc: 'make' },
-      { key: 'vehicle_model', label: 'Vehicle Model', fromDoc: 'model' }
+      { key: 'first_name', label: 'First Name', fromDoc: 'owner_name', validator: null },
+      { key: 'last_name', label: 'Last Name', fromDoc: 'owner_name', validator: null },
+      { key: 'kra_pin', label: 'KRA PIN', fromDoc: 'kra_pin', validator: validateKraPin },
+      { key: 'id_number', label: 'ID Number', fromDoc: 'id_number', validator: validateIdNumber },
+      { key: 'email', label: 'Email', fromDoc: 'email', validator: validateEmail },
+      { key: 'phone', label: 'Phone', fromDoc: 'phone', validator: validatePhone },
+      { key: 'vehicle_registration', label: 'Vehicle Registration', fromDoc: 'registration_number', validator: null },
+      { key: 'chassis_number', label: 'Chassis Number', fromDoc: 'chassis_number', validator: null },
+      { key: 'vehicle_make', label: 'Vehicle Make', fromDoc: 'make', validator: null },
+      { key: 'vehicle_model', label: 'Vehicle Model', fromDoc: 'model', validator: null }
     ];
 
     const missingFields = [];
+    const invalidFields = [];
     const extractionIssues = [];
 
     requiredFields.forEach(field => {
@@ -60,17 +147,23 @@ export default function EnhancedClientForm({
         if (!extractedValue) {
           extractionIssues.push(`${field.label} could not be extracted from documents`);
         }
+      } else if (field.validator && !field.validator(currentValue)) {
+        // Check format validation if validator exists
+        invalidFields.push(field.label);
       }
     });
 
-    const isValid = missingFields.length === 0;
+    const isValid = missingFields.length === 0 && invalidFields.length === 0;
     const validationResult = {
       isValid,
       missingFields,
+      invalidFields,
       extractionIssues,
       message: isValid 
         ? 'All required fields completed'
-        : `Missing: ${missingFields.join(', ')}`
+        : (invalidFields.length > 0 
+          ? `Invalid format: ${invalidFields.join(', ')}`
+          : `Missing: ${missingFields.join(', ')}`)
     };
 
     onValidationChange?.(validationResult);
@@ -125,7 +218,9 @@ export default function EnhancedClientForm({
     if (hasChanges) {
       onChange?.(newValues);
       hasAppliedExtractedData.current = true; // Prevent re-applying
-      console.log('✅ Client form auto-filled from extracted data:', newValues);
+      if (DEBUG) {
+        try { console.log('✅ Client form auto-filled from extracted data'); } catch {}
+      }
     }
   }, [extractedData, values, onChange]);
 
@@ -163,51 +258,63 @@ export default function EnhancedClientForm({
       <Field 
         label="First Name" 
         value={values.first_name} 
-        onChangeText={(v) => update('first_name', v)} 
+        onChangeText={(v) => update('first_name', v)}
+        onBlur={() => handleBlur('first_name')}
         placeholder="Auto-filled from documents"
         status={getFieldStatus('first_name', 'owner_name')}
+        error={fieldErrors.first_name}
       />
       <Field 
         label="Last Name" 
         value={values.last_name} 
-        onChangeText={(v) => update('last_name', v)} 
+        onChangeText={(v) => update('last_name', v)}
+        onBlur={() => handleBlur('last_name')}
         placeholder="Auto-filled from documents"
         status={getFieldStatus('last_name', 'owner_name')}
+        error={fieldErrors.last_name}
       />
       <Field 
         label="KRA PIN" 
         value={values.kra_pin} 
-        onChangeText={(v) => update('kra_pin', (v || '').toUpperCase())} 
+        onChangeText={(v) => update('kra_pin', (v || '').toUpperCase())}
+        onBlur={() => handleBlur('kra_pin')}
         autoCapitalize="characters" 
         placeholder="Auto-filled from KRA PIN doc"
         status={getFieldStatus('kra_pin', 'kra_pin')}
+        error={fieldErrors.kra_pin}
       />
       <Field 
         label="ID Number" 
         value={values.id_number} 
-        onChangeText={(v) => update('id_number', v)} 
+        onChangeText={(v) => update('id_number', v)}
+        onBlur={() => handleBlur('id_number')}
         placeholder="Auto-filled from ID document" 
         keyboardType="numeric"
         status={getFieldStatus('id_number', 'id_number')}
+        error={fieldErrors.id_number}
       />
 
       {/* Contact Details */}
       <Field 
         label="Email" 
         value={values.email} 
-        onChangeText={(v) => update('email', v)} 
+        onChangeText={(v) => update('email', v)}
+        onBlur={() => handleBlur('email')}
         placeholder="Enter client email"
         keyboardType="email-address"
         autoCapitalize="none"
         status={getFieldStatus('email', 'email')}
+        error={fieldErrors.email}
       />
       <Field 
         label="Phone" 
         value={values.phone} 
-        onChangeText={(v) => update('phone', v)} 
+        onChangeText={(v) => update('phone', v)}
+        onBlur={() => handleBlur('phone')}
         placeholder="Enter client phone"
         keyboardType="phone-pad"
         status={getFieldStatus('phone', 'phone')}
+        error={fieldErrors.phone}
       />
 
       {/* Vehicle Fields */}
@@ -228,36 +335,24 @@ export default function EnhancedClientForm({
         status={getFieldStatus('chassis_number', 'chassis_number')}
       />
       
-      {/* Vehicle Make - Dropdown Select */}
-      <SelectField 
-        label="Make" 
+      {/* Vehicle Make - Simple Text Field to avoid dropdown keyboard issues */}
+      <Field
+        label="Make"
         value={values.vehicle_make}
-        options={VEHICLE_MAKES}
-        onValueChange={(v) => {
-          console.log('Make selected:', v);
-          update('vehicle_make', v);
-          // Clear model when make changes
-          if (values.vehicle_model && v !== values.vehicle_make) {
-            update('vehicle_model', '');
-          }
-        }}
-        placeholder="Select vehicle make"
+        onChangeText={(v) => update('vehicle_make', v)}
+        placeholder="Auto-filled from logbook/DMVIC"
         status={getFieldStatus('vehicle_make', 'make')}
-        disabled={false}
+        autoCapitalize="characters"
       />
       
-      {/* Vehicle Model - Dropdown Select (depends on Make) */}
-      <SelectField 
-        label="Model" 
+      {/* Vehicle Model - Simple Text Field to avoid dropdown keyboard issues */}
+      <Field
+        label="Model"
         value={values.vehicle_model}
-        options={values.vehicle_make ? getModelsForMake(values.vehicle_make) : []}
-        onValueChange={(v) => {
-          console.log('Model selected:', v);
-          update('vehicle_model', v);
-        }}
-        placeholder={values.vehicle_make ? "Select vehicle model" : "Select make first"}
-        disabled={!values.vehicle_make}
+        onChangeText={(v) => update('vehicle_model', v)}
+        placeholder="Auto-filled from logbook/DMVIC"
         status={getFieldStatus('vehicle_model', 'model')}
+        autoCapitalize="characters"
       />
       
       {errors.form ? <Text style={styles.error}>{errors.form}</Text> : null}
@@ -376,6 +471,11 @@ function SelectField({ label, error, status, value, options, onValueChange, plac
 
 function Field({ label, error, style, status, ...inputProps }) {
   const getStatusStyle = () => {
+    // Error takes priority over status
+    if (error) {
+      return { borderColor: '#ff6b6b', backgroundColor: '#fff5f5', borderWidth: 2 };
+    }
+    
     switch (status) {
       case 'missing-both': return { borderColor: '#ff6b6b', backgroundColor: '#fff5f5' };
       case 'missing-current': return { borderColor: '#ffa500', backgroundColor: '#fff8f0' };
@@ -404,7 +504,10 @@ function Field({ label, error, style, status, ...inputProps }) {
         blurOnSubmit={false}
         returnKeyType="next"
       />
-      {status && status !== 'complete' && (
+      {/* Show error first, then status message */}
+      {error ? (
+        <Text style={styles.error}>{error}</Text>
+      ) : status && status !== 'complete' ? (
         <Text style={[
           styles.statusText,
           status === 'missing-both' ? styles.errorStatus : 
@@ -412,8 +515,7 @@ function Field({ label, error, style, status, ...inputProps }) {
         ]}>
           {getStatusMessage()}
         </Text>
-      )}
-      {error ? <Text style={styles.error}>{error}</Text> : null}
+      ) : null}
     </View>
   );
 }

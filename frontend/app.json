@@ -4,6 +4,7 @@
     "slug": "patabima-agent",
     "version": "1.0.1",
     "orientation": "portrait",
+    "jsEngine": "hermes",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "splash": {
@@ -13,8 +14,9 @@
       "imageMode": "center"
     },
     "updates": {
-      "fallbackToCacheTimeout": 0,
-      "url": "https://u.expo.dev/05038c89-0d3b-4bba-a357-c3fa6af17848"
+      "enabled": false,
+      "checkAutomatically": "ON_ERROR_RECOVERY",
+      "fallbackToCacheTimeout": 0
     },
     "assetBundlePatterns": [
       "assets/fonts/**/*",

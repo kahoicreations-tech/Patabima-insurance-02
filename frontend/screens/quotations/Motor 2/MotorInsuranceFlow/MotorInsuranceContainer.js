@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useCallback, useEffect } from 'react';
+import React, { useMemo, useState, useCallback, useEffect, useRef } from 'react';
 import { View, StyleSheet, Text, TouchableOpacity, SafeAreaView, StatusBar, ActivityIndicator, Modal, Pressable, Alert } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useMotorInsurance } from '@contexts/MotorInsuranceContext';
@@ -100,9 +100,9 @@ export default function MotorInsuranceContainer({ route, navigation }) {
     const norm = typeof rawType === 'string' ? rawType.toUpperCase().trim() : '';
     const isComprehensive = norm.includes('COMP');
 
-    // Underwriter and client data
-    const selectedUnderwriter = state.selectedUnderwriter;
-    const client = state.clientDetails || state.clientInfo || {};
+  // Underwriter and client data
+  const selectedUnderwriter = state.selectedUnderwriter;
+  const client = (state.pricingInputs?.clientDetails) || state.clientDetails || state.clientInfo || {};
 
     // Premium sources
     const premiumTotal = (
@@ -146,19 +146,69 @@ export default function MotorInsuranceContainer({ route, navigation }) {
         return { canProceed: ok, validationMessage: ok ? '' : 'Select an underwriter to continue' };
       }
       case 'Documents': {
-        // Keep permissive for now; documents step handles its own checks
-        return { canProceed: true, validationMessage: '' };
+        // Validate that required documents are uploaded
+        const uploadedDocs = state.uploadedDocuments || {};
+        const requiredDocs = ['logbook', 'id_copy', 'kra_pin'];
+        const missingDocs = requiredDocs.filter(doc => !uploadedDocs[doc]);
+        
+        const allUploaded = missingDocs.length === 0;
+        let msg = '';
+        if (!allUploaded) {
+          msg = `Please upload: ${missingDocs.map(d => {
+            switch(d) {
+              case 'logbook': return 'Vehicle Logbook';
+              case 'id_copy': return 'National ID';
+              case 'kra_pin': return 'KRA PIN Certificate';
+              default: return d;
+            }
+          }).join(', ')}`;
+        }
+        return { canProceed: allUploaded, validationMessage: msg };
       }
       case 'Client Details': {
         const fullName = str(client.fullName || client.name);
         const phone = str(client.phone || client.phoneNumber || client.msisdn);
-        const ok = !!fullName && !!phone;
-        let msg = '';
-        if (!ok) {
-          if (!fullName) msg = 'Enter client full name';
-          else if (!phone) msg = 'Enter client phone number';
+        const email = str(client.email);
+        const kraPin = str(client.kra_pin || client.kraPin);
+        const idNumber = str(client.id_number || client.idNumber);
+        
+        // Basic presence validation
+        if (!fullName) {
+          return { canProceed: false, validationMessage: 'Enter client full name' };
         }
-        return { canProceed: ok, validationMessage: msg };
+        if (!phone) {
+          return { canProceed: false, validationMessage: 'Enter client phone number' };
+        }
+        if (!email) {
+          return { canProceed: false, validationMessage: 'Enter client email address' };
+        }
+        
+        // Phone number validation (Kenyan format: 07XXXXXXXX or 01XXXXXXXX or +2547XXXXXXXX)
+        const phoneRegex = /^(\+254|254|0)?[17]\d{8}$/;
+        if (!phoneRegex.test(phone.replace(/[\s\-]/g, ''))) {
+          return { canProceed: false, validationMessage: 'Enter valid Kenyan phone number (e.g., 0712345678)' };
+        }
+        
+        // Email validation
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+          return { canProceed: false, validationMessage: 'Enter valid email address' };
+        }
+        
+        // KRA PIN validation (format: A000000000X)
+        if (kraPin) {
+          const kraPinRegex = /^[A-Z]\d{9}[A-Z]$/;
+          if (!kraPinRegex.test(kraPin.replace(/[\s\-]/g, ''))) {
+            return { canProceed: false, validationMessage: 'Enter valid KRA PIN (e.g., A000000000X)' };
+          }
+        }
+        
+        // ID Number validation (8 digits minimum)
+        if (idNumber && idNumber.length < 7) {
+          return { canProceed: false, validationMessage: 'Enter valid ID number (minimum 7 digits)' };
+        }
+        
+        return { canProceed: true, validationMessage: '' };
       }
       case 'Payment': {
         const ok = premiumTotal > 0;
@@ -170,33 +220,63 @@ export default function MotorInsuranceContainer({ route, navigation }) {
     }
   }, [steps, currentStep, state]);
 
+  // ✅ NEW: Reference to hold validation function from PolicyDetailsStep
+  const policyDetailsValidatorRef = useRef(null);
+  
   const goNext = useCallback(async () => {
     const currentStepName = steps[currentStep];
 
-    // Phase 1.3: CRITICAL Navigation guard - block if existing cover detected
-    // Check BOTH showVerificationScreen flag AND minCoverStartDate presence
-    // minCoverStartDate is only set when existing cover is found
-    if (state.showVerificationScreen || state.minCoverStartDate) {
-      console.error('[MotorContainer] 🚫 Navigation blocked - existing cover must be resolved first');
-      console.error('[MotorContainer] showVerificationScreen:', state.showVerificationScreen);
-      console.error('[MotorContainer] minCoverStartDate:', state.minCoverStartDate);
-      console.error('[MotorContainer] existingCoverData:', state.existingCoverData);
-      
-      // Force show the verification screen
-      if (!state.showVerificationScreen) {
-        console.log('[MotorContainer] Forcing verification screen to show');
-        actions.setShowVerificationScreen(true);
+    // ✅ NEW: If on Policy Details step, trigger DMVIC validation before proceeding
+    if (currentStepName === 'Policy Details' && policyDetailsValidatorRef.current) {
+      console.log('[MotorContainer] Triggering Policy Details validation before navigation');
+      try {
+        const validationResult = await policyDetailsValidatorRef.current();
+        console.log('[MotorContainer] 🔍 Validation result:', JSON.stringify(validationResult, null, 2));
+        
+        if (!validationResult.valid) {
+          console.log('[MotorContainer] 🔍 Validation failed. Reason:', validationResult.reason);
+          
+          // If this is a date-collision case, store the warning but ALLOW navigation to KYC
+          if (validationResult.reason === 'DATE_COLLISION' || validationResult.reason === 'EXISTING_COVER') {
+            console.log('[MotorContainer] ⚠️ Date collision detected - storing for KYC step');
+            if (validationResult.minDate) {
+              actions.setMinCoverStartDate(validationResult.minDate);
+              console.log('[MotorContainer] Set minCoverStartDate:', validationResult.minDate);
+            }
+            // Don't block navigation - modal will show in KYC step
+            // Just proceed to next step
+            console.log('[MotorContainer] ✅ Allowing navigation to KYC despite collision');
+          } else {
+            // Other validation errors - block navigation
+            Alert.alert('Validation Error', validationResult.message || 'Please complete the form correctly.', [{ text: 'OK' }]);
+            return;
+          }
+        } else {
+          console.log('[MotorContainer] Policy Details validation passed');
+        }
+      } catch (error) {
+        console.error('[MotorContainer] Validation error:', error);
+        Alert.alert('Error', 'Failed to validate vehicle details. Please try again.', [{ text: 'OK' }]);
+        return;
       }
-      
-      Alert.alert(
-        '⚠️ Existing Cover Detected',
-        'This vehicle has existing cover that expires on ' + 
-        (state.existingCoverData?.expiryDate ? new Date(state.minCoverStartDate).toLocaleDateString() : 'a future date') + 
-        '. You must either:\n\n1. Adjust the cover start date to after the existing cover expires, OR\n2. Submit a debit note to cancel the existing cover\n\nPlease resolve this before continuing.',
-        [{ text: 'OK' }]
-      );
+    }
+
+    // Phase 1.3: REMOVED - Don't block navigation here anymore
+    // The modal will show automatically in KYC step if there's a collision
+    /*
+    const selectedCoverDateStr = state.vehicleDetails?.cover_start_date || state.vehicleDetails?.coverStartDate;
+    const minCoverStartDateStr = state.minCoverStartDate;
+    const isCollision = Boolean(
+      minCoverStartDateStr && selectedCoverDateStr && new Date(selectedCoverDateStr) < new Date(minCoverStartDateStr)
+    );
+
+    if (state.showVerificationScreen || isCollision) {
+      console.error('[MotorContainer] 🚫 Navigation blocked - existing cover must be resolved first');
+      actions.setShowVerificationScreen(true);
+      Alert.alert(...);
       return;
     }
+    */
 
     // Additional check for Policy Details step specifically
     if (currentStepName === 'Policy Details') {
@@ -248,14 +328,21 @@ export default function MotorInsuranceContainer({ route, navigation }) {
     // Close verification screen
     actions.setShowVerificationScreen(false);
     
-    // Navigate back to Policy Details step
-    const policyDetailsIndex = steps.indexOf('Policy Details');
-    if (policyDetailsIndex >= 0) {
-      setCurrentStep(policyDetailsIndex);
+    // ✅ NEW: If on KYC step, go back to Policy Details to adjust date
+    // If already on Policy Details, stay there
+    const currentStepName = steps[currentStep];
+    if (currentStepName === 'KYC') {
+      console.log('[DMVIC] Navigating back to Policy Details from KYC to adjust date');
+      const policyDetailsIndex = steps.indexOf('Policy Details');
+      if (policyDetailsIndex >= 0) {
+        setCurrentStep(policyDetailsIndex);
+      }
+    } else {
+      console.log('[DMVIC] Already on Policy Details, modal closed for date adjustment');
     }
     
     // Note: minDate calculation now handled in PolicyDetailsStep.processDMVICResult
-  }, [actions, steps]);
+  }, [actions, steps, currentStep]);
 
   // Phase 1.3: Handler for "Submit Debit Note" - now uses context state
   const handleSubmitDebitNote = useCallback(() => {
@@ -297,7 +384,7 @@ export default function MotorInsuranceContainer({ route, navigation }) {
       case 'Subcategory':
         return <CategorySelectionStep stepName={stepName} onNext={goNext} />;
       case 'Policy Details':
-        return <PolicyDetailsStep />;
+        return <PolicyDetailsStep onValidateBeforeNext={(validator) => { policyDetailsValidatorRef.current = validator; }} />;
       case 'KYC':
         return <KYCStep />;
       case 'Underwriters':
@@ -322,6 +409,12 @@ export default function MotorInsuranceContainer({ route, navigation }) {
   // Handle extracted data from documents and compare with DMVIC/vehicle details
   const handleDocumentExtracted = useCallback((documentKey, fields) => {
     try {
+      // ✅ Guard: fields must be a valid object
+      if (!fields || typeof fields !== 'object') {
+        console.log('[MotorInsuranceContainer] No fields extracted for:', documentKey);
+        return;
+      }
+
       // Persist extracted fields in context, both under key and merged 'all'
       const prevAll = state.extractedDocuments?.all || {};
       actions.updateExtractedDocuments({

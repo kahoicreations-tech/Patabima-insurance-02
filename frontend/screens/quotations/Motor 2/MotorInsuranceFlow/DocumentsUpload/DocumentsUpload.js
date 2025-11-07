@@ -9,14 +9,12 @@ import {
   ActivityIndicator 
 } from 'react-native';
 import * as DocumentPicker from 'expo-document-picker';
-import { Alert as RNAlert } from 'react-native';
-import HybridDocumentService from '../../../../../services/HybridDocumentService';
-import { detectDocumentType, validateDocumentType, getDocumentTypeName } from '../../../../../utils/documentTypeDetector';
+import S3DocumentService from '../../../../../services/S3DocumentService';
 
 /**
  * DocumentsUpload Component
- * Handles document collection and upload for motor insurance
- * Step 4 in the motor insurance flow (between Pricing & Coverage)
+ * Handles document collection and upload for motor insurance using S3
+ * Step 5 in the motor insurance flow (Documents step)
  */
 export default function DocumentsUpload({ 
   onDocumentsChange, 
@@ -69,59 +67,42 @@ export default function DocumentsUpload({
 
   // Required documents based on product type and coverage
   const getRequiredDocuments = () => {
-    const baseDocuments = [
+    // All document types available for upload
+    // Only logbook will be auto-extracted with Textract
+    return [
       {
         key: 'logbook',
         title: 'Vehicle Logbook',
-        description: 'Original vehicle registration certificate',
+        description: 'Original vehicle registration certificate (Auto-extraction enabled)',
         required: true,
         type: 'document'
       },
       {
         key: 'id_copy',
-        title: 'ID Copy',
-        description: 'National ID or Passport copy',
+        title: 'National ID',
+        description: 'National ID card (front and back)',
         required: true,
         type: 'document'
       },
       {
         key: 'kra_pin',
         title: 'KRA PIN Certificate',
-        description: 'Kenya Revenue Authority PIN certificate',
-        // Per product guidance: de-emphasize KRA PIN in extraction priority; keep optional here
-        required: false,
+        description: 'KRA PIN certificate document',
+        required: true,
         type: 'document'
       }
     ];
-
-    // Add additional documents based on coverage type
-    const coverage = selectedProduct?.coverage_type?.toLowerCase();
-    if (coverage === 'comprehensive') {
-      baseDocuments.push({
-        key: 'valuation',
-        title: 'Vehicle Valuation Report',
-        description: 'Professional vehicle valuation (if sum insured > 1M)',
-        required: false,
-        type: 'document'
-      });
-    }
-
-    // Add commercial-specific documents
-    const category = selectedProduct?.category?.toLowerCase();
-    if (category === 'commercial') {
-      baseDocuments.push({
-        key: 'business_permit',
-        title: 'Business Permit',
-        description: 'Valid business permit or license',
-        required: true,
-        type: 'document'
-      });
-    }
-
-    return baseDocuments;
   };
 
   const handleDocumentPick = async (documentKey) => {
+    console.log('');
+    console.log('═══════════════════════════════════════════════════════');
+    console.log('📤 DOCUMENT UPLOAD INITIATED');
+    console.log('═══════════════════════════════════════════════════════');
+    console.log('Document Key:', documentKey);
+    console.log('Expected Type:', mapDocType(documentKey));
+    console.log('───────────────────────────────────────────────────────');
+    
     try {
   setUploading(prev => ({ ...prev, [documentKey]: true }));
   startProgress(documentKey, 5, 'preparing');
@@ -148,204 +129,71 @@ export default function DocumentsUpload({
         setDocuments(newDocuments);
         onDocumentsChange?.(newDocuments);
 
-        // ORIGINAL CODE (commented out for now):
+        // ✅ Upload to S3
         try {
           const docType = mapDocType(documentKey);
-          const response = await HybridDocumentService.processDocument(
-            { name: document.name, uri: document.uri, type: document.mimeType, size: document.size },
+          
+          console.log(`📤 Uploading ${documentKey} to S3...`);
+          
+          const uploadResult = await S3DocumentService.uploadDocument(
+            { 
+              name: document.name, 
+              uri: document.uri, 
+              type: document.mimeType, 
+              size: document.size 
+            },
             { 
               docType, 
               quoteId: vehicleData?.quotationId || selectedProduct?.quotationId,
-              onProgress: (phase, percent) => {
-                setPhase(documentKey, phase, percent || 0);
-                // if no timer yet, start one to animate smoothly between updates
-                if (!progressTimers.current[documentKey]) startProgress(documentKey, percent || 0, phase);
+            },
+            (phase, percent) => {
+              setPhase(documentKey, phase, percent || 0);
+              if (!progressTimers.current[documentKey]) {
+                startProgress(documentKey, percent || 0, phase);
               }
             }
           );
-          if (response?.success) {
-            setPhase(documentKey, 'finishing', 95);
-            // Persist the result to quotation form on backend (apply endpoint is invoked inside service if quoteId present)
-            const result = response.result;
-            
-            // ===== DOCUMENT TYPE VALIDATION =====
-            const expectedType = mapDocType(documentKey);
-            
-            // Enhanced detection: check backend response first, then field-based detection
-            let detectedType = 'unknown';
-            
-            // 1. Check if backend explicitly provided document type
-            if (result.documentType || result.document_type || result.docType) {
-              const backendType = (result.documentType || result.document_type || result.docType).toLowerCase();
-              console.log('📋 Backend identified document type:', backendType);
-              detectedType = backendType.replace(/_/g, '').replace(/-/g, '');
-              
-              // Normalize backend type to our expected types
-              if (detectedType.includes('kra') || detectedType.includes('pin')) {
-                detectedType = 'kra_pin';
-              } else if (detectedType.includes('logbook') || detectedType.includes('vehicle')) {
-                detectedType = 'logbook';
-              } else if (detectedType.includes('national') || detectedType.includes('id')) {
-                detectedType = 'national_id';
-              } else if (detectedType.includes('valuation')) {
-                detectedType = 'valuation_report';
-              } else if (detectedType.includes('permit') || detectedType.includes('business')) {
-                detectedType = 'business_permit';
-              }
-            }
-            
-            // 2. If backend didn't provide type, use field-based detection
-            if (detectedType === 'unknown') {
-              detectedType = detectDocumentType(result);
-            }
-            
-            const validation = validateDocumentType(expectedType, detectedType);
-            
-            // Debug logging - Full extraction details
-            console.log('═══════════════════════════════════════════════════════');
-            console.log('🔍 DOCUMENT VALIDATION RESULTS');
-            console.log('═══════════════════════════════════════════════════════');
-            console.log('📁 Document Key:', documentKey);
-            console.log('🎯 Expected Type:', expectedType, '→', getDocumentTypeName(expectedType));
-            console.log('🔎 Detected Type:', detectedType, '→', getDocumentTypeName(detectedType));
-            console.log('✅ Validation Status:', validation.valid ? '✅ VERIFIED' : validation.warning ? '⚠️ WARNING' : '❌ MISMATCH');
-            console.log('💬 Message:', validation.message);
-            console.log('───────────────────────────────────────────────────────');
-            console.log('📊 EXTRACTED FIELDS:');
-            if (result?.fields && Object.keys(result.fields).length > 0) {
-              Object.entries(result.fields).forEach(([key, value]) => {
-                console.log(`  • ${key}:`, value);
-              });
-            } else {
-              console.log('  (No canonical fields extracted)');
-            }
-            console.log('───────────────────────────────────────────────────────');
-            console.log('📋 RAW FIELDS:');
-            if (result?.rawFields && Object.keys(result.rawFields).length > 0) {
-              Object.entries(result.rawFields).forEach(([key, value]) => {
-                console.log(`  • ${key}:`, value);
-              });
-            } else {
-              console.log('  (No raw fields available)');
-            }
-            console.log('───────────────────────────────────────────────────────');
-            console.log('🔧 DIAGNOSTICS:');
-            if (result?.diagnostics) {
-              console.log('  Backend guessed type:', result.diagnostics.guessedType || 'N/A');
-              console.log('  Type match:', result.diagnostics.typeMatch);
-              console.log('  Clarity:', result.diagnostics.clarity);
-              console.log('  Avg confidence:', result.diagnostics.avgWordConfidence);
-            } else {
-              console.log('  (No diagnostics available)');
-            }
-            console.log('───────────────────────────────────────────────────────');
-            console.log('📦 BACKEND TYPE INFO:');
-            console.log('  documentType:', result.documentType);
-            console.log('  document_type:', result.document_type);
-            console.log('  docType:', result.docType);
-            console.log('═══════════════════════════════════════════════════════');
-            
-            onExtractedData?.(documentKey, result.fields);
 
-            // Store validation state with document
-            const validationStatus = validation.valid ? 'verified' : (validation.warning ? 'warning' : 'mismatch');
+          if (uploadResult.success) {
+            console.log(`✅ ${documentKey} uploaded successfully to S3`);
             
-            const next = {
+            // Update document state with S3 info
+            const updatedDocuments = {
               ...newDocuments,
               [documentKey]: {
                 ...newDocuments[documentKey],
-                jobId: response.jobId,
-                status: 'processed',
-                result: result || null,
-                detectedType,
-                validationStatus,
-                validationMessage: validation.message
+                s3_key: uploadResult.s3_key,
+                s3_url: uploadResult.s3_url,
+                document_id: uploadResult.document_id,
+                status: 'uploaded',
+                uploadedAt: new Date().toISOString(),
               }
             };
-            setDocuments(next);
-            onDocumentsChange?.(next);
             
-            // Pass extracted canonical fields to parent for auto-fill
-            const canonicalFields = result?.fields || {};
-            if (Object.keys(canonicalFields).length > 0) {
-              if (onExtractedData) {
-                onExtractedData(documentKey, canonicalFields);
-              }
-              // Notify parent/container about extracted fields for this document
-              if (onExtractedData) {
-                onExtractedData(documentKey, canonicalFields);
-              }
-            }
+            setDocuments(updatedDocuments);
+            onDocumentsChange?.(updatedDocuments);
             
-            // Show validation alert with extracted fields
-            try {
-              const fields = result?.fields || {};
-              const pairs = Object.entries(fields)
-                .slice(0, 6)
-                .map(([k, v]) => `${k}: ${String(v)}`);
-              
-              if (!validation.valid) {
-                // Document mismatch or unknown - show warning
-                if (validation.warning) {
-                  // Unknown type - soft warning, allow continuation
-                  RNAlert.alert(
-                    '⚠️ Document Type Unknown',
-                    validation.message + '\n\n' + (pairs.length > 0 ? 'Extracted fields:\n' + pairs.join('\n') : ''),
-                    [
-                      { text: 'Re-upload', onPress: () => handleRemoveDocument(documentKey), style: 'cancel' },
-                      { text: 'Continue Anyway', style: 'default' }
-                    ]
-                  );
-                } else {
-                  // Type mismatch - HARD REJECTION, auto-remove
-                  RNAlert.alert(
-                    '❌ Wrong Document Uploaded',
-                    validation.message + '\n\nThe document will be automatically removed. Please upload the correct document.',
-                    [
-                      { 
-                        text: 'OK', 
-                        onPress: () => handleRemoveDocument(documentKey), 
-                        style: 'default' 
-                      }
-                    ],
-                    { cancelable: false }
-                  );
-                  // Auto-remove after a short delay to allow user to see the message
-                  setTimeout(() => handleRemoveDocument(documentKey), 2000);
-                }
-              } else {
-                // Valid document - show success with fields
-                const message = pairs.length > 0 
-                  ? `✓ ${validation.message}\n\nExtracted:\n${pairs.join('\n')}\n\nData will auto-fill in client details.`
-                  : `✓ ${validation.message}\n\nExtraction completed.`;
-                RNAlert.alert('Document Verified', message);
-              }
-            } catch {}
-            stopProgress(documentKey, 100);
-          } else if (response?.disabled) {
-            // Feature flag disabled; keep local state only
-            stopProgress(documentKey, 0);
-          } else {
-            // Extraction failed or timed out - allow manual entry
-            const errorMsg = response?.error || 'Failed to process document';
-            RNAlert.alert(
-              'Extraction Failed', 
-              `${errorMsg}\n\nDocument uploaded successfully. You can manually enter the details in the next step.`,
+            Alert.alert(
+              '✅ Upload Successful',
+              `${document.name} has been uploaded to secure storage.\n\nDocument ID: ${uploadResult.document_id}`,
               [{ text: 'OK' }]
             );
-            stopProgress(documentKey, 0);
+            
+            stopProgress(documentKey, 100);
+          } else {
+            throw new Error(uploadResult.error || 'Upload failed');
           }
-        } catch (procErr) {
-          console.log('Document processing failed:', procErr);
-          // Document uploaded but extraction failed - allow manual entry
-          RNAlert.alert(
-            'Extraction Error',
-            'Document uploaded but extraction failed. You can manually enter the details in the next step.',
+        } catch (uploadError) {
+          console.error('❌ S3 upload failed:', uploadError);
+          
+          Alert.alert(
+            'Upload Error',
+            `Failed to upload ${document.name}.\n\nError: ${uploadError.message}\n\nThe document has been saved locally. You can try again later.`,
             [{ text: 'OK' }]
           );
+          
           stopProgress(documentKey, 0);
         }
-        // END OF COMMENTED TEXTRACT CODE
       }
     } catch (error) {
       console.error('Document picker error:', error);
@@ -522,8 +370,7 @@ export default function DocumentsUpload({
             />
           </View>
           <Text style={styles.helperNote}>
-            Upload required documents. If auto-extraction fails, you can manually enter details.{'\n'}
-            Required: Logbook and National ID. KRA PIN is optional.
+            Upload all required documents. Only the Vehicle Logbook will be auto-extracted. Other documents are stored for verification purposes.
           </Text>
         </View>
       </View>

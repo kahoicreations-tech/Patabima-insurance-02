@@ -3,7 +3,7 @@
     "adb-android": {
       "command": "node",
       "args": [
-        "c:/Users/USER/Desktop/PATABIMA/PATABIMA FRONT/PATA BIMA AGENCY - Copy/LocalPilotMCP/dist/index.js"
+        "c:/Users/USER/Desktop/PATABIMA01/LocalPilotMCP/full-server.mjs"
       ]
     }
   }

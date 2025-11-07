@@ -1,5 +1,8 @@
 # PataBima App - Copilot Instructions
 
+Act as a senior full-stack developer expert in React Native, Django, and AWS.
+Give direct, production-level explanations with flawless codes and best pattern.
+
 <!-- Use this file to provide workspace-specific custom instructions to Copilot. For more details, visit https://code.visualstudio.com/docs/copilot/copilot-customization#_use-a-githubcopilotinstructionsmd-file -->
 
 ## Project Overview
@@ -307,7 +310,7 @@ Based on the comprehensive implementation and wireframes:
 - **Memory Management**: Proper cleanup of subscriptions and listeners
 - **Bundle Size**: Monitor and optimize bundle size for faster app startup
 
-## How The System Actually Works
+## How The System Actually Works: Complete Technical Walkthrough
 
 ### Architecture Overview
 
@@ -319,53 +322,922 @@ PataBima follows a **service-oriented architecture** with clear separation betwe
 - **Caching Layer**: Two-tier cache (memory + AsyncStorage) with TTL
 - **Backend Layer**: Django REST API with PostgreSQL
 
+### Complete Request Flow: User Action → Backend → Response → UI Update
+
+#### Example: Agent Creates Third-Party Motor Insurance Quote
+
+**STEP 1: User Opens Motor Insurance Flow**
+
+```
+User Action: Taps "Motor Insurance" card on Dashboard
+↓
+Frontend Navigation:
+  - App.js → Bottom Tab Navigator → QuotationsStack
+  - QuotationsStack → MotorInsuranceContainer.js
+↓
+Component Mount:
+  - MotorInsuranceContainer wraps entire flow
+  - MotorInsuranceProvider (Context) initializes state
+  - CategorySelectionStep.js renders (Step 1 of 8)
+```
+
+**STEP 2: Load Motor Categories from Backend**
+
+```
+Component Effect:
+  CategorySelectionStep.js → useEffect() on mount
+  ↓
+Service Call:
+  motorPricingService.getCategories()
+  ↓
+Cache Check (Two-Tier):
+  SimpleCache.get('MOTOR_CATEGORIES')
+  → Check MEMORY Map first (instant)
+  → If miss, check AsyncStorage (persistent)
+  → If miss, proceed to API call
+  ↓
+API Request (if cache miss):
+  DjangoAPIService.makeRequest('/api/motor2/categories/')
+  ↓
+Django Backend Processing:
+  1. URL Router: urls.py → MotorCategoryViewSet
+  2. View: views.py → list() method
+  3. Database Query: MotorCategory.objects.filter(is_active=True)
+  4. Serialization: MotorCategorySerializer.serialize(queryset)
+  5. Response: JSON with 6 categories (PRIVATE, COMMERCIAL, PSV, etc.)
+  ↓
+Response Journey Back:
+  Django → DjangoAPIService → motorPricingService
+  ↓
+Cache Write:
+  SimpleCache.set('MOTOR_CATEGORIES', response, 7_DAYS_TTL)
+  → Write to MEMORY Map (instant access)
+  → Write to AsyncStorage (persistent)
+  ↓
+State Update:
+  motorPricingService returns data
+  → CategorySelectionStep setState(categories)
+  → React re-renders UI with category cards
+  ↓
+UI Display:
+  6 category cards render (Private, Commercial, PSV, Motorcycle, TukTuk, Special)
+  User sees: "🚗 Private", "🚚 Commercial", etc.
+```
+
+**STEP 3: User Selects "Private" Category**
+
+```
+User Action: Taps "Private" card
+↓
+Event Handler:
+  onCategorySelect('PRIVATE')
+  ↓
+Service Call:
+  motorPricingService.getSubcategoriesByCategory('PRIVATE')
+  ↓
+API Request:
+  DjangoAPIService.makeRequest('/api/motor2/subcategories/?category=PRIVATE')
+  ↓
+Django Backend:
+  1. MotorSubcategoryViewSet.list(category='PRIVATE')
+  2. Query: MotorSubcategory.objects.filter(category='PRIVATE', is_active=True)
+  3. Returns: [
+       {subcategory_code: 'PRIVATE_THIRD_PARTY', pricing_model: 'FIXED', ...},
+       {subcategory_code: 'PRIVATE_COMPREHENSIVE', pricing_model: 'BRACKET', ...},
+       {subcategory_code: 'PRIVATE_TOR', pricing_model: 'FIXED', ...}
+     ]
+  ↓
+Context State Update:
+  MotorInsuranceContext.dispatch({
+    type: 'SET_CATEGORY_SELECTION',
+    payload: { category: 'PRIVATE', subcategories: [...] }
+  })
+  ↓
+Navigation:
+  Subcategory selection modal/screen appears
+  User sees: "Third Party", "Comprehensive", "Time on Risk"
+```
+
+**STEP 4: User Selects "Third Party" Subcategory**
+
+```
+User Action: Taps "Third Party" option
+↓
+Context Update:
+  dispatch({
+    type: 'SET_SUBCATEGORY',
+    payload: {
+      subcategory_code: 'PRIVATE_THIRD_PARTY',
+      pricing_model: 'FIXED',
+      coverage_type: 'THIRD_PARTY'
+    }
+  })
+  ↓
+Navigation:
+  MotorContainer navigates to PolicyDetailsStep (Step 3)
+  PolicyDetailsStep.js mounts
+  ↓
+Component Renders:
+  <DynamicVehicleForm
+    selectedProduct={PRIVATE_THIRD_PARTY}
+    onUnderwriterSelection={handleUnderwriterSelection}
+  />
+```
+
+**STEP 5: DynamicVehicleForm Auto-Loads Underwriters (Third Party)**
+
+```
+Component Mount Effect:
+  DynamicVehicleForm.js → useEffect() detects Third Party
+  ↓
+Pricing Check:
+  isPricingDependent('THIRD_PARTY') → returns FALSE
+  (Third Party has fixed pricing, doesn't depend on vehicle details)
+  ↓
+Auto-Load Trigger:
+  triggerUnderwriterComparison() called immediately
+  ↓
+Service Call:
+  motorPricingService.compareUnderwritersBySubcategory(
+    'PRIVATE_THIRD_PARTY',
+    { cover_start_date: '2025-11-06' }
+  )
+  ↓
+Cache Check:
+  cacheKey = makeKey(['UW_SUBCAT', 'PRIVATE_THIRD_PARTY', 0, 0, 0])
+  SimpleCache.get(cacheKey) → Check memory + AsyncStorage (12h TTL)
+  ↓
+API Request (if cache miss):
+  DjangoAPIService.makeRequest('/api/motor2/pricing/compare-by-subcategory/', {
+    subcategory_code: 'PRIVATE_THIRD_PARTY',
+    cover_start_date: '2025-11-06'
+  })
+  ↓
+Django Backend Processing:
+  1. UnderwriterComparisonView.compare_by_subcategory()
+  2. Query: UnderwriterProduct.objects.filter(
+       subcategory='PRIVATE_THIRD_PARTY',
+       is_active=True
+     )
+  3. For each underwriter (Madison, PATABIMA, Jubilee, UAP, APA, Britam, CIC):
+     - Get base_premium from pricing table
+     - Third Party fixed: KSh 2,975 (Madison/PATABIMA/Jubilee) or 3,500 (UAP/APA) or 3,920 (Britam/CIC)
+  4. Return: [
+       {underwriter_code: 'MADISON', base_premium: 2975, ...},
+       {underwriter_code: 'PTA', base_premium: 2975, ...},
+       // ... 5 more underwriters
+     ]
+  ↓
+Frontend Enhancement (Apply Mandatory Levies):
+  For each comparison:
+    base_premium = 2975
+    itl = 2975 * 0.0025 = 7.44 (Insurance Training Levy)
+    pcf = 2975 * 0.0025 = 7.44 (Policyholders Compensation Fund)
+    stamp_duty = 40 (Fixed)
+    total_premium = 2975 + 7.44 + 7.44 + 40 = 3029.88
+  ↓
+Sort by Price:
+  comparisons.sort((a, b) => a.total_premium - b.total_premium)
+  Result: Madison (3029.88), PATABIMA (3029.88), Jubilee (3029.88), UAP (3557.50), ...
+  ↓
+Cache Write:
+  SimpleCache.set(cacheKey, enhancedComparisons, 12_HOURS_TTL)
+  ↓
+State Update:
+  setUnderwriterComparisons(enhancedComparisons)
+  hasComparisonsRef.current = true
+  lastComparisonsRef.current = enhancedComparisons
+  ↓
+UI Rendering (FlatList with Memoization):
+  <FlatList
+    data={enhancedComparisons}
+    renderItem={({ item }) => <UnderwriterCard comparison={item} />}
+    keyExtractor={(item) => item.id}
+  />
+  ↓
+User Sees:
+  7 underwriter cards displaying:
+  - Madison Insurance: KSh 3,029.88
+  - PATABIMA INC: KSh 3,029.88
+  - (with breakdown showing base, ITL, PCF, stamp duty)
+```
+
+**STEP 6: User Selects Madison Insurance**
+
+```
+User Action: Taps Madison Insurance card
+↓
+Touch Handler (with requestAnimationFrame for smooth UI):
+  onPress={() => {
+    underwriterSelectedRef.current = true; // Immediate flag (no re-render)
+
+    requestAnimationFrame(() => {
+      setSelectedUnderwriter(madisonData);
+      handleInputChange('underwriter', 'Madison Insurance');
+      onUnderwriterSelection(madisonData); // Callback to parent
+    });
+  }}
+  ↓
+Ref Update (Instant):
+  underwriterSelectedRef.current = true
+  → Prevents further auto-comparisons
+  → Prevents infinite loops
+  ↓
+State Update (Next Frame):
+  selectedUnderwriter = {
+    id: 'aa85d49e-06a2-40ec-9a22-e09b453f8066',
+    name: 'Madison Insurance',
+    code: 'MADISON',
+    total_premium: 3029.88,
+    base_premium: 2975,
+    breakdown: { itl: 7.44, pcf: 7.44, stamp_duty: 40 }
+  }
+  ↓
+Context Update (via callback):
+  PolicyDetailsStep.handleUnderwriterSelection(madisonData)
+  ↓
+  MotorInsuranceContext.dispatch({
+    type: 'UPDATE_VEHICLE_DETAILS',
+    payload: {
+      underwriter: 'Madison Insurance',
+      selectedUnderwriter: madisonData // Full object
+    }
+  })
+  ↓
+UI Update:
+  UnderwriterCard re-renders with selected styling
+  Checkmark (✓) appears on Madison card
+  Other cards remain unselected
+```
+
+**STEP 7: User Fills Vehicle Details & Proceeds**
+
+```
+User Actions:
+  1. Selects "Vehicle Registration" type
+  2. Enters "KDA 123A" in registration field
+  3. Selects cover start date: "11/12/2025"
+  ↓
+Form Handling (Debounced):
+  handleInputChange('registrationNumber', 'KDA 123A')
+  → Updates formData state
+  → Debounced notification (400ms delay) to parent
+  → lastNotifiedDataRef prevents duplicate notifications
+  ↓
+Parent Notification (After Debounce):
+  onDataChange({
+    registrationNumber: 'KDA 123A',
+    cover_start_date: '2025-11-12',
+    identificationType: 'Vehicle Registration',
+    financialInterest: 'Yes'
+    // underwriter excluded (handled separately)
+  })
+  ↓
+Context Merge:
+  MotorInsuranceContext merges vehicle data
+  Preserves selectedUnderwriter object
+  ↓
+User Taps "Next":
+  Validation runs:
+    - Check required fields present
+    - Check underwriter selected (Madison ✓)
+    - All valid → proceed
+  ↓
+Navigation:
+  MotorContainer.nextStep()
+  → Navigate to KYCStep (Step 4)
+```
+
+**STEP 8: Complete Flow Through Remaining Steps**
+
+```
+KYC Step (4):
+  User uploads ID documents
+  → AWS S3 upload via presigned URLs
+  → Textract OCR extracts data
+  → Auto-fills client details
+  ↓
+Document Upload Step (5):
+  User uploads logbook/receipt
+  → S3 upload
+  → DMVIC integration checks vehicle details
+  ↓
+Client Details Step (6):
+  User confirms/edits:
+    - ID Number
+    - Phone Number
+    - Email
+    - Physical Address
+  → Context updates client details
+  ↓
+Payment Step (7):
+  Display summary:
+    - Madison Insurance
+    - KSh 3,029.88
+    - Vehicle: KDA 123A
+  ↓
+  User selects M-PESA payment
+  → Backend creates payment intent
+  → M-PESA STK Push sent to phone
+  → User enters PIN on phone
+  → Backend receives callback
+  → Payment confirmed
+  ↓
+Final Submission Step (8):
+  Context contains complete data:
+    {
+      category: 'PRIVATE',
+      subcategory: 'PRIVATE_THIRD_PARTY',
+      vehicleDetails: { registration: 'KDA 123A', ... },
+      selectedUnderwriter: { name: 'Madison Insurance', code: 'MADISON', ... },
+      clientDetails: { id_number: '12345678', ... },
+      paymentDetails: { method: 'MPESA', transaction_id: 'ABC123', ... }
+    }
+  ↓
+  Submission Service Call:
+    motorQuotationService.submitQuote(completeData)
+    ↓
+  API Request:
+    POST /api/motor2/quotations/
+    Body: { ...completeData }
+    ↓
+  Django Backend Processing:
+    1. QuotationViewSet.create()
+    2. Validate all required fields
+    3. Create database records:
+       - Quotation (quote_number, status='DRAFT')
+       - QuotationVehicle (registration, ...)
+       - QuotationClient (id_number, ...)
+       - QuotationUnderwriter (Madison Insurance)
+       - QuotationPayment (transaction_id, amount)
+    4. Update quotation status to 'PENDING_PAYMENT'
+    5. Trigger policy generation if payment confirmed
+    6. Generate PDF quote document
+    7. Return: {
+         quote_number: 'QT-2025-001234',
+         status: 'ACTIVE',
+         policy_number: 'POL-2025-001234', // If payment confirmed
+         pdf_url: 'https://s3.../quote_POL-2025-001234.pdf'
+       }
+    ↓
+  Frontend Success:
+    - Navigate to SuccessScreen
+    - Display quote number
+    - Show download PDF button
+    - Send email/SMS to client
+    - Update quotations list in context
+```
+
+### Backend Architecture Deep Dive
+
+#### Django Project Structure
+
+```
+insurance-app/
+├── manage.py
+├── insurance-app/
+│   ├── settings.py          # Django settings, DB config
+│   ├── urls.py              # Root URL router
+│   └── wsgi.py              # WSGI entry point
+├── app/                     # Main application
+│   ├── models/              # Database models
+│   │   ├── motor.py         # MotorCategory, MotorSubcategory, MotorProduct
+│   │   ├── underwriter.py   # Underwriter, UnderwriterProduct, Pricing
+│   │   ├── quotation.py     # Quotation, QuotationVehicle, QuotationClient
+│   │   └── policy.py        # Policy, PolicyRenewal, PolicyExtension
+│   ├── serializers/         # DRF serializers (model → JSON)
+│   ├── views/               # API view logic
+│   │   ├── motor_views.py   # Category/subcategory endpoints
+│   │   ├── pricing_views.py # Underwriter comparison logic
+│   │   └── quotation_views.py # Quote CRUD operations
+│   ├── services/            # Business logic
+│   │   ├── pricing_engine.py    # Calculate premiums
+│   │   ├── dmvic_service.py     # Vehicle verification
+│   │   └── payment_service.py   # M-PESA integration
+│   ├── urls.py              # App URL routes
+│   └── migrations/          # Database migrations
+└── requirements.txt
+```
+
+#### Request Handling Flow in Django
+
+**Example: GET /api/motor2/categories/**
+
+```
+1. Request arrives at Django:
+   URL: http://10.0.2.2:8000/api/motor2/categories/
+   Method: GET
+   Headers: { Authorization: 'Bearer eyJ...' }
+
+2. URL Routing (insurance-app/urls.py):
+   urlpatterns = [
+     path('api/', include('app.urls')),
+   ]
+   → Routes to app/urls.py
+
+3. App URL Routing (app/urls.py):
+   router = DefaultRouter()
+   router.register(r'motor2/categories', MotorCategoryViewSet)
+   → Routes to MotorCategoryViewSet
+
+4. ViewSet (app/views/motor_views.py):
+   class MotorCategoryViewSet(viewsets.ReadOnlyModelViewSet):
+       queryset = MotorCategory.objects.filter(is_active=True)
+       serializer_class = MotorCategorySerializer
+       permission_classes = [IsAuthenticated]
+
+       def list(self, request):
+           # 1. Check authentication (JWT token)
+           # 2. Query database
+           categories = self.get_queryset().order_by('sort_order')
+
+           # 3. Serialize to JSON
+           serializer = self.get_serializer(categories, many=True)
+
+           # 4. Return response
+           return Response({
+               'categories': serializer.data,
+               'total_count': categories.count()
+           })
+
+5. Database Query (PostgreSQL):
+   SELECT * FROM app_motorcategory
+   WHERE is_active = TRUE
+   ORDER BY sort_order;
+
+   Returns:
+   - PRIVATE (sort_order=1)
+   - COMMERCIAL (sort_order=2)
+   - PSV (sort_order=3)
+   - MOTORCYCLE (sort_order=4)
+   - TUKTUK (sort_order=5)
+   - SPECIAL (sort_order=6)
+
+6. Serialization (app/serializers/motor_serializers.py):
+   class MotorCategorySerializer(serializers.ModelSerializer):
+       class Meta:
+           model = MotorCategory
+           fields = [
+               'id', 'code', 'name', 'description', 'icon',
+               'field_requirements', 'is_active', 'sort_order'
+           ]
+
+   Converts model instances to JSON:
+   {
+     "id": "02a099fd-e88b-4b61-8f64-0e3eb7ee173f",
+     "code": "PRIVATE",
+     "name": "Private",
+     "description": "Personal vehicles for private use",
+     "icon": "🚗",
+     "field_requirements": {
+       "core_fields": ["registration", "cover_date"]
+     },
+     "is_active": true,
+     "sort_order": 1
+   }
+
+7. Response Journey:
+   ViewSet → Django Middleware → WSGI Server → Network → React Native App
+```
+
+#### Complex Backend Operation: Underwriter Price Comparison
+
+**POST /api/motor2/pricing/compare-by-subcategory/**
+
+```
+Request Body:
+{
+  "subcategory_code": "PRIVATE_THIRD_PARTY",
+  "cover_start_date": "2025-11-06",
+  "sum_insured": null,  // Not needed for Third Party
+  "tonnage": null,
+  "capacity": null
+}
+
+Django Processing Flow:
+
+1. View Entry (app/views/pricing_views.py):
+   class UnderwriterComparisonView(APIView):
+       def post(self, request):
+           subcategory_code = request.data['subcategory_code']
+           cover_date = request.data['cover_start_date']
+
+           # Call pricing engine service
+           comparisons = PricingEngine.compare_underwriters(
+               subcategory_code,
+               request.data
+           )
+
+           return Response({'comparisons': comparisons})
+
+2. Pricing Engine Service (app/services/pricing_engine.py):
+   class PricingEngine:
+       @staticmethod
+       def compare_underwriters(subcategory_code, form_data):
+           # Step 1: Get subcategory details
+           subcategory = MotorSubcategory.objects.get(
+               subcategory_code=subcategory_code
+           )
+
+           # Step 2: Find all active underwriter products
+           underwriter_products = UnderwriterProduct.objects.filter(
+               subcategory=subcategory,
+               is_active=True,
+               underwriter__is_active=True
+           ).select_related('underwriter', 'pricing')
+
+           # Step 3: Calculate price for each underwriter
+           results = []
+           for uw_product in underwriter_products:
+               premium = PricingEngine._calculate_premium(
+                   uw_product,
+                   subcategory.pricing_model,
+                   form_data
+               )
+
+               results.append({
+                   'underwriter_code': uw_product.underwriter.code,
+                   'underwriter_name': uw_product.underwriter.name,
+                   'result': {
+                       'base_premium': premium,
+                       'pricing_model': subcategory.pricing_model
+                   }
+               })
+
+           return results
+
+3. Premium Calculation Logic:
+   @staticmethod
+   def _calculate_premium(uw_product, pricing_model, form_data):
+       if pricing_model == 'FIXED':
+           # Third Party / TOR
+           pricing = uw_product.pricing  # ForeignKey to PricingTable
+           return pricing.fixed_premium  # e.g., 2975
+
+       elif pricing_model == 'BRACKET':
+           # Comprehensive - sum insured brackets
+           sum_insured = form_data.get('sum_insured', 0)
+           bracket = PricingBracket.objects.filter(
+               pricing=uw_product.pricing,
+               min_value__lte=sum_insured,
+               max_value__gte=sum_insured
+           ).first()
+
+           if bracket:
+               # Calculate percentage or fixed
+               if bracket.rate_type == 'PERCENTAGE':
+                   return sum_insured * (bracket.rate / 100)
+               else:
+                   return bracket.rate
+
+       elif pricing_model == 'TONNAGE':
+           # Commercial - tonnage scale
+           tonnage = form_data.get('tonnage', 0)
+           scale = TonnageScale.objects.filter(
+               pricing=uw_product.pricing,
+               min_tons__lte=tonnage,
+               max_tons__gte=tonnage
+           ).first()
+
+           return scale.premium if scale else 0
+
+4. Database Queries Executed:
+   -- Get subcategory
+   SELECT * FROM app_motorsubcategory
+   WHERE subcategory_code = 'PRIVATE_THIRD_PARTY';
+
+   -- Get all underwriter products with pricing
+   SELECT
+     uw_product.id,
+     uw.code AS underwriter_code,
+     uw.name AS underwriter_name,
+     pricing.fixed_premium
+   FROM app_underwriterproduct uw_product
+   JOIN app_underwriter uw ON uw_product.underwriter_id = uw.id
+   JOIN app_pricingtable pricing ON uw_product.pricing_id = pricing.id
+   WHERE uw_product.subcategory_id = '...'
+     AND uw_product.is_active = TRUE
+     AND uw.is_active = TRUE;
+
+   Results:
+   - Madison: 2975
+   - PATABIMA: 2975
+   - Jubilee: 2975
+   - UAP: 3500
+   - APA: 3500
+   - Britam: 3920
+   - CIC: 3920
+
+5. Response Formation:
+   {
+     "comparisons": [
+       {
+         "underwriter_code": "MADISON",
+         "underwriter_name": "Madison Insurance",
+         "result": {
+           "base_premium": 2975,
+           "pricing_model": "FIXED"
+         }
+       },
+       // ... 6 more
+     ]
+   }
+
+6. Return to Frontend:
+   Django → Network → DjangoAPIService → motorPricingService
+   → Frontend applies levies → Displays to user
+```
+
 ### State Management Implementation
 
 The app uses **React Context API with reducers** for complex state management (not Redux). Key patterns:
 
-#### Motor Insurance Context Pattern
+#### Motor Insurance Context Pattern - Complete Lifecycle
+
+**Context File Structure:**
 
 ```javascript
 // frontend/contexts/MotorInsuranceContext.js
+
+// 1. INITIAL STATE DEFINITION
 const initialState = {
-  selectedCategory: null,
-  selectedSubcategory: null,
-  vehicleDetails: {},
-  pricingInputs: {},
-  subcategoryFormData: {}, // Per-subcategory isolation
-  availableUnderwriters: [],
-  pricingComparison: [],
-  calculatedPremium: null,
-  currentStep: 0,
-  selectedAddons: [],
+  // Category Selection (Step 1-2)
+  selectedCategory: null, // e.g., { code: 'PRIVATE', name: 'Private', ... }
+  selectedSubcategory: null, // e.g., { code: 'PRIVATE_THIRD_PARTY', ... }
+
+  // Form Data (Step 3-6)
+  vehicleDetails: {}, // { registration: 'KDA 123A', cover_start_date: '2025-11-06', ... }
+  pricingInputs: {}, // { sum_insured: 500000, tonnage: 5, ... }
+  subcategoryFormData: {}, // Isolated storage: { 'PRIVATE_THIRD_PARTY': {...}, 'PRIVATE_COMPREHENSIVE': {...} }
+
+  // Underwriter Selection
+  availableUnderwriters: [], // List of all active underwriters
+  pricingComparison: [], // Comparison results from backend
+  selectedUnderwriter: null, // { name: 'Madison', code: 'MADISON', total_premium: 3029.88 }
+  calculatedPremium: null, // Current premium calculation
+
+  // Client & Payment
+  clientDetails: {}, // { id_number: '12345678', phone: '0712345678', ... }
+  kycDocuments: [], // Uploaded ID, passport, etc.
+  uploadedDocuments: [], // Logbook, receipt, etc.
+  paymentDetails: null, // { method: 'MPESA', transaction_id: 'ABC123', ... }
+
+  // Flow Control
+  currentStep: 0, // 0-7 (8 steps total)
+  completedSteps: [], // [0, 1, 2] - tracks which steps are done
+  validationErrors: {}, // { registrationNumber: 'Required field', ... }
+
+  // Add-ons & Options
+  selectedAddons: [], // Optional coverages selected
+
   // History for undo/redo
-  past: [],
-  future: [],
+  past: [], // Previous states for undo
+  future: [], // Forward states for redo
 };
 
-function reducer(state, action) {
+// 2. REDUCER FUNCTION - Handles All State Updates
+function motorInsuranceReducer(state, action) {
   switch (action.type) {
+    // Category/Subcategory Selection
     case "SET_CATEGORY_SELECTION":
-      // Save current form data before switching
-      // Restore saved data for new subcategory
-      return saveForHistory(state, newState);
+      // When user selects a category, save current form data before switching
+      const currentFormKey = state.selectedSubcategory?.subcategory_code;
+      const updatedSubcategoryData = currentFormKey
+        ? {
+            ...state.subcategoryFormData,
+            [currentFormKey]: state.vehicleDetails, // Save current data
+          }
+        : state.subcategoryFormData;
+
+      return saveForHistory(state, {
+        ...state,
+        selectedCategory: action.payload.category,
+        selectedSubcategory: action.payload.subcategory,
+        subcategoryFormData: updatedSubcategoryData,
+        // Restore saved data for new subcategory (if exists)
+        vehicleDetails:
+          updatedSubcategoryData[
+            action.payload.subcategory?.subcategory_code
+          ] || {},
+        currentStep: 2, // Move to Policy Details step
+      });
+
+    // Vehicle Details Update
     case "UPDATE_VEHICLE_DETAILS":
-      // Merge updates, preserve selectedUnderwriter object
+      // Critical: Preserve selectedUnderwriter as full object, not just string
+      const newDetails = action.payload;
+
+      // If underwriter is coming as string but we have an object, preserve object
+      const preservedUnderwriter =
+        typeof newDetails.underwriter === "string" && state.selectedUnderwriter
+          ? state.selectedUnderwriter
+          : newDetails.selectedUnderwriter || newDetails.underwriter;
+
       return {
         ...state,
-        vehicleDetails: { ...state.vehicleDetails, ...action.payload },
+        vehicleDetails: {
+          ...state.vehicleDetails,
+          ...newDetails,
+          selectedUnderwriter: preservedUnderwriter, // Always preserve object
+        },
+        selectedUnderwriter: preservedUnderwriter,
       };
-    // ... other actions
+
+    // Underwriter Selection (from comparison)
+    case "SELECT_UNDERWRITER":
+      return {
+        ...state,
+        selectedUnderwriter: action.payload, // Full object with pricing
+        vehicleDetails: {
+          ...state.vehicleDetails,
+          underwriter: action.payload.name,
+          selectedUnderwriter: action.payload,
+        },
+        calculatedPremium: action.payload.total_premium,
+      };
+
+    // Client Details
+    case "UPDATE_CLIENT_DETAILS":
+      return {
+        ...state,
+        clientDetails: {
+          ...state.clientDetails,
+          ...action.payload,
+        },
+      };
+
+    // Document Upload
+    case "ADD_KYC_DOCUMENT":
+      return {
+        ...state,
+        kycDocuments: [...state.kycDocuments, action.payload],
+      };
+
+    case "ADD_UPLOADED_DOCUMENT":
+      return {
+        ...state,
+        uploadedDocuments: [...state.uploadedDocuments, action.payload],
+      };
+
+    // Payment
+    case "SET_PAYMENT_DETAILS":
+      return {
+        ...state,
+        paymentDetails: action.payload,
+      };
+
+    // Step Navigation
+    case "SET_CURRENT_STEP":
+      const newStep = action.payload;
+      const isCompleted = newStep > state.currentStep;
+
+      return {
+        ...state,
+        currentStep: newStep,
+        completedSteps: isCompleted
+          ? [...new Set([...state.completedSteps, state.currentStep])]
+          : state.completedSteps,
+      };
+
+    // Validation
+    case "SET_VALIDATION_ERRORS":
+      return {
+        ...state,
+        validationErrors: action.payload,
+      };
+
+    // Reset Flow
+    case "RESET_FLOW":
+      return initialState;
+
+    default:
+      return state;
   }
+}
+
+// 3. CONTEXT PROVIDER - Wraps the App
+export const MotorInsuranceProvider = ({ children }) => {
+  const [state, dispatch] = useReducer(motorInsuranceReducer, initialState);
+
+  // Memoized action creators (prevent re-renders)
+  const actions = useMemo(
+    () => ({
+      setCategorySelection: useCallback((category, subcategory) => {
+        dispatch({
+          type: "SET_CATEGORY_SELECTION",
+          payload: { category, subcategory },
+        });
+      }, []),
+
+      updateVehicleDetails: useCallback((details) => {
+        dispatch({
+          type: "UPDATE_VEHICLE_DETAILS",
+          payload: details,
+        });
+      }, []),
+
+      selectUnderwriter: useCallback((underwriter) => {
+        dispatch({
+          type: "SELECT_UNDERWRITER",
+          payload: underwriter,
+        });
+      }, []),
+
+      updateClientDetails: useCallback((details) => {
+        dispatch({
+          type: "UPDATE_CLIENT_DETAILS",
+          payload: details,
+        });
+      }, []),
+
+      setCurrentStep: useCallback((step) => {
+        dispatch({
+          type: "SET_CURRENT_STEP",
+          payload: step,
+        });
+      }, []),
+
+      resetFlow: useCallback(() => {
+        dispatch({ type: "RESET_FLOW" });
+      }, []),
+    }),
+    []
+  );
+
+  // Context value combines state and actions
+  const value = useMemo(
+    () => ({
+      ...state,
+      ...actions,
+    }),
+    [state, actions]
+  );
+
+  return (
+    <MotorInsuranceContext.Provider value={value}>
+      {children}
+    </MotorInsuranceContext.Provider>
+  );
+};
+
+// 4. USAGE IN COMPONENTS
+function PolicyDetailsStep() {
+  const {
+    selectedSubcategory,
+    vehicleDetails,
+    selectedUnderwriter,
+    updateVehicleDetails,
+    selectUnderwriter,
+  } = useMotorInsurance(); // Custom hook
+
+  const handleUnderwriterSelection = (underwriter) => {
+    console.log("[PolicyDetails] Underwriter selected:", underwriter.name);
+
+    // Update context with full object
+    selectUnderwriter(underwriter);
+
+    // Also update vehicle details (dual write for compatibility)
+    updateVehicleDetails({
+      underwriter: underwriter.name,
+      selectedUnderwriter: underwriter,
+    });
+  };
+
+  return (
+    <DynamicVehicleForm
+      selectedProduct={selectedSubcategory}
+      initialData={vehicleDetails}
+      onUnderwriterSelection={handleUnderwriterSelection}
+      onDataChange={updateVehicleDetails}
+    />
+  );
 }
 ```
 
-**Key Implementation Details:**
+**Critical Implementation Details:**
 
-- **Per-subcategory form data isolation**: When switching between subcategories, form data is saved and restored to prevent data bleeding
-- **History management**: Uses `past` and `future` arrays for undo/redo functionality
-- **Memoized actions**: All action functions use `useCallback` to prevent unnecessary re-renders
-- **Refs for performance**: Critical flags use `useRef` instead of state to avoid triggering re-renders (e.g., `underwriterSelectedRef`, `hasComparisonsRef`)
+1. **Per-subcategory Form Data Isolation**:
+
+   - When user switches between Third Party ↔ Comprehensive, their form data is saved
+   - Prevents data bleeding between different insurance types
+   - Each subcategory gets its own isolated storage in `subcategoryFormData`
+
+2. **History Management** (Undo/Redo):
+
+   - Uses `past` and `future` arrays for navigation history
+   - `saveForHistory()` helper pushes current state to past before update
+   - Enables undo/redo functionality for complex flows
+
+3. **Memoized Actions**:
+
+   - All action creators wrapped in `useCallback`
+   - Prevents unnecessary re-renders when passed as props
+   - Actions don't change identity between renders
+
+4. **Refs for Performance-Critical Flags**:
+   - `underwriterSelectedRef`, `hasComparisonsRef` in components
+   - Use `useRef` instead of `useState` for flags that trigger logic but don't need to cause re-renders
+   - Prevents infinite loops in effects
 
 ### API Client Architecture
 

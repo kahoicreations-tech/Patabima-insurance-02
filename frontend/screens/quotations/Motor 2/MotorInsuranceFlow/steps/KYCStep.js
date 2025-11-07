@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect } from 'react';
 import {
   View,
   Text,
@@ -11,6 +11,29 @@ import { useMotorInsurance } from '@contexts/MotorInsuranceContext';
 
 export default function KYCStep() {
   const { state, actions } = useMotorInsurance();
+
+  // ✅ NEW: Auto-show verification modal if there's an existing cover collision
+  useEffect(() => {
+    const selectedCoverDateStr = state.vehicleDetails?.cover_start_date || state.vehicleDetails?.coverStartDate;
+    const minCoverStartDateStr = state.minCoverStartDate;
+    
+    // Check if there's a date collision
+    const isCollision = Boolean(
+      minCoverStartDateStr && selectedCoverDateStr && new Date(selectedCoverDateStr) < new Date(minCoverStartDateStr)
+    );
+    
+    // Check if there's existing cover data
+    const hasExistingCover = state.existingCoverData?.hasExistingCover;
+    
+    console.log('[KYCStep] Mount check - Collision:', isCollision, 'HasExistingCover:', hasExistingCover);
+    console.log('[KYCStep] Selected date:', selectedCoverDateStr, 'Min date:', minCoverStartDateStr);
+    
+    // Auto-show modal if collision detected and not already showing
+    if ((isCollision || hasExistingCover) && !state.showVerificationScreen) {
+      console.log('[KYCStep] ✅ Auto-opening verification modal for existing cover');
+      actions.setShowVerificationScreen(true);
+    }
+  }, [state.minCoverStartDate, state.vehicleDetails?.cover_start_date, state.vehicleDetails?.coverStartDate, state.existingCoverData?.hasExistingCover, state.showVerificationScreen, actions]);
 
   // Get data from vehicle details or pricing inputs
   const vehicleData = state.vehicleDetails || {};

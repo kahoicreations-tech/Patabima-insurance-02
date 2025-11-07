@@ -1,5 +1,6 @@
 // Document Type Detector - Simple client-side validation for Motor 2 KYC documents
 // Detects document type from OCR extracted fields and text to prevent mismatches
+import { isValidKRAPin } from './kenyaValidation';
 
 /**
  * Detect document type from OCR result
@@ -15,6 +16,19 @@ export function detectDocumentType(result) {
   const fields = { ...(result.rawFields || {}), ...(result.fields || {}) };
   const rawText = (result.rawText || '').toLowerCase();
   const fieldKeys = Object.keys(fields).map(k => k.toLowerCase());
+
+  // Quick direct detection: Look for a valid KRA PIN pattern anywhere in raw text (tolerate spaces and dashes)
+  // Examples: A123456789Z, P 123 456 789 Q, A-123-456-789-Z
+  try {
+    const kraLooseRegex = /([ap][\s-]?\d[\s-]?\d[\s-]?\d[\s-]?\d[\s-]?\d[\s-]?\d[\s-]?\d[\s-]?\d[\s-]?\d[\s-]?[a-z])/i;
+    const match = (result.rawText || '').match(kraLooseRegex);
+    if (match && match[1]) {
+      const compact = match[1].replace(/[^a-z0-9]/gi, '').toUpperCase();
+      if (isValidKRAPin(compact)) {
+        return 'kra_pin';
+      }
+    }
+  } catch {}
 
   // Strong markers for vehicle logbook (if >=2 present, it's a logbook)
   const strongLogbookKeys = ['registration', 'reg_no', 'regno', 'chassis', 'chassis_number', 'engine', 'engine_number'];
@@ -45,16 +59,29 @@ export function detectDocumentType(result) {
       ]
     },
     kra_pin: {
-      keys: [ { k: 'pin', w: 3 }, { k: 'kra', w: 2 }, { k: 'tax', w: 1 }, { k: 'taxpayer', w: 2 }, { k: 'personal_identification_number', w: 4 } ],
-      text: [ { t: 'kenya revenue authority', w: 3 }, { t: 'pin certificate', w: 3 }, { t: 'kra', w: 2 } ]
+      keys: [
+        { k: 'pin', w: 3 }, { k: 'pin_no', w: 3 }, { k: 'pin number', w: 3 }, { k: 'p.i.n', w: 3 },
+        { k: 'kra', w: 2 }, { k: 'tax', w: 1 }, { k: 'taxpayer', w: 2 }, { k: 'personal_identification_number', w: 4 },
+        { k: 'personal identification number', w: 4 }
+      ],
+      text: [
+        { t: 'kenya revenue authority', w: 3 }, { t: 'pin certificate', w: 3 }, { t: 'kra', w: 2 },
+        { t: 'taxpayer pin', w: 2 }, { t: 'itax', w: 2 }
+      ]
     },
     valuation_report: {
       keys: [ { k: 'valuation', w: 3 }, { k: 'market_value', w: 2 }, { k: 'assessed_value', w: 2 }, { k: 'valuer', w: 2 }, { k: 'valuation_date', w: 2 } ],
       text: [ { t: 'valuation report', w: 3 }, { t: 'market value', w: 2 } ]
     },
     business_permit: {
-      keys: [ { k: 'permit', w: 3 }, { k: 'business', w: 1 }, { k: 'license', w: 2 }, { k: 'licence', w: 2 }, { k: 'business_name', w: 2 }, { k: 'county', w: 1 } ],
-      text: [ { t: 'business permit', w: 3 }, { t: 'trade license', w: 2 } ]
+      keys: [
+        { k: 'permit', w: 3 }, { k: 'business', w: 1 }, { k: 'license', w: 2 }, { k: 'licence', w: 2 },
+        { k: 'business_name', w: 2 }, { k: 'county', w: 1 }, { k: 'single business permit', w: 4 }
+      ],
+      text: [
+        { t: 'business permit', w: 3 }, { t: 'trade license', w: 2 }, { t: 'single business permit', w: 4 },
+        { t: 'county government', w: 2 }
+      ]
     }
   };
 

@@ -46,7 +46,17 @@ config.resolver = config.resolver || {};
 config.resolver.blockList = blockListRE;
 
 // Performance optimizations for faster startup
-config.maxWorkers = 2; // Limit CPU usage for faster startup
+// Let Metro decide worker count (removing hard cap of 2 which slowed bundling on multi-core machines)
+if (config.maxWorkers) delete config.maxWorkers;
+
+// Defer require() of modules until they are used → noticeably faster app cold start in dev
+config.transformer = config.transformer || {};
+config.transformer.getTransformOptions = async () => ({
+  transform: {
+    experimentalImportSupport: false,
+    inlineRequires: true,
+  },
+});
 
 // Optimize resolver performance (keep defaults reasonable)
 config.resolver.platforms = ['ios', 'android', 'web'];

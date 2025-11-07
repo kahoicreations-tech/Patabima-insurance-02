@@ -1049,7 +1049,11 @@ class DjangoAPIService {
 
   async getCurrentUser() {
     try {
-      const response = await this.makeRequest(API_CONFIG.ENDPOINTS.USER.GET_CURRENT_USER, { _allowWhenLocked: true });
+      // Use shorter timeout (5s) for initial auth check to avoid hanging app startup
+      const response = await this.makeRequest(API_CONFIG.ENDPOINTS.USER.GET_CURRENT_USER, { 
+        _allowWhenLocked: true,
+        _timeoutMs: 5000 // 5 second timeout instead of default 30s
+      });
       this.agentData = response;
       await AsyncStorage.setItem('agent_data', JSON.stringify(response));
       return response;
