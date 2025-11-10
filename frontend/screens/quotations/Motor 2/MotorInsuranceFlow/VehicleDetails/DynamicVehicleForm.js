@@ -19,7 +19,6 @@ const MemoizedTextInput = memo(({
 }) => {
   return (
     <TextInput
-      key={fieldKey}
       style={[style, hasError && styles.inputError]}
       value={value}
       onChangeText={onChangeText}
@@ -32,10 +31,16 @@ const MemoizedTextInput = memo(({
   );
 }, (prevProps, nextProps) => {
   // Custom comparison - only re-render if relevant props change
+  // Return TRUE to skip re-render (props are equal)
+  // IMPORTANT: We deliberately exclude onChangeText from comparison because
+  // it's recreated on every render, but the TextInput doesn't need to remount for that
   return (
     prevProps.value === nextProps.value &&
     prevProps.hasError === nextProps.hasError &&
-    prevProps.placeholder === nextProps.placeholder
+    prevProps.placeholder === nextProps.placeholder &&
+    prevProps.fieldKey === nextProps.fieldKey &&
+    prevProps.keyboardType === nextProps.keyboardType &&
+    prevProps.autoCapitalize === nextProps.autoCapitalize
   );
 });
 
@@ -50,8 +55,6 @@ const DynamicPolicyForm = ({
   onUnderwriterComparison, 
   onUnderwriterSelection,
   // Phase 1.2: New props for DMVIC integration
-  onRegistrationChange,
-  onCoverDateChange,
   minCoverStartDate,
   dmvicLoading,
   dmvicError,
@@ -80,6 +83,7 @@ const DynamicPolicyForm = ({
   
   // Debounced parent notifier to avoid parent re-renders on every keystroke
   const notifyTimeoutRef = useRef(null);
+  const formDataUpdateTimeoutRef = useRef(null); // Debounce state updates for registration field
   const latestFormRef = useRef(formData);
   
   // Track if underwriter has been selected (prevents re-fetch after selection)
@@ -99,26 +103,34 @@ const DynamicPolicyForm = ({
   useEffect(() => {
     hasComparisonsRef.current = underwriterComparisons.length > 0;
     
+    // ✅ DISABLED: Auto-scroll interferes with typing in Third Party products
+    // For Third Party, underwriters load instantly on mount and are already visible
+    // Auto-scrolling while user is typing the plate causes focus loss
+    // Keep this disabled - users can scroll manually if needed
+    
     // Auto-scroll to underwriter section when comparisons are loaded
-    if (underwriterComparisons.length > 0 && underwriterSectionRef.current && scrollViewRef.current) {
-      // Small delay to ensure rendering is complete
-      setTimeout(() => {
-        underwriterSectionRef.current?.measureLayout(
-          scrollViewRef.current,
-          (x, y) => {
-            scrollViewRef.current?.scrollTo({ y: y - 20, animated: true });
-          },
-          () => {} // Error callback
-        );
-      }, 300);
-    }
+    // if (underwriterComparisons.length > 0 && underwriterSectionRef.current && scrollViewRef.current) {
+    //   // Small delay to ensure rendering is complete
+    //   setTimeout(() => {
+    //     underwriterSectionRef.current?.measureLayout(
+    //       scrollViewRef.current,
+    //       (x, y) => {
+    //         scrollViewRef.current?.scrollTo({ y: y - 20, animated: true });
+    //       },
+    //       () => {} // Error callback
+    //     );
+    //   }, 300);
+    // }
   }, [underwriterComparisons.length]);
 
-  // Cleanup debounce timer on unmount
+  // Cleanup debounce timers on unmount
   useEffect(() => {
     return () => {
       if (notifyTimeoutRef.current) {
         clearTimeout(notifyTimeoutRef.current);
+      }
+      if (formDataUpdateTimeoutRef.current) {
+        clearTimeout(formDataUpdateTimeoutRef.current);
       }
     };
   }, []);
@@ -251,82 +263,78 @@ const DynamicPolicyForm = ({
   // Check if we can trigger underwriter comparison
   // Memoize only the pricing-relevant fields to prevent unnecessary re-triggers
   const canCompareUnderwriters = useCallback(() => {
-    console.log('🔍 canCompareUnderwriters called with:', {
-      selectedProduct: selectedProduct?.subcategory_name,
-      category: selectedProduct?.category,
-      coverage_type: selectedProduct?.coverage_type,
-      formData: {
-        registrationNumber: formData.registrationNumber,
-        cover_start_date: formData.cover_start_date,
-        allKeys: Object.keys(formData)
-      }
-    });
-
     if (!selectedProduct || !selectedProduct.category || !selectedProduct.coverage_type) {
-      console.log('❌ canCompareUnderwriters: Missing product info');
       return false;
-    }
-
-  const requiredFields = ['registrationNumber', 'cover_start_date'];
-    
-    // Check basic required fields including cover start date
-    const hasRequired = requiredFields.every(field => formData[field] && formData[field].toString().trim());
-    if (!hasRequired) {
-      console.log('❌ canCompareUnderwriters: Missing required fields');
-      return false;
-    }
-
-    // Validate registration number format to avoid triggering while typing
-    const identificationType = formData.identificationType || 'Vehicle Registration';
-    const regRaw = (formData.registrationNumber || '').toString().trim().toUpperCase();
-    if (identificationType === 'Vehicle Registration') {
-      // Kenyan plate: KXX 123X or KXX123X
-      const kenyanPlatePattern = /^K[A-Z]{2}\s?\d{3}[A-Z]$/;
-      if (!kenyanPlatePattern.test(regRaw)) {
-        console.log('❌ canCompareUnderwriters: Registration not valid yet');
-        return false;
-      }
-    } else if (identificationType === 'Chassis Number') {
-      // Chassis numbers vary; require a reasonable minimum length to avoid early triggers
-      if (regRaw.length < 8) {
-        console.log('❌ canCompareUnderwriters: Chassis too short');
-        return false;
-      }
     }
 
     // For comprehensive insurance, need sum_insured
     const isComprehensive = selectedProduct.coverage_type?.toLowerCase().includes('comprehensive');
     // Disable underwriter comparison on Vehicle Details for Comprehensive to avoid duplication
     if (isComprehensive) {
-      console.log('❌ canCompareUnderwriters: Comprehensive - disabled on this screen');
       return false;
+    }
+
+    // Determine if this is a Third Party or TOR product (pricing NOT dependent on plate/date)
+    const coverageType = (selectedProduct?.coverage_type || '').toLowerCase();
+    const subcategoryCode = selectedProduct?.subcategory_code?.toLowerCase() || '';
+    const isThirdPartyLike = (
+      coverageType.includes('third_party') ||
+      coverageType.includes('third-party') ||
+      coverageType === 'tor' ||
+      coverageType === 'fixed' ||
+      subcategoryCode.includes('tor') ||
+      subcategoryCode.includes('third_party') ||
+      subcategoryCode.includes('third-party')
+    );
+
+    // For Third Party/TOR: NO validation needed - pricing is fixed
+    // Can compare underwriters immediately without any form data
+    if (isThirdPartyLike) {
+      return true;
+    }
+
+    // For other products, validate required fields (read from ref, not state)
+    const formValues = latestFormRef.current;
+    const requiredFields = ['registrationNumber', 'cover_start_date'];
+    const hasRequired = requiredFields.every(field => formValues[field] && formValues[field].toString().trim());
+    if (!hasRequired) {
+      return false;
+    }
+
+    // Validate registration number format to avoid triggering while typing
+    const identificationType = formValues.identificationType || 'Vehicle Registration';
+    const regRaw = (formValues.registrationNumber || '').toString().trim().toUpperCase();
+    if (identificationType === 'Vehicle Registration') {
+      // Kenyan plate: KXX 123X or KXX123X
+      const kenyanPlatePattern = /^K[A-Z]{2}\s?\d{3}[A-Z]$/;
+      if (!kenyanPlatePattern.test(regRaw)) {
+        return false;
+      }
+    } else if (identificationType === 'Chassis Number') {
+      // Chassis numbers vary; require a reasonable minimum length to avoid early triggers
+      if (regRaw.length < 8) {
+        return false;
+      }
     }
 
     // For commercial, need tonnage
     const isCommercial = selectedProduct.category?.toLowerCase() === 'commercial';
-    if (isCommercial && !formData.tonnage) {
-      console.log('❌ canCompareUnderwriters: Commercial needs tonnage');
+    if (isCommercial && !formValues.tonnage) {
       return false;
     }
 
     // For PSV, need passenger capacity
     const isPSV = selectedProduct.category?.toLowerCase() === 'psv';
-    if (isPSV && (!formData.passengerCapacity || Number(formData.passengerCapacity) <= 0)) {
-      console.log('❌ canCompareUnderwriters: PSV needs passenger capacity');
+    if (isPSV && (!formValues.passengerCapacity || Number(formValues.passengerCapacity) <= 0)) {
       return false;
     }
 
-    console.log('✅ canCompareUnderwriters: ALL CHECKS PASSED!');
     return true;
   }, [
-    selectedProduct, 
-    // Only depend on fields that affect pricing, NOT underwriter selection
-    formData.registrationNumber,
-    formData.cover_start_date,
-    formData.tonnage,
-    formData.passengerCapacity,
-    formData.sum_insured,
-    formData.engineCapacity
+    selectedProduct
+    // ✅ CRITICAL FIX: Do NOT include formData fields in dependencies
+    // Use latestFormRef.current inside the function to read values without triggering recalculation
+    // This prevents the callback from recreating on every keystroke
   ]);
 
   // Memoize comparison trigger data to prevent unnecessary calls
@@ -334,6 +342,8 @@ const DynamicPolicyForm = ({
   // CRITICAL: Do NOT include formData.underwriter in the key or dependencies
   // so that selecting an underwriter does not schedule a new comparison
   const comparisonKey = useMemo(() => {
+    console.log('🔑 [MEMO] comparisonKey recalculating. latestFormRef.registrationNumber:', latestFormRef.current?.registrationNumber);
+    
     if (!selectedProduct) return null;
     // Do not trigger comparisons from the Vehicle Details step for Comprehensive
     if (selectedProduct.coverage_type?.toLowerCase().includes('comprehensive')) return null;
@@ -342,30 +352,53 @@ const DynamicPolicyForm = ({
     const category = selectedProduct?.category?.toUpperCase();
     const coverType = selectedProduct?.coverage_type?.toUpperCase();
     
+    // ✅ For Third Party/TOR: ONLY product info (no form fields) to prevent keystroke triggers
+    const isThirdPartyLike = (
+      coverType?.includes('THIRD_PARTY') ||
+      coverType?.includes('THIRD-PARTY') ||
+      coverType === 'TOR' ||
+      coverType === 'FIXED' ||
+      subcategory_code?.toLowerCase().includes('tor') ||
+      subcategory_code?.toLowerCase().includes('third_party') ||
+      subcategory_code?.toLowerCase().includes('third-party')
+    );
+    
+    if (isThirdPartyLike) {
+      // Fixed pricing - only product matters, not user input
+      const key = JSON.stringify({
+        subcategory: subcategory_code,
+        category: category,
+        coverType: coverType
+      });
+      console.log('🔑 [MEMO] Third Party product - key excludes form fields:', key);
+      return key;
+    }
+    
     // Create signature with only the fields that affect pricing
     // Exclude underwriter selection to prevent re-scheduling comparison on every click
-    return JSON.stringify({
+    // Use latestFormRef.current to read current form data WITHOUT adding to dependencies
+    const key = JSON.stringify({
       subcategory: subcategory_code,
       category: category,
       coverType: coverType,
-      registration: formData.registrationNumber,
-      sumInsured: formData.sum_insured,
-      tonnage: formData.tonnage,
-      capacity: formData.passengerCapacity,
-      engineCapacity: formData.engineCapacity,
-      coverDate: formData.cover_start_date
+      registration: latestFormRef.current?.registrationNumber,
+      sumInsured: latestFormRef.current?.sum_insured,
+      tonnage: latestFormRef.current?.tonnage,
+      capacity: latestFormRef.current?.passengerCapacity,
+      engineCapacity: latestFormRef.current?.engineCapacity,
+      coverDate: latestFormRef.current?.cover_start_date
     });
+    console.log('🔑 [MEMO] Variable pricing product - key includes form fields:', key);
+    return key;
   }, [
+    // ✅ STABLE PRIMITIVE VALUES ONLY - strings are compared by value in React
+    // Extract primitive values to ensure stable comparisons
     selectedProduct?.subcategory_code,
     selectedProduct?.code,
     selectedProduct?.category,
-    selectedProduct?.coverage_type,
-    formData.registrationNumber,
-    formData.sum_insured,
-    formData.tonnage,
-    formData.passengerCapacity,
-    formData.engineCapacity,
-    formData.cover_start_date
+    selectedProduct?.coverage_type
+    // ⚠️ CRITICAL: We do NOT include selectedProduct object itself or ANY form fields
+    // Only extract the specific string properties we need for comparison
   ]);
 
   // Trigger underwriter comparison when form is ready
@@ -386,14 +419,15 @@ const DynamicPolicyForm = ({
     const coverType = selectedProduct?.coverage_type?.toUpperCase();
     
     // Create a signature of the current data to avoid repeated calls
+    const formValues = latestFormRef.current || {};
     const currentDataSignature = JSON.stringify({
       subcategory_code,
       category,
       coverType,
-      registrationNumber: formData.registrationNumber,
-      sum_insured: formData.sum_insured,
-      tonnage: formData.tonnage,
-      passengerCapacity: formData.passengerCapacity,
+      registrationNumber: formValues.registrationNumber,
+      sum_insured: formValues.sum_insured,
+      tonnage: formValues.tonnage,
+      passengerCapacity: formValues.passengerCapacity,
     });
 
     // Don't repeat the same comparison
@@ -406,7 +440,7 @@ const DynamicPolicyForm = ({
     setLastComparisonData(currentDataSignature);
 
     try {
-      console.log('Triggering underwriter comparison for:', { subcategory_code, category, coverType, formData });
+  console.log('Triggering underwriter comparison for:', { subcategory_code, category, coverType, formData: formValues });
       
       let comparisons;
       
@@ -414,7 +448,7 @@ const DynamicPolicyForm = ({
       if (subcategory_code) {
         // Use the subcategory directly for comparison
         const enhancedFormData = {
-          ...formData,
+          ...formValues,
           subcategory_code: subcategory_code,
           category: category
         };
@@ -428,7 +462,7 @@ const DynamicPolicyForm = ({
         comparisons = await motorPricingService.compareUnderwritersByCoverType(
           category,
           coverType,
-          formData
+          formValues
         );
       }
 
@@ -464,42 +498,72 @@ const DynamicPolicyForm = ({
     } finally {
       setComparingUnderwriters(false);
     }
-  }, [selectedProduct, formData, canCompareUnderwriters, comparingUnderwriters, onUnderwriterComparison, lastComparisonData]);
+  }, [selectedProduct, canCompareUnderwriters, comparingUnderwriters, onUnderwriterComparison, lastComparisonData]);
 
   // Auto-trigger underwriter comparison with debouncing when comparisonKey changes
   useEffect(() => {
+    console.log('🔍 [EFFECT] Auto-trigger effect running. comparisonKey:', comparisonKey);
+    
     // Skip auto comparisons for Comprehensive on Vehicle Details screen
     if (selectedProduct?.coverage_type?.toLowerCase().includes('comprehensive')) {
+      console.log('⏭️ [EFFECT] Skipping - Comprehensive product');
       return;
     }
     
     // Skip if no comparison key (not ready yet)
     if (!comparisonKey) {
+      console.log('⏭️ [EFFECT] Skipping - No comparison key yet');
       lastComparisonKeyRef.current = null;
+      return;
+    }
+
+    // ✅ CRITICAL GUARD: For Third Party / TOR / fixed pricing products we only ever need ONE fetch.
+    // After the first successful comparison set (hasComparisonsRef.current === true), further
+    // form interactions (radio toggles, focusing fields, typing registration) should NOT re-trigger comparisons.
+    // This MUST come BEFORE the duplicate key checks so we exit early without executing any logic.
+    const coverageTypeCheck = (selectedProduct?.coverage_type || '').toLowerCase();
+    const subcategoryCodeCheck = selectedProduct?.subcategory_code?.toLowerCase() || '';
+    const isThirdPartyLikeGuard = (
+      coverageTypeCheck.includes('third_party') ||
+      coverageTypeCheck.includes('third-party') ||
+      coverageTypeCheck === 'tor' ||
+      coverageTypeCheck === 'fixed' ||
+      subcategoryCodeCheck.includes('tor') ||
+      subcategoryCodeCheck.includes('third_party') ||
+      subcategoryCodeCheck.includes('third-party')
+    );
+    console.log(`🛡️ [EFFECT GUARD] Third Party check: isThirdPartyLike=${isThirdPartyLikeGuard}, hasComparisons=${hasComparisonsRef.current}`);
+    if (isThirdPartyLikeGuard && hasComparisonsRef.current) {
+      console.log('⏭️ [EFFECT] Skipping - Third Party-like product already loaded (single fetch policy)');
+      // Stamp the current key so future renders also short-circuit earlier duplicate checks
+      comparisonTriggerRef.current = comparisonKey;
+      lastComparisonKeyRef.current = comparisonKey;
       return;
     }
 
     // Prevent duplicate calls - check if this key was already processed
     // This prevents re-triggering when formData changes but pricing inputs haven't
     if (comparisonTriggerRef.current === comparisonKey) {
-      // Silent skip - don't log to reduce console noise
+      console.log('⏭️ [EFFECT] Skipping - comparisonTriggerRef already has this key');
       return;
     }
 
     if (lastComparisonKeyRef.current === comparisonKey) {
+      console.log('⏭️ [EFFECT] Skipping - lastComparisonKeyRef already has this key');
       return;
     }
 
     // Check if we can trigger comparison (call inline to avoid dependency issues)
     const canCompare = canCompareUnderwriters();
     if (!canCompare) {
+      console.log('⏭️ [EFFECT] Skipping - canCompareUnderwriters returned false');
       return;
     }
 
     // If we already have comparisons and an underwriter is selected, don't re-fetch
     // Use refs to check current state without adding to dependencies
     if (hasComparisonsRef.current && underwriterSelectedRef.current) {
-      console.log('⏭️  Skipping comparison - underwriter already selected:', latestFormRef.current?.underwriter);
+      console.log('⏭️ [EFFECT] Skipping - Already have comparisons and underwriter selected');
       return;
     }
 
@@ -510,24 +574,34 @@ const DynamicPolicyForm = ({
 
     // Mark this key as being processed BEFORE setting timeout
     // This prevents duplicate timeouts from being created
-  comparisonTriggerRef.current = comparisonKey;
-  lastComparisonKeyRef.current = comparisonKey;
-    console.log('🧮 comparisonKey changed → scheduling comparison', {
-      comparisonKey,
-      formSignature: {
-        registration: formData.registrationNumber,
-        coverDate: formData.cover_start_date,
-        tonnage: formData.tonnage,
-        capacity: formData.passengerCapacity,
-        sumInsured: formData.sum_insured
-      }
-    });
+    comparisonTriggerRef.current = comparisonKey;
+    lastComparisonKeyRef.current = comparisonKey;
 
-    // Shorter debounce (1 second) to load underwriters faster
-    comparisonTimeoutRef.current = setTimeout(() => {
-      console.log('🔄 Auto-triggering underwriter comparison (debounced 1s)');
+    // ✅ For Third Party/TOR: NO debounce - trigger immediately
+    // They don't depend on user input, so fetch prices right away
+    const coverageType = (selectedProduct?.coverage_type || '').toLowerCase();
+    const subcategoryCode = selectedProduct?.subcategory_code?.toLowerCase() || '';
+    const isThirdPartyLike = (
+      coverageType.includes('third_party') ||
+      coverageType.includes('third-party') ||
+      coverageType === 'tor' ||
+      coverageType === 'fixed' ||
+      subcategoryCode.includes('tor') ||
+      subcategoryCode.includes('third_party') ||
+      subcategoryCode.includes('third-party')
+    );
+
+    if (isThirdPartyLike) {
+      console.log('✅ [EFFECT] Third Party product - triggering immediately');
+      // Immediate trigger for Third Party
       triggerUnderwriterComparison();
-    }, 1000);
+    } else {
+      console.log('⏱️ [EFFECT] Variable pricing product - scheduling with 1s debounce');
+      // Shorter debounce (1 second) for other products
+      comparisonTimeoutRef.current = setTimeout(() => {
+        triggerUnderwriterComparison();
+      }, 1000);
+    }
 
     // Cleanup on unmount or when dependencies change
     return () => {
@@ -536,20 +610,19 @@ const DynamicPolicyForm = ({
       }
     };
   }, [
-    comparisonKey, 
-    selectedProduct?.coverage_type, 
-    triggerUnderwriterComparison,
-    canCompareUnderwriters,
-    formData.registrationNumber,
-    formData.cover_start_date,
-    formData.tonnage,
-    formData.passengerCapacity,
-    formData.sum_insured
+    // Only re-run when the product signature changes
+    comparisonKey,
+    selectedProduct?.coverage_type,
+    selectedProduct?.subcategory_code
+    // Note: Intentionally exclude function deps (triggerUnderwriterComparison, canCompareUnderwriters)
+    // to avoid re-running on each render due to changing function identities.
   ]);
 
 
 
   const handleInputChange = useCallback((key, value) => {
+    console.log(`⌨️ [INPUT] handleInputChange called. key: ${key}, value: ${value}`);
+    
     // Format currency inputs
     if (getFormFields.find(f => f.key === key)?.type === 'currency') {
       value = value.replace(/[^0-9]/g, '');
@@ -575,17 +648,38 @@ const DynamicPolicyForm = ({
       'engineCapacity'
     ];
     if (pricingCriticalKeys.includes(key)) {
-      if (newFormData.underwriter) {
-        delete newFormData.underwriter;
+      // Determine if product is Third Party / TOR / fixed pricing (plate/date do NOT affect pricing)
+      const coverageType = (selectedProduct?.coverage_type || '').toLowerCase();
+      const subcategoryCode = selectedProduct?.subcategory_code?.toLowerCase() || '';
+      const isThirdPartyLike = (
+        coverageType.includes('third_party') ||
+        coverageType.includes('third-party') ||
+        coverageType === 'tor' ||
+        coverageType === 'fixed' ||
+        subcategoryCode.includes('tor') ||
+        subcategoryCode.includes('third_party') ||
+        subcategoryCode.includes('third-party')
+      );
+
+      // For Third Party / TOR we DO NOT reset underwriter refs on registration/date keystrokes.
+      // This prevents the underwriter list from blinking (re-fetch/cache hit) while typing.
+      if (isThirdPartyLike && key === 'registrationNumber') {
+        console.log(`🔄 [INPUT] Third Party-like product; ignoring registration change for comparison triggering.`);
+      } else {
+        console.log(`🔄 [INPUT] Pricing-critical field "${key}" changed - resetting underwriter selection`);
+        if (newFormData.underwriter) {
+          delete newFormData.underwriter;
+        }
+        if (selectedUnderwriter) {
+          setSelectedUnderwriter(null);
+        }
+        // Reset the ref to allow new comparison
+        underwriterSelectedRef.current = false;
+        // Reset comparison tracking refs to allow fresh comparison
+        comparisonTriggerRef.current = null;
+        lastComparisonKeyRef.current = null;
+        console.log(`🔄 [INPUT] Reset refs: comparisonTriggerRef, lastComparisonKeyRef, underwriterSelectedRef`);
       }
-      if (selectedUnderwriter) {
-        setSelectedUnderwriter(null);
-      }
-      // Reset the ref to allow new comparison
-      underwriterSelectedRef.current = false;
-      // Reset comparison tracking refs to allow fresh comparison
-      comparisonTriggerRef.current = null;
-      lastComparisonKeyRef.current = null;
     }
 
     // If the user just selected an underwriter, freeze any pending auto-compare
@@ -625,9 +719,24 @@ const DynamicPolicyForm = ({
       delete newFormData.model_other;
     }
     
-    // Update local state immediately for instant UI feedback
-    setFormData(newFormData);
+    // ✅ CRITICAL FIX: For text fields (especially registration), update ref immediately
+    // but DEBOUNCE state updates to prevent keyboard dismissal
     latestFormRef.current = newFormData;
+    
+    // For registration field, debounce state update to prevent keyboard dismissal
+    if (key === 'registrationNumber') {
+      // Clear existing state update timeout
+      if (formDataUpdateTimeoutRef.current) {
+        clearTimeout(formDataUpdateTimeoutRef.current);
+      }
+      // Schedule state update after user stops typing (400ms)
+      formDataUpdateTimeoutRef.current = setTimeout(() => {
+        setFormData(newFormData);
+      }, 400);
+    } else {
+      // For non-registration fields, update state immediately
+      setFormData(newFormData);
+    }
 
     // Real-time validation
     const error = validateField(key, value);
@@ -636,16 +745,7 @@ const DynamicPolicyForm = ({
       [key]: error
     }));
 
-    // Phase 1.2: Trigger DMVIC checks for specific fields
-    if (key === 'registrationNumber' && onRegistrationChange) {
-      console.log('[DynamicVehicleForm] Registration changed, triggering DMVIC check:', nextValue);
-      onRegistrationChange(nextValue, newFormData.identificationType);
-    }
-    
-    if (key === 'cover_start_date' && onCoverDateChange) {
-      console.log('[DynamicVehicleForm] Cover date changed, triggering DMVIC check:', value);
-      onCoverDateChange(value);
-    }
+    // ✅ REMOVED: DMVIC triggers on registration/date change - now handled by Next button only
 
     // Notify parent component with a small debounce to prevent focus loss
     if (notifyTimeoutRef.current) {
@@ -669,8 +769,6 @@ const DynamicPolicyForm = ({
     onChange, 
     // getFormFields is memoized, so it's stable
     // validateField is not memoized but needs to be stable - wrap it separately
-    onRegistrationChange, 
-    onCoverDateChange
   ]);
 
   const validateField = useCallback((key, value) => {
@@ -878,10 +976,7 @@ const DynamicPolicyForm = ({
                       const formattedDate = selectedDate.toISOString().split('T')[0];
                       handleInputChange(field.key, formattedDate);
                       
-                      // Phase 1.2: Trigger DMVIC check on cover date change
-                      if (field.key === 'cover_start_date' && onCoverDateChange) {
-                        onCoverDateChange(formattedDate);
-                      }
+                      // ✅ REMOVED: DMVIC trigger - now handled by Next button only
                     }
                   }}
                 />
@@ -1000,12 +1095,19 @@ const DynamicPolicyForm = ({
                       formData[field.key] === comparison.name && styles.selectedUnderwriterOption
                     ]}
                     onPress={() => {
-                      setSelectedUnderwriter(comparison);
-                      handleInputChange(field.key, comparison.name);
-                      underwriterSelectedRef.current = true; // Set ref immediately on selection
-                      if (onUnderwriterSelection) {
-                        onUnderwriterSelection(comparison);
-                      }
+                      // ✅ Batch all state updates in a single frame to prevent re-renders
+                      // Set ref immediately (synchronous) to prevent race conditions
+                      underwriterSelectedRef.current = true;
+                      
+                      // Batch UI updates in next frame to prevent scroll/focus issues
+                      requestAnimationFrame(() => {
+                        setSelectedUnderwriter(comparison);
+                        handleInputChange(field.key, comparison.name);
+                        
+                        if (onUnderwriterSelection) {
+                          onUnderwriterSelection(comparison);
+                        }
+                      });
                     }}
                     activeOpacity={0.9}
                   >
@@ -1146,6 +1248,7 @@ const DynamicPolicyForm = ({
             {/* Phase 1.2: Registration field with inline DMVIC indicators */}
             <View style={field.key === 'registrationNumber' ? styles.registrationFieldContainer : null}>
               <MemoizedTextInput
+                key={field.key}
                 fieldKey={field.key}
                 value={displayValue}
                 onChangeText={(value) => {
@@ -1857,12 +1960,18 @@ const styles = StyleSheet.create({
 });
 
 // Memoize to prevent re-renders when parent updates
+// React.memo's comparison function returns TRUE to SKIP re-render (props are equal)
+// and FALSE to RE-RENDER (props changed)
 export default React.memo(DynamicPolicyForm, (prevProps, nextProps) => {
-  // Only re-render if these specific props change
+  // Only re-render if these critical props change
+  // Return TRUE if all are equal (skip re-render) - this prevents keyboard dismissal
   return (
     prevProps.selectedProduct?.id === nextProps.selectedProduct?.id &&
     prevProps.selectedProduct?.subcategory_code === nextProps.selectedProduct?.subcategory_code &&
     prevProps.productType === nextProps.productType &&
-    prevProps.initialData === nextProps.initialData
+    prevProps.initialData === nextProps.initialData &&
+    prevProps.minCoverStartDate === nextProps.minCoverStartDate &&
+    prevProps.dmvicLoading === nextProps.dmvicLoading &&
+    prevProps.onDataChange === nextProps.onDataChange
   );
 });
