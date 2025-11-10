@@ -1,0 +1,135 @@
+/**
+ * TukTuk (Three-Wheeler) Subcategories - Static Data
+ * Version: 1.0.0
+ * Last Updated: 2025-11-10
+ * 
+ * DO NOT EDIT MANUALLY
+ * Generated from backend via: python manage.py export_motor2_static
+ * 
+ * Products: 7 subcategories
+ * - Commercial & PSV TukTuks (FIXED/PASSENGER pricing)
+ * - Third Party, Third Party Extendible, Comprehensive
+ */
+
+export const TUKTUK_SUBCATEGORIES = [
+  {
+    id: 'd85a3baa-dc18-4773-9dd4-d5556c66f24c',
+    subcategory_code: 'TUKTUK_COMMERCIAL_TP_ALT',
+    name: 'Commercial TukTuk Third-Party (Alternative)',
+    description: '',
+    category_code: 'TUKTUK',
+    pricing_model: 'FIXED',
+    product_type: 'third_party',
+    is_complex: false,
+    additional_fields: [],
+    pricing_requirements: {},
+    is_active: true,
+    show_in_public: false,
+    public_sort_order: 0,
+    public_label: 'Commercial TukTuk Third-Party (Alternative)'
+  },
+  {
+    id: '563e94a4-6304-438a-9b5f-25b72bce2773',
+    subcategory_code: 'TUKTUK_PSV_TP',
+    name: 'PSV Tuk-Tuk Third-Party',
+    description: '',
+    category_code: 'TUKTUK',
+    pricing_model: 'PASSENGER',
+    product_type: 'THIRD_PARTY',
+    is_complex: false,
+    additional_fields: ['passenger_count'],
+    pricing_requirements: {
+      requires_passenger_count: true
+    },
+    is_active: true,
+    show_in_public: true,
+    public_sort_order: 101,
+    public_label: 'PSV Tuk-Tuk Third-Party'
+  },
+  {
+    id: 'ace106ee-e1e8-40c1-9a97-4d073f5b3f33',
+    subcategory_code: 'TUKTUK_COMMERCIAL_TP',
+    name: 'Commercial TukTuk Third-Party',
+    description: '',
+    category_code: 'TUKTUK',
+    pricing_model: 'FIXED',
+    product_type: 'THIRD_PARTY',
+    is_complex: false,
+    additional_fields: [],
+    pricing_requirements: {},
+    is_active: true,
+    show_in_public: true,
+    public_sort_order: 103,
+    public_label: 'Commercial TukTuk Third-Party'
+  },
+  {
+    id: 'd7b935c7-d55f-47ca-9e28-5a444243e9b1',
+    subcategory_code: 'TUKTUK_PSV_TP_EXT',
+    name: 'PSV Tuk-Tuk Third-Party Extendible',
+    description: '',
+    category_code: 'TUKTUK',
+    pricing_model: 'PASSENGER',
+    product_type: 'THIRD_PARTY_EXT',
+    is_complex: false,
+    additional_fields: ['passenger_count'],
+    pricing_requirements: {
+      requires_passenger_count: true
+    },
+    is_active: true,
+    show_in_public: true,
+    public_sort_order: 202,
+    public_label: 'PSV Tuk-Tuk Third-Party Extendible'
+  },
+  {
+    id: 'fb7e17be-9bfd-4fc3-93e8-6fa13346eebe',
+    subcategory_code: 'TUKTUK_COMMERCIAL_TP_EXT',
+    name: 'Commercial TukTuk Third-Party Extendible',
+    description: '',
+    category_code: 'TUKTUK',
+    pricing_model: 'FIXED',
+    product_type: 'THIRD_PARTY_EXT',
+    is_complex: false,
+    additional_fields: [],
+    pricing_requirements: {},
+    is_active: true,
+    show_in_public: true,
+    public_sort_order: 204,
+    public_label: 'Commercial TukTuk Third-Party Extendible'
+  },
+  {
+    id: 'cf100eb6-efb7-4c10-afab-9b628baf3747',
+    subcategory_code: 'TUKTUK_COMMERCIAL_COMP',
+    name: 'Commercial TukTuk Comprehensive',
+    description: '',
+    category_code: 'TUKTUK',
+    pricing_model: 'FIXED',
+    product_type: 'COMPREHENSIVE',
+    is_complex: false,
+    additional_fields: [],
+    pricing_requirements: {},
+    is_active: true,
+    show_in_public: true,
+    public_sort_order: 505,
+    public_label: 'Commercial TukTuk Comprehensive'
+  },
+  {
+    id: 'a1b8c919-c5a2-4e10-882d-41e9a2b734b8',
+    subcategory_code: 'TUKTUK_PSV_COMP',
+    name: 'PSV Tuk-Tuk Comprehensive',
+    description: '',
+    category_code: 'TUKTUK',
+    pricing_model: 'PASSENGER',
+    product_type: 'COMPREHENSIVE',
+    is_complex: false,
+    additional_fields: ['passenger_count'],
+    pricing_requirements: {
+      requires_passenger_count: true
+    },
+    is_active: true,
+    show_in_public: true,
+    public_sort_order: 506,
+    public_label: 'PSV Tuk-Tuk Comprehensive'
+  }
+];
+
+export default TUKTUK_SUBCATEGORIES;

@@ -43,6 +43,8 @@ const initialState = {
   // History State for undo/redo
   past: [],
   future: [],
+  // DMVIC processed registrations (persist across remounts to avoid repeated API calls)
+  dmvicProcessedRegMap: {}, // { 'KAC040R': true }
 };
 
 function saveForHistory(state, newState) {
@@ -88,7 +90,11 @@ function reducer(state, action) {
         // Clear pricing comparison when subcategory changes
         pricingComparison: [],
         selectedUnderwriter: null,
-        calculatedPremium: null
+        calculatedPremium: null,
+        // ✅ Clear DMVIC state when switching categories (Phase 1.3 fix)
+        existingCoverData: {},
+        minCoverStartDate: null,
+        showVerificationScreen: false
       });
     case 'UPDATE_VEHICLE_DETAILS':
       const updatedVehicleDetails = { ...state.vehicleDetails, ...action.payload };
@@ -316,20 +322,43 @@ function reducer(state, action) {
       return { ...state, ...next, past: [...state.past, present], future: newFuture };
     }
     case 'SET_EXISTING_COVER_DATA':
-      return {
+      console.log('[MotorReducer] 🔥 SET_EXISTING_COVER_DATA received, payload:', JSON.stringify(action.payload, null, 2));
+      const newStateWithCover = {
         ...state,
         existingCoverData: action.payload,
       };
+      console.log('[MotorReducer] ✅ New existingCoverData:', JSON.stringify(newStateWithCover.existingCoverData, null, 2));
+      return newStateWithCover;
     case 'SET_MIN_COVER_START_DATE':
-      return {
+      console.log('[MotorReducer] 🔥 SET_MIN_COVER_START_DATE received, payload:', action.payload);
+      const newStateWithMinDate = {
         ...state,
         minCoverStartDate: action.payload,
       };
+      console.log('[MotorReducer] ✅ New minCoverStartDate:', newStateWithMinDate.minCoverStartDate);
+      return newStateWithMinDate;
     case 'SET_SHOW_VERIFICATION_SCREEN':
-      return {
+      console.log('[MotorReducer] 🔥 SET_SHOW_VERIFICATION_SCREEN received, payload:', action.payload);
+      const newStateWithVerification = {
         ...state,
         showVerificationScreen: action.payload,
       };
+      console.log('[MotorReducer] ✅ New showVerificationScreen:', newStateWithVerification.showVerificationScreen);
+      return newStateWithVerification;
+    case 'MARK_DMVIC_PROCESSED': {
+      const reg = (action.payload || '').toUpperCase().trim();
+      if (!reg) return state;
+      return {
+        ...state,
+        dmvicProcessedRegMap: { ...state.dmvicProcessedRegMap, [reg]: true },
+      };
+    }
+    case 'CLEAR_DMVIC_PROCESSED': {
+      return {
+        ...state,
+        dmvicProcessedRegMap: {},
+      };
+    }
     case 'CACHE_DMVIC_RESULT': {
       return {
         ...state,
@@ -751,6 +780,12 @@ export function MotorInsuranceProvider({ children }) {
     
     setShowVerificationScreen: (show) => {
       dispatch({ type: 'SET_SHOW_VERIFICATION_SCREEN', payload: show });
+    },
+    hasDMVICProcessed: (reg) => !!state.dmvicProcessedRegMap[(reg || '').toUpperCase().trim()],
+    markDMVICProcessed: (reg) => {
+      const norm = (reg || '').toUpperCase().trim();
+      if (!norm) return;
+      dispatch({ type: 'MARK_DMVIC_PROCESSED', payload: norm });
     },
     
     getCachedDMVICResult: (regNumber) => {

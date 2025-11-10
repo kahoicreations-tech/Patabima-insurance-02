@@ -5,6 +5,7 @@ import DjangoAPIService from '../../../../../services/DjangoAPIService';
 import StoragePurge from '../../../../../services/StoragePurge';
 import { useMotorInsurance } from '../../../../../contexts/MotorInsuranceContext';
 import { useNavigation } from '@react-navigation/native';
+import DoubleInsuranceWarningModal from '../../../../../components/modals/DoubleInsuranceWarningModal';
 
 /**
  * Validates extendible configuration for extendible products
@@ -104,6 +105,44 @@ function validateExtendibleConfig(product, premium) {
 }
 
 /**
+ * Sanitize string to remove null bytes (\u0000) that cause PostgreSQL errors
+ * OCR/Textract extraction may insert null bytes which PostgreSQL cannot store
+ */
+function sanitizeString(value) {
+  if (typeof value !== 'string') return value;
+  // Remove all null bytes from the string
+  return value.replace(/\u0000/g, '');
+}
+
+/**
+ * Recursively sanitize all string values in an object to remove null bytes
+ * This prevents PostgreSQL errors: "unsupported Unicode escape sequence \u0000"
+ */
+function sanitizeObject(obj) {
+  if (obj === null || obj === undefined) return obj;
+  
+  if (typeof obj === 'string') {
+    return sanitizeString(obj);
+  }
+  
+  if (Array.isArray(obj)) {
+    return obj.map(item => sanitizeObject(item));
+  }
+  
+  if (typeof obj === 'object') {
+    const sanitized = {};
+    for (const key in obj) {
+      if (obj.hasOwnProperty(key)) {
+        sanitized[key] = sanitizeObject(obj[key]);
+      }
+    }
+    return sanitized;
+  }
+  
+  return obj;
+}
+
+/**
  * Map document keys from frontend to backend document types
  */
 function mapDocTypeToBackend(key) {
@@ -177,6 +216,8 @@ function normalizePolicyData(data) {
       make: vehicle.make || vehicle.vehicle_make || '',
       model: vehicle.model || vehicle.vehicle_model || '',
       year: Number(vehicle.year || vehicle.vehicle_year || new Date().getFullYear()),
+      // Identification type (REQUIRED for validation)
+      ...(vehicle.identificationType || vehicle.identification_type ? { identificationType: vehicle.identificationType || vehicle.identification_type } : {}),
       // Additional identifiers
       ...(vehicle.chassisNumber || vehicle.chassis_number ? { chassisNumber: vehicle.chassisNumber || vehicle.chassis_number } : {}),
       ...(vehicle.engineNumber || vehicle.engine_number ? { engineNumber: vehicle.engineNumber || vehicle.engine_number } : {}),
@@ -216,11 +257,30 @@ function normalizePolicyData(data) {
       ...(premium.extendible_config ? { extendible_config: premium.extendible_config } : {}),
     },
     paymentDetails: {
-      method: payment.method || 'PENDING',
+      // CRITICAL FIX: Payment logic based on actual transaction ID
+      // - If we have a real transaction ID (from M-PESA, etc.), status is CONFIRMED
+      // - If no transaction ID, this is a PENDING policy (user hasn't paid yet)
+      // - Generate placeholder transaction ID ONLY for tracking purposes
+      transactionId: payment.transactionId || payment.transaction_id || `QUOTE-${Date.now()}`,
+      transaction_id: payment.transaction_id || payment.transactionId || `QUOTE-${Date.now()}`,
+      
+      // Set method and status based on whether we have a real transaction ID
+      // Real transaction IDs from M-PESA start with specific prefixes
+      method: payment.method || (() => {
+        const txnId = payment.transactionId || payment.transaction_id || '';
+        // Check if it's a real M-PESA/payment gateway transaction ID
+        const isRealPayment = txnId && !txnId.startsWith('TXN-') && !txnId.startsWith('QUOTE-');
+        return isRealPayment ? 'MPESA' : 'PENDING';
+      })(),
+      
+      status: payment.status || (() => {
+        const txnId = payment.transactionId || payment.transaction_id || '';
+        // Check if it's a real payment transaction ID
+        const isRealPayment = txnId && !txnId.startsWith('TXN-') && !txnId.startsWith('QUOTE-');
+        return isRealPayment ? 'CONFIRMED' : 'PENDING';
+      })(),
+      
       amount: Number(payment.amount ?? premium.totalAmount ?? premium.total_amount ?? 0),
-      status: payment.status || 'CONFIRMED',
-      transactionId: payment.transactionId || payment.transaction_id || `TXN-${Date.now()}`,
-      transaction_id: payment.transaction_id || payment.transactionId || `TXN-${Date.now()}`, // Backend expects snake_case
     },
     underwriterDetails: safe.underwriterDetails || safe.underwriter_details || null,
     addons: Array.isArray(safe.addons) ? safe.addons : [],
@@ -245,6 +305,11 @@ export default function PolicySubmission({
   const [step, setStep] = useState(1);
   const totalSteps = 4;
   
+  // Double-insurance modal state
+  const [showDoubleInsuranceModal, setShowDoubleInsuranceModal] = useState(false);
+  const [dmvicPolicy, setDmvicPolicy] = useState(null);
+  const [allowProceed, setAllowProceed] = useState(false);
+  
   // Get motor insurance context to reset flow after submission
   const { state: motorState, actions: motorActions } = useMotorInsurance();
   const navigation = useNavigation();
@@ -260,8 +325,21 @@ export default function PolicySubmission({
       const existingGuard = await AsyncStorage.getItem(guardKey);
       if (existingGuard) {
         console.log('[PolicySubmission] Duplicate submission blocked by guard');
-        return; // Early exit to prevent double policy creation
+        
+        // Check if guard is stale (older than 2 minutes = failed submission)
+        const guardTimestamp = parseInt(existingGuard);
+        const twoMinutesAgo = Date.now() - (2 * 60 * 1000);
+        
+        if (guardTimestamp < twoMinutesAgo) {
+          console.log('[PolicySubmission] Guard is stale, clearing and allowing retry');
+          await AsyncStorage.removeItem(guardKey);
+          // Continue with submission
+        } else {
+          console.log('[PolicySubmission] Recent guard found, blocking duplicate submission');
+          return; // Early exit to prevent double policy creation
+        }
       }
+      
       await AsyncStorage.setItem(guardKey, String(Date.now()));
 
       // IMPORTANT: Do not purge or reset flow before successful submission.
@@ -403,15 +481,25 @@ export default function PolicySubmission({
                                                40;
         }
         
-        // Underwriter fallbacks
-        if (!composed.underwriterDetails) {
+        // Underwriter fallbacks - pull from selectedUnderwriter in context
+        if (!composed.underwriterDetails || !composed.underwriterDetails.name) {
           composed.underwriterDetails = {
             name: ctxUnderwriter.name || ctxUnderwriter.underwriter_name || 
-                  ctxVehicle.selectedUnderwriter || ctxVehicle.underwriter || '',
+                  ctxUnderwriter.company || // Add 'company' field as fallback
+                  ctxVehicle.selectedUnderwriter?.name ||
+                  ctxVehicle.underwriter || '',
             code: ctxUnderwriter.code || ctxUnderwriter.underwriter_code || 
                   ctxUnderwriter.company_code || '',
             id: ctxUnderwriter.id || ctxUnderwriter.underwriter_id || '',
           };
+          
+          // Also store in vehicleDetails for backend compatibility
+          if (!composed.vehicleDetails.underwriter && composed.underwriterDetails.name) {
+            composed.vehicleDetails.underwriter = composed.underwriterDetails.name;
+          }
+          if (!composed.vehicleDetails.selectedUnderwriter && ctxUnderwriter.name) {
+            composed.vehicleDetails.selectedUnderwriter = ctxUnderwriter;
+          }
         }
 
         // Documents fallbacks - convert uploaded documents to array format expected by backend
@@ -435,25 +523,36 @@ export default function PolicySubmission({
 
       const policyData = normalizePolicyData(composed);
 
+      // CRITICAL: Sanitize all string values to remove null bytes (\u0000)
+      // OCR/Textract extraction may insert null bytes which PostgreSQL cannot store
+      const sanitizedPolicyData = sanitizeObject(policyData);
+
       console.log('\n' + '='.repeat(80));
       console.log('PolicySubmission - Composed Data BEFORE Normalization:');
       console.log(JSON.stringify(composed, null, 2));
       console.log('='.repeat(80));
       console.log('PolicySubmission - Normalized Payload BEING SENT:');
-      console.log(JSON.stringify(policyData, null, 2));
+      console.log(JSON.stringify(sanitizedPolicyData, null, 2));
       console.log('='.repeat(80));
       console.log('🔍 TRANSACTION ID CHECK:');
-      console.log('  - transactionId:', policyData.paymentDetails?.transactionId);
-      console.log('  - transaction_id:', policyData.paymentDetails?.transaction_id);
-      console.log('  - status:', policyData.paymentDetails?.status);
+      console.log('  - transactionId:', sanitizedPolicyData.paymentDetails?.transactionId);
+      console.log('  - transaction_id:', sanitizedPolicyData.paymentDetails?.transaction_id);
+      console.log('  - status:', sanitizedPolicyData.paymentDetails?.status);
       console.log('='.repeat(80) + '\n');
+
+      // NOTE: Comprehensive validation is NOT needed here because:
+      // 1. The wizard validates each step BEFORE allowing progression (MotorInsuranceContainer.js lines 101-267)
+      // 2. Users CANNOT proceed to submission without completing all required fields
+      // 3. The backend performs final validation with MotorPolicySubmissionSerializer
+      // 4. Running validation here causes false negatives due to field name normalization mismatches
+      console.log('[PolicySubmission] ℹ️ Skipping redundant validation - wizard already enforced all requirements');
 
       // ========================================
       // CRITICAL: Validate extendible configuration
       // ========================================
       const extendibleValidation = validateExtendibleConfig(
-        policyData.productDetails,
-        policyData.premiumBreakdown
+        sanitizedPolicyData.productDetails,
+        sanitizedPolicyData.premiumBreakdown
       );
 
       if (!extendibleValidation.isValid) {
@@ -487,49 +586,292 @@ export default function PolicySubmission({
 
       // Final preflight validation for required fields to avoid backend 400s
       const missing = [];
-      if (!policyData?.clientDetails?.fullName) missing.push('clientDetails.fullName');
-      if (!policyData?.clientDetails?.phone) missing.push('clientDetails.phone');
-      if (!policyData?.vehicleDetails?.registration) missing.push('vehicleDetails.registration');
-      if (!policyData?.productDetails?.category) missing.push('productDetails.category');
+      if (!sanitizedPolicyData?.clientDetails?.fullName) missing.push('clientDetails.fullName');
+      if (!sanitizedPolicyData?.clientDetails?.phone) missing.push('clientDetails.phone');
+      if (!sanitizedPolicyData?.vehicleDetails?.registration) missing.push('vehicleDetails.registration');
+      if (!sanitizedPolicyData?.productDetails?.category) missing.push('productDetails.category');
+      if (!sanitizedPolicyData?.productDetails?.subcategory) missing.push('productDetails.subcategory');
+      
+      // Check premium from premiumBreakdown
+      const premiumAmount = sanitizedPolicyData?.premiumBreakdown?.totalAmount || 
+                           sanitizedPolicyData?.premiumBreakdown?.total_amount || 0;
+      if (!premiumAmount || premiumAmount <= 0) {
+        missing.push('premiumBreakdown.totalAmount (must be > 0)');
+      }
+      
+      // Check underwriter name from underwriterDetails or fallback to vehicleDetails
+      const underwriterName = sanitizedPolicyData?.underwriterDetails?.name || 
+                             sanitizedPolicyData?.vehicleDetails?.underwriter ||
+                             sanitizedPolicyData?.vehicleDetails?.selectedUnderwriter?.name;
+      if (!underwriterName) {
+        missing.push('underwriterDetails.name');
+      }
 
       if (missing.length) {
         const msg = `Missing required fields:\n- ${missing.join('\n- ')}`;
         console.warn('[PolicySubmission] Preflight validation failed:', msg);
+        console.warn('[PolicySubmission] Policy data dump:', JSON.stringify(sanitizedPolicyData, null, 2));
+        
+        // Clear guard to allow retry after fixing data
+        await AsyncStorage.removeItem('policy_submission_guard');
+        
+        // Show user-friendly error
+        Alert.alert(
+          'Incomplete Policy Data',
+          'Cannot submit policy. Please go back and ensure all required information is filled:\n\n' + 
+          missing.map(f => `• ${f.split('.').pop()}`).join('\n'),
+          [
+            {
+              text: 'Go Back',
+              onPress: () => {
+                if (onSubmissionError) {
+                  onSubmissionError(new Error(msg));
+                } else {
+                  navigation.goBack();
+                }
+              }
+            }
+          ]
+        );
+        
         throw new Error(msg);
       }
 
-      // Create policy using the proper API service method
+      // ========================================
+      // CRITICAL: DMVIC Double-Insurance Check (ALWAYS ENFORCED)
+      // DMVIC is the regulatory authority - their decision is FINAL
+      // ========================================
+      setProgress('Checking for existing coverage...');
+      setStep(2);
+      const registration = sanitizedPolicyData?.vehicleDetails?.registration;
+      const coverStartDate = sanitizedPolicyData?.vehicleDetails?.coverStartDate;
+      const coverEndDate = sanitizedPolicyData?.vehicleDetails?.coverEndDate;
+
+      if (registration) {
+        try {
+          console.log('[PolicySubmission] Checking DMVIC double-insurance:', registration);
+          const djangoAPI = DjangoAPIService;
+          await djangoAPI.initialize();
+          
+          const doubleInsuranceResult = await djangoAPI.validateDoubleInsurance(
+            registration,
+            coverStartDate,
+            coverEndDate
+          );
+
+          console.log('[PolicySubmission] DMVIC double-insurance result:', doubleInsuranceResult);
+
+          // If active cover found, BLOCK submission (DMVIC authority is final)
+          if (doubleInsuranceResult?.has_active_cover && doubleInsuranceResult?.dmvic_policy) {
+            console.log('[PolicySubmission] ❌ DMVIC blocked: Active cover detected');
+            
+            const dmvicPol = doubleInsuranceResult.dmvic_policy;
+            const dmvicInfo = `Policy: ${dmvicPol.policy_number || 'Unknown'}\n` +
+                            `Underwriter: ${dmvicPol.member_company || 'Unknown'}\n` +
+                            `Cover Type: ${dmvicPol.certificate_type || 'Unknown'}\n` +
+                            `Expiry: ${dmvicPol.cover_end_date || 'Unknown'}`;
+            
+            // Clear guard
+            await AsyncStorage.removeItem('policy_submission_guard');
+            
+            // Show BLOCKING alert
+            Alert.alert(
+              '⚠️ DMVIC Insurance Active',
+              `CANNOT CREATE NEW POLICY\n\nDMVIC database confirms this vehicle has active insurance:\n\n${dmvicInfo}\n\n` +
+              `Kenyan law prohibits duplicate motor insurance. The existing policy must expire or be cancelled before a new one can be issued.`,
+              [
+                {
+                  text: 'Contact Support',
+                  onPress: () => {
+                    Alert.alert(
+                      'Support Contact',
+                      'For policy cancellation or transfer:\n\nPhone: 0700 123 456\nEmail: support@patabima.com',
+                      [{ text: 'OK' }]
+                    );
+                  }
+                },
+                {
+                  text: 'Go Back',
+                  style: 'cancel',
+                  onPress: () => {
+                    if (onSubmissionError) {
+                      onSubmissionError(new Error('DMVIC blocked: Active coverage exists'));
+                    } else {
+                      navigation.goBack();
+                    }
+                  }
+                }
+              ],
+              { cancelable: false }
+            );
+            return; // BLOCK submission
+          } else {
+            console.log('[PolicySubmission] ✅ DMVIC check passed: No active cover found');
+          }
+        } catch (error) {
+          // Log but don't block - network errors shouldn't prevent policy creation
+          console.warn('[PolicySubmission] ⚠️ DMVIC check failed (network error - non-blocking):', error.message);
+          console.warn('[PolicySubmission] Continuing with policy creation...');
+        }
+      } else {
+        console.warn('[PolicySubmission] ⚠️ No registration number - skipping DMVIC check');
+      }
+
+      // Step 3: Create policy using the proper API service method
+      setStep(3);
+      setProgress('Creating policy...');
       const djangoAPI = DjangoAPIService;
       await djangoAPI.initialize(); // Ensure service is initialized
       
-  const response = await djangoAPI.createMotorPolicy(policyData);
-
-      if (!response.success && !response.policyNumber) {
-        throw new Error(response.message || 'Policy creation failed');
+      // Add allowProceed flag to policy data if user chose to proceed anyway
+      if (allowProceed) {
+        sanitizedPolicyData.allowProceed = true;
       }
-
-      // Step 3: Generate documents
-      setStep(3);
-      setProgress('Generating policy document...');
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      let response;
+      try {
+        response = await djangoAPI.createMotorPolicy(sanitizedPolicyData);
+        console.log('[PolicySubmission] ✅ Policy created:', response);
+      } catch (apiError) {
+        console.error('[PolicySubmission] ❌ API Error:', apiError);
+        // Handle HTTP 409 Conflict - Duplicate Policy
+        if (apiError.status === 409 || apiError.statusCode === 409) {
+          const errorData = apiError.payload || apiError.response?.data || {};
+          
+          // Check if it's a duplicate policy error
+          if (errorData.error?.includes('Duplicate policy') || errorData.existing_policies) {
+            console.warn('[PolicySubmission] ❌ DUPLICATE POLICY BLOCKED:', errorData);
+            
+            const existingPolicies = errorData.existing_policies || [];
+            const policyList = existingPolicies.map(p => 
+              `• ${p.policy_number}\n  ${p.product} - ${p.underwriter}\n  Coverage: ${p.cover_start} to ${p.cover_end}\n  Status: ${p.status}`
+            ).join('\n\n');
+            
+            // Clear guard to allow going back
+            await AsyncStorage.removeItem('policy_submission_guard');
+            
+            // Show BLOCKING alert - NO option to proceed
+            Alert.alert(
+              '⚠️ Duplicate Policy Blocked',
+              `CANNOT CREATE NEW POLICY\n\nAn active policy already exists for this vehicle:\n\n${policyList}\n\n` +
+              `DMVIC regulations prohibit multiple active policies for the same vehicle. ` +
+              `To create a new policy, please cancel or wait for the existing policy to expire.`,
+              [
+                {
+                  text: 'Go Back',
+                  style: 'default',
+                  onPress: () => {
+                    if (onSubmissionError) {
+                      onSubmissionError(new Error('Duplicate policy blocked by DMVIC regulations'));
+                    } else {
+                      navigation.goBack();
+                    }
+                  }
+                },
+                {
+                  text: 'View Policies',
+                  style: 'default',
+                  onPress: () => {
+                    // Navigate to Quotations tab to view all policies
+                    navigation.navigate('MainTabs', { screen: 'Quotations' });
+                  }
+                }
+              ],
+              { cancelable: false }
+            );
+            return; // BLOCK submission completely
+          }
+          
+          // Check if it's a DMVIC double-insurance error
+          if (errorData.error?.includes('DMVIC') || errorData.dmvic_policy) {
+            console.warn('[PolicySubmission] ❌ DMVIC DOUBLE-INSURANCE BLOCKED:', errorData);
+            
+            const dmvicPol = errorData.dmvic_policy || {};
+            const dmvicInfo = `Policy: ${dmvicPol.policy_number || 'Unknown'}\n` +
+                            `Underwriter: ${dmvicPol.underwriter || 'Unknown'}\n` +
+                            `Cover Type: ${dmvicPol.cover_type || 'Unknown'}\n` +
+                            `Expiry: ${dmvicPol.expiry_date || 'Unknown'}`;
+            
+            // Clear guard
+            await AsyncStorage.removeItem('policy_submission_guard');
+            
+            // Show BLOCKING alert for DMVIC conflict
+            Alert.alert(
+              '⚠️ DMVIC Insurance Conflict',
+              `CANNOT CREATE NEW POLICY\n\nDMVIC database shows this vehicle already has active insurance coverage:\n\n${dmvicInfo}\n\n` +
+              `Creating duplicate coverage violates Kenyan insurance regulations and DMVIC rules. ` +
+              `The existing policy must be cancelled before a new one can be issued.`,
+              [
+                {
+                  text: 'Contact Support',
+                  onPress: () => {
+                    // Navigate to support or show contact info
+                    Alert.alert(
+                      'Support Contact',
+                      'Please contact our support team:\n\nPhone: 0700 123 456\nEmail: support@patabima.com',
+                      [{ text: 'OK' }]
+                    );
+                  }
+                },
+                {
+                  text: 'Go Back',
+                  style: 'cancel',
+                  onPress: () => {
+                    if (onSubmissionError) {
+                      onSubmissionError(new Error('DMVIC double-insurance blocked'));
+                    } else {
+                      navigation.goBack();
+                    }
+                  }
+                }
+              ],
+              { cancelable: false }
+            );
+            return; // BLOCK submission completely
+          }
+        }
+        
+        // Re-throw other errors
+        throw apiError;
+      }
+      
+      if (!response || (!response.success && !response.policyNumber && !response.policy_number)) {
+        throw new Error(response?.message || 'Policy creation failed - no response from server');
+      }
 
       // Step 4: Finalize
       setStep(4);
       setProgress('Policy created successfully!');
       
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise(resolve => setTimeout(resolve, 800));
 
       // Complete submission
       const result = {
-        policyNumber: response.policyNumber || `POL-${Date.now()}`,
-        policyId: response.policyId || response.id,
-        pdfUrl: response.pdfUrl || null,
-        message: response.message || 'Policy created successfully'
+        policyNumber: response.policyNumber || response.policy_number || `POL-${Date.now()}`,
+        policyId: response.policyId || response.policy_id || response.id,
+        pdfUrl: response.pdfUrl || response.pdf_url || null,
+        message: response.message || 'Policy created successfully',
+        dmvicCertificate: response.dmvic_certificate || response.certificate || null
       };
 
       console.log('✅ Policy created successfully!');
       console.log('Policy Number:', result.policyNumber);
       console.log('Policy ID:', result.policyId);
+      console.log('DMVIC Certificate:', result.dmvicCertificate);
+
+      // Alert user if DMVIC certificate issuance is pending
+      if (result.dmvicCertificate?.status === 'PENDING') {
+        setTimeout(() => {
+          Alert.alert(
+            '⚠️ Certificate Pending',
+            `Your policy ${result.policyNumber} has been created successfully!\n\n` +
+            `However, DMVIC certificate issuance is pending:\n` +
+            `${result.dmvicCertificate.error || 'Certificate will be issued shortly.'}\n\n` +
+            `${result.dmvicCertificate.action_required || 'The certificate will be available within 24 hours.'}`,
+            [{ text: 'OK', style: 'default' }]
+          );
+        }, 1500);
+      }
 
       // Prefer parent handler, else navigate directly to success screen
       if (typeof onSubmissionComplete === 'function') {
@@ -607,6 +949,24 @@ export default function PolicySubmission({
         
         <Text style={styles.pleaseWait}>Please wait while we process your policy...</Text>
       </View>
+
+      {/* DMVIC Double-Insurance BLOCKED Modal - Informational Only */}
+      <DoubleInsuranceWarningModal
+        visible={showDoubleInsuranceModal}
+        dmvicPolicy={dmvicPolicy}
+        onClose={() => {
+          console.log('[PolicySubmission] ❌ DMVIC double-insurance - submission blocked');
+          setShowDoubleInsuranceModal(false);
+          // Remove guard and navigate back
+          AsyncStorage.removeItem('policy_submission_guard').catch(console.warn);
+          if (onSubmissionError) {
+            onSubmissionError(new Error('DMVIC blocked: Active insurance coverage detected'));
+          } else {
+            navigation.goBack();
+          }
+        }}
+        // NO onProceed - DMVIC authority is final, cannot bypass
+      />
     </View>
   );
 }

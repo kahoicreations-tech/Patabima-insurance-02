@@ -27,6 +27,8 @@ let expertMode = false;
 let autoViewAfterAction = true;
 const logBuffer = [];
 const MAX_LOG_BUFFER = 500;
+// Track spawned logcat processes so we can end observation cleanly
+const observationProcesses = new Set();
 
 function addLog(line) {
   logBuffer.push(line);
@@ -41,28 +43,16 @@ async function createServer() {
   const server = new McpServer({ name: 'adb-mcp-server', version: '1.0.4' });
 
   // Tool 1: List Devices
-  server.tool('adb_list_devices', {
-    title: 'List ADB Devices',
-    description: 'Lists connected Android devices/emulators',
-    inputSchema: { type: 'object', properties: {}, additionalProperties: false }
-  }, async () => {
+  server.tool('adb_list_devices', 'Lists connected Android devices/emulators', {}, async () => {
     const { code, out, err } = await adb(['devices', '-l']);
     if (code !== 0) return { content: [{ type: 'text', text: err || 'adb failed' }] };
     return { content: [{ type: 'text', text: out.trim() || '(no devices)' }] };
   });
 
   // Tool 2: Get Current View
-  server.tool('get_current_view', {
-    title: 'Get Current View',
-    description: 'Capture screenshot and recent logs',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        deviceId: { type: 'string', description: 'Optional device serial' },
-        maxLogLines: { type: 'number', description: 'Max log lines to return', default: 120 }
-      },
-      additionalProperties: false
-    }
+  server.tool('get_current_view', 'Capture screenshot and recent logs', {
+    deviceId: { type: 'string', description: 'Optional device serial', optional: true },
+    maxLogLines: { type: 'number', description: 'Max log lines to return', default: 120, optional: true }
   }, async (args) => {
     const deviceId = args?.deviceId;
     const maxLogLines = args?.maxLogLines || 120;
@@ -85,18 +75,9 @@ async function createServer() {
   });
 
   // Tool 3: Toggle Expert Mode
-  server.tool('toggle_expert_mode', {
-    title: 'Toggle Expert Mode',
-    description: 'Enable/disable expert mode with human-like delays',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        enabled: { type: 'boolean', description: 'Enable or disable' },
-        autoView: { type: 'boolean', description: 'Auto-view after actions' }
-      },
-      required: ['enabled'],
-      additionalProperties: false
-    }
+  server.tool('toggle_expert_mode', 'Enable/disable expert mode with human-like delays', {
+    enabled: { type: 'boolean', description: 'Enable or disable' },
+    autoView: { type: 'boolean', description: 'Auto-view after actions', optional: true }
   }, async (args) => {
     expertMode = args.enabled;
     if (args.autoView !== undefined) autoViewAfterAction = args.autoView;
@@ -109,16 +90,8 @@ async function createServer() {
   });
 
   // Tool 4: Get UI Tree
-  server.tool('get_ui_tree', {
-    title: 'Get UI Tree',
-    description: 'Dump UI hierarchy XML',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        deviceId: { type: 'string', description: 'Device serial' }
-      },
-      additionalProperties: false
-    }
+  server.tool('get_ui_tree', 'Dump UI hierarchy XML', {
+    deviceId: { type: 'string', description: 'Device serial', optional: true }
   }, async (args) => {
     const { code, out, err } = await adb(['shell', 'uiautomator', 'dump', '/dev/tty'], args?.deviceId);
     if (code !== 0) return { content: [{ type: 'text', text: err || 'UI dump failed' }] };
@@ -131,19 +104,10 @@ async function createServer() {
   });
 
   // Tool 5: Tap Percent
-  server.tool('tap_percent', {
-    title: 'Tap by Percentage',
-    description: 'Tap at percentage coordinates (0-100)',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        xPct: { type: 'number', minimum: 0, maximum: 100 },
-        yPct: { type: 'number', minimum: 0, maximum: 100 },
-        deviceId: { type: 'string' }
-      },
-      required: ['xPct', 'yPct'],
-      additionalProperties: false
-    }
+  server.tool('tap_percent', 'Tap at percentage coordinates (0-100)', {
+    xPct: { type: 'number', description: 'X percentage (0-100)' },
+    yPct: { type: 'number', description: 'Y percentage (0-100)' },
+    deviceId: { type: 'string', description: 'Device serial', optional: true }
   }, async (args) => {
     // Get screen size
     const { out: sizeOut } = await adb(['shell', 'wm', 'size'], args.deviceId);
@@ -164,22 +128,13 @@ async function createServer() {
   });
 
   // Tool 6: Swipe Percent
-  server.tool('swipe_percent', {
-    title: 'Swipe by Percentage',
-    description: 'Swipe using percentage coordinates',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        x1Pct: { type: 'number', minimum: 0, maximum: 100 },
-        y1Pct: { type: 'number', minimum: 0, maximum: 100 },
-        x2Pct: { type: 'number', minimum: 0, maximum: 100 },
-        y2Pct: { type: 'number', minimum: 0, maximum: 100 },
-        durationMs: { type: 'number', description: 'Swipe duration in ms' },
-        deviceId: { type: 'string' }
-      },
-      required: ['x1Pct', 'y1Pct', 'x2Pct', 'y2Pct'],
-      additionalProperties: false
-    }
+  server.tool('swipe_percent', 'Swipe using percentage coordinates', {
+    x1Pct: { type: 'number', description: 'Start X percentage (0-100)' },
+    y1Pct: { type: 'number', description: 'Start Y percentage (0-100)' },
+    x2Pct: { type: 'number', description: 'End X percentage (0-100)' },
+    y2Pct: { type: 'number', description: 'End Y percentage (0-100)' },
+    durationMs: { type: 'number', description: 'Swipe duration in ms', optional: true },
+    deviceId: { type: 'string', description: 'Device serial', optional: true }
   }, async (args) => {
     const { out: sizeOut } = await adb(['shell', 'wm', 'size'], args.deviceId);
     const match = sizeOut.match(/(\d+)x(\d+)/);
@@ -204,18 +159,9 @@ async function createServer() {
   });
 
   // Tool 7: Type Text
-  server.tool('type_text', {
-    title: 'Type Text',
-    description: 'Type text into focused input field',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        value: { type: 'string', description: 'Text to type' },
-        deviceId: { type: 'string' }
-      },
-      required: ['value'],
-      additionalProperties: false
-    }
+  server.tool('type_text', 'Type text into the currently focused input field', {
+    value: { type: 'string', description: 'Text to type' },
+    deviceId: { type: 'string', description: 'Device serial', optional: true }
   }, async (args) => {
     const safe = `'${args.value.replace(/'/g, "'\\''")}'`;
     await new Promise(r => setTimeout(r, humanDelayMs()));
@@ -224,40 +170,23 @@ async function createServer() {
   });
 
   // Tool 8: Dismiss Keyboard
-  server.tool('dismiss_keyboard', {
-    title: 'Dismiss Keyboard',
-    description: 'Dismiss soft keyboard using BACK key',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        deviceId: { type: 'string' }
-      },
-      additionalProperties: false
-    }
+  server.tool('dismiss_keyboard', 'Dismiss the soft keyboard using BACK keyevent', {
+    deviceId: { type: 'string', description: 'Device serial', optional: true }
   }, async (args) => {
     await adb(['shell', 'input', 'keyevent', 'BACK'], args.deviceId);
     return { content: [{ type: 'text', text: 'Keyboard dismissed' }] };
   });
 
-  // Tool 9: ADB Input
-  server.tool('adb_input', {
-    title: 'ADB Input',
-    description: 'Direct adb input command',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        action: { type: 'string', enum: ['tap', 'swipe', 'keyevent', 'text'] },
-        x: { type: 'number' },
-        y: { type: 'number' },
-        x2: { type: 'number' },
-        y2: { type: 'number' },
-        keycode: { type: 'string' },
-        text: { type: 'string' },
-        deviceId: { type: 'string' }
-      },
-      required: ['action'],
-      additionalProperties: false
-    }
+  // Tool 9: Direct ADB Input
+  server.tool('adb_input', 'Direct adb input command (tap/swipe/keyevent/text)', {
+    action: { type: 'string', description: 'Action type: tap, swipe, keyevent, or text' },
+    x: { type: 'number', description: 'X coordinate for tap/swipe', optional: true },
+    y: { type: 'number', description: 'Y coordinate for tap/swipe', optional: true },
+    x2: { type: 'number', description: 'End X coordinate for swipe', optional: true },
+    y2: { type: 'number', description: 'End Y coordinate for swipe', optional: true },
+    keycode: { type: 'number', description: 'Keycode for keyevent action', optional: true },
+    text: { type: 'string', description: 'Text for text action', optional: true },
+    deviceId: { type: 'string', description: 'Device serial', optional: true }
   }, async (args) => {
     const cmdArgs = ['shell', 'input'];
     
@@ -280,16 +209,8 @@ async function createServer() {
   });
 
   // Tool 10: Foreground App
-  server.tool('foreground_app', {
-    title: 'Get Foreground App',
-    description: 'Get package name of foreground app',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        deviceId: { type: 'string' }
-      },
-      additionalProperties: false
-    }
+  server.tool('foreground_app', 'Get the package name of the currently foreground app', {
+    deviceId: { type: 'string', description: 'Device serial', optional: true }
   }, async (args) => {
     const { out } = await adb(['shell', 'dumpsys', 'window', 'windows'], args.deviceId);
     const match = out.match(/mCurrentFocus=.*?([a-z][a-z0-9_.]*)\//i);
@@ -298,16 +219,8 @@ async function createServer() {
   });
 
   // Tool 11: Start Observation Session
-  server.tool('start_observation_session', {
-    title: 'Start Observation Session',
-    description: 'Start logcat observation',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        deviceId: { type: 'string' }
-      },
-      additionalProperties: false
-    }
+  server.tool('start_observation_session', 'Start a logcat observation session', {
+    deviceId: { type: 'string', description: 'Device serial', optional: true }
   }, async (args) => {
     // Start logcat in background
     const logcatPs = spawn('adb', args.deviceId ? ['-s', args.deviceId, 'logcat'] : ['logcat']);
@@ -317,37 +230,30 @@ async function createServer() {
         if (line.trim()) addLog(line);
       });
     });
+    logcatPs.on('close', () => observationProcesses.delete(logcatPs));
+    observationProcesses.add(logcatPs);
     
     return { content: [{ type: 'text', text: `Observation started on device ${args.deviceId || 'default'}` }] };
   });
 
   // Tool 12: End Observation Session
-  server.tool('end_observation_session', {
-    title: 'End Observation Session',
-    description: 'Stop observation',
-    inputSchema: {
-      type: 'object',
-      properties: {},
-      additionalProperties: false
+  server.tool('end_observation_session', 'Stop observation', {}, async () => {
+    let count = 0;
+    for (const ps of Array.from(observationProcesses)) {
+      try {
+        ps.kill('SIGTERM');
+        count += 1;
+      } catch {}
+      observationProcesses.delete(ps);
     }
-  }, async () => {
-    return { content: [{ type: 'text', text: 'Observation ended (logcat continues in background)' }] };
+    return { content: [{ type: 'text', text: `Observation ended. Stopped ${count} logcat process(es).` }] };
   });
 
   // Tool 13: Wait for Element
-  server.tool('wait_for_element', {
-    title: 'Wait for Element',
-    description: 'Wait for UI element to appear',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        query: { type: 'string', description: 'Text/content-desc/resource-id to search' },
-        timeoutMs: { type: 'number', default: 8000 },
-        deviceId: { type: 'string' }
-      },
-      required: ['query'],
-      additionalProperties: false
-    }
+  server.tool('wait_for_element', 'Wait for UI element to appear', {
+    query: { type: 'string', description: 'Text/content-desc/resource-id to search' },
+    timeoutMs: { type: 'number', description: 'Timeout in milliseconds (default 8000)', optional: true },
+    deviceId: { type: 'string', description: 'Device serial', optional: true }
   }, async (args) => {
     const start = Date.now();
     const timeout = args.timeoutMs || 8000;
@@ -366,18 +272,9 @@ async function createServer() {
   });
 
   // Tool 14: Tap by Query
-  server.tool('tap_by_query', {
-    title: 'Tap by Query',
-    description: 'Find and tap element by text/content-desc/resource-id',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        query: { type: 'string' },
-        deviceId: { type: 'string' }
-      },
-      required: ['query'],
-      additionalProperties: false
-    }
+  server.tool('tap_by_query', 'Find and tap element by text/content-desc/resource-id', {
+    query: { type: 'string', description: 'Text/content-desc/resource-id to search' },
+    deviceId: { type: 'string', description: 'Device serial', optional: true }
   }, async (args) => {
     const { out } = await adb(['shell', 'uiautomator', 'dump', '/dev/tty'], args.deviceId);
     
@@ -403,59 +300,69 @@ async function createServer() {
   });
 
   // Tool 15: Start Observation for Package
-  server.tool('start_observation_for_package', {
-    title: 'Start Observation for Package',
-    description: 'Start observation filtered to specific package',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        packageName: { type: 'string', description: 'Package to filter (e.g., host.exp.exponent)' },
-        deviceId: { type: 'string' }
-      },
-      required: ['packageName'],
-      additionalProperties: false
-    }
+  server.tool('start_observation_for_package', 'Start observation filtered to specific package', {
+    packageName: { type: 'string', description: 'Package name to filter (e.g., host.exp.exponent for Expo)' },
+    deviceId: { type: 'string', description: 'Device serial', optional: true }
   }, async (args) => {
-    const logcatPs = spawn('adb', [
-      ...(args.deviceId ? ['-s', args.deviceId] : []),
-      'logcat',
-      `--pid=$(adb ${args.deviceId ? `-s ${args.deviceId}` : ''} shell pidof ${args.packageName})`
-    ]);
-    
+    const pkg = args.packageName || args.package; // accept legacy alias "package"
+    if (!pkg) {
+      return { content: [{ type: 'text', text: 'Missing packageName' }] };
+    }
+
+    // Resolve PID first (no shell interpolation)
+    const pidRes = await adb(['shell', 'pidof', pkg], args.deviceId);
+    const pid = pidRes.code === 0 ? pidRes.out.trim().split(/\s+/)[0] : '';
+
+    let logcatPs;
+    if (pid) {
+      logcatPs = spawn('adb', [
+        ...(args.deviceId ? ['-s', args.deviceId] : []),
+        'logcat',
+        `--pid=${pid}`
+      ]);
+    } else {
+      // Fallback: filter by package tag in log output
+      logcatPs = spawn('adb', [
+        ...(args.deviceId ? ['-s', args.deviceId] : []),
+        'logcat'
+      ]);
+    }
+
     logcatPs.stdout.on('data', (d) => {
       const lines = d.toString().split('\n');
       lines.forEach(line => {
-        if (line.trim()) addLog(line);
+        if (line.trim() && (!pid || line.includes(pkg))) addLog(line);
       });
     });
+    logcatPs.on('close', () => observationProcesses.delete(logcatPs));
+    observationProcesses.add(logcatPs);
 
-    return { content: [{ type: 'text', text: `Observation started for package: ${args.packageName}` }] };
+    const startedMsg = pid
+      ? `Observation started for package: ${pkg} (pid ${pid})`
+      : `Observation started for package: ${pkg} (pid not found, using fallback filter)`;
+    return { content: [{ type: 'text', text: startedMsg }] };
+  });
+
+  // Tool 17: Health Check
+  server.tool('health_check', 'Report basic server health and session info', {}, async () => {
+    // Best-effort device list
+    const { code, out } = await adb(['devices']);
+    const deviceLines = out?.split('\n')?.slice(1).filter(Boolean) || [];
+    const devices = deviceLines.filter(l => l.includes('\tdevice')).length;
+    const sessions = observationProcesses.size;
+    const logs = logBuffer.length;
+    return { content: [{ type: 'text', text: `devices=${devices}, sessions=${sessions}, log_lines=${logs}` }] };
   });
 
   // Tool 16: Act and View
-  server.tool('act_and_view', {
-    title: 'Act and View',
-    description: 'Execute sequence of actions and return final view',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        actions: {
-          type: 'array',
-          items: {
-            type: 'object',
-            properties: {
-              tool: { type: 'string' },
-              args: { type: 'object' }
-            }
-          }
-        },
-        viewEveryStep: { type: 'boolean', default: false },
-        maxLogLines: { type: 'number', default: 120 },
-        deviceId: { type: 'string' }
-      },
-      required: ['actions'],
-      additionalProperties: false
-    }
+  server.tool('act_and_view', 'Execute sequence of actions and return final view', {
+    actions: { 
+      type: 'array', 
+      description: 'Array of actions to execute. Each action should have {tool: string, args: object}'
+    },
+    viewEveryStep: { type: 'boolean', description: 'Capture screenshot after each step (default false)', optional: true },
+    maxLogLines: { type: 'number', description: 'Maximum log lines to return (default 120)', optional: true },
+    deviceId: { type: 'string', description: 'Device serial', optional: true }
   }, async (args) => {
     const results = [];
     const images = [];
@@ -517,7 +424,7 @@ async function createServer() {
   await server.connect(transport);
 
   console.error('ADB MCP Server v1.0.4 started');
-  console.error('16 tools, 3 resources available');
+  console.error('17 tools, 3 resources available');
 }
 
 createServer().catch((e) => {

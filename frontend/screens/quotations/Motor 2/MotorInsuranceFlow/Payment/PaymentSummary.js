@@ -70,11 +70,20 @@ export default function PaymentSummary({ selectedProduct, vehicleData, premium, 
   if (underwriter) {
     // Prefer backend breakdown keys first
     const bd = underwriter.breakdown || {};
-    const base = Number(bd.base_premium ?? bd.base ?? underwriter.base_premium ?? 0);
-    const itl = Number(bd.training_levy ?? underwriter.training_levy ?? (base * 0.0025));
-    const pcf = Number(bd.pcf_levy ?? underwriter.pcf_levy ?? (base * 0.0025));
+    // Normalize key variants (snake_case & camelCase & short forms)
+    const base = Number(
+      bd.base_premium ?? bd.base ?? bd.basicPremium ?? underwriter.base_premium ?? underwriter.basicPremium ?? 0
+    );
+    const itl = Number(
+      bd.training_levy ?? bd.itl ?? underwriter.training_levy ?? underwriter.itl ?? (base * 0.0025)
+    );
+    const pcf = Number(
+      bd.pcf_levy ?? bd.pcf ?? underwriter.pcf_levy ?? underwriter.pcf ?? (base * 0.0025)
+    );
     const stamp = Number(bd.stamp_duty ?? underwriter.stamp_duty ?? 40);
-    const total = Number(underwriter.total_premium ?? underwriter.totalPremium ?? (base + itl + pcf + stamp));
+    const total = Number(
+      underwriter.total_premium ?? underwriter.totalPremium ?? bd.total_premium ?? (base + itl + pcf + stamp)
+    );
     
     // Calculate add-ons from both selected add-ons and underwriter-specific add-ons
     const contextAddons = Number(addonsPremium) || 0;
@@ -88,11 +97,19 @@ export default function PaymentSummary({ selectedProduct, vehicleData, premium, 
   } else {
     // Fallback to premium prop calculations if no underwriter selected
     const breakdown = premium?.breakdown || {};
-  const base = Number(premium?.base_premium ?? breakdown.base_premium ?? breakdown.base ?? premium?.basicPremium ?? 0);
-  const itl = Number(breakdown.training_levy ?? premium?.training_levy ?? Math.round(base * 0.0025));
-  const pcf = Number(breakdown.pcf_levy ?? premium?.pcf_levy ?? Math.round(base * 0.0025));
-  const stamp = Number(breakdown.stamp_duty ?? premium?.stamp_duty ?? 40);
-  const total = Number(premium?.totalPremium ?? premium?.premium ?? (base + itl + pcf + stamp));
+    const base = Number(
+      premium?.base_premium ?? breakdown.base_premium ?? breakdown.base ?? premium?.basicPremium ?? 0
+    );
+    const itl = Number(
+      breakdown.training_levy ?? breakdown.itl ?? premium?.training_levy ?? premium?.itl ?? (base * 0.0025)
+    );
+    const pcf = Number(
+      breakdown.pcf_levy ?? breakdown.pcf ?? premium?.pcf_levy ?? premium?.pcf ?? (base * 0.0025)
+    );
+    const stamp = Number(breakdown.stamp_duty ?? premium?.stamp_duty ?? 40);
+    const total = Number(
+      premium?.totalPremium ?? premium?.total_premium ?? premium?.premium ?? breakdown.total_premium ?? (base + itl + pcf + stamp)
+    );
     
     // Calculate add-ons from both context and fallback scenarios
     const contextAddons = Number(addonsPremium) || 0;

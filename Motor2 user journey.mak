@@ -1,0 +1,57 @@
+STEP 1: Policy Details Screen
+┌─────────────────────────────────────────┐
+│ User enters: KDA 123A                  │
+│ User selects: Cover start 15/11/2025   │
+└─────────────────────────────────────────┘
+           │
+           ↓ (Auto-trigger DMVIC API call)
+┌─────────────────────────────────────────┐
+│ DMVIC Backend Response:                │
+│ - Vehicle: Toyota Corolla 2020         │
+│ - Existing Cover: YES                  │
+│ - Insurer: Madison Insurance           │
+│ - Expires: 31/12/2025                  │
+└─────────────────────────────────────────┘
+           │
+           ↓ (Auto-fill vehicle data)
+┌─────────────────────────────────────────┐
+│ Form Updates:                          │
+│ - Make: Toyota                         │
+│ - Model: Corolla                       │
+│ - Year: 2020                           │
+│ - MinCoverStartDate: 01/01/2026        │
+└─────────────────────────────────────────┘
+           │
+           ↓ (User proceeds to KYC step)
+STEP 2: KYC Screen
+┌─────────────────────────────────────────┐
+│ ℹ️ DMVIC Notice Displayed              │
+│ "DMVIC check will be performed..."     │
+└─────────────────────────────────────────┘
+           │
+           ↓ (useEffect detects collision)
+┌─────────────────────────────────────────┐
+│ Collision: 15/11/2025 < 01/01/2026     │
+│ → Auto-show VehicleVerificationScreen  │
+└─────────────────────────────────────────┘
+           │
+           ↓ (Modal appears)
+STEP 3: VehicleVerificationScreen
+┌─────────────────────────────────────────┐
+│ 🛡️ Existing Cover Detected              │
+│                                         │
+│ Policy Details:                        │
+│ - Registration: KDA 123A               │
+│ - Insurer: Madison Insurance           │
+│ - Expires: 31/12/2025                  │
+│                                         │
+│ [Adjust Start Date] [Submit Debit Note]│
+└─────────────────────────────────────────┘
+           │
+           ↓ (User clicks "Adjust Start Date")
+┌─────────────────────────────────────────┐
+│ ✅ Cover Start Date Updated             │
+│ New start date: 01/01/2026             │
+│ → Modal closes                         │
+│ → User can proceed to next step        │
+└─────────────────────────────────────────┘

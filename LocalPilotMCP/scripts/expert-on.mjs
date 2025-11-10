@@ -5,7 +5,7 @@ import { resolve, dirname } from 'node:path';
 
 async function main() {
   const here = dirname(fileURLToPath(import.meta.url));
-  const serverEntrypoint = resolve(here, '../dist/index.js');
+  const serverEntrypoint = resolve(here, '../full-server.mjs');
   const transport = new StdioClientTransport({ command: 'node', args: [serverEntrypoint] });
   const client = new Client({ name: 'adb-mcp-expert-on', version: '1.0.0' });
   await client.connect(transport);

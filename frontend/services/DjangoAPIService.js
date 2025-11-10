@@ -1422,6 +1422,191 @@ class DjangoAPIService {
     }
   }
 
+  /**
+   * DMVIC: Validate Double Insurance
+   * Check if vehicle already has active motor insurance coverage in DMVIC registry
+   * 
+   * @param {string} registration - Vehicle registration number (e.g., "KDA123A")
+   * @param {string} coverStartDate - Proposed cover start date (YYYY-MM-DD)
+   * @param {string} coverEndDate - Proposed cover end date (YYYY-MM-DD)
+   * @returns {Promise<Object>} { has_active_cover, dmvic_policy: { policy_number, underwriter, cover_type, expiry_date } }
+   */
+  async validateDoubleInsurance(registration, coverStartDate, coverEndDate) {
+    try {
+      if (!registration) {
+        throw new Error('Vehicle registration is required for double-insurance validation');
+      }
+
+      const payload = {
+        registration_number: registration,
+        cover_start_date: coverStartDate,
+        cover_end_date: coverEndDate
+      };
+
+      console.log('[DjangoAPIService] Validating double-insurance:', payload);
+
+      const response = await this.makeRequest(API_CONFIG.ENDPOINTS.DMVIC.VALIDATE_DOUBLE_INSURANCE, {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      });
+
+      console.log('[DjangoAPIService] Double-insurance validation result:', response);
+      
+      return response;
+    } catch (error) {
+      console.error('[DjangoAPIService] Double-insurance validation failed:', error);
+      // Don't throw - return safe result allowing policy creation to proceed
+      return {
+        has_active_cover: false,
+        validation_error: error.message,
+        dmvic_policy: null
+      };
+    }
+  }
+
+  /**
+   * DMVIC: Search Vehicle
+   * Search for vehicle details in DMVIC registry
+   * 
+   * @param {string} registration - Vehicle registration number
+   * @param {string} chassisNumber - Optional chassis number for verification
+   * @returns {Promise<Object>} Vehicle details from DMVIC
+   */
+  async dmvicSearchVehicle(registration, chassisNumber = null) {
+    try {
+      const payload = {
+        registration_number: registration
+      };
+      
+      if (chassisNumber) {
+        payload.chassis_number = chassisNumber;
+      }
+
+      console.log('[DjangoAPIService] DMVIC vehicle search:', payload);
+
+      const response = await this.makeRequest(API_CONFIG.ENDPOINTS.DMVIC.SEARCH_VEHICLE, {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      });
+
+      console.log('[DjangoAPIService] DMVIC vehicle search result:', response);
+      return response;
+    } catch (error) {
+      console.error('[DjangoAPIService] DMVIC vehicle search failed:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * DMVIC: Get Certificate PDF
+   * Download DMVIC certificate PDF for a policy
+   * 
+   * @param {string} policyId - Policy ID
+   * @param {string} certificateNumber - Optional certificate number
+   * @returns {Promise<Object>} PDF data (base64) and URL
+   */
+  async dmvicGetCertificatePdf(policyId, certificateNumber = null) {
+    try {
+      const payload = {
+        policy_id: policyId
+      };
+      
+      if (certificateNumber) {
+        payload.certificate_number = certificateNumber;
+      }
+
+      console.log('[DjangoAPIService] Fetching DMVIC certificate PDF:', payload);
+
+      const response = await this.makeRequest(API_CONFIG.ENDPOINTS.DMVIC.GET_CERTIFICATE_PDF, {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      });
+
+      console.log('[DjangoAPIService] Certificate PDF fetched:', response.success);
+      return response;
+    } catch (error) {
+      console.error('[DjangoAPIService] Certificate PDF fetch failed:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * DMVIC: Preview Certificate
+   * Preview certificate details before issuance
+   * 
+   * @param {Object} certificateData - Certificate data for preview
+   * @returns {Promise<Object>} Preview details
+   */
+  async dmvicPreviewCertificate(certificateData) {
+    try {
+      console.log('[DjangoAPIService] Previewing DMVIC certificate');
+
+      const response = await this.makeRequest(API_CONFIG.ENDPOINTS.DMVIC.PREVIEW_CERTIFICATE, {
+        method: 'POST',
+        body: JSON.stringify(certificateData),
+      });
+
+      return response;
+    } catch (error) {
+      console.error('[DjangoAPIService] Certificate preview failed:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * DMVIC: Issue Certificate
+   * Issue DMVIC certificate for a policy
+   * 
+   * @param {Object} certificateData - Certificate issuance data
+   * @returns {Promise<Object>} Issuance result with certificate number
+   */
+  async dmvicIssueCertificate(certificateData) {
+    try {
+      console.log('[DjangoAPIService] Issuing DMVIC certificate');
+
+      const response = await this.makeRequest(API_CONFIG.ENDPOINTS.DMVIC.ISSUE_CERTIFICATE, {
+        method: 'POST',
+        body: JSON.stringify(certificateData),
+      });
+
+      console.log('[DjangoAPIService] Certificate issued:', response.success);
+      return response;
+    } catch (error) {
+      console.error('[DjangoAPIService] Certificate issuance failed:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * DMVIC: Confirm Certificate Issuance
+   * Confirm certificate issuance after logbook verification
+   * 
+   * @param {string} issuanceRequestId - Issuance request ID from preview/issue
+   * @param {Object} confirmationData - Additional confirmation data
+   * @returns {Promise<Object>} Confirmation result
+   */
+  async dmvicConfirmIssuance(issuanceRequestId, confirmationData = {}) {
+    try {
+      const payload = {
+        issuance_request_id: issuanceRequestId,
+        ...confirmationData
+      };
+
+      console.log('[DjangoAPIService] Confirming DMVIC certificate issuance:', issuanceRequestId);
+
+      const response = await this.makeRequest(API_CONFIG.ENDPOINTS.DMVIC.CONFIRM_ISSUANCE, {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      });
+
+      console.log('[DjangoAPIService] Certificate issuance confirmed:', response.success);
+      return response;
+    } catch (error) {
+      console.error('[DjangoAPIService] Certificate confirmation failed:', error);
+      throw error;
+    }
+  }
+
   // Documents: upload (returns OCR in backend mock)
   async uploadDocument(payload) {
     try {

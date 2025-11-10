@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useMotorInsurance } from '@contexts/MotorInsuranceContext';
@@ -13,9 +13,26 @@ const VehicleVerificationScreen = ({
   onAdjustStartDate, 
   onSubmitDebitNote 
 }) => {
-  const { actions } = useMotorInsurance();
+  const { state, actions } = useMotorInsurance();
   
   console.log('🎨 [VehicleVerificationScreen] Rendering with data:', existingCoverData);
+  
+  // ✅ Check if user's selected date is already compliant
+  const selectedCoverDateStr = state.vehicleDetails?.cover_start_date || state.vehicleDetails?.coverStartDate;
+  const minCoverStartDateStr = state.minCoverStartDate;
+  
+  const isDateValid = useMemo(() => {
+    if (!minCoverStartDateStr || !selectedCoverDateStr) return false;
+    const selectedDate = new Date(selectedCoverDateStr);
+    const minDate = new Date(minCoverStartDateStr);
+    return selectedDate >= minDate;
+  }, [selectedCoverDateStr, minCoverStartDateStr]);
+  
+  console.log('📅 [VehicleVerificationScreen] Date validation:', {
+    selectedDate: selectedCoverDateStr,
+    minDate: minCoverStartDateStr,
+    isValid: isDateValid
+  });
   
   // Phase 3.1: Enhanced handler with auto-date adjustment
   const handleAdjustDate = () => {
@@ -179,30 +196,57 @@ const VehicleVerificationScreen = ({
 
         {/* Info Box */}
         <View style={styles.infoBox}>
-          <Ionicons name="information-circle" size={18} color="#4CAF50" style={{ marginTop: 2 }} />
+          <Ionicons 
+            name={isDateValid ? "checkmark-circle" : "information-circle"} 
+            size={18} 
+            color={isDateValid ? "#4CAF50" : "#2196F3"} 
+            style={{ marginTop: 2 }} 
+          />
           <Text style={styles.infoBoxText}>
-            Click "Adjust Start Date" to automatically update the new policy to begin the day after existing cover expires.
+            {isDateValid 
+              ? `Your selected cover start date (${new Date(selectedCoverDateStr).toLocaleDateString('en-GB')}) is valid. Click "Continue" to proceed with your application.`
+              : `Click "Adjust Start Date" to automatically update the new policy to begin the day after existing cover expires.`
+            }
           </Text>
         </View>
       </ScrollView>
 
       {/* Action Buttons - Fixed at bottom */}
       <View style={styles.drawerActions}>
-        <TouchableOpacity 
-          style={[styles.drawerButton, styles.drawerButtonSecondary]}
-          onPress={handleAdjustDate}
-          activeOpacity={0.8}
-        >
-          <Text style={styles.drawerButtonSecondaryText}>Adjust Start Date</Text>
-        </TouchableOpacity>
+        {isDateValid ? (
+          // ✅ If date is already valid, show "Continue" button
+          <>
+            <TouchableOpacity 
+              style={[styles.drawerButton, styles.drawerButtonPrimary, { flex: 1 }]}
+              onPress={() => {
+                console.log('✅ [VehicleVerificationScreen] Continue clicked - date is valid');
+                actions.setShowVerificationScreen(false);
+              }}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.drawerButtonPrimaryText}>Continue with Current Date</Text>
+            </TouchableOpacity>
+          </>
+        ) : (
+          // ❌ If date needs adjustment, show adjustment options
+          <>
+            <TouchableOpacity 
+              style={[styles.drawerButton, styles.drawerButtonSecondary]}
+              onPress={handleAdjustDate}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.drawerButtonSecondaryText}>Adjust Start Date</Text>
+            </TouchableOpacity>
 
-        <TouchableOpacity 
-          style={[styles.drawerButton, styles.drawerButtonPrimary]}
-          onPress={onSubmitDebitNote}
-          activeOpacity={0.8}
-        >
-          <Text style={styles.drawerButtonPrimaryText}>Submit Debit Note</Text>
-        </TouchableOpacity>
+            <TouchableOpacity 
+              style={[styles.drawerButton, styles.drawerButtonPrimary]}
+              onPress={onSubmitDebitNote}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.drawerButtonPrimaryText}>Submit Debit Note</Text>
+            </TouchableOpacity>
+          </>
+        )}
       </View>
     </View>
   );

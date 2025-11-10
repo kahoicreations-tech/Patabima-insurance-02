@@ -20,6 +20,7 @@ import AddonSelectionStep from './AddonsSelection/AddonSelectionStep';
 import DocumentsStep from './steps/DocumentsStep';
 import ClientDetailsStep from './steps/ClientDetailsStep';
 import SubmissionStep from './steps/SubmissionStep';
+import { clearUnderwriterCache } from './VehicleDetails/DynamicVehicleForm';
 
 export default function MotorInsuranceContainer({ route, navigation }) {
   // Basic error boundary to keep flow resilient during refactor
@@ -44,8 +45,43 @@ export default function MotorInsuranceContainer({ route, navigation }) {
   // - existingCoverData (removed - now state.existingCoverData)
   // - showVerificationScreen (removed - now state.showVerificationScreen)
 
-  // Mount effect placeholder (original cache clearing runs elsewhere in file)
-  useEffect(() => {}, []);
+  // Clear all Motor2 cached data on mount to ensure fresh start
+  useEffect(() => {
+    const clearMotor2Cache = async () => {
+      try {
+        console.log('[MotorInsuranceContainer] 🗑️ Clearing Motor2 cached data on mount...');
+        
+        // Clear module-level underwriter cache
+        clearUnderwriterCache();
+        
+        // Clear AsyncStorage Motor2 flow data
+        const keysToRemove = [
+          'policy_submission_guard',
+          'MOTOR_FLOW_STATE',
+          'MOTOR_FLOW_VEHICLE_DETAILS',
+          'MOTOR_FLOW_CLIENT_DETAILS',
+          'MOTOR_FLOW_PRICING',
+          'MOTOR_FLOW_UNDERWRITER',
+          'MOTOR_FLOW_DOCUMENTS',
+          'DMVIC_CACHE',
+          'MOTOR_CATEGORY_SELECTION',
+          'MOTOR_SUBCATEGORY_SELECTION',
+        ];
+        
+        await Promise.all(
+          keysToRemove.map(key => 
+            AsyncStorage.removeItem(key).catch(e => console.warn(`Failed to remove ${key}:`, e))
+          )
+        );
+        
+        console.log('[MotorInsuranceContainer] ✅ Motor2 cache cleared - starting fresh');
+      } catch (error) {
+        console.warn('[MotorInsuranceContainer] Cache clear warning:', error);
+      }
+    };
+    
+    clearMotor2Cache();
+  }, []);
 
   // Determine flow based on selected subcategory (Third Party vs Comprehensive)
   const steps = useMemo(() => {
@@ -106,10 +142,13 @@ export default function MotorInsuranceContainer({ route, navigation }) {
 
     // Premium sources
     const premiumTotal = (
+      (state.calculatedPremium?.totalPremium) ||
+      (state.calculatedPremium?.total_premium) ||
       (state.premium?.total) ||
       (state.premium_breakdown?.total) ||
       (state.premiumBreakdown?.total) ||
       (selectedUnderwriter?.total_premium) ||
+      (selectedUnderwriter?.totalPremium) ||
       0
     );
 
@@ -126,12 +165,20 @@ export default function MotorInsuranceContainer({ route, navigation }) {
         const hasReg = !!str(registration);
         const hasIdType = !!str(identificationType);
         const hasCover = !!str(coverStart);
-        const ok = hasReg && hasIdType && hasCover;
+        // CRITICAL: Require underwriter selection for ALL products (Third Party AND Comprehensive)
+        const hasUnderwriter = !!selectedUnderwriter;
+        
+        // Check premium from selected underwriter object (not state.calculatedPremium which doesn't exist)
+        const hasPremium = !!(selectedUnderwriter?.total_premium > 0 || selectedUnderwriter?.totalPremium > 0);
+        
+        const ok = hasReg && hasIdType && hasCover && hasUnderwriter && hasPremium;
         let msg = '';
         if (!ok) {
           if (!hasReg) msg = 'Enter vehicle registration';
           else if (!hasIdType) msg = 'Select identification type';
           else if (!hasCover) msg = 'Select cover start date';
+          else if (!hasUnderwriter) msg = 'Select an underwriter from the pricing comparison';
+          else if (!hasPremium) msg = 'Premium not calculated - please wait for pricing to load';
         }
         return { canProceed: ok, validationMessage: msg };
       }
@@ -220,88 +267,40 @@ export default function MotorInsuranceContainer({ route, navigation }) {
     }
   }, [steps, currentStep, state]);
 
-  // ✅ NEW: Reference to hold validation function from PolicyDetailsStep
-  const policyDetailsValidatorRef = useRef(null);
+  // ✅ Reference to hold DMVIC check function from PolicyDetailsStep
+  const dmvicCheckRef = useRef(null);
   
   const goNext = useCallback(async () => {
     const currentStepName = steps[currentStep];
 
-    // ✅ NEW: If on Policy Details step, trigger DMVIC validation before proceeding
-    if (currentStepName === 'Policy Details' && policyDetailsValidatorRef.current) {
-      console.log('[MotorContainer] Triggering Policy Details validation before navigation');
-      try {
-        const validationResult = await policyDetailsValidatorRef.current();
-        console.log('[MotorContainer] 🔍 Validation result:', JSON.stringify(validationResult, null, 2));
-        
-        if (!validationResult.valid) {
-          console.log('[MotorContainer] 🔍 Validation failed. Reason:', validationResult.reason);
-          
-          // If this is a date-collision case, store the warning but ALLOW navigation to KYC
-          if (validationResult.reason === 'DATE_COLLISION' || validationResult.reason === 'EXISTING_COVER') {
-            console.log('[MotorContainer] ⚠️ Date collision detected - storing for KYC step');
-            if (validationResult.minDate) {
-              actions.setMinCoverStartDate(validationResult.minDate);
-              console.log('[MotorContainer] Set minCoverStartDate:', validationResult.minDate);
-            }
-            // Don't block navigation - modal will show in KYC step
-            // Just proceed to next step
-            console.log('[MotorContainer] ✅ Allowing navigation to KYC despite collision');
-          } else {
-            // Other validation errors - block navigation
-            Alert.alert('Validation Error', validationResult.message || 'Please complete the form correctly.', [{ text: 'OK' }]);
-            return;
-          }
-        } else {
-          console.log('[MotorContainer] Policy Details validation passed');
-        }
-      } catch (error) {
-        console.error('[MotorContainer] Validation error:', error);
-        Alert.alert('Error', 'Failed to validate vehicle details. Please try again.', [{ text: 'OK' }]);
-        return;
-      }
-    }
-
-    // Phase 1.3: REMOVED - Don't block navigation here anymore
-    // The modal will show automatically in KYC step if there's a collision
-    /*
-    const selectedCoverDateStr = state.vehicleDetails?.cover_start_date || state.vehicleDetails?.coverStartDate;
-    const minCoverStartDateStr = state.minCoverStartDate;
-    const isCollision = Boolean(
-      minCoverStartDateStr && selectedCoverDateStr && new Date(selectedCoverDateStr) < new Date(minCoverStartDateStr)
-    );
-
-    if (state.showVerificationScreen || isCollision) {
-      console.error('[MotorContainer] 🚫 Navigation blocked - existing cover must be resolved first');
-      actions.setShowVerificationScreen(true);
-      Alert.alert(...);
-      return;
-    }
-    */
-
-    // Additional check for Policy Details step specifically
-    if (currentStepName === 'Policy Details') {
-      const registrationNumber = 
+    // ✅ NEW: If on Policy Details step, trigger DMVIC check before proceeding to KYC
+    if (currentStepName === 'Policy Details' && dmvicCheckRef.current) {
+      console.log('[MotorContainer] Triggering DMVIC check before proceeding to KYC');
+      
+      const regNumber = 
         state.vehicleDetails?.registrationNumber || 
         state.vehicleDetails?.registration_number || 
         state.vehicleDetails?.Registration_Number;
       
-      const coverStartDate = 
+      const coverDate = 
         state.vehicleDetails?.cover_start_date || 
         state.vehicleDetails?.coverStartDate;
-      
-      // If there's a minCoverStartDate constraint, ensure coverStartDate is after it
-      if (state.minCoverStartDate && coverStartDate) {
-        const minDate = new Date(state.minCoverStartDate);
-        const selectedDate = new Date(coverStartDate);
+
+      // Only trigger if we have registration and haven't already processed it
+      if (regNumber && regNumber.length >= 6) {
+        const alreadyProcessed = actions.hasDMVICProcessed?.(regNumber);
         
-        if (selectedDate < minDate) {
-          console.error('[MotorContainer] 🚫 Selected cover start date is before minimum allowed date');
-          Alert.alert(
-            '❌ Invalid Cover Start Date',
-            `The selected cover start date (${selectedDate.toLocaleDateString()}) is before the minimum allowed date (${minDate.toLocaleDateString()}).\n\nExisting cover expires on ${new Date(minDate.getTime() - 24*60*60*1000).toLocaleDateString()}. Please select a start date on or after ${minDate.toLocaleDateString()}.`,
-            [{ text: 'OK' }]
-          );
-          return;
+        if (!alreadyProcessed) {
+          console.log('[MotorContainer] Performing DMVIC check for:', regNumber);
+          try {
+            await dmvicCheckRef.current.current(regNumber, coverDate);
+            actions.markDMVICProcessed?.(regNumber);
+          } catch (error) {
+            console.warn('[MotorContainer] DMVIC check failed (non-blocking):', error?.message);
+            // Don't block navigation on DMVIC errors
+          }
+        } else {
+          console.log('[MotorContainer] DMVIC already processed for:', regNumber);
         }
       }
     }
@@ -309,7 +308,7 @@ export default function MotorInsuranceContainer({ route, navigation }) {
     console.log('[MotorContainer] ✅ Navigation allowed to next step');
     // Proceed to next step
     setCurrentStep((s) => Math.min(s + 1, steps.length - 1));
-  }, [steps, currentStep, state.showVerificationScreen, state.existingCoverData, state.minCoverStartDate, state.vehicleDetails, actions]);
+  }, [steps, currentStep, state.vehicleDetails, actions]);
 
   const goBack = useCallback(() => {
     // Phase 1.3: If context shows verification screen, use context state
@@ -384,7 +383,7 @@ export default function MotorInsuranceContainer({ route, navigation }) {
       case 'Subcategory':
         return <CategorySelectionStep stepName={stepName} onNext={goNext} />;
       case 'Policy Details':
-        return <PolicyDetailsStep onValidateBeforeNext={(validator) => { policyDetailsValidatorRef.current = validator; }} />;
+        return <PolicyDetailsStep onDMVICCheckRef={(ref) => { dmvicCheckRef.current = ref; }} />;
       case 'KYC':
         return <KYCStep />;
       case 'Underwriters':
@@ -505,29 +504,18 @@ export default function MotorInsuranceContainer({ route, navigation }) {
           <Text style={styles.validationText}>{validationMessage}</Text>
         )}
         
-        {/* Back and Next Buttons */}
-        <View style={styles.navButtonRow}>
-          {!isFirstStep ? (
-            <TouchableOpacity style={styles.backButton} onPress={goBack} activeOpacity={0.75}>
-              <Ionicons name="chevron-back" size={20} color="#495057" />
-              <Text style={styles.backButtonText}>Back</Text>
-            </TouchableOpacity>
-          ) : (
-            <View style={{ width: 90 }} />
-          )}
-
-          {!isFirstStep && (
-            <TouchableOpacity
-              style={[styles.nextButton, !canProceed && styles.nextButtonDisabled]}
-              onPress={goNext}
-              disabled={!canProceed}
-              activeOpacity={0.75}
-            >
-              <Text style={styles.nextButtonText}>Next</Text>
-              <Ionicons name="chevron-forward" size={20} color="#fff" />
-            </TouchableOpacity>
-          )}
-        </View>
+        {/* Next Button - Full Width */}
+        {!isFirstStep && (
+          <TouchableOpacity
+            style={[styles.nextButton, styles.nextButtonFullWidth, !canProceed && styles.nextButtonDisabled]}
+            onPress={goNext}
+            disabled={!canProceed}
+            activeOpacity={0.75}
+          >
+            <Text style={styles.nextButtonText}>Next</Text>
+            <Ionicons name="chevron-forward" size={20} color="#fff" />
+          </TouchableOpacity>
+        )}
       </View>
 
       {/* Phase 1.3: Simplified Modal - No loading drawer, only VehicleVerificationScreen */}
@@ -684,6 +672,11 @@ const styles = StyleSheet.create({
     flex: 1,
     maxWidth: 200,
     gap: 4,
+  },
+  nextButtonFullWidth: {
+    flex: 'none',
+    width: '100%',
+    maxWidth: '100%',
   },
   nextButtonDisabled: { backgroundColor: '#ced4da' },
   nextButtonText: { 

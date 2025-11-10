@@ -262,6 +262,68 @@ Based on the comprehensive implementation and wireframes:
 - **Caching**: Cache pricing data and underwriter information for better performance
 - **Offline Support**: Handle offline scenarios gracefully with data persistence
 
+#### Form Handling Best Practices
+
+**Controlled Components**: Use components from `frontend/components/forms/`:
+
+- `ControlledTextInput` - Text input with keyboard persistence (`blurOnSubmit=false`, `returnKeyType=next`)
+- `ControlledRadioGroup` - Radio buttons with stable handlers and PataBima styling
+- `ControlledSelect` - Accordion-style dropdown selector with auto-collapse
+- `ControlledDatePicker` - Native date picker with min/max validation
+
+**Field State Management**: Use `useMotorFormField` hook from `frontend/hooks/`:
+
+```javascript
+const { value, error, handleChange } = useMotorFormField({
+  name: "registrationNumber",
+  validate: validateKenyanRegistration,
+  onNotify: notifyParent,
+  debounceMs: 400, // 400ms for text, 100ms for radio/select
+});
+```
+
+**Validation**: Import validators from `frontend/utils/motorFormValidation.js`:
+
+- All validators preserve exact business logic (Kenyan registration pattern, sum insured range, etc.)
+- `formatCurrency()` and `parseCurrency()` helpers for sum_insured field
+
+**Keyboard Persistence Techniques**:
+
+- Always set `blurOnSubmit={false}` on TextInput to keep keyboard visible
+- Use `returnKeyType="next"` for smooth field navigation
+- Debounce state updates: 400ms for text input, 100ms for radio/select
+- Use refs (`latestFormRef`) to read values without adding to dependency arrays
+
+**Memoization Strategy**:
+
+- Wrap components with `React.memo` and custom comparison functions
+- Exclude function props from comparison (e.g., `onChangeText`, `onSelect`)
+- Use `useCallback` for stable handlers
+- Use refs for reading state, state for rendering (prevents re-render loops)
+
+**Example: Registration Field**:
+
+```javascript
+const registration = useMotorFormField({
+  name: "registrationNumber",
+  validate: validateKenyanRegistration,
+  onNotify: notifyParent,
+  debounceMs: 400,
+});
+
+<ControlledTextInput
+  value={registration.value}
+  onChangeText={registration.handleChange}
+  label="Vehicle Registration"
+  required
+  error={registration.error}
+  placeholder="e.g., KDA 123A"
+  autoCapitalize="characters"
+/>;
+```
+
+See `docs/MOTOR2_FOUNDATION_USAGE_GUIDE.md` for complete implementation examples.
+
 ### API Integration Guidelines
 
 - **Centralized Service**: Use DjangoAPIService singleton for all API communications

@@ -92,9 +92,89 @@ export const AppDataProvider = ({ children }) => {
     if (!force && isFresh('motorPolicies') && motorPolicies.length) return motorPolicies;
     try {
       const items = await djangoAPI.getMotorPolicies({ _suppressErrorLog: true });
-      setMotorPolicies(items || []);
+      
+      console.log('[AppDataContext] Fetched motor policies:', items?.length || 0, 'items from API');
+      
+      if (!items || items.length === 0) {
+        setMotorPolicies([]);
+        markFresh('motorPolicies');
+        return [];
+      }
+
+      // ========================================
+      // DEDUPLICATION LOGIC (Todo #8)
+      // ========================================
+      // Deduplicate by composite key: normalized registration + coverStartDate
+      // Keep most recent policy (highest submitted_at or id)
+      
+      const normalizeRegistration = (reg) => {
+        if (!reg) return '';
+        return String(reg).toUpperCase().replace(/\s+/g, '').trim();
+      };
+
+      const deduplicationMap = new Map();
+      const removedDuplicates = [];
+
+      items.forEach((policy) => {
+        const vehicleDetails = policy.vehicle_details || policy.vehicleDetails || {};
+        const productDetails = policy.product_details || policy.productDetails || {};
+        
+        const registration = vehicleDetails.registration || vehicleDetails.registration_number || '';
+        const coverStartDate = policy.cover_start_date || vehicleDetails.coverStartDate || productDetails.coverStartDate || '';
+        
+        const normalizedReg = normalizeRegistration(registration);
+        const compositeKey = `${normalizedReg}|${coverStartDate}`;
+        
+        if (!compositeKey || compositeKey === '|') {
+          // No registration or date - keep as unique
+          deduplicationMap.set(`UNKNOWN_${policy.id}`, policy);
+          return;
+        }
+
+        const existing = deduplicationMap.get(compositeKey);
+        
+        if (existing) {
+          // Duplicate found - keep the most recent one
+          const existingTime = existing.submitted_at || existing.created_at || existing.id || 0;
+          const currentTime = policy.submitted_at || policy.created_at || policy.id || 0;
+          
+          if (currentTime > existingTime) {
+            // Current policy is newer, replace existing
+            removedDuplicates.push(existing);
+            deduplicationMap.set(compositeKey, policy);
+            console.log(`[AppDataContext] 🔄 Replaced duplicate: ${compositeKey}`, {
+              kept: policy.policy_number,
+              removed: existing.policy_number
+            });
+          } else {
+            // Existing policy is newer, discard current
+            removedDuplicates.push(policy);
+            console.log(`[AppDataContext] 🗑️  Discarded duplicate: ${compositeKey}`, {
+              kept: existing.policy_number,
+              removed: policy.policy_number
+            });
+          }
+        } else {
+          // First occurrence of this composite key
+          deduplicationMap.set(compositeKey, policy);
+        }
+      });
+
+      const deduplicatedItems = Array.from(deduplicationMap.values());
+
+      if (removedDuplicates.length > 0) {
+        console.warn('[AppDataContext] ⚠️  DUPLICATE MOTOR POLICIES DETECTED AND REMOVED!');
+        console.warn('[AppDataContext] Original count:', items.length);
+        console.warn('[AppDataContext] Deduplicated count:', deduplicatedItems.length);
+        console.warn('[AppDataContext] Removed duplicates:', removedDuplicates.length);
+        console.warn('[AppDataContext] Removed policy numbers:', removedDuplicates.map(p => p.policy_number));
+      } else {
+        console.log('[AppDataContext] ✅ No duplicates found in motor policies');
+      }
+
+      setMotorPolicies(deduplicatedItems);
       markFresh('motorPolicies');
-      return items || [];
+      return deduplicatedItems;
     } catch (e) {
       setErrors((prev) => ({ ...prev, motorPolicies: e }));
       return [];

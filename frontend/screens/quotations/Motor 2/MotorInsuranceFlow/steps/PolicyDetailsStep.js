@@ -5,7 +5,7 @@ import { useMotorInsurance } from '@contexts/MotorInsuranceContext';
 import djangoAPI from '@services/DjangoAPIService';
 import { debounce } from '@utils/index';
 
-export default function PolicyDetailsStep() {
+export default function PolicyDetailsStep({ onDMVICCheckRef }) {
   const { state, actions } = useMotorInsurance();
   
   // Local state for DMVIC check
@@ -29,10 +29,22 @@ export default function PolicyDetailsStep() {
     updateRef.current(data);
   }, []);
 
+  // Ensure underwriter selection persists as a full object in context
+  const handleUnderwriterSelection = useCallback((underwriter) => {
+    if (!underwriter) return;
+    console.log('[PolicyDetailsStep] Underwriter selected:', underwriter?.name || underwriter?.underwriter_name);
+    // Persist full object for downstream steps (Payment, Submission)
+    actions.setSelectedUnderwriter?.(underwriter);
+    // Also dual-write into vehicleDetails to keep legacy readers working
+    const uwName = underwriter?.name || underwriter?.underwriter_name || underwriter?.company_name || underwriter?.company;
+    actions.updateVehicleDetails?.({
+      underwriter: uwName,
+      selectedUnderwriter: underwriter,
+    });
+  }, [actions]);
+
   // Process DMVIC result (Phase 1.1)
   const processDMVICResult = useCallback((result) => {
-    console.log('[DMVIC PolicyDetails] Processing result:', JSON.stringify(result, null, 2));
-    
     // AUTO-FILL VEHICLE DATA FROM DMVIC (regardless of existing cover)
     if (result && result.success && result.vehicle) {
       const vehicle = result.vehicle;
@@ -41,23 +53,19 @@ export default function PolicyDetailsStep() {
       // Auto-fill make and model if available
       if (vehicle.make && vehicle.make !== 'NA') {
         autoFilledData.make = vehicle.make;
-        console.log('[DMVIC PolicyDetails] Auto-filled make:', vehicle.make);
       }
       if (vehicle.model && vehicle.model !== 'NA') {
         autoFilledData.model = vehicle.model;
-        console.log('[DMVIC PolicyDetails] Auto-filled model:', vehicle.model);
       }
       
       // Auto-fill engine number
       if (vehicle.engine_number) {
         autoFilledData.engineNumber = vehicle.engine_number;
-        console.log('[DMVIC PolicyDetails] Auto-filled engine number:', vehicle.engine_number);
       }
       
       // Auto-fill chassis number
       if (vehicle.chassis_number) {
         autoFilledData.chassisNumber = vehicle.chassis_number;
-        console.log('[DMVIC PolicyDetails] Auto-filled chassis number:', vehicle.chassis_number);
       }
       
       // Auto-fill year of manufacture
@@ -68,40 +76,32 @@ export default function PolicyDetailsStep() {
           year = year < 50 ? 2000 + year : 1900 + year;
         }
         autoFilledData.year = year.toString();
-        console.log('[DMVIC PolicyDetails] Auto-filled year:', year);
       }
       
       // Auto-fill color if available
       if (vehicle.color) {
         autoFilledData.color = vehicle.color;
-        console.log('[DMVIC PolicyDetails] Auto-filled color:', vehicle.color);
       }
       
       // Update vehicle details with auto-filled data
       if (Object.keys(autoFilledData).length > 0) {
-        console.log('[DMVIC PolicyDetails] Auto-filling vehicle details:', autoFilledData);
         actions.updateVehicleDetails(autoFilledData);
-
-        // Show a confirmation alert to the user
         const make = autoFilledData.make || 'N/A';
         const model = autoFilledData.model || 'N/A';
         const year = autoFilledData.year || 'N/A';
-        Alert.alert(
-          'Vehicle Found',
-          `Successfully found vehicle: ${make} ${model} (${year}). The details have been auto-filled.`,
-          [{ text: 'OK' }]
-        );
+        console.log('[DMVIC] ✅ Auto-filled:', `${make} ${model} (${year})`);
       }
     }
     
     // Check for existing cover at the top level of the response
     // Backend returns: { success: true, vehicle: {...}, has_existing_cover: true, existing_cover_expiry: "date" }
     if (result && result.success && result.has_existing_cover) {
-      console.log('[DMVIC PolicyDetails] Existing cover detected');
+      console.log('[DMVIC] ✅ Existing cover detected');
       
       const vehicle = result.vehicle || {};
-      const expiryDateStr = result.existing_cover_expiry || vehicle.cover_end_date || vehicle.cover_to || null;
-      const registrationNumber = vehicle.registration_number || vehicle.vehicle_registration || 'N/A';
+      const currentPolicy = vehicle.current_policy || {};
+      const expiryDateStr = result.existing_cover_expiry || currentPolicy.cover_end_date || null;
+      const registrationNumber = vehicle.registration_number || 'N/A';
       
       // Calculate minimum date (expiry + 1 day)
       let minDate = null;
@@ -118,37 +118,36 @@ export default function PolicyDetailsStep() {
           
           minDate = new Date(expiryDate);
           minDate.setDate(minDate.getDate() + 1);
-          
-          console.log('[DMVIC PolicyDetails] Existing cover expires:', expiryDateStr);
-          console.log('[DMVIC PolicyDetails] Minimum date calculated:', minDate.toISOString());
         } catch (error) {
-          console.error('[DMVIC PolicyDetails] Error parsing date:', error);
+          console.error('[DMVIC] Error parsing date:', error);
         }
       }
 
       // Structure matching VehicleVerificationScreen expectations
-      actions.setExistingCoverData({
+      const coverData = {
         hasExistingCover: true,
         expiryDate: expiryDateStr,
         policy: {
           vehicle_registration: registrationNumber,
-          policy_number: vehicle.policy_number || 'N/A',
-          insurer: vehicle.member_company || vehicle.insurer || 'Unknown Insurer',
-          cover_type: vehicle.class_of_insurance || vehicle.cover_type || 'Unknown',
+          policy_number: currentPolicy.policy_number || 'N/A',
+          insurer: currentPolicy.member_company || 'Unknown Insurer',
+          cover_type: currentPolicy.certificate_type || 'Unknown',
           expiry_date: expiryDateStr,
-          certificate_number: vehicle.certificate_type || vehicle.policy_number || 'N/A',
+          certificate_number: currentPolicy.policy_number || 'N/A',
         },
-      });
+      };
+      
+      actions.setExistingCoverData(coverData);
       
       if (minDate) {
-        actions.setMinCoverStartDate(minDate.toISOString());
+        const minDateISO = minDate.toISOString();
+        actions.setMinCoverStartDate(minDateISO);
       }
       
       actions.setShowVerificationScreen(true);
-      console.log('[DMVIC PolicyDetails] Existing cover found, showing verification screen');
+      console.log('[DMVIC] ✅ Verification screen enabled');
     } else {
       // No existing cover
-      console.log('[DMVIC PolicyDetails] No existing cover found');
       actions.setExistingCoverData({ hasExistingCover: false });
       actions.setShowVerificationScreen(false);
       actions.setMinCoverStartDate(null);
@@ -157,42 +156,48 @@ export default function PolicyDetailsStep() {
 
   // Perform DMVIC check with caching (Phase 1.1)
   const performDMVICCheck = useCallback(async (regNumber, coverDate) => {
+    // Short-circuit if we already have a positive detection for this reg in state
+    const currentReg = (state.vehicleDetails?.registrationNumber || state.vehicleDetails?.registration_number || '').toUpperCase().trim();
+    if (currentReg && currentReg === (regNumber || '').toUpperCase().trim()) {
+      if (state.existingCoverData?.hasExistingCover && state.minCoverStartDate) {
+        return;
+      }
+      if (state.showVerificationScreen) {
+        return;
+      }
+    }
     if (!regNumber || regNumber.length < 6) {
-      console.log('[DMVIC PolicyDetails] Registration too short, skipping check:', regNumber);
       return; // Skip check if registration is too short
     }
 
     try {
-      console.log('[DMVIC PolicyDetails] Starting check for:', regNumber, 'Cover date:', coverDate);
       setDMVICLoading(true);
       setDMVICError(null);
 
       // Check cache first
       const cachedResult = actions.getCachedDMVICResult?.(regNumber);
       if (cachedResult) {
-        console.log('[DMVIC PolicyDetails] Using cached result for:', regNumber);
+        console.log('[DMVIC] Using cached result for:', regNumber);
         processDMVICResult(cachedResult);
         setDMVICLoading(false);
         return;
       }
 
       // Make API call
-      console.log('[DMVIC PolicyDetails] Fetching fresh data for:', regNumber);
+      console.log('[DMVIC] Checking vehicle:', regNumber);
       
       const payload = {
         registration_number: regNumber.trim().toUpperCase(),
         proposed_cover_start_date: coverDate || new Date().toISOString().split('T')[0],
       };
       
-      console.log('[DMVIC PolicyDetails] Request payload:', JSON.stringify(payload, null, 2));
-      
       const response = await djangoAPI.makeRequest('/api/insurance/dmvic/search-vehicle/', {
         method: 'POST',
         body: JSON.stringify(payload),
-        _suppressErrorLog: true, // Suppress console.error for this specific call
+        _suppressErrorLog: true,
       });
 
-      console.log('[DMVIC PolicyDetails] API Response:', JSON.stringify(response, null, 2));
+      console.log('[DMVIC] ✅ Response received for:', regNumber);
 
       // Cache the result
       if (actions.cacheDMVICResult) {
@@ -202,11 +207,9 @@ export default function PolicyDetailsStep() {
       // Process result
       processDMVICResult(response);
     } catch (error) {
-      // Downgrade to warning to avoid noisy red console overlay on HTTP 500/404
-      console.warn('[DMVIC PolicyDetails] Check failed (non-blocking):', error?.message || error);
+      console.warn('[DMVIC] Check failed (non-blocking):', error?.message || error);
       
-  // Friendly hint; do not block user if DMVIC backend is not configured
-  const errorMsg = 'DMVIC verification unavailable right now. You can proceed anyway.';
+      const errorMsg = 'DMVIC verification unavailable right now. You can proceed anyway.';
       setDMVICError(errorMsg);
       
       // Don't block user flow on error
@@ -215,55 +218,23 @@ export default function PolicyDetailsStep() {
     } finally {
       setDMVICLoading(false);
     }
-  }, [actions, processDMVICResult]);
+  }, [actions, processDMVICResult, state.vehicleDetails, state.existingCoverData, state.minCoverStartDate, state.showVerificationScreen]);
 
-  // Debounced handlers (Phase 1.1)
-  const debouncedDMVICCheck = useRef(
-    debounce((regNumber, coverDate) => {
-      performDMVICCheck(regNumber, coverDate);
-    }, 500)
-  ).current;
+  // Store performDMVICCheck in a ref to avoid dependency issues
+  // Keep stable reference for external access
+  const performDMVICCheckRef = useRef(performDMVICCheck);
+  performDMVICCheckRef.current = performDMVICCheck;
 
-  const handleRegistrationChange = useCallback((regNumber, identificationType) => {
-    const identType = identificationType || state.vehicleDetails.identificationType || 'Vehicle Registration';
-    console.log('[DMVIC PolicyDetails] Registration changed:', regNumber, 'Length:', regNumber?.length, 'Type:', identType);
-    
-    const regRaw = (regNumber || '').toString().trim().toUpperCase();
-
-    let isValidForCheck = false;
-    if (identType === 'Vehicle Registration') {
-      const kenyanPlatePattern = /^K[A-Z]{2}\s?\d{3}[A-Z]$/;
-      if (kenyanPlatePattern.test(regRaw)) {
-        isValidForCheck = true;
-      }
-    } else if (identType === 'Chassis Number') {
-      if (regRaw.length >= 8) {
-        isValidForCheck = true;
-      }
+  // Expose to parent container via callback ref
+  useEffect(() => {
+    if (onDMVICCheckRef) {
+      onDMVICCheckRef(performDMVICCheckRef);
     }
+  }, [onDMVICCheckRef]);
 
-    if (!isValidForCheck) {
-      console.log('[DMVIC PolicyDetails] Registration not valid for DMVIC check yet');
-      return;
-    }
-    
-    const coverDate = state.vehicleDetails.cover_start_date || state.vehicleDetails.coverStartDate || new Date().toISOString().split('T')[0];
-    console.log('[DMVIC PolicyDetails] Cover date for DMVIC check:', coverDate);
-    console.log('[DMVIC PolicyDetails] Triggering debounced DMVIC check...');
-    
-    debouncedDMVICCheck(regNumber, coverDate);
-  }, [state.vehicleDetails.identificationType, state.vehicleDetails.cover_start_date, state.vehicleDetails.coverStartDate, debouncedDMVICCheck]);
-
-  const handleCoverDateChange = useCallback((coverDate) => {
-    console.log('[DMVIC PolicyDetails] Cover date changed:', coverDate);
-    const regNumber = state.vehicleDetails.registration_number || state.vehicleDetails.registrationNumber || state.vehicleDetails.Registration_Number;
-    console.log('[DMVIC PolicyDetails] Registration number:', regNumber);
-    if (regNumber && regNumber.length >= 6) {
-      debouncedDMVICCheck(regNumber, coverDate);
-    }
-  }, [state.vehicleDetails.registration_number, state.vehicleDetails.registrationNumber, state.vehicleDetails.Registration_Number, debouncedDMVICCheck]);
-
-  // Handlers removed - now in MotorInsuranceContainer.js
+  // ✅ REMOVED: Mount check for DMVIC - now triggered by Next button in MotorInsuranceContainer
+  // ✅ REMOVED: Debounced registration/date change handlers - DMVIC only runs on Next button
+  // This prevents repeated logging and unnecessary processing while user types
 
   return (
     <KeyboardAvoidingView
@@ -278,8 +249,7 @@ export default function PolicyDetailsStep() {
             productType={state.productType}
             initialData={initialDataRef.current}
             onDataChange={handleDataChange}
-            onRegistrationChange={handleRegistrationChange}
-            onCoverDateChange={handleCoverDateChange}
+            onUnderwriterSelection={handleUnderwriterSelection}
             minCoverStartDate={state.minCoverStartDate}
             dmvicLoading={dmvicLoading}
             dmvicError={dmvicError}

@@ -1,0 +1,229 @@
+/**
+ * PSV (Public Service Vehicle) Subcategories - Static Data
+ * Version: 1.0.0
+ * Last Updated: 2025-11-10
+ * 
+ * DO NOT EDIT MANUALLY
+ * Generated from backend via: python manage.py export_motor2_static
+ * 
+ * Products: 12 subcategories
+ * - Uber, TukTuk, Matatu, Tour Van variants (PASSENGER pricing)
+ * - Third Party, Third Party Extendible, Comprehensive
+ */
+
+export const PSV_SUBCATEGORIES = [
+  {
+    id: '8a6b2335-aa56-4658-a15d-9c0db0062b2c',
+    subcategory_code: 'PSV_UBER_TP',
+    name: 'PSV Uber Third-Party',
+    description: '',
+    category_code: 'PSV',
+    pricing_model: 'PASSENGER',
+    product_type: 'THIRD_PARTY',
+    is_complex: false,
+    additional_fields: [],
+    pricing_requirements: {},
+    is_active: true,
+    show_in_public: true,
+    public_sort_order: 101,
+    public_label: 'PSV Uber Third-Party'
+  },
+  {
+    id: 'accb806c-d4ba-4aa0-9ff0-bb7505fd78d2',
+    subcategory_code: 'PSV_TUKTUK_TP',
+    name: 'PSV Tuk-Tuk Third-Party',
+    description: '',
+    category_code: 'PSV',
+    pricing_model: 'PASSENGER',
+    product_type: 'THIRD_PARTY',
+    is_complex: false,
+    additional_fields: [],
+    pricing_requirements: {},
+    is_active: true,
+    show_in_public: true,
+    public_sort_order: 102,
+    public_label: 'PSV Tuk-Tuk Third-Party'
+  },
+  {
+    id: '20ff31a0-8000-4c03-9cd9-2313da80fa72',
+    subcategory_code: 'PSV_MATATU_1M_TP',
+    name: '1 Month PSV Matatu Third-Party',
+    description: '',
+    category_code: 'PSV',
+    pricing_model: 'PASSENGER',
+    product_type: 'THIRD_PARTY',
+    is_complex: false,
+    additional_fields: ['passenger_count'],
+    pricing_requirements: {
+      requires_passenger_count: true
+    },
+    is_active: true,
+    show_in_public: true,
+    public_sort_order: 104,
+    public_label: '1 Month PSV Matatu Third-Party'
+  },
+  {
+    id: '30318080-02ef-4c91-902f-169cc49e5cd3',
+    subcategory_code: 'PSV_MATATU_2WKS_TP',
+    name: '2 Weeks PSV Matatu Third-Party',
+    description: '',
+    category_code: 'PSV',
+    pricing_model: 'PASSENGER',
+    product_type: 'THIRD_PARTY',
+    is_complex: false,
+    additional_fields: ['passenger_count'],
+    pricing_requirements: {
+      requires_passenger_count: true
+    },
+    is_active: true,
+    show_in_public: true,
+    public_sort_order: 105,
+    public_label: '2 Weeks PSV Matatu Third-Party'
+  },
+  {
+    id: '115f0d9a-3a1c-43eb-8cde-03441d4fda05',
+    subcategory_code: 'PSV_TOUR_VAN_TP',
+    name: 'PSV Tour Van Third-Party',
+    description: '',
+    category_code: 'PSV',
+    pricing_model: 'PASSENGER',
+    product_type: 'THIRD_PARTY',
+    is_complex: false,
+    additional_fields: ['passenger_count'],
+    pricing_requirements: {
+      requires_passenger_count: true
+    },
+    is_active: true,
+    show_in_public: true,
+    public_sort_order: 107,
+    public_label: 'PSV Tour Van Third-Party'
+  },
+  {
+    id: '89b3450a-72d7-4e4d-a777-a195b27f20d1',
+    subcategory_code: 'PSV_PLAIN_TPO',
+    name: 'PSV Plain TPO',
+    description: '',
+    category_code: 'PSV',
+    pricing_model: 'PASSENGER',
+    product_type: 'THIRD_PARTY',
+    is_complex: false,
+    additional_fields: ['passenger_count'],
+    pricing_requirements: {
+      requires_passenger_count: true
+    },
+    is_active: true,
+    show_in_public: true,
+    public_sort_order: 109,
+    public_label: 'PSV Plain TPO'
+  },
+  {
+    id: '0ea55fb0-2580-4e81-b4cb-d4a0ce9e2d0e',
+    subcategory_code: 'PSV_TUKTUK_TP_EXT',
+    name: 'PSV Tuk-Tuk Third-Party Extendible',
+    description: '',
+    category_code: 'PSV',
+    pricing_model: 'PASSENGER',
+    product_type: 'THIRD_PARTY_EXT',
+    is_complex: false,
+    additional_fields: ['passenger_count'],
+    pricing_requirements: {
+      requires_passenger_count: true
+    },
+    is_active: true,
+    show_in_public: true,
+    public_sort_order: 203,
+    public_label: 'PSV Tuk-Tuk Third-Party Extendible'
+  },
+  {
+    id: '2ed6271a-1b24-4463-b7a9-29021ca597ab',
+    subcategory_code: 'PSV_UBER_TP_EXT',
+    name: 'PSV Uber Third-Party Extendible',
+    description: '',
+    category_code: 'PSV',
+    pricing_model: 'PASSENGER',
+    product_type: 'THIRD_PARTY_EXT',
+    is_complex: false,
+    additional_fields: ['passenger_count'],
+    pricing_requirements: {
+      requires_passenger_count: true
+    },
+    is_active: true,
+    show_in_public: true,
+    public_sort_order: 206,
+    public_label: 'PSV Uber Third-Party Extendible'
+  },
+  {
+    id: '8309f7db-23f7-4c96-a565-631a6f98cbf2',
+    subcategory_code: 'PSV_MATATU_1WK_TP_EXT',
+    name: '1 Week PSV Matatu Third-Party Extendible',
+    description: '',
+    category_code: 'PSV',
+    pricing_model: 'PASSENGER',
+    product_type: 'THIRD_PARTY_EXT',
+    is_complex: false,
+    additional_fields: ['passenger_count'],
+    pricing_requirements: {
+      requires_passenger_count: true
+    },
+    is_active: true,
+    show_in_public: true,
+    public_sort_order: 208,
+    public_label: '1 Week PSV Matatu Third-Party Extendible'
+  },
+  {
+    id: '80830f4d-a48a-4bb7-aabd-a5b418c14868',
+    subcategory_code: 'PSV_TOUR_VAN_TP_EXT',
+    name: 'PSV Tour Van Third-Party Extendible',
+    description: '',
+    category_code: 'PSV',
+    pricing_model: 'PASSENGER',
+    product_type: 'THIRD_PARTY_EXT',
+    is_complex: false,
+    additional_fields: ['passenger_count'],
+    pricing_requirements: {
+      requires_passenger_count: true
+    },
+    is_active: true,
+    show_in_public: true,
+    public_sort_order: 210,
+    public_label: 'PSV Tour Van Third-Party Extendible'
+  },
+  {
+    id: 'acf78ac4-9d88-4200-aae5-03131abce47b',
+    subcategory_code: 'PSV_UBER_COMP',
+    name: 'PSV Uber Comprehensive',
+    description: '',
+    category_code: 'PSV',
+    pricing_model: 'PASSENGER',
+    product_type: 'COMPREHENSIVE',
+    is_complex: false,
+    additional_fields: ['passenger_count'],
+    pricing_requirements: {
+      requires_passenger_count: true
+    },
+    is_active: true,
+    show_in_public: true,
+    public_sort_order: 511,
+    public_label: 'PSV UBER COMPREHENSIVE'
+  },
+  {
+    id: '9d10c0e7-f9c9-4589-b9f5-17534b08881c',
+    subcategory_code: 'PSV_TOUR_VAN_COMP',
+    name: 'PSV Tour Van Comprehensive',
+    description: '',
+    category_code: 'PSV',
+    pricing_model: 'PASSENGER',
+    product_type: 'COMPREHENSIVE',
+    is_complex: false,
+    additional_fields: ['passenger_count'],
+    pricing_requirements: {
+      requires_passenger_count: true
+    },
+    is_active: true,
+    show_in_public: true,
+    public_sort_order: 512,
+    public_label: 'PSV Tour Van Comprehensive'
+  }
+];
+
+export default PSV_SUBCATEGORIES;

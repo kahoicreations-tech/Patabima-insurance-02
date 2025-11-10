@@ -1,4 +1,4 @@
-import React, { useMemo, useEffect } from 'react';
+import React, { useMemo, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -11,13 +11,23 @@ import { useMotorInsurance } from '@contexts/MotorInsuranceContext';
 
 export default function KYCStep() {
   const { state, actions } = useMotorInsurance();
+  
+  console.log('[KYCStep] 🔥 COMPONENT RENDER');
+  console.log('[KYCStep] 🔥 state.existingCoverData:', JSON.stringify(state.existingCoverData, null, 2));
+  console.log('[KYCStep] 🔥 state.minCoverStartDate:', state.minCoverStartDate);
+  console.log('[KYCStep] 🔥 state.showVerificationScreen:', state.showVerificationScreen);
 
-  // ✅ NEW: Auto-show verification modal if there's an existing cover collision
+  // ✅ NEW: Auto-show verification modal ONLY if there's a date collision
+  const hasShownModal = useRef(false);
+  
   useEffect(() => {
+    // Only run once
+    if (hasShownModal.current) return;
+    
     const selectedCoverDateStr = state.vehicleDetails?.cover_start_date || state.vehicleDetails?.coverStartDate;
     const minCoverStartDateStr = state.minCoverStartDate;
     
-    // Check if there's a date collision
+    // Check if there's a date collision (selected date is BEFORE minimum allowed)
     const isCollision = Boolean(
       minCoverStartDateStr && selectedCoverDateStr && new Date(selectedCoverDateStr) < new Date(minCoverStartDateStr)
     );
@@ -28,10 +38,15 @@ export default function KYCStep() {
     console.log('[KYCStep] Mount check - Collision:', isCollision, 'HasExistingCover:', hasExistingCover);
     console.log('[KYCStep] Selected date:', selectedCoverDateStr, 'Min date:', minCoverStartDateStr);
     
-    // Auto-show modal if collision detected and not already showing
-    if ((isCollision || hasExistingCover) && !state.showVerificationScreen) {
-      console.log('[KYCStep] ✅ Auto-opening verification modal for existing cover');
+    // ✅ CRITICAL FIX: Only show modal if there's a COLLISION
+    // If user already selected a valid date (after minimum), don't block them
+    if (isCollision && !state.showVerificationScreen) {
+      console.log('[KYCStep] ⚠️ Date collision detected - opening verification modal');
+      hasShownModal.current = true; // Mark as shown to prevent infinite loop
       actions.setShowVerificationScreen(true);
+    } else if (hasExistingCover && !isCollision) {
+      console.log('[KYCStep] ✅ Existing cover found but date is valid - user can proceed');
+      // Don't show modal - user's selected date is already compliant
     }
   }, [state.minCoverStartDate, state.vehicleDetails?.cover_start_date, state.vehicleDetails?.coverStartDate, state.existingCoverData?.hasExistingCover, state.showVerificationScreen, actions]);
 

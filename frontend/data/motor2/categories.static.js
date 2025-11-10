@@ -1,0 +1,140 @@
+/**
+ * Motor Insurance Categories - Static Data
+ * Version: 1.0.0
+ * Last Updated: 2025-11-10
+ * 
+ * DO NOT EDIT MANUALLY
+ * Generated from backend via: python manage.py export_motor2_static
+ * 
+ * To update:
+ * 1. Run export command in backend: cd insurance-app && python manage.py export_motor2_static
+ * 2. Copy JSON from static_exports/motor2/categories.json
+ * 3. Paste into MOTOR_CATEGORIES array below
+ * 4. Update version in metadata.js
+ * 5. Increment MOTOR2_STATIC_VERSION in backend settings.py
+ */
+
+export const MOTOR_CATEGORIES = [
+  {
+    id: '02a099fd-e88b-4b61-8f64-0e3eb7ee173f',
+    code: 'PRIVATE',
+    name: 'Private',
+    description: 'Personal vehicles for private use',
+    icon: '🚗',
+    pricing_type: 'dynamic',
+    field_requirements: {
+      requires_tonnage: false,
+      requires_engine_capacity: false,
+      requires_passenger_count: false,
+      requires_passenger_type: false,
+      requires_carrying_capacity: false,
+      supports_time_period_variants: false
+    },
+    min_vehicle_age: 0,
+    max_vehicle_age: 25,
+    is_active: true,
+    sort_order: 1
+  },
+  {
+    id: 'fe27c128-972d-4a08-8893-1ad922d882bd',
+    code: 'COMMERCIAL',
+    name: 'Commercial',
+    description: 'Goods carriers and commercial vehicles',
+    icon: '🚚',
+    pricing_type: 'dynamic',
+    field_requirements: {
+      requires_tonnage: true,
+      requires_engine_capacity: false,
+      requires_passenger_count: false,
+      requires_passenger_type: false,
+      requires_carrying_capacity: false,
+      supports_time_period_variants: false
+    },
+    min_vehicle_age: 0,
+    max_vehicle_age: 20,
+    is_active: true,
+    sort_order: 2
+  },
+  {
+    id: 'd4ee8d63-363f-40e1-a5fc-41748a26ef42',
+    code: 'PSV',
+    name: 'PSV',
+    description: 'Public service vehicles (matatu, buses)',
+    icon: '🚌',
+    pricing_type: 'dynamic',
+    field_requirements: {
+      requires_tonnage: false,
+      requires_engine_capacity: false,
+      requires_passenger_count: true,
+      requires_passenger_type: false,
+      requires_carrying_capacity: false,
+      supports_time_period_variants: true
+    },
+    min_vehicle_age: 0,
+    max_vehicle_age: 20,
+    is_active: true,
+    sort_order: 3
+  },
+  {
+    id: '83a003d5-9c80-422b-9350-583f92bb9d55',
+    code: 'MOTORCYCLE',
+    name: 'Motorcycle',
+    description: 'Motorcycles including boda boda',
+    icon: '🏍️',
+    pricing_type: 'dynamic',
+    field_requirements: {
+      requires_tonnage: false,
+      requires_engine_capacity: true,
+      requires_passenger_count: false,
+      requires_passenger_type: false,
+      requires_carrying_capacity: false,
+      supports_time_period_variants: true
+    },
+    min_vehicle_age: 0,
+    max_vehicle_age: 15,
+    is_active: true,
+    sort_order: 4
+  },
+  {
+    id: '4f87a0cc-d791-4e20-9b96-39855211270e',
+    code: 'TUKTUK',
+    name: 'TukTuk',
+    description: 'Three-wheeler vehicles',
+    icon: '🛺',
+    pricing_type: 'dynamic',
+    field_requirements: {
+      requires_tonnage: false,
+      requires_engine_capacity: false,
+      requires_passenger_count: true,
+      requires_passenger_type: false,
+      requires_carrying_capacity: false,
+      supports_time_period_variants: false
+    },
+    min_vehicle_age: 0,
+    max_vehicle_age: 15,
+    is_active: true,
+    sort_order: 5
+  },
+  {
+    id: '63206394-bcc9-4ca4-9a2f-faf4cbadddb0',
+    code: 'SPECIAL',
+    name: 'Special Classes',
+    description: 'Agricultural, institutional, and special vehicles',
+    icon: '🚜',
+    pricing_type: 'dynamic',
+    field_requirements: {
+      requires_tonnage: true,
+      requires_engine_capacity: false,
+      requires_passenger_count: true,
+      requires_passenger_type: true,
+      requires_carrying_capacity: false,
+      supports_time_period_variants: false
+    },
+    min_vehicle_age: 0,
+    max_vehicle_age: 25,
+    is_active: true,
+    sort_order: 6
+  }
+];
+
+export default MOTOR_CATEGORIES;

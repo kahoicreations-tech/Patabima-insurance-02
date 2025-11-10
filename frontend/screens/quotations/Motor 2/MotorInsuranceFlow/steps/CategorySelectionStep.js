@@ -3,7 +3,7 @@ import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator, 
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useMotorInsurance } from '@contexts/MotorInsuranceContext';
-import motorPricingService from '@services/MotorInsurancePricingService';
+import Motor2StaticDataService from '@services/Motor2StaticDataService';
 import djangoAPI from '@services/DjangoAPIService';
 import { Colors } from '@constants/Colors';
 import { Typography } from '@constants/Typography';
@@ -13,7 +13,6 @@ import { stripBracketNotes as stripNotes, normalizeName as normName } from '@uti
 export default function CategorySelectionStep({ stepName = 'Category', onNext }) {
   const { state, actions } = useMotorInsurance();
   const [categories, setCategories] = useState([]);
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   // Modal state for cross-platform registration entry
   const [showCheckModal, setShowCheckModal] = useState(false);
@@ -63,93 +62,36 @@ export default function CategorySelectionStep({ stepName = 'Category', onNext })
   }, [getCategoryIcon, getDefaultDescription]);
 
   const loadCategories = useCallback(async () => {
-    setLoading(true);
-    setError('');
     try {
-      // Try cache first
-      const cached = await AsyncStorage.getItem('motor_categories');
-      if (cached) {
-        const parsed = JSON.parse(cached);
-        const age = Date.now() - (parsed.timestamp || 0);
-        const maxAge = 24 * 60 * 60 * 1000; // 24h
-        if (age < maxAge && Array.isArray(parsed.data)) {
-          setCategories(parsed.data);
-          setLoading(false);
-          // Background refresh
-          motorPricingService.getCategories().then(async (backend) => {
-            if (Array.isArray(backend) && backend.length) {
-              const formatted = formatCategories(backend);
-              setCategories(formatted);
-              await AsyncStorage.setItem('motor_categories', JSON.stringify({ data: formatted, timestamp: Date.now() }));
-            }
-          }).catch(() => {});
-          return;
-        }
-      }
-      // Fresh fetch
-      const backendCategories = await motorPricingService.getCategories();
+      // Use Motor2StaticDataService for instant 0ms load with background sync
+      const startTime = performance.now();
+      const backendCategories = await Motor2StaticDataService.getCategories();
+      const endTime = performance.now();
+      const loadTime = endTime - startTime;
+      
+      console.log(`🚀 [CategorySelectionStep] Categories loaded in ${loadTime.toFixed(2)}ms`);
+      console.log(`📦 [CategorySelectionStep] Loaded ${backendCategories?.length || 0} categories`);
+      
       if (Array.isArray(backendCategories) && backendCategories.length) {
         const formatted = formatCategories(backendCategories);
         setCategories(formatted);
-        await AsyncStorage.setItem('motor_categories', JSON.stringify({ data: formatted, timestamp: Date.now() }));
       } else {
         setCategories([]);
-        setError('No categories available from backend');
+        setError('No categories available');
       }
     } catch (e) {
       console.error('[CategorySelectionStep] Failed to load categories:', e);
       setCategories([]);
       setError(e?.message || 'Failed to load categories');
-      Alert.alert('Connection Error', 'Unable to load insurance categories from server. Please try again.');
-    } finally {
-      setLoading(false);
+      Alert.alert('Connection Error', 'Unable to load insurance categories. Please check your connection.');
     }
   }, [formatCategories]);
 
   const loadSubcategoriesForCategory = useCallback(async (categoryCode) => {
-    const cacheKey = `motor_subcategories_v2_${categoryCode}`; // v2 to invalidate old cache format
     try {
-      // Try cache first
-      const cached = await AsyncStorage.getItem(cacheKey);
-      if (cached) {
-        const parsed = JSON.parse(cached);
-        const age = Date.now() - (parsed.timestamp || 0);
-        const maxAge = 24 * 60 * 60 * 1000; // 24h
-        if (age < maxAge && Array.isArray(parsed.data)) {
-          actions.setSubcategories(parsed.data);
-          // Background refresh
-          djangoAPI.getSubcategories(categoryCode).then(async (list) => {
-            const transformed = (Array.isArray(list) ? list : []).map((sub) => {
-              const type = String(sub.cover_type || sub.product_type || sub.pricing_model || '').toUpperCase();
-              const rawReq = sub.pricing_requirements || sub.required_fields || [];
-              const requirements = Array.isArray(rawReq) ? rawReq : Object.values(rawReq || {});
-              return {
-                id: sub.id,
-                code: sub.subcategory_code || sub.code,
-                subcategory_code: sub.subcategory_code || sub.code,
-                name: sub.subcategory_name || sub.name,
-                type,
-                coverage_type: type, // Map type to coverage_type for DynamicVehicleForm compatibility
-                category: selectedCategory?.code || categoryCode, // Add category for DynamicVehicleForm
-                pricing_model: sub.pricing_model,
-                description: sub.description,
-                requirements,
-                is_extendible: Boolean(sub.is_extendible),
-                extendible_variant_id: sub.extendible_variant_id || sub.extendible_variant || null,
-                additionalFields: sub.additional_fields || sub.additionalFields || [],
-                fieldValidations: sub.field_validations || sub.fieldValidations || {},
-                complex: (sub.pricing_model && sub.pricing_model !== 'FIXED') || requirements.length > 0,
-                raw: sub,
-              };
-            });
-            actions.setSubcategories(transformed);
-            await AsyncStorage.setItem(cacheKey, JSON.stringify({ data: transformed, timestamp: Date.now() }));
-          }).catch(() => {});
-          return;
-        }
-      }
-      // Fresh fetch
-      const list = await djangoAPI.getSubcategories(categoryCode);
+      // Use Motor2StaticDataService for instant load with background sync
+      const list = await Motor2StaticDataService.getSubcategoriesByCategory(categoryCode);
+      
       const transformed = (Array.isArray(list) ? list : []).map((sub) => {
         const type = String(sub.cover_type || sub.product_type || sub.pricing_model || '').toUpperCase();
         const rawReq = sub.pricing_requirements || sub.required_fields || [];
@@ -174,13 +116,12 @@ export default function CategorySelectionStep({ stepName = 'Category', onNext })
         };
       });
       actions.setSubcategories(transformed);
-      await AsyncStorage.setItem(cacheKey, JSON.stringify({ data: transformed, timestamp: Date.now() }));
     } catch (e) {
       console.error('[CategorySelectionStep] Error loading subcategories:', e);
       actions.setSubcategories([]);
       Alert.alert('Error', e?.message || 'Failed to load coverage types');
     }
-  }, [actions]);
+  }, [actions, selectedCategory]);
 
   // Load categories on mount
   useEffect(() => {
@@ -305,24 +246,18 @@ export default function CategorySelectionStep({ stepName = 'Category', onNext })
 
   // Render based on which step we're on
   if (stepName === 'Category') {
-    // Step 1: Show only category grid
+    // Step 1: Show only category grid (instant load via Motor2StaticDataService)
     return (
       <View style={styles.container}>
         <Text style={styles.stepTitle}>Select Vehicle Category</Text>
-        {loading && (
-          <View style={[styles.loadingContainer, { paddingVertical: 24 }]}>
-            <ActivityIndicator size="small" color={Colors.primary} />
-            <Text style={styles.loadingText}>Loading categories from backend...</Text>
-          </View>
-        )}
-        {error && !loading && (
+        {error && (
           <View style={styles.errorContainer}>
             <Text style={styles.errorIcon}>⚠️</Text>
             <Text style={styles.errorTitle}>No Categories Available</Text>
-            <Text style={styles.errorText}>{error || 'Failed to load from backend'}</Text>
+            <Text style={styles.errorText}>{error || 'Failed to load categories'}</Text>
           </View>
         )}
-        {!loading && !error && (
+        {!error && (
           <>
             <FlatList
               data={categories}

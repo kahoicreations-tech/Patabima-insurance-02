@@ -7,7 +7,7 @@ import { dirname, resolve } from 'node:path';
 
 async function main() {
   const outPath = resolve(process.argv[2] || 'out/screen.png');
-  const serverEntrypoint = resolve(dirname(fileURLToPath(import.meta.url)), '../dist/index.js');
+  const serverEntrypoint = resolve(dirname(fileURLToPath(import.meta.url)), '../full-server.mjs');
   const transport = new StdioClientTransport({ command: 'node', args: [serverEntrypoint] });
 
   const client = new Client({ name: 'adb-mcp-cli', version: '1.0.0' });

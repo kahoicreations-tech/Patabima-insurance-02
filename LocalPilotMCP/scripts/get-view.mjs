@@ -6,7 +6,7 @@ import { fileURLToPath } from 'url';
 
 async function main() {
   const out = resolve('out');
-  const serverEntrypoint = resolve(dirname(fileURLToPath(import.meta.url)), '../dist/index.js');
+  const serverEntrypoint = resolve(dirname(fileURLToPath(import.meta.url)), '../full-server.mjs');
   mkdirSync(out, { recursive: true });
   const transport = new StdioClientTransport({ command: 'node', args: [serverEntrypoint] });
   const client = new Client({ name: 'adb-mcp-view-now', version: '1.0.0' });

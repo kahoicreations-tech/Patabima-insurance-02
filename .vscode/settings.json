@@ -10,7 +10,7 @@
         "adb-android": {
             "command": "node",
             "args": [
-                "c:\\Users\\USER\\Desktop\\PATABIMA01\\LocalPilotMCP\\dist\\index.js"
+                "c:\\Users\\USER\\Desktop\\PATABIMA01\\LocalPilotMCP\\full-server.mjs"
             ],
             "env": {
                 "NODE_ENV": "production"

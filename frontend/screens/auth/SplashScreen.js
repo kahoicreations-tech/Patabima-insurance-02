@@ -16,9 +16,12 @@ export default function SplashScreen() {
       useNativeDriver: true,
     }).start();
 
+    // Shorter delay in dev for faster testing, normal delay in production
+    const SPLASH_DURATION = __DEV__ ? 800 : 2000;
+    
     const timer = setTimeout(() => {
       navigation.replace('Welcome');
-    }, 3000);
+    }, SPLASH_DURATION);
 
     return () => clearTimeout(timer);
   }, [navigation]);

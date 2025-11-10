@@ -334,7 +334,7 @@ async function runIntelligentSimulation() {
   console.log('Test User:', testUser);
   console.log('');
 
-  const serverEntrypoint = resolve(__dirname, '../dist/index.js');
+  const serverEntrypoint = resolve(__dirname, '../full-server.mjs');
   const transport = new StdioClientTransport({ 
     command: 'node', 
     args: [serverEntrypoint] 

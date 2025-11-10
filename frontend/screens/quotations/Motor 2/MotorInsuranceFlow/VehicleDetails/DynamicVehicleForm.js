@@ -6,6 +6,18 @@ import motorPricingService from '../../../../../services/MotorInsurancePricingSe
 import { VEHICLE_MAKES, getModelsForMake } from '../../../../../constants/vehicleCatalog';
 import djangoAPI from '../../../../../services/DjangoAPIService';
 
+// Module-level cache to preserve underwriter comparisons across remounts
+// This eliminates re-fetches and prevents keyboard blinks when the form rerenders
+// Keyed by subcategory_code (or category:coverType fallback)
+// NOTE: This cache is INTENTIONALLY cleared on each new policy flow to ensure fresh data
+const UnderwriterLocalCache = new Map();
+
+// Export cache clear function for use by MotorInsuranceContainer
+export const clearUnderwriterCache = () => {
+  console.log('[DynamicVehicleForm] 🗑️ Clearing underwriter cache');
+  UnderwriterLocalCache.clear();
+};
+
 // Memoized TextInput component to prevent re-creation and focus loss
 const MemoizedTextInput = memo(({ 
   fieldKey, 
@@ -100,28 +112,13 @@ const DynamicPolicyForm = ({
     // underwriterSelectedRef.current = Boolean(formData?.underwriter);
   }, [formData]);
 
-  useEffect(() => {
-    hasComparisonsRef.current = underwriterComparisons.length > 0;
-    
-    // ✅ DISABLED: Auto-scroll interferes with typing in Third Party products
-    // For Third Party, underwriters load instantly on mount and are already visible
-    // Auto-scrolling while user is typing the plate causes focus loss
-    // Keep this disabled - users can scroll manually if needed
-    
-    // Auto-scroll to underwriter section when comparisons are loaded
-    // if (underwriterComparisons.length > 0 && underwriterSectionRef.current && scrollViewRef.current) {
-    //   // Small delay to ensure rendering is complete
-    //   setTimeout(() => {
-    //     underwriterSectionRef.current?.measureLayout(
-    //       scrollViewRef.current,
-    //       (x, y) => {
-    //         scrollViewRef.current?.scrollTo({ y: y - 20, animated: true });
-    //       },
-    //       () => {} // Error callback
-    //     );
-    //   }, 300);
-    // }
-  }, [underwriterComparisons.length]);
+  // ✅ REMOVED: Redundant sync effect - hasComparisonsRef is now set immediately in triggerUnderwriterComparison
+  // This effect ran AFTER render, causing a timing issue where radio button clicks would trigger
+  // comparison before the ref was updated. Now we set the ref synchronously when comparisons arrive.
+  
+  // ✅ DISABLED: Auto-scroll to underwriters - interferes with typing in Third Party products
+  // For Third Party, underwriters load instantly on mount and are already visible
+  // Auto-scrolling while user is typing the plate causes focus loss
 
   // Cleanup debounce timers on unmount
   useEffect(() => {
@@ -342,8 +339,6 @@ const DynamicPolicyForm = ({
   // CRITICAL: Do NOT include formData.underwriter in the key or dependencies
   // so that selecting an underwriter does not schedule a new comparison
   const comparisonKey = useMemo(() => {
-    console.log('🔑 [MEMO] comparisonKey recalculating. latestFormRef.registrationNumber:', latestFormRef.current?.registrationNumber);
-    
     if (!selectedProduct) return null;
     // Do not trigger comparisons from the Vehicle Details step for Comprehensive
     if (selectedProduct.coverage_type?.toLowerCase().includes('comprehensive')) return null;
@@ -352,12 +347,14 @@ const DynamicPolicyForm = ({
     const category = selectedProduct?.category?.toUpperCase();
     const coverType = selectedProduct?.coverage_type?.toUpperCase();
     
-    // ✅ For Third Party/TOR: ONLY product info (no form fields) to prevent keystroke triggers
+    // ✅ CRITICAL FIX: For Third Party/TOR: ONLY product info (no form fields) to prevent keystroke triggers
+    // Check BOTH coverage_type AND pricing_model to catch all fixed-price products
     const isThirdPartyLike = (
       coverType?.includes('THIRD_PARTY') ||
       coverType?.includes('THIRD-PARTY') ||
       coverType === 'TOR' ||
       coverType === 'FIXED' ||
+      selectedProduct?.pricing_model === 'FIXED' || // ✅ NEW: Check pricing_model
       subcategory_code?.toLowerCase().includes('tor') ||
       subcategory_code?.toLowerCase().includes('third_party') ||
       subcategory_code?.toLowerCase().includes('third-party')
@@ -365,22 +362,23 @@ const DynamicPolicyForm = ({
     
     if (isThirdPartyLike) {
       // Fixed pricing - only product matters, not user input
-      const key = JSON.stringify({
+      // This key will be IDENTICAL across all keystrokes, preventing re-renders
+      return JSON.stringify({
         subcategory: subcategory_code,
         category: category,
-        coverType: coverType
+        type: 'FIXED' // ✅ Mark as fixed pricing
       });
-      console.log('🔑 [MEMO] Third Party product - key excludes form fields:', key);
-      return key;
     }
     
+    // Variable pricing products (Comprehensive, Commercial, etc.)
     // Create signature with only the fields that affect pricing
     // Exclude underwriter selection to prevent re-scheduling comparison on every click
     // Use latestFormRef.current to read current form data WITHOUT adding to dependencies
-    const key = JSON.stringify({
+    return JSON.stringify({
       subcategory: subcategory_code,
       category: category,
       coverType: coverType,
+      type: 'VARIABLE', // ✅ Mark as variable pricing
       registration: latestFormRef.current?.registrationNumber,
       sumInsured: latestFormRef.current?.sum_insured,
       tonnage: latestFormRef.current?.tonnage,
@@ -388,15 +386,14 @@ const DynamicPolicyForm = ({
       engineCapacity: latestFormRef.current?.engineCapacity,
       coverDate: latestFormRef.current?.cover_start_date
     });
-    console.log('🔑 [MEMO] Variable pricing product - key includes form fields:', key);
-    return key;
   }, [
     // ✅ STABLE PRIMITIVE VALUES ONLY - strings are compared by value in React
     // Extract primitive values to ensure stable comparisons
     selectedProduct?.subcategory_code,
     selectedProduct?.code,
     selectedProduct?.category,
-    selectedProduct?.coverage_type
+    selectedProduct?.coverage_type,
+    selectedProduct?.pricing_model // ✅ NEW: Add pricing_model to dependencies
     // ⚠️ CRITICAL: We do NOT include selectedProduct object itself or ANY form fields
     // Only extract the specific string properties we need for comparison
   ]);
@@ -466,20 +463,31 @@ const DynamicPolicyForm = ({
         );
       }
 
-      console.log('Underwriter comparisons received:', comparisons);
+  console.log('Underwriter comparisons received:', comparisons);
       
       // Check if we got empty comparisons - this means no pricing configured for this product
       if (!comparisons || comparisons.length === 0) {
         const productName = selectedProduct?.subcategory_name || selectedProduct?.name || 'this product';
         setComparisonError(`No underwriter pricing available for ${productName}. This product may not be configured yet. Please contact support or select a different product.`);
         setUnderwriterComparisons([]);
+        // ✅ Reset ref when comparisons are empty
+        hasComparisonsRef.current = false;
         // Reset the signature on error so it can be retried
         setLastComparisonData(null);
         lastComparisonKeyRef.current = null;
         comparisonTriggerRef.current = null;
       } else {
-        setUnderwriterComparisons(comparisons);
+  setUnderwriterComparisons(comparisons);
         setComparisonError(null); // Clear any previous errors
+        
+        // ✅ CRITICAL FIX: Set ref immediately to prevent re-fetches on radio button clicks
+        // This must happen synchronously before the next render to block the Third Party guard
+        hasComparisonsRef.current = true;
+        console.log('[COMPARISONS LOADED] hasComparisonsRef.current set to TRUE, count:', comparisons.length);
+
+  // Persist in module-level cache to survive remounts
+  const cacheKey = (selectedProduct?.subcategory_code || `${(selectedProduct?.category||'').toUpperCase()}:${(selectedProduct?.coverage_type||'').toUpperCase()}`);
+  try { UnderwriterLocalCache.set(cacheKey, comparisons); } catch {}
         
         // Notify parent if callback provided
         if (onUnderwriterComparison) {
@@ -491,6 +499,8 @@ const DynamicPolicyForm = ({
       console.error('Failed to compare underwriters:', error);
       setComparisonError(error.message);
       setUnderwriterComparisons([]);
+      // ✅ Reset ref on error
+      hasComparisonsRef.current = false;
       // Reset the signature on error so it can be retried
       setLastComparisonData(null);
       lastComparisonKeyRef.current = null;
@@ -502,17 +512,23 @@ const DynamicPolicyForm = ({
 
   // Auto-trigger underwriter comparison with debouncing when comparisonKey changes
   useEffect(() => {
-    console.log('🔍 [EFFECT] Auto-trigger effect running. comparisonKey:', comparisonKey);
+    // ✅ TEMPORARY DEBUG: Log comparison key changes to verify guard working
+    if (comparisonKey) {
+      console.log('[COMPARISON KEY]', comparisonKey);
+    }
+    
+    // ✅ DEBUG: Log useEffect execution
+    console.log('[EFFECT RUN] comparisonKey changed, hasComparisons:', hasComparisonsRef.current);
     
     // Skip auto comparisons for Comprehensive on Vehicle Details screen
     if (selectedProduct?.coverage_type?.toLowerCase().includes('comprehensive')) {
-      console.log('⏭️ [EFFECT] Skipping - Comprehensive product');
+      console.log('[EFFECT SKIP] Comprehensive product');
       return;
     }
     
     // Skip if no comparison key (not ready yet)
     if (!comparisonKey) {
-      console.log('⏭️ [EFFECT] Skipping - No comparison key yet');
+      console.log('[EFFECT SKIP] No comparison key');
       lastComparisonKeyRef.current = null;
       return;
     }
@@ -532,9 +548,8 @@ const DynamicPolicyForm = ({
       subcategoryCodeCheck.includes('third_party') ||
       subcategoryCodeCheck.includes('third-party')
     );
-    console.log(`🛡️ [EFFECT GUARD] Third Party check: isThirdPartyLike=${isThirdPartyLikeGuard}, hasComparisons=${hasComparisonsRef.current}`);
     if (isThirdPartyLikeGuard && hasComparisonsRef.current) {
-      console.log('⏭️ [EFFECT] Skipping - Third Party-like product already loaded (single fetch policy)');
+      console.log('[EFFECT SKIP] Third Party guard - already have comparisons');
       // Stamp the current key so future renders also short-circuit earlier duplicate checks
       comparisonTriggerRef.current = comparisonKey;
       lastComparisonKeyRef.current = comparisonKey;
@@ -544,28 +559,30 @@ const DynamicPolicyForm = ({
     // Prevent duplicate calls - check if this key was already processed
     // This prevents re-triggering when formData changes but pricing inputs haven't
     if (comparisonTriggerRef.current === comparisonKey) {
-      console.log('⏭️ [EFFECT] Skipping - comparisonTriggerRef already has this key');
+      console.log('[EFFECT SKIP] comparisonTriggerRef already has this key');
       return;
     }
 
     if (lastComparisonKeyRef.current === comparisonKey) {
-      console.log('⏭️ [EFFECT] Skipping - lastComparisonKeyRef already has this key');
+      console.log('[EFFECT SKIP] lastComparisonKeyRef already has this key');
       return;
     }
 
     // Check if we can trigger comparison (call inline to avoid dependency issues)
     const canCompare = canCompareUnderwriters();
     if (!canCompare) {
-      console.log('⏭️ [EFFECT] Skipping - canCompareUnderwriters returned false');
+      console.log('[EFFECT SKIP] canCompare = false');
       return;
     }
 
     // If we already have comparisons and an underwriter is selected, don't re-fetch
     // Use refs to check current state without adding to dependencies
     if (hasComparisonsRef.current && underwriterSelectedRef.current) {
-      console.log('⏭️ [EFFECT] Skipping - Already have comparisons and underwriter selected');
+      console.log('[EFFECT SKIP] Already have comparisons AND underwriter selected');
       return;
     }
+
+    console.log('[EFFECT PROCEED] About to trigger comparison');
 
     // Clear any existing timeout
     if (comparisonTimeoutRef.current) {
@@ -592,11 +609,11 @@ const DynamicPolicyForm = ({
     );
 
     if (isThirdPartyLike) {
-      console.log('✅ [EFFECT] Third Party product - triggering immediately');
+      console.log('[EFFECT] Triggering Third Party comparison immediately (no debounce)');
       // Immediate trigger for Third Party
       triggerUnderwriterComparison();
     } else {
-      console.log('⏱️ [EFFECT] Variable pricing product - scheduling with 1s debounce');
+      console.log('[EFFECT] Scheduling variable pricing comparison with 1s debounce');
       // Shorter debounce (1 second) for other products
       comparisonTimeoutRef.current = setTimeout(() => {
         triggerUnderwriterComparison();
@@ -610,10 +627,10 @@ const DynamicPolicyForm = ({
       }
     };
   }, [
-    // Only re-run when the product signature changes
-    comparisonKey,
-    selectedProduct?.coverage_type,
-    selectedProduct?.subcategory_code
+    // ✅ CRITICAL FIX: ONLY comparisonKey as dependency
+    // comparisonKey already includes selectedProduct.coverage_type and subcategory_code
+    // Adding them again causes re-runs when selectedProduct object reference changes
+    comparisonKey
     // Note: Intentionally exclude function deps (triggerUnderwriterComparison, canCompareUnderwriters)
     // to avoid re-running on each render due to changing function identities.
   ]);
@@ -621,7 +638,17 @@ const DynamicPolicyForm = ({
 
 
   const handleInputChange = useCallback((key, value) => {
-    console.log(`⌨️ [INPUT] handleInputChange called. key: ${key}, value: ${value}`);
+    // ✅ CRITICAL GUARD: Prevent duplicate value updates (especially for radio buttons)
+    // If the value is already set to the same value, skip all processing
+    // This prevents re-render loops when clicking the same radio button repeatedly
+    const currentValue = latestFormRef.current[key];
+    if (currentValue === value) {
+      console.log(`[INPUT CHANGE SKIP] Field: ${key} already has value: ${value}`);
+      return; // Early exit - no changes needed
+    }
+    
+    // ✅ DEBUG: Log all input changes to trace radio button clicks
+    console.log(`[INPUT CHANGE] Field: ${key}, Value: ${value}`);
     
     // Format currency inputs
     if (getFormFields.find(f => f.key === key)?.type === 'currency') {
@@ -661,12 +688,10 @@ const DynamicPolicyForm = ({
         subcategoryCode.includes('third-party')
       );
 
-      // For Third Party / TOR we DO NOT reset underwriter refs on registration/date keystrokes.
-      // This prevents the underwriter list from blinking (re-fetch/cache hit) while typing.
-      if (isThirdPartyLike && key === 'registrationNumber') {
-        console.log(`🔄 [INPUT] Third Party-like product; ignoring registration change for comparison triggering.`);
-      } else {
-        console.log(`🔄 [INPUT] Pricing-critical field "${key}" changed - resetting underwriter selection`);
+      // For Third Party / TOR products, Policy Details fields are independent of pricing.
+      // Do NOT reset underwriter or comparisons when these fields change.
+      // This ensures a selected underwriter remains selected while editing the form.
+      if (!isThirdPartyLike) {
         if (newFormData.underwriter) {
           delete newFormData.underwriter;
         }
@@ -678,7 +703,9 @@ const DynamicPolicyForm = ({
         // Reset comparison tracking refs to allow fresh comparison
         comparisonTriggerRef.current = null;
         lastComparisonKeyRef.current = null;
-        console.log(`🔄 [INPUT] Reset refs: comparisonTriggerRef, lastComparisonKeyRef, underwriterSelectedRef`);
+        // ✅ CRITICAL: Also reset hasComparisons for non-Third-Party products
+        // For Third Party, we skip this entire block, so hasComparisons stays true
+        hasComparisonsRef.current = false;
       }
     }
 
@@ -1051,7 +1078,7 @@ const DynamicPolicyForm = ({
             {/* Show error if comparison failed and no previous comparisons to show */}
             {!isLoading && comparisonError && !hasComparisons && (
               <View style={styles.errorContainer}>
-                <Ionicons name="alert-circle" size={24} color="#DC2626" />
+                <Ionicons name="alert-circle" size={24} color="#160101ff" />
                 <Text style={styles.errorText}>{comparisonError}</Text>
                 <TouchableOpacity 
                   style={styles.retryButton} 
@@ -1092,7 +1119,9 @@ const DynamicPolicyForm = ({
                     key={comparison.id || index} 
                     style={[
                       styles.underwriterOption,
-                      formData[field.key] === comparison.name && styles.selectedUnderwriterOption
+                      // ✅ Use selectedUnderwriter.id instead of formData to prevent re-renders
+                      // This prevents blinking when non-underwriter fields (radio buttons) change
+                      selectedUnderwriter?.id === comparison.id && styles.selectedUnderwriterOption
                     ]}
                     onPress={() => {
                       // ✅ Batch all state updates in a single frame to prevent re-renders
@@ -1116,7 +1145,8 @@ const DynamicPolicyForm = ({
                         <View style={styles.underwriterInfo}>
                           <Text style={[
                             styles.underwriterOptionName,
-                            formData[field.key] === comparison.name && styles.selectedUnderwriterText
+                            // ✅ Use selectedUnderwriter.id instead of formData
+                            selectedUnderwriter?.id === comparison.id && styles.selectedUnderwriterText
                           ]}>
                             {comparison.name}
                           </Text>
@@ -1126,7 +1156,8 @@ const DynamicPolicyForm = ({
                         </View>
                         <Text style={[
                           styles.underwriterOptionPrice,
-                          formData[field.key] === comparison.name && styles.selectedUnderwriterText
+                          // ✅ Use selectedUnderwriter.id instead of formData
+                          selectedUnderwriter?.id === comparison.id && styles.selectedUnderwriterText
                         ]}>
                           KSh {comparison.total_premium?.toLocaleString() || 'N/A'}
                         </Text>
@@ -1210,7 +1241,8 @@ const DynamicPolicyForm = ({
                         })()}
                       </View>
                     </View>
-                    {formData[field.key] === comparison.name && (
+                    {/* ✅ Use selectedUnderwriter.id instead of formData to prevent re-renders */}
+                    {selectedUnderwriter?.id === comparison.id && (
                       <Text style={styles.underwriterSelectedIcon}>✓</Text>
                     )}
                   </TouchableOpacity>
@@ -1306,7 +1338,7 @@ const DynamicPolicyForm = ({
     }
   };
 
-  // Initialize once when product changes; avoid depending on object props to prevent loops
+  // Initialize once when product changes or on mount; restore cached comparisons early for fixed-price products
   useEffect(() => {
     const initialFormData = initialData || values || {};
     
@@ -1326,6 +1358,47 @@ const DynamicPolicyForm = ({
       setValidationErrors(errors);
     }
     
+    // ✅ Attempt to restore comparisons and selection from local cache for fixed-price products
+    const coverageTypeCheck = (selectedProduct?.coverage_type || '').toLowerCase();
+    const subcategoryCodeCheck = selectedProduct?.subcategory_code || '';
+    const isThirdPartyLikeRestore = (
+      coverageTypeCheck.includes('third_party') ||
+      coverageTypeCheck.includes('third-party') ||
+      coverageTypeCheck === 'tor' ||
+      coverageTypeCheck === 'fixed' ||
+      (subcategoryCodeCheck.toLowerCase?.() || '').includes('tor') ||
+      (subcategoryCodeCheck.toLowerCase?.() || '').includes('third_party') ||
+      (subcategoryCodeCheck.toLowerCase?.() || '').includes('third-party')
+    );
+
+    const cacheKey = (selectedProduct?.subcategory_code || `${(selectedProduct?.category||'').toUpperCase()}:${(selectedProduct?.coverage_type||'').toUpperCase()}`);
+    if (isThirdPartyLikeRestore && UnderwriterLocalCache.has(cacheKey)) {
+      const cached = UnderwriterLocalCache.get(cacheKey);
+      if (Array.isArray(cached) && cached.length > 0) {
+        setUnderwriterComparisons(cached);
+        hasComparisonsRef.current = true;
+        // Mark the current comparison key as processed to avoid effect-triggered refetch
+        const fixedKey = JSON.stringify({
+          subcategory: selectedProduct?.subcategory_code || selectedProduct?.code,
+          category: selectedProduct?.category?.toUpperCase(),
+          type: 'FIXED'
+        });
+        comparisonTriggerRef.current = fixedKey;
+        lastComparisonKeyRef.current = fixedKey;
+
+        // If we had an underwriter string in form data, try to reselect matching object
+        const uName = initialFormData?.underwriter;
+        if (uName && !selectedUnderwriter) {
+          const match = cached.find(u => u?.name === uName || u?.company === uName);
+          if (match) {
+            setSelectedUnderwriter(match);
+          }
+        }
+        // Early return: we restored comparisons; don't clear state below
+        return;
+      }
+    }
+
     // Clear comparisons when product/subcategory changes to prevent showing stale data
     setUnderwriterComparisons([]);
     setSelectedUnderwriter(null);
@@ -1333,6 +1406,8 @@ const DynamicPolicyForm = ({
     setLastComparisonData(null);
     lastComparisonKeyRef.current = null;
     comparisonTriggerRef.current = null;
+    hasComparisonsRef.current = false; // ✅ CRITICAL: Reset ref when product changes
+    underwriterSelectedRef.current = false; // ✅ CRITICAL: Reset selection ref too
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedProduct?.id, selectedProduct?.subcategory_code, selectedProduct?.code, productType]);
 
@@ -1362,7 +1437,7 @@ const DynamicPolicyForm = ({
       style={styles.container} 
       contentContainerStyle={{ paddingBottom: 24 }}
       showsVerticalScrollIndicator={false}
-      keyboardShouldPersistTaps="handled"
+      keyboardShouldPersistTaps="always" // Keep keyboard when tapping underwriter cards or controls
       keyboardDismissMode={Platform.OS === 'ios' ? 'on-drag' : 'interactive'}
     >
       <View style={styles.formContainer}>
