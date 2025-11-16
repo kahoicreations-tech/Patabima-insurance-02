@@ -1,0 +1,72 @@
+═══════════════════════════════════════════════════════════════
+PataBima EC2 Sync Commands - Generated 2025-11-16 16:04:17
+═══════════════════════════════════════════════════════════════
+
+METHOD 1: Git Sync (Recommended)
+────────────────────────────────────────────────────────────────
+
+# On Local Machine:
+git add .
+git commit -m "Updated admin panel and models"
+git push origin main
+
+# On EC2 (via AWS Console → EC2 Instance Connect):
+cd /var/www/patabima
+git pull origin main
+source venv/bin/activate
+export $(grep -v '^#' .env | xargs)
+python manage.py migrate
+python manage.py collectstatic --noinput
+sudo systemctl restart patabima
+sudo systemctl status patabima
+
+
+METHOD 2: Direct File Upload (if no Git)
+────────────────────────────────────────────────────────────────
+
+# Upload files via SCP (Git Bash/WSL):
+scp "C:\Users\USER\Desktop\PATABIMA01\insurance-app/app/admin.py" ec2-user@44.200.182.180:/var/www/patabima/app/
+scp "C:\Users\USER\Desktop\PATABIMA01\insurance-app/app/models.py" ec2-user@44.200.182.180:/var/www/patabima/app/
+scp "C:\Users\USER\Desktop\PATABIMA01\insurance-app/create_admin.py" ec2-user@44.200.182.180:/var/www/patabima/
+
+# Then SSH to EC2:
+ssh ec2-user@44.200.182.180
+cd /var/www/patabima
+source venv/bin/activate
+export $(grep -v '^#' .env | xargs)
+python manage.py migrate
+python manage.py collectstatic --noinput
+sudo systemctl restart patabima
+
+
+VERIFICATION
+────────────────────────────────────────────────────────────────
+
+# Check service status:
+sudo systemctl status patabima nginx
+
+# View recent logs:
+sudo journalctl -u patabima -n 100 --no-pager
+
+# Test API:
+curl -sS "http://localhost/api/v1/motor2/categories/" | python -m json.tool
+
+# Test admin:
+curl -I "http://localhost/admin/login/"
+
+
+TROUBLESHOOTING
+────────────────────────────────────────────────────────────────
+
+# If service fails to start:
+sudo journalctl -u patabima -n 200 --no-pager
+
+# Check for Python errors:
+cd /var/www/patabima
+source venv/bin/activate
+python manage.py check
+
+# Test manually:
+gunicorn --bind 0.0.0.0:8000 insurance.wsgi:application
+
+═══════════════════════════════════════════════════════════════

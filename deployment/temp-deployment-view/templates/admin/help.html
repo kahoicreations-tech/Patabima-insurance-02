@@ -1,0 +1,20 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+{% block content %}
+<h1>Admin Help</h1>
+<p>Welcome to PataBima Admin Help. Use the links below for quick guidance.</p>
+<ul>
+  <li><a href="/admin/dashboard/">Main Dashboard</a></li>
+  <li><a href="/admin/pricing-analytics/">Pricing Analytics</a></li>
+  <li><a href="/admin/quotation-analytics/">Quotation Analytics</a></li>
+  <li><a href="/admin/system-health/">System Health</a></li>
+  <li><a href="/admin/reports/bi/">Business Intelligence</a></li>
+  <li><a href="/admin/reports/pricing/">Pricing Comparison Report</a></li>
+</ul>
+<h2>Tips</h2>
+<ul>
+  <li>Use search fields in changelists to quickly find records.</li>
+  <li>Filters on the right help narrow down results.</li>
+  <li>Bulk actions appear above lists for mass updates.</li>
+</ul>
+{% endblock %}

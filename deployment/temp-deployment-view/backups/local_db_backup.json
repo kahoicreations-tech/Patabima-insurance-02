@@ -1,0 +1,3838 @@
+[
+{
+  "model": "app.insuranceprovider",
+  "pk": "14900c1c-4327-4366-a1e9-585699b1a495",
+  "fields": {
+    "date_created": "2025-09-23T14:54:11.598Z",
+    "date_updated": "2025-09-26T21:18:17.658Z",
+    "is_active": true,
+    "name": "Jubilee Insurance",
+    "code": "JUBILEE",
+    "contact_email": "info@jubileekenya.com",
+    "contact_phone": null,
+    "address": null,
+    "supported_categories": [
+      "PRIVATE",
+      "COMMERCIAL",
+      "PSV",
+      "TUKTUK"
+    ],
+    "supported_payment_methods": [
+      "mpesa"
+    ],
+    "features": {
+      "dmvic": true,
+      "pricing": {
+        "PRIVATE_TOR": {
+          "base_premium": 1320.0,
+          "pricing_type": "fixed"
+        },
+        "PSV_UBER_TP": {
+          "base_premium": 4675.0,
+          "pricing_type": "fixed"
+        },
+        "PSV_UBER_COMP": {
+          "rate": 0.03496,
+          "min_premium": 13800.0,
+          "pricing_type": "percentage"
+        },
+        "TUKTUK_PSV_TP": {
+          "base_premium": 3500.0,
+          "pricing_type": "fixed"
+        },
+        "COMMERCIAL_TOR": {
+          "base_premium": 1760.0,
+          "pricing_type": "fixed"
+        },
+        "PSV_MATATU_1M_TP": {
+          "base_premium": 3500.0,
+          "pricing_type": "fixed"
+        },
+        "PRIVATE_THIRD_PARTY": {
+          "base_premium": 2975.0,
+          "pricing_type": "fixed"
+        },
+        "TUKTUK_COMMERCIAL_TP": {
+          "base_premium": 3500.0,
+          "pricing_type": "fixed"
+        },
+        "PRIVATE_COMPREHENSIVE": {
+          "rate": 0.0276,
+          "min_premium": 13800.0,
+          "pricing_type": "percentage"
+        },
+        "PRIVATE_MOTORCYCLE_TP": {
+          "base_premium": 2380.0,
+          "pricing_type": "fixed"
+        },
+        "TUKTUK_COMMERCIAL_COMP": {
+          "rate": 0.03,
+          "min_premium": 13800.0,
+          "pricing_type": "percentage"
+        },
+        "COMMERCIAL_OWN_GOODS_TP": {
+          "base_premium": 3825.0,
+          "pricing_type": "fixed"
+        },
+        "PRIVATE_THIRD_PARTY_EXT": {
+          "base_premium": 4500.0,
+          "pricing_type": "fixed"
+        },
+        "COMMERCIAL_OWN_GOODS_COMP": {
+          "rate": 0.0322,
+          "min_premium": 13800.0,
+          "pricing_type": "percentage"
+        },
+        "COMMERCIAL_GENERAL_CARTAGE_TP": {
+          "base_premium": 4420.0,
+          "pricing_type": "fixed"
+        }
+      },
+      "market_position": "budget"
+    },
+    "display_mode": "GROSS"
+  }
+},
+{
+  "model": "app.insuranceprovider",
+  "pk": "155e4474-a112-4231-b2b4-29e7f0a675e4",
+  "fields": {
+    "date_created": "2025-09-23T19:14:48.891Z",
+    "date_updated": "2025-09-30T10:43:56.412Z",
+    "is_active": true,
+    "name": "MONARCH",
+    "code": "MNK",
+    "contact_email": null,
+    "contact_phone": null,
+    "address": null,
+    "supported_categories": [],
+    "supported_payment_methods": [],
+    "features": {},
+    "display_mode": "GROSS"
+  }
+},
+{
+  "model": "app.insuranceprovider",
+  "pk": "2ccc38e1-d8c1-42e1-acca-19bbc0dd3c28",
+  "fields": {
+    "date_created": "2025-09-26T21:17:45.166Z",
+    "date_updated": "2025-09-26T21:18:17.657Z",
+    "is_active": true,
+    "name": "Britam Insurance",
+    "code": "BRITAM",
+    "contact_email": "info@britam.com",
+    "contact_phone": null,
+    "address": null,
+    "supported_categories": [
+      "PRIVATE",
+      "COMMERCIAL",
+      "PSV",
+      "MOTORCYCLE"
+    ],
+    "supported_payment_methods": [],
+    "features": {
+      "pricing": {
+        "PRIVATE_TOR": {
+          "base_premium": 1725.0,
+          "pricing_type": "fixed"
+        },
+        "PSV_UBER_TP": {
+          "base_premium": 6160.0,
+          "pricing_type": "fixed"
+        },
+        "PSV_UBER_COMP": {
+          "rate": 0.04104,
+          "min_premium": 16200.000000000002,
+          "pricing_type": "percentage"
+        },
+        "COMMERCIAL_TOR": {
+          "base_premium": 2300.0,
+          "pricing_type": "fixed"
+        },
+        "PSV_MATATU_1M_TP": {
+          "base_premium": 3500.0,
+          "pricing_type": "fixed"
+        },
+        "MOTORCYCLE_PSV_TP": {
+          "base_premium": 3500.0,
+          "pricing_type": "fixed"
+        },
+        "PRIVATE_THIRD_PARTY": {
+          "base_premium": 3920.0,
+          "pricing_type": "fixed"
+        },
+        "MOTORCYCLE_PRIVATE_TP": {
+          "base_premium": 3500.0,
+          "pricing_type": "fixed"
+        },
+        "PRIVATE_COMPREHENSIVE": {
+          "rate": 0.0324,
+          "min_premium": 16200.000000000002,
+          "pricing_type": "percentage"
+        },
+        "PRIVATE_MOTORCYCLE_TP": {
+          "base_premium": 3136.0,
+          "pricing_type": "fixed"
+        },
+        "COMMERCIAL_OWN_GOODS_TP": {
+          "base_premium": 5040.0,
+          "pricing_type": "fixed"
+        },
+        "MOTORCYCLE_PRIVATE_COMP": {
+          "rate": 0.03,
+          "min_premium": 16200.000000000002,
+          "pricing_type": "percentage"
+        },
+        "PRIVATE_THIRD_PARTY_EXT": {
+          "base_premium": 4500.0,
+          "pricing_type": "fixed"
+        },
+        "COMMERCIAL_OWN_GOODS_COMP": {
+          "rate": 0.0378,
+          "min_premium": 16200.000000000002,
+          "pricing_type": "percentage"
+        },
+        "COMMERCIAL_GENERAL_CARTAGE_TP": {
+          "base_premium": 5824.0,
+          "pricing_type": "fixed"
+        }
+      },
+      "market_position": "premium"
+    },
+    "display_mode": "GROSS"
+  }
+},
+{
+  "model": "app.insuranceprovider",
+  "pk": "39667f07-51d1-483b-a430-3fc2b52b05b9",
+  "fields": {
+    "date_created": "2025-09-26T21:17:24.521Z",
+    "date_updated": "2025-09-26T21:18:17.653Z",
+    "is_active": true,
+    "name": "CIC Insurance Group",
+    "code": "CIC",
+    "contact_email": "info@cic.co.ke",
+    "contact_phone": null,
+    "address": null,
+    "supported_categories": [
+      "PRIVATE",
+      "COMMERCIAL",
+      "PSV",
+      "MOTORCYCLE",
+      "TUKTUK"
+    ],
+    "supported_payment_methods": [],
+    "features": {
+      "pricing": {
+        "PRIVATE_TOR": {
+          "base_premium": 1725.0,
+          "pricing_type": "fixed"
+        },
+        "PSV_UBER_TP": {
+          "base_premium": 6160.0,
+          "pricing_type": "fixed"
+        },
+        "PSV_UBER_COMP": {
+          "rate": 0.04104,
+          "min_premium": 16200.000000000002,
+          "pricing_type": "percentage"
+        },
+        "TUKTUK_PSV_TP": {
+          "base_premium": 3500.0,
+          "pricing_type": "fixed"
+        },
+        "COMMERCIAL_TOR": {
+          "base_premium": 2300.0,
+          "pricing_type": "fixed"
+        },
+        "PSV_MATATU_1M_TP": {
+          "base_premium": 3500.0,
+          "pricing_type": "fixed"
+        },
+        "MOTORCYCLE_PSV_TP": {
+          "base_premium": 3500.0,
+          "pricing_type": "fixed"
+        },
+        "PRIVATE_THIRD_PARTY": {
+          "base_premium": 3920.0,
+          "pricing_type": "fixed"
+        },
+        "TUKTUK_COMMERCIAL_TP": {
+          "base_premium": 3500.0,
+          "pricing_type": "fixed"
+        },
+        "MOTORCYCLE_PRIVATE_TP": {
+          "base_premium": 3500.0,
+          "pricing_type": "fixed"
+        },
+        "PRIVATE_COMPREHENSIVE": {
+          "rate": 0.0324,
+          "min_premium": 16200.000000000002,
+          "pricing_type": "percentage"
+        },
+        "PRIVATE_MOTORCYCLE_TP": {
+          "base_premium": 3136.0,
+          "pricing_type": "fixed"
+        },
+        "TUKTUK_COMMERCIAL_COMP": {
+          "rate": 0.03,
+          "min_premium": 16200.000000000002,
+          "pricing_type": "percentage"
+        },
+        "COMMERCIAL_OWN_GOODS_TP": {
+          "base_premium": 5040.0,
+          "pricing_type": "fixed"
+        },
+        "MOTORCYCLE_PRIVATE_COMP": {
+          "rate": 0.03,
+          "min_premium": 16200.000000000002,
+          "pricing_type": "percentage"
+        },
+        "PRIVATE_THIRD_PARTY_EXT": {
+          "base_premium": 4500.0,
+          "pricing_type": "fixed"
+        },
+        "COMMERCIAL_OWN_GOODS_COMP": {
+          "rate": 0.0378,
+          "min_premium": 16200.000000000002,
+          "pricing_type": "percentage"
+        },
+        "COMMERCIAL_GENERAL_CARTAGE_TP": {
+          "base_premium": 5824.0,
+          "pricing_type": "fixed"
+        }
+      },
+      "market_position": "premium"
+    },
+    "display_mode": "GROSS"
+  }
+},
+{
+  "model": "app.insuranceprovider",
+  "pk": "771c566f-292a-49f1-97a9-19c2b967335e",
+  "fields": {
+    "date_created": "2025-09-24T08:29:37.723Z",
+    "date_updated": "2025-09-30T10:43:00.947Z",
+    "is_active": true,
+    "name": "PATABIMA INC",
+    "code": "PTA",
+    "contact_email": null,
+    "contact_phone": null,
+    "address": null,
+    "supported_categories": [
+      "PRIVATE",
+      "COMMERCIAL",
+      "MOTORCYCLE",
+      "TUKTUK"
+    ],
+    "supported_payment_methods": [
+      "MPESA",
+      "CARD",
+      "BANK_TRANSFER",
+      "CASH"
+    ],
+    "features": {
+      "pricing": {
+        "PRIVATE_TP": {
+          "base_premium": 2200,
+          "pricing_type": "fixed"
+        },
+        "PRIVATE_TOR": {
+          "base_premium": 600,
+          "pricing_type": "fixed"
+        },
+        "MOTORCYCLE_TP": {
+          "base_premium": 2500,
+          "pricing_type": "fixed"
+        },
+        "TUKTUK_PSV_TP": {
+          "base_premium": 3500,
+          "pricing_type": "fixed"
+        },
+        "COMMERCIAL_TOR": {
+          "base_premium": 1760,
+          "pricing_type": "fixed"
+        },
+        "MOTORCYCLE_TOR": {
+          "base_premium": 800,
+          "pricing_type": "fixed"
+        },
+        "MOTORCYCLE_PSV_TP": {
+          "base_premium": 3500,
+          "pricing_type": "fixed"
+        },
+        "PRIVATE_THIRD_PARTY": {
+          "base_premium": 2975,
+          "pricing_type": "fixed"
+        },
+        "TUKTUK_COMMERCIAL_TP": {
+          "base_premium": 3500,
+          "pricing_type": "fixed"
+        },
+        "MOTORCYCLE_PRIVATE_TP": {
+          "base_premium": 3500,
+          "pricing_type": "fixed"
+        },
+        "PRIVATE_COMPREHENSIVE": {
+          "rate": 0.03,
+          "min_premium": 15000,
+          "pricing_type": "percentage"
+        },
+        "PRIVATE_MOTORCYCLE_TP": {
+          "base_premium": 2380,
+          "pricing_type": "fixed"
+        },
+        "TUKTUK_COMMERCIAL_COMP": {
+          "rate": 0.03,
+          "min_premium": 13800,
+          "pricing_type": "percentage"
+        },
+        "COMMERCIAL_OWN_GOODS_TP": {
+          "base_premium": 3825,
+          "pricing_type": "fixed"
+        },
+        "MOTORCYCLE_PRIVATE_COMP": {
+          "rate": 0.03,
+          "min_premium": 13800,
+          "pricing_type": "percentage"
+        },
+        "PRIVATE_THIRD_PARTY_EXT": {
+          "base_premium": 4500,
+          "pricing_type": "fixed"
+        },
+        "MOTORCYCLE_COMPREHENSIVE": {
+          "rate": 0.025,
+          "min_premium": 8000,
+          "pricing_type": "percentage"
+        },
+        "COMMERCIAL_OWN_GOODS_COMP": {
+          "rate": 0.0322,
+          "min_premium": 13800,
+          "pricing_type": "percentage"
+        },
+        "COMMERCIAL_GENERAL_CARTAGE_TP": {
+          "base_premium": 4420,
+          "pricing_type": "fixed"
+        }
+      },
+      "addon_overrides": {},
+      "market_position": "budget"
+    },
+    "display_mode": "GROSS"
+  }
+},
+{
+  "model": "app.insuranceprovider",
+  "pk": "aa85d49e-06a2-40ec-9a22-e09b453f8066",
+  "fields": {
+    "date_created": "2025-09-26T21:18:17.626Z",
+    "date_updated": "2025-10-08T11:59:22.145Z",
+    "is_active": true,
+    "name": "Madison Insurance",
+    "code": "MADISON",
+    "contact_email": "info@madison.co.ke",
+    "contact_phone": null,
+    "address": null,
+    "supported_categories": [
+      "PRIVATE",
+      "COMMERCIAL",
+      "MOTORCYCLE",
+      "TUKTUK"
+    ],
+    "supported_payment_methods": [],
+    "features": {
+      "pricing": {
+        "PRIVATE_TP": {
+          "base_premium": 2200,
+          "pricing_type": "fixed"
+        },
+        "PRIVATE_TOR": {
+          "base_premium": 600,
+          "pricing_type": "fixed"
+        },
+        "MOTORCYCLE_TP": {
+          "base_premium": 2000,
+          "pricing_type": "fixed"
+        },
+        "TUKTUK_PSV_TP": {
+          "base_premium": 3500,
+          "pricing_type": "fixed"
+        },
+        "COMMERCIAL_TOR": {
+          "base_premium": 1760,
+          "pricing_type": "fixed"
+        },
+        "MOTORCYCLE_TOR": {
+          "base_premium": 800,
+          "pricing_type": "fixed"
+        },
+        "MOTORCYCLE_PSV_TP": {
+          "base_premium": 3500,
+          "pricing_type": "fixed"
+        },
+        "PRIVATE_THIRD_PARTY": {
+          "base_premium": 2975,
+          "pricing_type": "fixed"
+        },
+        "TUKTUK_COMMERCIAL_TP": {
+          "base_premium": 3500,
+          "pricing_type": "fixed"
+        },
+        "MOTORCYCLE_PRIVATE_TP": {
+          "base_premium": 3500,
+          "pricing_type": "fixed"
+        },
+        "PRIVATE_COMPREHENSIVE": {
+          "rate": 0.03,
+          "min_premium": 15000,
+          "pricing_type": "percentage"
+        },
+        "PRIVATE_MOTORCYCLE_TP": {
+          "base_premium": 2380,
+          "pricing_type": "fixed"
+        },
+        "TUKTUK_COMMERCIAL_COMP": {
+          "rate": 0.03,
+          "min_premium": 13800,
+          "pricing_type": "percentage"
+        },
+        "COMMERCIAL_OWN_GOODS_TP": {
+          "base_premium": 3825,
+          "pricing_type": "fixed"
+        },
+        "MOTORCYCLE_PRIVATE_COMP": {
+          "rate": 0.03,
+          "min_premium": 13800,
+          "pricing_type": "percentage"
+        },
+        "PRIVATE_THIRD_PARTY_EXT": {
+          "base_premium": 4500,
+          "pricing_type": "fixed"
+        },
+        "MOTORCYCLE_COMPREHENSIVE": {
+          "rate": 0.025,
+          "min_premium": 8000,
+          "pricing_type": "percentage"
+        },
+        "COMMERCIAL_OWN_GOODS_COMP": {
+          "rate": 0.0322,
+          "min_premium": 13800,
+          "pricing_type": "percentage"
+        },
+        "COMMERCIAL_GENERAL_CARTAGE_TP": {
+          "base_premium": 4420,
+          "pricing_type": "fixed"
+        }
+      },
+      "addon_overrides": {},
+      "market_position": "budget"
+    },
+    "display_mode": "GROSS"
+  }
+},
+{
+  "model": "app.insuranceprovider",
+  "pk": "acff5e40-a95b-4dd1-bc06-8e210e1e95bc",
+  "fields": {
+    "date_created": "2025-09-23T14:54:11.595Z",
+    "date_updated": "2025-09-26T21:18:17.655Z",
+    "is_active": true,
+    "name": "APA Insurance",
+    "code": "APA",
+    "contact_email": "info@apainsurance.org",
+    "contact_phone": null,
+    "address": null,
+    "supported_categories": [
+      "PRIVATE",
+      "COMMERCIAL",
+      "PSV",
+      "MOTORCYCLE",
+      "TUKTUK"
+    ],
+    "supported_payment_methods": [
+      "mpesa",
+      "dpo"
+    ],
+    "features": {
+      "dmvic": true,
+      "pricing": {
+        "PRIVATE_TOR": {
+          "base_premium": 1500.0,
+          "pricing_type": "fixed"
+        },
+        "PSV_UBER_TP": {
+          "base_premium": 5500.0,
+          "pricing_type": "fixed"
+        },
+        "PSV_UBER_COMP": {
+          "rate": 0.038,
+          "min_premium": 15000.0,
+          "pricing_type": "percentage"
+        },
+        "TUKTUK_PSV_TP": {
+          "base_premium": 3500.0,
+          "pricing_type": "fixed"
+        },
+        "COMMERCIAL_TOR": {
+          "base_premium": 2000.0,
+          "pricing_type": "fixed"
+        },
+        "PSV_MATATU_1M_TP": {
+          "base_premium": 3500.0,
+          "pricing_type": "fixed"
+        },
+        "MOTORCYCLE_PSV_TP": {
+          "base_premium": 3500.0,
+          "pricing_type": "fixed"
+        },
+        "PRIVATE_THIRD_PARTY": {
+          "base_premium": 3500.0,
+          "pricing_type": "fixed"
+        },
+        "TUKTUK_COMMERCIAL_TP": {
+          "base_premium": 3500.0,
+          "pricing_type": "fixed"
+        },
+        "MOTORCYCLE_PRIVATE_TP": {
+          "base_premium": 3500.0,
+          "pricing_type": "fixed"
+        },
+        "PRIVATE_COMPREHENSIVE": {
+          "rate": 0.03,
+          "min_premium": 15000.0,
+          "pricing_type": "percentage"
+        },
+        "PRIVATE_MOTORCYCLE_TP": {
+          "base_premium": 2800.0,
+          "pricing_type": "fixed"
+        },
+        "TUKTUK_COMMERCIAL_COMP": {
+          "rate": 0.03,
+          "min_premium": 15000.0,
+          "pricing_type": "percentage"
+        },
+        "COMMERCIAL_OWN_GOODS_TP": {
+          "base_premium": 4500.0,
+          "pricing_type": "fixed"
+        },
+        "MOTORCYCLE_PRIVATE_COMP": {
+          "rate": 0.03,
+          "min_premium": 15000.0,
+          "pricing_type": "percentage"
+        },
+        "PRIVATE_THIRD_PARTY_EXT": {
+          "base_premium": 4500.0,
+          "pricing_type": "fixed"
+        },
+        "COMMERCIAL_OWN_GOODS_COMP": {
+          "rate": 0.035,
+          "min_premium": 15000.0,
+          "pricing_type": "percentage"
+        },
+        "COMMERCIAL_GENERAL_CARTAGE_TP": {
+          "base_premium": 5200.0,
+          "pricing_type": "fixed"
+        }
+      },
+      "market_position": "competitive"
+    },
+    "display_mode": "GROSS"
+  }
+},
+{
+  "model": "app.insuranceprovider",
+  "pk": "cb192689-b1f2-4afd-b08a-c2bc2e6cc864",
+  "fields": {
+    "date_created": "2025-09-26T21:18:17.624Z",
+    "date_updated": "2025-10-08T12:00:12.548Z",
+    "is_active": true,
+    "name": "UAP Insurance",
+    "code": "UAP",
+    "contact_email": "info@uap.co.ke",
+    "contact_phone": null,
+    "address": null,
+    "supported_categories": [
+      "PRIVATE",
+      "COMMERCIAL",
+      "PSV",
+      "SPECIAL CLASS"
+    ],
+    "supported_payment_methods": [],
+    "features": {
+      "pricing": {
+        "PRIVATE_TOR": {
+          "base_premium": 1500.0,
+          "pricing_type": "fixed"
+        },
+        "PSV_UBER_TP": {
+          "base_premium": 5500.0,
+          "pricing_type": "fixed"
+        },
+        "PSV_UBER_COMP": {
+          "rate": 0.038,
+          "min_premium": 15000.0,
+          "pricing_type": "percentage"
+        },
+        "COMMERCIAL_TOR": {
+          "base_premium": 2000.0,
+          "pricing_type": "fixed"
+        },
+        "PSV_MATATU_1M_TP": {
+          "base_premium": 3500.0,
+          "pricing_type": "fixed"
+        },
+        "PRIVATE_THIRD_PARTY": {
+          "base_premium": 3500.0,
+          "pricing_type": "fixed"
+        },
+        "PRIVATE_COMPREHENSIVE": {
+          "rate": 0.03,
+          "min_premium": 15000.0,
+          "pricing_type": "percentage"
+        },
+        "PRIVATE_MOTORCYCLE_TP": {
+          "base_premium": 2800.0,
+          "pricing_type": "fixed"
+        },
+        "COMMERCIAL_OWN_GOODS_TP": {
+          "base_premium": 4500.0,
+          "pricing_type": "fixed"
+        },
+        "PRIVATE_THIRD_PARTY_EXT": {
+          "base_premium": 4500.0,
+          "pricing_type": "fixed"
+        },
+        "COMMERCIAL_OWN_GOODS_COMP": {
+          "rate": 0.035,
+          "min_premium": 15000.0,
+          "pricing_type": "percentage"
+        },
+        "COMMERCIAL_GENERAL_CARTAGE_TP": {
+          "base_premium": 5200.0,
+          "pricing_type": "fixed"
+        }
+      },
+      "market_position": "competitive"
+    },
+    "display_mode": "GROSS"
+  }
+},
+{
+  "model": "app.motorcategory",
+  "pk": "02a099fd-e88b-4b61-8f64-0e3eb7ee173f",
+  "fields": {
+    "date_created": "2025-09-23T14:54:13.068Z",
+    "date_updated": "2025-09-28T11:00:27.282Z",
+    "is_active": true,
+    "code": "PRIVATE",
+    "name": "Private",
+    "description": "Personal vehicles for private use",
+    "icon": "🚗",
+    "sort_order": 1,
+    "requires_tonnage": false,
+    "requires_engine_capacity": false,
+    "requires_passenger_count": false,
+    "requires_passenger_type": false,
+    "requires_carrying_capacity": false,
+    "supports_time_period_variants": false,
+    "min_vehicle_age": 0,
+    "max_vehicle_age": 25
+  }
+},
+{
+  "model": "app.motorcategory",
+  "pk": "4f87a0cc-d791-4e20-9b96-39855211270e",
+  "fields": {
+    "date_created": "2025-09-23T14:54:13.079Z",
+    "date_updated": "2025-09-26T14:11:43.865Z",
+    "is_active": true,
+    "code": "TUKTUK",
+    "name": "TukTuk",
+    "description": "Three-wheeler vehicles",
+    "icon": "🛺",
+    "sort_order": 5,
+    "requires_tonnage": false,
+    "requires_engine_capacity": false,
+    "requires_passenger_count": true,
+    "requires_passenger_type": false,
+    "requires_carrying_capacity": false,
+    "supports_time_period_variants": false,
+    "min_vehicle_age": 0,
+    "max_vehicle_age": 15
+  }
+},
+{
+  "model": "app.motorcategory",
+  "pk": "63206394-bcc9-4ca4-9a2f-faf4cbadddb0",
+  "fields": {
+    "date_created": "2025-09-23T14:54:13.080Z",
+    "date_updated": "2025-09-26T14:11:43.867Z",
+    "is_active": true,
+    "code": "SPECIAL",
+    "name": "Special Classes",
+    "description": "Agricultural, institutional, and special vehicles",
+    "icon": "🚜",
+    "sort_order": 6,
+    "requires_tonnage": true,
+    "requires_engine_capacity": false,
+    "requires_passenger_count": true,
+    "requires_passenger_type": true,
+    "requires_carrying_capacity": false,
+    "supports_time_period_variants": false,
+    "min_vehicle_age": 0,
+    "max_vehicle_age": 25
+  }
+},
+{
+  "model": "app.motorcategory",
+  "pk": "83a003d5-9c80-422b-9350-583f92bb9d55",
+  "fields": {
+    "date_created": "2025-09-23T14:54:13.078Z",
+    "date_updated": "2025-09-26T14:11:43.864Z",
+    "is_active": true,
+    "code": "MOTORCYCLE",
+    "name": "Motorcycle",
+    "description": "Motorcycles including boda boda",
+    "icon": "🏍️",
+    "sort_order": 4,
+    "requires_tonnage": false,
+    "requires_engine_capacity": true,
+    "requires_passenger_count": false,
+    "requires_passenger_type": false,
+    "requires_carrying_capacity": false,
+    "supports_time_period_variants": true,
+    "min_vehicle_age": 0,
+    "max_vehicle_age": 15
+  }
+},
+{
+  "model": "app.motorcategory",
+  "pk": "d4ee8d63-363f-40e1-a5fc-41748a26ef42",
+  "fields": {
+    "date_created": "2025-09-23T14:54:13.076Z",
+    "date_updated": "2025-09-26T14:11:43.863Z",
+    "is_active": true,
+    "code": "PSV",
+    "name": "PSV",
+    "description": "Public service vehicles (matatu, buses)",
+    "icon": "🚌",
+    "sort_order": 3,
+    "requires_tonnage": false,
+    "requires_engine_capacity": false,
+    "requires_passenger_count": true,
+    "requires_passenger_type": false,
+    "requires_carrying_capacity": false,
+    "supports_time_period_variants": true,
+    "min_vehicle_age": 0,
+    "max_vehicle_age": 20
+  }
+},
+{
+  "model": "app.motorcategory",
+  "pk": "fe27c128-972d-4a08-8893-1ad922d882bd",
+  "fields": {
+    "date_created": "2025-09-23T14:54:13.074Z",
+    "date_updated": "2025-09-26T14:11:43.861Z",
+    "is_active": true,
+    "code": "COMMERCIAL",
+    "name": "Commercial",
+    "description": "Goods carriers and commercial vehicles",
+    "icon": "🚚",
+    "sort_order": 2,
+    "requires_tonnage": true,
+    "requires_engine_capacity": false,
+    "requires_passenger_count": false,
+    "requires_passenger_type": false,
+    "requires_carrying_capacity": false,
+    "supports_time_period_variants": false,
+    "min_vehicle_age": 0,
+    "max_vehicle_age": 20
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "01409174-e37d-4573-ad01-cd717030ab52",
+  "fields": {
+    "date_created": "2025-09-29T00:12:30.215Z",
+    "date_updated": "2025-09-29T00:12:30.215Z",
+    "category": "63206394-bcc9-4ca4-9a2f-faf4cbadddb0",
+    "subcategory_code": "SPECIAL_AGRICULTURAL_TP",
+    "subcategory_name": "Agricultural Tractor Third-Party",
+    "product_type": "THIRD_PARTY",
+    "pricing_model": "TONNAGE",
+    "is_complex": false,
+    "additional_fields": [
+      "tonnage"
+    ],
+    "pricing_requirements": {
+      "max_tonnage": 31,
+      "requires_tonnage": true
+    },
+    "is_active": true,
+    "show_in_public": true,
+    "public_sort_order": 101,
+    "public_label": "Agricultural Tractor Third-Party"
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "051a8549-d5fd-4fc7-b176-1d6955ff5f13",
+  "fields": {
+    "date_created": "2025-09-29T00:12:30.226Z",
+    "date_updated": "2025-09-29T00:12:30.226Z",
+    "category": "63206394-bcc9-4ca4-9a2f-faf4cbadddb0",
+    "subcategory_code": "SPECIAL_DRIVING_SCHOOL_COMP",
+    "subcategory_name": "Driving School Comprehensive",
+    "product_type": "COMPREHENSIVE",
+    "pricing_model": "TONNAGE",
+    "is_complex": false,
+    "additional_fields": [
+      "tonnage",
+      "passenger_count"
+    ],
+    "pricing_requirements": {
+      "requires_tonnage": true,
+      "requires_passenger_count": true
+    },
+    "is_active": true,
+    "show_in_public": true,
+    "public_sort_order": 508,
+    "public_label": "Driving School Comprehensive"
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "0b13511b-8e76-4616-934b-a847650f43fa",
+  "fields": {
+    "date_created": "2025-09-28T22:50:23.603Z",
+    "date_updated": "2025-10-16T09:11:47.942Z",
+    "category": "02a099fd-e88b-4b61-8f64-0e3eb7ee173f",
+    "subcategory_code": "COMMERCIAL_OWN_GOODS_COMP",
+    "subcategory_name": "COMMERCIAL_OWN_GOODS_COMP",
+    "product_type": "THIRD_PARTY",
+    "pricing_model": "FIXED",
+    "is_complex": false,
+    "additional_fields": [],
+    "pricing_requirements": {},
+    "is_active": false,
+    "show_in_public": false,
+    "public_sort_order": 0,
+    "public_label": null
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "0e9334f1-a127-48e0-8a41-623fc00825e3",
+  "fields": {
+    "date_created": "2025-09-28T22:50:23.606Z",
+    "date_updated": "2025-10-16T09:11:47.956Z",
+    "category": "02a099fd-e88b-4b61-8f64-0e3eb7ee173f",
+    "subcategory_code": "SPECIAL_AGRICULTURAL_TP",
+    "subcategory_name": "SPECIAL_AGRICULTURAL_TP",
+    "product_type": "THIRD_PARTY",
+    "pricing_model": "FIXED",
+    "is_complex": false,
+    "additional_fields": [],
+    "pricing_requirements": {},
+    "is_active": false,
+    "show_in_public": false,
+    "public_sort_order": 0,
+    "public_label": null
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "0ea55fb0-2580-4e81-b4cb-d4a0ce9e2d0e",
+  "fields": {
+    "date_created": "2025-09-29T00:05:54.489Z",
+    "date_updated": "2025-09-29T00:05:54.489Z",
+    "category": "d4ee8d63-363f-40e1-a5fc-41748a26ef42",
+    "subcategory_code": "PSV_TUKTUK_TP_EXT",
+    "subcategory_name": "PSV Tuk-Tuk Third-Party Extendible",
+    "product_type": "THIRD_PARTY_EXT",
+    "pricing_model": "PASSENGER",
+    "is_complex": false,
+    "additional_fields": [
+      "passenger_count"
+    ],
+    "pricing_requirements": {
+      "requires_passenger_count": true
+    },
+    "is_active": true,
+    "show_in_public": true,
+    "public_sort_order": 203,
+    "public_label": "PSV Tuk-Tuk Third-Party Extendible"
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "115f0d9a-3a1c-43eb-8cde-03441d4fda05",
+  "fields": {
+    "date_created": "2025-09-29T00:05:54.498Z",
+    "date_updated": "2025-09-29T00:05:54.498Z",
+    "category": "d4ee8d63-363f-40e1-a5fc-41748a26ef42",
+    "subcategory_code": "PSV_TOUR_VAN_TP",
+    "subcategory_name": "PSV Tour Van Third-Party",
+    "product_type": "THIRD_PARTY",
+    "pricing_model": "PASSENGER",
+    "is_complex": false,
+    "additional_fields": [
+      "passenger_count"
+    ],
+    "pricing_requirements": {
+      "requires_passenger_count": true
+    },
+    "is_active": true,
+    "show_in_public": true,
+    "public_sort_order": 107,
+    "public_label": "PSV Tour Van Third-Party"
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "20ff31a0-8000-4c03-9cd9-2313da80fa72",
+  "fields": {
+    "date_created": "2025-09-29T00:05:54.493Z",
+    "date_updated": "2025-09-29T00:05:54.493Z",
+    "category": "d4ee8d63-363f-40e1-a5fc-41748a26ef42",
+    "subcategory_code": "PSV_MATATU_1M_TP",
+    "subcategory_name": "1 Month PSV Matatu Third-Party",
+    "product_type": "THIRD_PARTY",
+    "pricing_model": "PASSENGER",
+    "is_complex": false,
+    "additional_fields": [
+      "passenger_count"
+    ],
+    "pricing_requirements": {
+      "requires_passenger_count": true
+    },
+    "is_active": true,
+    "show_in_public": true,
+    "public_sort_order": 104,
+    "public_label": "1 Month PSV Matatu Third-Party"
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "29ee63eb-cc42-4b85-9052-cd515a8dc056",
+  "fields": {
+    "date_created": "2025-09-29T00:12:30.219Z",
+    "date_updated": "2025-09-29T00:12:30.219Z",
+    "category": "63206394-bcc9-4ca4-9a2f-faf4cbadddb0",
+    "subcategory_code": "SPECIAL_KG_PLATE_TP",
+    "subcategory_name": "KG Plate Third-Party",
+    "product_type": "THIRD_PARTY",
+    "pricing_model": "FIXED",
+    "is_complex": false,
+    "additional_fields": [],
+    "pricing_requirements": {},
+    "is_active": true,
+    "show_in_public": true,
+    "public_sort_order": 104,
+    "public_label": "KG Plate Third-Party"
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "2ed6271a-1b24-4463-b7a9-29021ca597ab",
+  "fields": {
+    "date_created": "2025-09-29T00:05:54.497Z",
+    "date_updated": "2025-09-29T00:05:54.497Z",
+    "category": "d4ee8d63-363f-40e1-a5fc-41748a26ef42",
+    "subcategory_code": "PSV_UBER_TP_EXT",
+    "subcategory_name": "PSV Uber Third-Party Extendible",
+    "product_type": "THIRD_PARTY_EXT",
+    "pricing_model": "PASSENGER",
+    "is_complex": false,
+    "additional_fields": [
+      "passenger_count"
+    ],
+    "pricing_requirements": {
+      "requires_passenger_count": true
+    },
+    "is_active": true,
+    "show_in_public": true,
+    "public_sort_order": 206,
+    "public_label": "PSV Uber Third-Party Extendible"
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "2f817e5c-17a4-4772-8fbf-627056677cd0",
+  "fields": {
+    "date_created": "2025-09-29T00:12:30.229Z",
+    "date_updated": "2025-09-29T00:12:30.229Z",
+    "category": "63206394-bcc9-4ca4-9a2f-faf4cbadddb0",
+    "subcategory_code": "SPECIAL_AMBULANCE_COMP",
+    "subcategory_name": "Commercial Ambulance Comprehensive",
+    "product_type": "COMPREHENSIVE",
+    "pricing_model": "FIXED",
+    "is_complex": false,
+    "additional_fields": [],
+    "pricing_requirements": {},
+    "is_active": true,
+    "show_in_public": true,
+    "public_sort_order": 510,
+    "public_label": "Commercial Ambulance Comprehensive"
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "30318080-02ef-4c91-902f-169cc49e5cd3",
+  "fields": {
+    "date_created": "2025-09-29T00:05:54.495Z",
+    "date_updated": "2025-09-29T00:05:54.495Z",
+    "category": "d4ee8d63-363f-40e1-a5fc-41748a26ef42",
+    "subcategory_code": "PSV_MATATU_2WKS_TP",
+    "subcategory_name": "2 Weeks PSV Matatu Third-Party",
+    "product_type": "THIRD_PARTY",
+    "pricing_model": "PASSENGER",
+    "is_complex": false,
+    "additional_fields": [
+      "passenger_count"
+    ],
+    "pricing_requirements": {
+      "requires_passenger_count": true
+    },
+    "is_active": true,
+    "show_in_public": true,
+    "public_sort_order": 105,
+    "public_label": "2 Weeks PSV Matatu Third-Party"
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "3600f66f-b8dd-45b5-bbef-1316b6fb90fb",
+  "fields": {
+    "date_created": "2025-09-29T00:12:30.191Z",
+    "date_updated": "2025-09-29T00:12:30.192Z",
+    "category": "fe27c128-972d-4a08-8893-1ad922d882bd",
+    "subcategory_code": "COMMERCIAL_OWN_GOODS_COMP",
+    "subcategory_name": "Own Goods Comprehensive",
+    "product_type": "COMPREHENSIVE",
+    "pricing_model": "TONNAGE",
+    "is_complex": false,
+    "additional_fields": [
+      "tonnage"
+    ],
+    "pricing_requirements": {
+      "max_tonnage": 31,
+      "requires_tonnage": true
+    },
+    "is_active": true,
+    "show_in_public": true,
+    "public_sort_order": 509,
+    "public_label": "Own Goods Comprehensive"
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "47363ab5-bb14-4a5d-bec4-37f5cd8159b3",
+  "fields": {
+    "date_created": "2025-09-28T22:50:23.580Z",
+    "date_updated": "2025-10-16T09:11:47.944Z",
+    "category": "02a099fd-e88b-4b61-8f64-0e3eb7ee173f",
+    "subcategory_code": "COMMERCIAL_OWN_GOODS_TP",
+    "subcategory_name": "COMMERCIAL_OWN_GOODS_TP",
+    "product_type": "THIRD_PARTY",
+    "pricing_model": "FIXED",
+    "is_complex": false,
+    "additional_fields": [],
+    "pricing_requirements": {},
+    "is_active": false,
+    "show_in_public": false,
+    "public_sort_order": 0,
+    "public_label": null
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "55ec10f8-901f-4684-9601-d01944a85987",
+  "fields": {
+    "date_created": "2025-09-28T22:50:23.590Z",
+    "date_updated": "2025-10-16T09:11:47.950Z",
+    "category": "02a099fd-e88b-4b61-8f64-0e3eb7ee173f",
+    "subcategory_code": "PSV_MATATU_1M_TP",
+    "subcategory_name": "PSV_MATATU_1M_TP",
+    "product_type": "THIRD_PARTY",
+    "pricing_model": "FIXED",
+    "is_complex": false,
+    "additional_fields": [],
+    "pricing_requirements": {},
+    "is_active": false,
+    "show_in_public": false,
+    "public_sort_order": 0,
+    "public_label": null
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "562464a1-ba36-4db8-95f2-d2c6d7792781",
+  "fields": {
+    "date_created": "2025-09-28T22:50:23.596Z",
+    "date_updated": "2025-10-16T09:11:47.961Z",
+    "category": "02a099fd-e88b-4b61-8f64-0e3eb7ee173f",
+    "subcategory_code": "TUKTUK_COMMERCIAL_COMP",
+    "subcategory_name": "TUKTUK_COMMERCIAL_COMP",
+    "product_type": "THIRD_PARTY",
+    "pricing_model": "FIXED",
+    "is_complex": false,
+    "additional_fields": [],
+    "pricing_requirements": {},
+    "is_active": false,
+    "show_in_public": false,
+    "public_sort_order": 0,
+    "public_label": null
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "563e94a4-6304-438a-9b5f-25b72bce2773",
+  "fields": {
+    "date_created": "2025-09-29T00:12:30.204Z",
+    "date_updated": "2025-09-29T00:12:30.204Z",
+    "category": "4f87a0cc-d791-4e20-9b96-39855211270e",
+    "subcategory_code": "TUKTUK_PSV_TP",
+    "subcategory_name": "PSV Tuk-Tuk Third-Party",
+    "product_type": "THIRD_PARTY",
+    "pricing_model": "PASSENGER",
+    "is_complex": false,
+    "additional_fields": [
+      "passenger_count"
+    ],
+    "pricing_requirements": {
+      "requires_passenger_count": true
+    },
+    "is_active": true,
+    "show_in_public": true,
+    "public_sort_order": 101,
+    "public_label": "PSV Tuk-Tuk Third-Party"
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "5d6abafb-0ab9-418e-b37e-99d2447c137f",
+  "fields": {
+    "date_created": "2025-09-28T22:50:23.585Z",
+    "date_updated": "2025-10-16T09:11:47.946Z",
+    "category": "02a099fd-e88b-4b61-8f64-0e3eb7ee173f",
+    "subcategory_code": "COMMERCIAL_TOR",
+    "subcategory_name": "COMMERCIAL_TOR",
+    "product_type": "THIRD_PARTY",
+    "pricing_model": "FIXED",
+    "is_complex": false,
+    "additional_fields": [],
+    "pricing_requirements": {},
+    "is_active": false,
+    "show_in_public": false,
+    "public_sort_order": 0,
+    "public_label": null
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "65cb2a5d-36e5-468b-a371-0cf955cbd780",
+  "fields": {
+    "date_created": "2025-09-29T00:12:30.216Z",
+    "date_updated": "2025-09-29T00:12:30.216Z",
+    "category": "63206394-bcc9-4ca4-9a2f-faf4cbadddb0",
+    "subcategory_code": "SPECIAL_INSTITUTIONAL_TP",
+    "subcategory_name": "Commercial Institutional Third-Party",
+    "product_type": "THIRD_PARTY",
+    "pricing_model": "PASSENGER",
+    "is_complex": false,
+    "additional_fields": [
+      "passenger_count",
+      "passenger_type"
+    ],
+    "pricing_requirements": {
+      "requires_passenger_type": true,
+      "requires_passenger_count": true
+    },
+    "is_active": true,
+    "show_in_public": true,
+    "public_sort_order": 102,
+    "public_label": "Commercial Institutional Third-Party"
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "792f2b97-9bd0-480d-a5cf-6d213196591c",
+  "fields": {
+    "date_created": "2025-09-28T22:50:23.578Z",
+    "date_updated": "2025-10-16T09:11:47.958Z",
+    "category": "02a099fd-e88b-4b61-8f64-0e3eb7ee173f",
+    "subcategory_code": "SPECIAL_AMBULANCE_COMP",
+    "subcategory_name": "SPECIAL_AMBULANCE_COMP",
+    "product_type": "THIRD_PARTY",
+    "pricing_model": "FIXED",
+    "is_complex": false,
+    "additional_fields": [],
+    "pricing_requirements": {},
+    "is_active": false,
+    "show_in_public": false,
+    "public_sort_order": 0,
+    "public_label": null
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "80830f4d-a48a-4bb7-aabd-a5b418c14868",
+  "fields": {
+    "date_created": "2025-09-29T00:05:54.503Z",
+    "date_updated": "2025-09-29T00:05:54.503Z",
+    "category": "d4ee8d63-363f-40e1-a5fc-41748a26ef42",
+    "subcategory_code": "PSV_TOUR_VAN_TP_EXT",
+    "subcategory_name": "PSV Tour Van Third-Party Extendible",
+    "product_type": "THIRD_PARTY_EXT",
+    "pricing_model": "PASSENGER",
+    "is_complex": false,
+    "additional_fields": [
+      "passenger_count"
+    ],
+    "pricing_requirements": {
+      "requires_passenger_count": true
+    },
+    "is_active": true,
+    "show_in_public": true,
+    "public_sort_order": 210,
+    "public_label": "PSV Tour Van Third-Party Extendible"
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "8309f7db-23f7-4c96-a565-631a6f98cbf2",
+  "fields": {
+    "date_created": "2025-09-29T00:05:54.500Z",
+    "date_updated": "2025-09-29T00:05:54.500Z",
+    "category": "d4ee8d63-363f-40e1-a5fc-41748a26ef42",
+    "subcategory_code": "PSV_MATATU_1WK_TP_EXT",
+    "subcategory_name": "1 Week PSV Matatu Third-Party Extendible",
+    "product_type": "THIRD_PARTY_EXT",
+    "pricing_model": "PASSENGER",
+    "is_complex": false,
+    "additional_fields": [
+      "passenger_count"
+    ],
+    "pricing_requirements": {
+      "requires_passenger_count": true
+    },
+    "is_active": true,
+    "show_in_public": true,
+    "public_sort_order": 208,
+    "public_label": "1 Week PSV Matatu Third-Party Extendible"
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "87862519-800b-4655-b480-790228534766",
+  "fields": {
+    "date_created": "2025-09-23T14:54:13.113Z",
+    "date_updated": "2025-09-23T16:22:12.211Z",
+    "category": "83a003d5-9c80-422b-9350-583f92bb9d55",
+    "subcategory_code": "MOTORCYCLE_PRIVATE_TP",
+    "subcategory_name": "Private motorcycle third party",
+    "product_type": "THIRD_PARTY",
+    "pricing_model": "ENGINE_CC",
+    "is_complex": false,
+    "additional_fields": [],
+    "pricing_requirements": {},
+    "is_active": true,
+    "show_in_public": true,
+    "public_sort_order": 101,
+    "public_label": "Private Motorcycle Third Party"
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "89b3450a-72d7-4e4d-a777-a195b27f20d1",
+  "fields": {
+    "date_created": "2025-09-29T00:05:54.501Z",
+    "date_updated": "2025-09-29T00:05:54.501Z",
+    "category": "d4ee8d63-363f-40e1-a5fc-41748a26ef42",
+    "subcategory_code": "PSV_PLAIN_TPO",
+    "subcategory_name": "PSV Plain TPO",
+    "product_type": "THIRD_PARTY",
+    "pricing_model": "PASSENGER",
+    "is_complex": false,
+    "additional_fields": [
+      "passenger_count"
+    ],
+    "pricing_requirements": {
+      "requires_passenger_count": true
+    },
+    "is_active": true,
+    "show_in_public": true,
+    "public_sort_order": 109,
+    "public_label": "PSV Plain TPO"
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "8a6b2335-aa56-4658-a15d-9c0db0062b2c",
+  "fields": {
+    "date_created": "2025-09-23T14:54:13.104Z",
+    "date_updated": "2025-09-23T16:22:12.184Z",
+    "category": "d4ee8d63-363f-40e1-a5fc-41748a26ef42",
+    "subcategory_code": "PSV_UBER_TP",
+    "subcategory_name": "PSV Uber Third-Party",
+    "product_type": "THIRD_PARTY",
+    "pricing_model": "PASSENGER",
+    "is_complex": false,
+    "additional_fields": [],
+    "pricing_requirements": {},
+    "is_active": true,
+    "show_in_public": true,
+    "public_sort_order": 101,
+    "public_label": "PSV Uber Third-Party"
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "8b31baec-cc54-4de4-9e60-82d932a61c85",
+  "fields": {
+    "date_created": "2025-09-29T00:12:30.197Z",
+    "date_updated": "2025-09-29T00:12:30.197Z",
+    "category": "83a003d5-9c80-422b-9350-583f92bb9d55",
+    "subcategory_code": "MOTORCYCLE_PSV_TP_6M",
+    "subcategory_name": "PSV motorcycle third-party 6 months",
+    "product_type": "THIRD_PARTY",
+    "pricing_model": "ENGINE_CC",
+    "is_complex": false,
+    "additional_fields": [
+      "engine_capacity"
+    ],
+    "pricing_requirements": {
+      "requires_engine_capacity": true
+    },
+    "is_active": true,
+    "show_in_public": true,
+    "public_sort_order": 103,
+    "public_label": "PSV motorcycle third-party 6 months"
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "8da7297d-5b17-4969-9b1b-e78bb6d5d40f",
+  "fields": {
+    "date_created": "2025-09-28T22:50:23.599Z",
+    "date_updated": "2025-10-16T09:11:47.963Z",
+    "category": "02a099fd-e88b-4b61-8f64-0e3eb7ee173f",
+    "subcategory_code": "TUKTUK_COMMERCIAL_TP",
+    "subcategory_name": "TUKTUK_COMMERCIAL_TP",
+    "product_type": "THIRD_PARTY",
+    "pricing_model": "FIXED",
+    "is_complex": false,
+    "additional_fields": [],
+    "pricing_requirements": {},
+    "is_active": false,
+    "show_in_public": false,
+    "public_sort_order": 0,
+    "public_label": null
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "8e119d96-cd85-4281-b2e3-ed25887c0651",
+  "fields": {
+    "date_created": "2025-09-29T00:12:30.223Z",
+    "date_updated": "2025-09-29T00:12:30.223Z",
+    "category": "63206394-bcc9-4ca4-9a2f-faf4cbadddb0",
+    "subcategory_code": "SPECIAL_AGRICULTURAL_COMP",
+    "subcategory_name": "Agricultural Tractor Comprehensive",
+    "product_type": "COMPREHENSIVE",
+    "pricing_model": "TONNAGE",
+    "is_complex": false,
+    "additional_fields": [
+      "tonnage"
+    ],
+    "pricing_requirements": {
+      "max_tonnage": 31,
+      "requires_tonnage": true
+    },
+    "is_active": true,
+    "show_in_public": true,
+    "public_sort_order": 506,
+    "public_label": "Agricultural Tractor Comprehensive"
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "9050b00a-55a0-4bc2-ba54-d3d137514a33",
+  "fields": {
+    "date_created": "2025-09-29T00:12:30.199Z",
+    "date_updated": "2025-09-29T00:12:30.199Z",
+    "category": "83a003d5-9c80-422b-9350-583f92bb9d55",
+    "subcategory_code": "MOTORCYCLE_PRIVATE_COMP",
+    "subcategory_name": "Private Motorcycle comprehensive",
+    "product_type": "COMPREHENSIVE",
+    "pricing_model": "ENGINE_CC",
+    "is_complex": false,
+    "additional_fields": [
+      "engine_capacity"
+    ],
+    "pricing_requirements": {
+      "requires_engine_capacity": true
+    },
+    "is_active": true,
+    "show_in_public": true,
+    "public_sort_order": 504,
+    "public_label": "Private Motorcycle Comprehensive"
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "927c1088-fae4-4db6-b014-9d92428eac50",
+  "fields": {
+    "date_created": "2025-09-29T00:12:30.190Z",
+    "date_updated": "2025-09-29T00:12:30.190Z",
+    "category": "fe27c128-972d-4a08-8893-1ad922d882bd",
+    "subcategory_code": "COMMERCIAL_GENERAL_CARTAGE_COMP",
+    "subcategory_name": "General Cartage Comprehensive",
+    "product_type": "COMPREHENSIVE",
+    "pricing_model": "TONNAGE",
+    "is_complex": false,
+    "additional_fields": [
+      "tonnage"
+    ],
+    "pricing_requirements": {
+      "max_tonnage": 31,
+      "requires_tonnage": true
+    },
+    "is_active": true,
+    "show_in_public": true,
+    "public_sort_order": 508,
+    "public_label": "General Cartage Comprehensive"
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "927d6176-6b77-4650-a542-3874d629ae15",
+  "fields": {
+    "date_created": "2025-09-29T00:12:30.184Z",
+    "date_updated": "2025-09-29T00:12:30.184Z",
+    "category": "fe27c128-972d-4a08-8893-1ad922d882bd",
+    "subcategory_code": "COMMERCIAL_GENERAL_CARTAGE_TP_EXT",
+    "subcategory_name": "General Cartage Third-Party Extendible",
+    "product_type": "THIRD_PARTY_EXT",
+    "pricing_model": "TONNAGE",
+    "is_complex": false,
+    "additional_fields": [
+      "tonnage"
+    ],
+    "pricing_requirements": {
+      "max_tonnage": 31,
+      "requires_tonnage": true
+    },
+    "is_active": true,
+    "show_in_public": true,
+    "public_sort_order": 205,
+    "public_label": "General Cartage Third-Party Extendible"
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "97fccac6-72a3-4263-b7a9-57335e71985e",
+  "fields": {
+    "date_created": "2025-09-29T00:12:30.183Z",
+    "date_updated": "2025-09-29T00:12:30.183Z",
+    "category": "fe27c128-972d-4a08-8893-1ad922d882bd",
+    "subcategory_code": "COMMERCIAL_GENERAL_CARTAGE_TP",
+    "subcategory_name": "General Cartage Third-Party",
+    "product_type": "THIRD_PARTY",
+    "pricing_model": "TONNAGE",
+    "is_complex": false,
+    "additional_fields": [
+      "tonnage"
+    ],
+    "pricing_requirements": {
+      "max_tonnage": 31,
+      "requires_tonnage": true
+    },
+    "is_active": true,
+    "show_in_public": true,
+    "public_sort_order": 104,
+    "public_label": "General Cartage Third-Party"
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "9d10c0e7-f9c9-4589-b9f5-17534b08881c",
+  "fields": {
+    "date_created": "2025-09-29T00:05:54.507Z",
+    "date_updated": "2025-09-29T00:05:54.507Z",
+    "category": "d4ee8d63-363f-40e1-a5fc-41748a26ef42",
+    "subcategory_code": "PSV_TOUR_VAN_COMP",
+    "subcategory_name": "PSV Tour Van Comprehensive",
+    "product_type": "COMPREHENSIVE",
+    "pricing_model": "PASSENGER",
+    "is_complex": false,
+    "additional_fields": [
+      "passenger_count"
+    ],
+    "pricing_requirements": {
+      "requires_passenger_count": true
+    },
+    "is_active": true,
+    "show_in_public": true,
+    "public_sort_order": 512,
+    "public_label": "PSV Tour Van Comprehensive"
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "9dbc9eb0-8694-41a5-adb2-f7ecdfa00530",
+  "fields": {
+    "date_created": "2025-09-28T22:50:23.610Z",
+    "date_updated": "2025-10-16T09:11:47.965Z",
+    "category": "02a099fd-e88b-4b61-8f64-0e3eb7ee173f",
+    "subcategory_code": "TUKTUK_PSV_TP",
+    "subcategory_name": "TUKTUK_PSV_TP",
+    "product_type": "THIRD_PARTY",
+    "pricing_model": "FIXED",
+    "is_complex": false,
+    "additional_fields": [],
+    "pricing_requirements": {},
+    "is_active": false,
+    "show_in_public": false,
+    "public_sort_order": 0,
+    "public_label": null
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "a1b8c919-c5a2-4e10-882d-41e9a2b734b8",
+  "fields": {
+    "date_created": "2025-09-29T00:12:30.213Z",
+    "date_updated": "2025-09-29T00:12:30.213Z",
+    "category": "4f87a0cc-d791-4e20-9b96-39855211270e",
+    "subcategory_code": "TUKTUK_PSV_COMP",
+    "subcategory_name": "PSV Tuk-Tuk Comprehensive",
+    "product_type": "COMPREHENSIVE",
+    "pricing_model": "PASSENGER",
+    "is_complex": false,
+    "additional_fields": [
+      "passenger_count"
+    ],
+    "pricing_requirements": {
+      "requires_passenger_count": true
+    },
+    "is_active": true,
+    "show_in_public": true,
+    "public_sort_order": 506,
+    "public_label": "PSV Tuk-Tuk Comprehensive"
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "a3e56280-79a5-4f31-945f-f15b99f2cb9b",
+  "fields": {
+    "date_created": "2025-09-28T22:50:23.571Z",
+    "date_updated": "2025-10-16T09:11:47.959Z",
+    "category": "02a099fd-e88b-4b61-8f64-0e3eb7ee173f",
+    "subcategory_code": "SPECIAL_INSTITUTIONAL_TP",
+    "subcategory_name": "SPECIAL_INSTITUTIONAL_TP",
+    "product_type": "THIRD_PARTY",
+    "pricing_model": "FIXED",
+    "is_complex": false,
+    "additional_fields": [],
+    "pricing_requirements": {},
+    "is_active": false,
+    "show_in_public": false,
+    "public_sort_order": 0,
+    "public_label": null
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "a5159ed8-4774-4d50-ae56-d49b1d0f86a3",
+  "fields": {
+    "date_created": "2025-09-28T22:50:23.608Z",
+    "date_updated": "2025-10-16T09:12:55.349Z",
+    "category": "02a099fd-e88b-4b61-8f64-0e3eb7ee173f",
+    "subcategory_code": "MOTORCYCLE_PRIVATE_TP",
+    "subcategory_name": "Private Motorcycle Third-Party",
+    "product_type": "THIRD_PARTY",
+    "pricing_model": "FIXED",
+    "is_complex": false,
+    "additional_fields": [],
+    "pricing_requirements": {},
+    "is_active": false,
+    "show_in_public": true,
+    "public_sort_order": 104,
+    "public_label": "Private Motorcycle Third-Party"
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "ac494bc7-5f7c-402e-9a9c-937a131ad25c",
+  "fields": {
+    "date_created": "2025-09-29T00:12:30.228Z",
+    "date_updated": "2025-09-29T00:12:30.228Z",
+    "category": "63206394-bcc9-4ca4-9a2f-faf4cbadddb0",
+    "subcategory_code": "SPECIAL_FUEL_TANKER_COMP",
+    "subcategory_name": "Fuel Tankers Comprehensive",
+    "product_type": "COMPREHENSIVE",
+    "pricing_model": "TONNAGE",
+    "is_complex": false,
+    "additional_fields": [
+      "tonnage"
+    ],
+    "pricing_requirements": {
+      "max_tonnage": 31,
+      "requires_tonnage": true
+    },
+    "is_active": true,
+    "show_in_public": true,
+    "public_sort_order": 509,
+    "public_label": "Fuel Tankers Comprehensive"
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "accb806c-d4ba-4aa0-9ff0-bb7505fd78d2",
+  "fields": {
+    "date_created": "2025-09-23T14:54:13.105Z",
+    "date_updated": "2025-09-23T16:22:12.186Z",
+    "category": "d4ee8d63-363f-40e1-a5fc-41748a26ef42",
+    "subcategory_code": "PSV_TUKTUK_TP",
+    "subcategory_name": "PSV Tuk-Tuk Third-Party",
+    "product_type": "THIRD_PARTY",
+    "pricing_model": "PASSENGER",
+    "is_complex": false,
+    "additional_fields": [],
+    "pricing_requirements": {},
+    "is_active": true,
+    "show_in_public": true,
+    "public_sort_order": 102,
+    "public_label": "PSV Tuk-Tuk Third-Party"
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "ace106ee-e1e8-40c1-9a97-4d073f5b3f33",
+  "fields": {
+    "date_created": "2025-09-29T00:12:30.208Z",
+    "date_updated": "2025-09-29T00:12:30.208Z",
+    "category": "4f87a0cc-d791-4e20-9b96-39855211270e",
+    "subcategory_code": "TUKTUK_COMMERCIAL_TP",
+    "subcategory_name": "Commercial TukTuk Third-Party",
+    "product_type": "THIRD_PARTY",
+    "pricing_model": "FIXED",
+    "is_complex": false,
+    "additional_fields": [],
+    "pricing_requirements": {},
+    "is_active": true,
+    "show_in_public": true,
+    "public_sort_order": 103,
+    "public_label": "Commercial TukTuk Third-Party"
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "acf78ac4-9d88-4200-aae5-03131abce47b",
+  "fields": {
+    "date_created": "2025-09-29T00:05:54.505Z",
+    "date_updated": "2025-09-29T00:05:54.505Z",
+    "category": "d4ee8d63-363f-40e1-a5fc-41748a26ef42",
+    "subcategory_code": "PSV_UBER_COMP",
+    "subcategory_name": "PSV Uber Comprehensive",
+    "product_type": "COMPREHENSIVE",
+    "pricing_model": "PASSENGER",
+    "is_complex": false,
+    "additional_fields": [
+      "passenger_count"
+    ],
+    "pricing_requirements": {
+      "requires_passenger_count": true
+    },
+    "is_active": true,
+    "show_in_public": true,
+    "public_sort_order": 511,
+    "public_label": "PSV UBER COMPREHENSIVE"
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "b7ad403a-321a-4789-8fe4-0efb0dc4f817",
+  "fields": {
+    "date_created": "2025-09-29T00:12:30.180Z",
+    "date_updated": "2025-09-29T00:12:30.180Z",
+    "category": "fe27c128-972d-4a08-8893-1ad922d882bd",
+    "subcategory_code": "COMMERCIAL_OWN_GOODS_TP",
+    "subcategory_name": "Own Goods Third-Party",
+    "product_type": "THIRD_PARTY",
+    "pricing_model": "TONNAGE",
+    "is_complex": false,
+    "additional_fields": [
+      "tonnage"
+    ],
+    "pricing_requirements": {
+      "max_tonnage": 31,
+      "requires_tonnage": true
+    },
+    "is_active": true,
+    "show_in_public": true,
+    "public_sort_order": 102,
+    "public_label": "Own Goods Third-Party"
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "b976507a-d35e-4e84-9ef7-94608abaa1b5",
+  "fields": {
+    "date_created": "2025-09-29T00:12:30.218Z",
+    "date_updated": "2025-09-29T00:12:30.218Z",
+    "category": "63206394-bcc9-4ca4-9a2f-faf4cbadddb0",
+    "subcategory_code": "SPECIAL_INSTITUTIONAL_TP_EXT",
+    "subcategory_name": "Commercial Institutional Third-Party Extendible",
+    "product_type": "THIRD_PARTY_EXT",
+    "pricing_model": "PASSENGER",
+    "is_complex": false,
+    "additional_fields": [
+      "passenger_count",
+      "passenger_type"
+    ],
+    "pricing_requirements": {
+      "requires_passenger_type": true,
+      "requires_passenger_count": true
+    },
+    "is_active": true,
+    "show_in_public": true,
+    "public_sort_order": 203,
+    "public_label": "Commercial Institutional Third-Party Extendible"
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "c3d87a28-c87a-4b21-951f-1b0586a9d908",
+  "fields": {
+    "date_created": "2025-09-23T14:54:13.089Z",
+    "date_updated": "2025-09-23T16:22:12.125Z",
+    "category": "02a099fd-e88b-4b61-8f64-0e3eb7ee173f",
+    "subcategory_code": "PRIVATE_COMPREHENSIVE",
+    "subcategory_name": "Private Comprehensive",
+    "product_type": "comprehensive",
+    "pricing_model": "FIXED",
+    "is_complex": false,
+    "additional_fields": [],
+    "pricing_requirements": {},
+    "is_active": true,
+    "show_in_public": true,
+    "public_sort_order": 505,
+    "public_label": "Private Comprehensive"
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "c5178a09-c508-45ec-8cfa-886b32f3e300",
+  "fields": {
+    "date_created": "2025-09-29T00:12:30.225Z",
+    "date_updated": "2025-09-29T00:12:30.225Z",
+    "category": "63206394-bcc9-4ca4-9a2f-faf4cbadddb0",
+    "subcategory_code": "SPECIAL_INSTITUTIONAL_COMP",
+    "subcategory_name": "Commercial Institutional Comprehensive",
+    "product_type": "COMPREHENSIVE",
+    "pricing_model": "PASSENGER",
+    "is_complex": false,
+    "additional_fields": [
+      "passenger_count",
+      "passenger_type"
+    ],
+    "pricing_requirements": {
+      "requires_passenger_type": true,
+      "requires_passenger_count": true
+    },
+    "is_active": true,
+    "show_in_public": true,
+    "public_sort_order": 507,
+    "public_label": "Commercial Institutional Comprehensive"
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "ce88273c-85b0-4d72-a815-d9e9fef0b66a",
+  "fields": {
+    "date_created": "2025-09-23T14:54:13.115Z",
+    "date_updated": "2025-09-23T16:22:12.212Z",
+    "category": "83a003d5-9c80-422b-9350-583f92bb9d55",
+    "subcategory_code": "MOTORCYCLE_PSV_TP",
+    "subcategory_name": "PSV motorcycle third party",
+    "product_type": "THIRD_PARTY",
+    "pricing_model": "ENGINE_CC",
+    "is_complex": false,
+    "additional_fields": [],
+    "pricing_requirements": {},
+    "is_active": true,
+    "show_in_public": true,
+    "public_sort_order": 102,
+    "public_label": "PSV Motorcycle Third Party"
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "cf100eb6-efb7-4c10-afab-9b628baf3747",
+  "fields": {
+    "date_created": "2025-09-29T00:12:30.211Z",
+    "date_updated": "2025-09-29T00:12:30.211Z",
+    "category": "4f87a0cc-d791-4e20-9b96-39855211270e",
+    "subcategory_code": "TUKTUK_COMMERCIAL_COMP",
+    "subcategory_name": "Commercial TukTuk Comprehensive",
+    "product_type": "COMPREHENSIVE",
+    "pricing_model": "FIXED",
+    "is_complex": false,
+    "additional_fields": [],
+    "pricing_requirements": {},
+    "is_active": true,
+    "show_in_public": true,
+    "public_sort_order": 505,
+    "public_label": "Commercial TukTuk Comprehensive"
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "cf9966b7-4e06-4341-a4ca-992f218926d1",
+  "fields": {
+    "date_created": "2025-09-28T22:50:23.582Z",
+    "date_updated": "2025-10-16T09:11:47.948Z",
+    "category": "02a099fd-e88b-4b61-8f64-0e3eb7ee173f",
+    "subcategory_code": "MOTORCYCLE_PRIVATE_COMP",
+    "subcategory_name": "MOTORCYCLE_PRIVATE_COMP",
+    "product_type": "THIRD_PARTY",
+    "pricing_model": "FIXED",
+    "is_complex": false,
+    "additional_fields": [],
+    "pricing_requirements": {},
+    "is_active": false,
+    "show_in_public": false,
+    "public_sort_order": 0,
+    "public_label": null
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "d234cead-5ffa-4fd7-b75b-fc70002baf39",
+  "fields": {
+    "date_created": "2025-09-29T00:12:30.171Z",
+    "date_updated": "2025-09-29T00:12:30.171Z",
+    "category": "fe27c128-972d-4a08-8893-1ad922d882bd",
+    "subcategory_code": "COMMERCIAL_TOR",
+    "subcategory_name": "TOR For Commercial",
+    "product_type": "TOR",
+    "pricing_model": "TONNAGE",
+    "is_complex": false,
+    "additional_fields": [
+      "tonnage"
+    ],
+    "pricing_requirements": {
+      "max_tonnage": 31,
+      "requires_tonnage": true
+    },
+    "is_active": true,
+    "show_in_public": true,
+    "public_sort_order": 401,
+    "public_label": "TOR For Commercial"
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "d4426841-f3d0-42bf-931e-7662f12405a5",
+  "fields": {
+    "date_created": "2025-09-28T22:50:23.592Z",
+    "date_updated": "2025-10-16T09:11:47.954Z",
+    "category": "02a099fd-e88b-4b61-8f64-0e3eb7ee173f",
+    "subcategory_code": "SPECIAL_AGRICULTURAL_COMP",
+    "subcategory_name": "SPECIAL_AGRICULTURAL_COMP",
+    "product_type": "THIRD_PARTY",
+    "pricing_model": "FIXED",
+    "is_complex": false,
+    "additional_fields": [],
+    "pricing_requirements": {},
+    "is_active": false,
+    "show_in_public": false,
+    "public_sort_order": 0,
+    "public_label": null
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "d5497b86-997f-47cc-822e-9ea23b8929a9",
+  "fields": {
+    "date_created": "2025-09-29T00:12:30.200Z",
+    "date_updated": "2025-09-29T00:12:30.200Z",
+    "category": "83a003d5-9c80-422b-9350-583f92bb9d55",
+    "subcategory_code": "MOTORCYCLE_PSV_COMP",
+    "subcategory_name": "PSV Motorcycle comprehensive",
+    "product_type": "COMPREHENSIVE",
+    "pricing_model": "ENGINE_CC",
+    "is_complex": false,
+    "additional_fields": [
+      "engine_capacity"
+    ],
+    "pricing_requirements": {
+      "requires_engine_capacity": true
+    },
+    "is_active": true,
+    "show_in_public": true,
+    "public_sort_order": 505,
+    "public_label": "PSV Motorcycle comprehensive"
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "d7b4da34-6ad7-4a34-ae35-4cecbdb4b995",
+  "fields": {
+    "date_created": "2025-09-29T00:12:30.181Z",
+    "date_updated": "2025-09-29T00:12:30.181Z",
+    "category": "fe27c128-972d-4a08-8893-1ad922d882bd",
+    "subcategory_code": "COMMERCIAL_OWN_GOODS_TP_EXT",
+    "subcategory_name": "Own Goods Third-Party Extendible",
+    "product_type": "THIRD_PARTY_EXT",
+    "pricing_model": "TONNAGE",
+    "is_complex": false,
+    "additional_fields": [
+      "tonnage"
+    ],
+    "pricing_requirements": {
+      "max_tonnage": 31,
+      "requires_tonnage": true
+    },
+    "is_active": true,
+    "show_in_public": true,
+    "public_sort_order": 203,
+    "public_label": "Own Goods Third-Party Extendible"
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "d7b935c7-d55f-47ca-9e28-5a444243e9b1",
+  "fields": {
+    "date_created": "2025-09-29T00:12:30.206Z",
+    "date_updated": "2025-09-29T00:12:30.206Z",
+    "category": "4f87a0cc-d791-4e20-9b96-39855211270e",
+    "subcategory_code": "TUKTUK_PSV_TP_EXT",
+    "subcategory_name": "PSV Tuk-Tuk Third-Party Extendible",
+    "product_type": "THIRD_PARTY_EXT",
+    "pricing_model": "PASSENGER",
+    "is_complex": false,
+    "additional_fields": [
+      "passenger_count"
+    ],
+    "pricing_requirements": {
+      "requires_passenger_count": true
+    },
+    "is_active": true,
+    "show_in_public": true,
+    "public_sort_order": 202,
+    "public_label": "PSV Tuk-Tuk Third-Party Extendible"
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "d83ac6d4-9151-417f-b11e-4f2a3277ac82",
+  "fields": {
+    "date_created": "2025-09-23T14:54:13.083Z",
+    "date_updated": "2025-09-23T16:22:12.118Z",
+    "category": "02a099fd-e88b-4b61-8f64-0e3eb7ee173f",
+    "subcategory_code": "PRIVATE_TOR",
+    "subcategory_name": "Private Time On Risk",
+    "product_type": "fixed",
+    "pricing_model": "FIXED",
+    "is_complex": false,
+    "additional_fields": [],
+    "pricing_requirements": {},
+    "is_active": true,
+    "show_in_public": true,
+    "public_sort_order": 401,
+    "public_label": "TOR For Private"
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "d850b486-5ea8-40b1-940d-5c29927fb6c6",
+  "fields": {
+    "date_created": "2025-09-28T22:50:23.594Z",
+    "date_updated": "2025-10-16T09:11:47.952Z",
+    "category": "02a099fd-e88b-4b61-8f64-0e3eb7ee173f",
+    "subcategory_code": "PSV_UBER_COMP",
+    "subcategory_name": "PSV_UBER_COMP",
+    "product_type": "THIRD_PARTY",
+    "pricing_model": "FIXED",
+    "is_complex": false,
+    "additional_fields": [],
+    "pricing_requirements": {},
+    "is_active": false,
+    "show_in_public": false,
+    "public_sort_order": 0,
+    "public_label": null
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "d85a3baa-dc18-4773-9dd4-d5556c66f24c",
+  "fields": {
+    "date_created": "2025-09-23T14:54:13.096Z",
+    "date_updated": "2025-10-16T09:11:47.970Z",
+    "category": "4f87a0cc-d791-4e20-9b96-39855211270e",
+    "subcategory_code": "TUKTUK_COMMERCIAL_TP_ALT",
+    "subcategory_name": "Commercial TukTuk Third-Party (Alternative)",
+    "product_type": "third_party",
+    "pricing_model": "FIXED",
+    "is_complex": false,
+    "additional_fields": [],
+    "pricing_requirements": {},
+    "is_active": true,
+    "show_in_public": false,
+    "public_sort_order": 0,
+    "public_label": null
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "dec45528-de0c-4e25-b4d8-4d594237bb1a",
+  "fields": {
+    "date_created": "2025-09-29T00:12:30.221Z",
+    "date_updated": "2025-09-29T00:12:30.221Z",
+    "category": "63206394-bcc9-4ca4-9a2f-faf4cbadddb0",
+    "subcategory_code": "SPECIAL_DRIVING_SCHOOL_TP",
+    "subcategory_name": "Driving School Third-Party",
+    "product_type": "THIRD_PARTY",
+    "pricing_model": "TONNAGE",
+    "is_complex": false,
+    "additional_fields": [
+      "tonnage",
+      "passenger_count"
+    ],
+    "pricing_requirements": {
+      "requires_tonnage": true,
+      "requires_passenger_count": true
+    },
+    "is_active": true,
+    "show_in_public": true,
+    "public_sort_order": 105,
+    "public_label": "Driving School Third-Party"
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "e319fcc3-a380-435c-ba1e-cb1f99e24c41",
+  "fields": {
+    "date_created": "2025-09-29T00:12:30.188Z",
+    "date_updated": "2025-09-29T00:12:30.188Z",
+    "category": "fe27c128-972d-4a08-8893-1ad922d882bd",
+    "subcategory_code": "COMMERCIAL_GENERAL_CARTAGE_TP_EXT_PM",
+    "subcategory_name": "General Cartage Third-Party Extendible Prime Mover",
+    "product_type": "THIRD_PARTY_EXT",
+    "pricing_model": "TONNAGE",
+    "is_complex": false,
+    "additional_fields": [
+      "tonnage"
+    ],
+    "pricing_requirements": {
+      "max_tonnage": 31,
+      "requires_tonnage": true
+    },
+    "is_active": true,
+    "show_in_public": true,
+    "public_sort_order": 207,
+    "public_label": "General Cartage Third-Party Extendible Prime Mover"
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "e5fda96b-fdda-4fe9-a53c-3cd8d5500ada",
+  "fields": {
+    "date_created": "2025-09-28T22:50:23.588Z",
+    "date_updated": "2025-09-28T22:50:23.588Z",
+    "category": "02a099fd-e88b-4b61-8f64-0e3eb7ee173f",
+    "subcategory_code": "PRIVATE_THIRD_PARTY",
+    "subcategory_name": "PRIVATE_THIRD_PARTY",
+    "product_type": "THIRD_PARTY",
+    "pricing_model": "FIXED",
+    "is_complex": false,
+    "additional_fields": [],
+    "pricing_requirements": {},
+    "is_active": true,
+    "show_in_public": true,
+    "public_sort_order": 102,
+    "public_label": "Private Third-Party"
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "ef6f9d94-afa6-4957-a6e1-c722dc3f327f",
+  "fields": {
+    "date_created": "2025-09-29T00:12:30.202Z",
+    "date_updated": "2025-09-29T00:12:30.202Z",
+    "category": "83a003d5-9c80-422b-9350-583f92bb9d55",
+    "subcategory_code": "MOTORCYCLE_PSV_COMP_6M",
+    "subcategory_name": "PSV motorcycle comprehensive 6 months",
+    "product_type": "COMPREHENSIVE",
+    "pricing_model": "ENGINE_CC",
+    "is_complex": false,
+    "additional_fields": [
+      "engine_capacity"
+    ],
+    "pricing_requirements": {
+      "requires_engine_capacity": true
+    },
+    "is_active": true,
+    "show_in_public": true,
+    "public_sort_order": 506,
+    "public_label": "PSV motorcycle comprehensive 6 months"
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "f1b4d2b9-5654-4146-a799-5a66e44fd01e",
+  "fields": {
+    "date_created": "2025-09-28T22:50:23.576Z",
+    "date_updated": "2025-10-16T09:11:47.937Z",
+    "category": "02a099fd-e88b-4b61-8f64-0e3eb7ee173f",
+    "subcategory_code": "COMMERCIAL_GENERAL_CARTAGE_TP",
+    "subcategory_name": "COMMERCIAL_GENERAL_CARTAGE_TP",
+    "product_type": "THIRD_PARTY",
+    "pricing_model": "FIXED",
+    "is_complex": false,
+    "additional_fields": [],
+    "pricing_requirements": {},
+    "is_active": false,
+    "show_in_public": false,
+    "public_sort_order": 0,
+    "public_label": null
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "f2e4c804-1bc3-4411-99ab-c91f1f08606c",
+  "fields": {
+    "date_created": "2025-09-29T00:12:30.186Z",
+    "date_updated": "2025-09-29T00:12:30.186Z",
+    "category": "fe27c128-972d-4a08-8893-1ad922d882bd",
+    "subcategory_code": "COMMERCIAL_GENERAL_CARTAGE_TP_PM",
+    "subcategory_name": "General Cartage Third-Party Prime Mover",
+    "product_type": "THIRD_PARTY",
+    "pricing_model": "TONNAGE",
+    "is_complex": false,
+    "additional_fields": [
+      "tonnage"
+    ],
+    "pricing_requirements": {
+      "max_tonnage": 31,
+      "requires_tonnage": true
+    },
+    "is_active": true,
+    "show_in_public": true,
+    "public_sort_order": 106,
+    "public_label": "General Cartage Third-Party Prime Mover"
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "f74414bf-1e4f-4965-a953-dc4f46c3e265",
+  "fields": {
+    "date_created": "2025-09-28T22:50:23.601Z",
+    "date_updated": "2025-09-28T22:50:23.601Z",
+    "category": "02a099fd-e88b-4b61-8f64-0e3eb7ee173f",
+    "subcategory_code": "PRIVATE_THIRD_PARTY_EXT",
+    "subcategory_name": "PRIVATE_THIRD_PARTY_EXT",
+    "product_type": "THIRD_PARTY",
+    "pricing_model": "FIXED",
+    "is_complex": false,
+    "additional_fields": [],
+    "pricing_requirements": {},
+    "is_active": true,
+    "show_in_public": true,
+    "public_sort_order": 203,
+    "public_label": "Private Third-Party Extendible"
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "fb7e17be-9bfd-4fc3-93e8-6fa13346eebe",
+  "fields": {
+    "date_created": "2025-09-29T00:12:30.209Z",
+    "date_updated": "2025-09-29T00:12:30.209Z",
+    "category": "4f87a0cc-d791-4e20-9b96-39855211270e",
+    "subcategory_code": "TUKTUK_COMMERCIAL_TP_EXT",
+    "subcategory_name": "Commercial TukTuk Third-Party Extendible",
+    "product_type": "THIRD_PARTY_EXT",
+    "pricing_model": "FIXED",
+    "is_complex": false,
+    "additional_fields": [],
+    "pricing_requirements": {},
+    "is_active": true,
+    "show_in_public": true,
+    "public_sort_order": 204,
+    "public_label": "Commercial TukTuk Third-Party Extendible"
+  }
+},
+{
+  "model": "app.motorpricing",
+  "pk": "0376aa83-fe46-4659-a368-e55ae382f626",
+  "fields": {
+    "date_created": "2025-09-28T14:13:09.199Z",
+    "date_updated": "2025-09-28T15:14:46.784Z",
+    "subcategory": "e5fda96b-fdda-4fe9-a53c-3cd8d5500ada",
+    "underwriter": "771c566f-292a-49f1-97a9-19c2b967335e",
+    "base_premium": "5200.00",
+    "minimum_premium": null,
+    "maximum_premium": null,
+    "bracket_pricing": null,
+    "pricing_factors": {
+      "pricing_type": "fixed"
+    },
+    "effective_from": "2025-09-28",
+    "effective_to": null,
+    "is_active": true
+  }
+},
+{
+  "model": "app.motorpricing",
+  "pk": "07ba83b8-32cf-4e68-87cd-f2a92fba8e1d",
+  "fields": {
+    "date_created": "2025-09-23T15:22:45.217Z",
+    "date_updated": "2025-09-23T15:22:45.217Z",
+    "subcategory": "562464a1-ba36-4db8-95f2-d2c6d7792781",
+    "underwriter": "14900c1c-4327-4366-a1e9-585699b1a495",
+    "base_premium": "0.00",
+    "minimum_premium": "20000.00",
+    "maximum_premium": null,
+    "bracket_pricing": null,
+    "pricing_factors": {},
+    "effective_from": "2025-09-23",
+    "effective_to": null,
+    "is_active": true
+  }
+},
+{
+  "model": "app.motorpricing",
+  "pk": "0cbbcc3e-8ce5-487f-a6cb-0c163dbe7cfe",
+  "fields": {
+    "date_created": "2025-09-23T15:22:44.923Z",
+    "date_updated": "2025-09-23T15:22:44.923Z",
+    "subcategory": "d83ac6d4-9151-417f-b11e-4f2a3277ac82",
+    "underwriter": "acff5e40-a95b-4dd1-bc06-8e210e1e95bc",
+    "base_premium": "800.00",
+    "minimum_premium": null,
+    "maximum_premium": null,
+    "bracket_pricing": null,
+    "pricing_factors": {},
+    "effective_from": "2025-09-23",
+    "effective_to": null,
+    "is_active": true
+  }
+},
+{
+  "model": "app.motorpricing",
+  "pk": "0d6b88ed-5adb-4f8c-bdcb-247f196b1a3e",
+  "fields": {
+    "date_created": "2025-09-23T15:24:26.321Z",
+    "date_updated": "2025-09-23T15:24:26.321Z",
+    "subcategory": "792f2b97-9bd0-480d-a5cf-6d213196591c",
+    "underwriter": "14900c1c-4327-4366-a1e9-585699b1a495",
+    "base_premium": "0.00",
+    "minimum_premium": "20000.00",
+    "maximum_premium": null,
+    "bracket_pricing": null,
+    "pricing_factors": {},
+    "effective_from": "2025-09-23",
+    "effective_to": null,
+    "is_active": true
+  }
+},
+{
+  "model": "app.motorpricing",
+  "pk": "0f0e2b50-caba-4428-9e94-767267cdfa2a",
+  "fields": {
+    "date_created": "2025-09-23T15:24:26.171Z",
+    "date_updated": "2025-09-23T15:24:26.171Z",
+    "subcategory": "c3d87a28-c87a-4b21-951f-1b0586a9d908",
+    "underwriter": "acff5e40-a95b-4dd1-bc06-8e210e1e95bc",
+    "base_premium": "0.00",
+    "minimum_premium": "20000.00",
+    "maximum_premium": null,
+    "bracket_pricing": null,
+    "pricing_factors": {},
+    "effective_from": "2025-09-23",
+    "effective_to": null,
+    "is_active": true
+  }
+},
+{
+  "model": "app.motorpricing",
+  "pk": "10a2d701-0fb7-4b1b-8ac8-9549032b8889",
+  "fields": {
+    "date_created": "2025-09-23T19:17:32.853Z",
+    "date_updated": "2025-09-23T19:17:32.853Z",
+    "subcategory": "e5fda96b-fdda-4fe9-a53c-3cd8d5500ada",
+    "underwriter": "155e4474-a112-4231-b2b4-29e7f0a675e4",
+    "base_premium": "3600.00",
+    "minimum_premium": null,
+    "maximum_premium": null,
+    "bracket_pricing": null,
+    "pricing_factors": {},
+    "effective_from": "2025-09-23",
+    "effective_to": null,
+    "is_active": true
+  }
+},
+{
+  "model": "app.motorpricing",
+  "pk": "166bc61f-8a28-486e-98ba-2b999bd146aa",
+  "fields": {
+    "date_created": "2025-09-23T15:24:26.095Z",
+    "date_updated": "2025-09-23T15:24:26.095Z",
+    "subcategory": "55ec10f8-901f-4684-9601-d01944a85987",
+    "underwriter": "14900c1c-4327-4366-a1e9-585699b1a495",
+    "base_premium": "5500.00",
+    "minimum_premium": null,
+    "maximum_premium": null,
+    "bracket_pricing": null,
+    "pricing_factors": {},
+    "effective_from": "2025-09-23",
+    "effective_to": null,
+    "is_active": true
+  }
+},
+{
+  "model": "app.motorpricing",
+  "pk": "23e10604-2f37-4b1a-89e7-3adf0a406565",
+  "fields": {
+    "date_created": "2025-09-23T15:22:44.973Z",
+    "date_updated": "2025-09-23T15:22:44.973Z",
+    "subcategory": "ce88273c-85b0-4d72-a815-d9e9fef0b66a",
+    "underwriter": "acff5e40-a95b-4dd1-bc06-8e210e1e95bc",
+    "base_premium": "5500.00",
+    "minimum_premium": null,
+    "maximum_premium": null,
+    "bracket_pricing": null,
+    "pricing_factors": {},
+    "effective_from": "2025-09-23",
+    "effective_to": null,
+    "is_active": true
+  }
+},
+{
+  "model": "app.motorpricing",
+  "pk": "27508ea2-39b9-4ce9-a1df-aa35f34129b5",
+  "fields": {
+    "date_created": "2025-09-23T15:24:26.221Z",
+    "date_updated": "2025-09-23T15:24:26.221Z",
+    "subcategory": "792f2b97-9bd0-480d-a5cf-6d213196591c",
+    "underwriter": "acff5e40-a95b-4dd1-bc06-8e210e1e95bc",
+    "base_premium": "0.00",
+    "minimum_premium": "20000.00",
+    "maximum_premium": null,
+    "bracket_pricing": null,
+    "pricing_factors": {},
+    "effective_from": "2025-09-23",
+    "effective_to": null,
+    "is_active": true
+  }
+},
+{
+  "model": "app.motorpricing",
+  "pk": "2b7583f3-fb13-4128-82ed-72ae0e99b40f",
+  "fields": {
+    "date_created": "2025-09-23T15:22:44.950Z",
+    "date_updated": "2025-09-23T15:22:44.950Z",
+    "subcategory": "d85a3baa-dc18-4773-9dd4-d5556c66f24c",
+    "underwriter": "acff5e40-a95b-4dd1-bc06-8e210e1e95bc",
+    "base_premium": "5500.00",
+    "minimum_premium": null,
+    "maximum_premium": null,
+    "bracket_pricing": null,
+    "pricing_factors": {},
+    "effective_from": "2025-09-23",
+    "effective_to": null,
+    "is_active": true
+  }
+},
+{
+  "model": "app.motorpricing",
+  "pk": "3054cc79-b56c-49e6-8961-80eb55b035d6",
+  "fields": {
+    "date_created": "2025-09-23T15:22:45.075Z",
+    "date_updated": "2025-09-23T15:22:45.075Z",
+    "subcategory": "9dbc9eb0-8694-41a5-adb2-f7ecdfa00530",
+    "underwriter": "14900c1c-4327-4366-a1e9-585699b1a495",
+    "base_premium": "5500.00",
+    "minimum_premium": null,
+    "maximum_premium": null,
+    "bracket_pricing": null,
+    "pricing_factors": {},
+    "effective_from": "2025-09-23",
+    "effective_to": null,
+    "is_active": true
+  }
+},
+{
+  "model": "app.motorpricing",
+  "pk": "39a81878-d4fd-4999-b4bd-2781e413cc0f",
+  "fields": {
+    "date_created": "2025-09-23T15:24:26.211Z",
+    "date_updated": "2025-09-23T15:24:26.211Z",
+    "subcategory": "a3e56280-79a5-4f31-945f-f15b99f2cb9b",
+    "underwriter": "acff5e40-a95b-4dd1-bc06-8e210e1e95bc",
+    "base_premium": "0.00",
+    "minimum_premium": "20000.00",
+    "maximum_premium": null,
+    "bracket_pricing": null,
+    "pricing_factors": {},
+    "effective_from": "2025-09-23",
+    "effective_to": null,
+    "is_active": true
+  }
+},
+{
+  "model": "app.motorpricing",
+  "pk": "4943cce5-2d1b-4aa6-857f-9a3843af464e",
+  "fields": {
+    "date_created": "2025-09-23T15:24:26.087Z",
+    "date_updated": "2025-09-23T15:24:26.087Z",
+    "subcategory": "47363ab5-bb14-4a5d-bec4-37f5cd8159b3",
+    "underwriter": "14900c1c-4327-4366-a1e9-585699b1a495",
+    "base_premium": "5500.00",
+    "minimum_premium": null,
+    "maximum_premium": null,
+    "bracket_pricing": null,
+    "pricing_factors": {},
+    "effective_from": "2025-09-23",
+    "effective_to": null,
+    "is_active": true
+  }
+},
+{
+  "model": "app.motorpricing",
+  "pk": "50829cff-bb3b-4307-9de4-16e182e2bbe9",
+  "fields": {
+    "date_created": "2025-09-23T15:22:44.981Z",
+    "date_updated": "2025-09-23T15:22:44.981Z",
+    "subcategory": "9dbc9eb0-8694-41a5-adb2-f7ecdfa00530",
+    "underwriter": "acff5e40-a95b-4dd1-bc06-8e210e1e95bc",
+    "base_premium": "5500.00",
+    "minimum_premium": null,
+    "maximum_premium": null,
+    "bracket_pricing": null,
+    "pricing_factors": {},
+    "effective_from": "2025-09-23",
+    "effective_to": null,
+    "is_active": true
+  }
+},
+{
+  "model": "app.motorpricing",
+  "pk": "540996d5-5cf3-4237-9446-0136df80c382",
+  "fields": {
+    "date_created": "2025-09-23T15:22:45.052Z",
+    "date_updated": "2025-09-23T15:22:45.052Z",
+    "subcategory": "accb806c-d4ba-4aa0-9ff0-bb7505fd78d2",
+    "underwriter": "14900c1c-4327-4366-a1e9-585699b1a495",
+    "base_premium": "5500.00",
+    "minimum_premium": null,
+    "maximum_premium": null,
+    "bracket_pricing": null,
+    "pricing_factors": {},
+    "effective_from": "2025-09-23",
+    "effective_to": null,
+    "is_active": true
+  }
+},
+{
+  "model": "app.motorpricing",
+  "pk": "56b08730-57d6-4872-a485-7551f1bab3c1",
+  "fields": {
+    "date_created": "2025-09-23T15:24:26.184Z",
+    "date_updated": "2025-09-23T15:24:26.184Z",
+    "subcategory": "cf9966b7-4e06-4341-a4ca-992f218926d1",
+    "underwriter": "acff5e40-a95b-4dd1-bc06-8e210e1e95bc",
+    "base_premium": "0.00",
+    "minimum_premium": "20000.00",
+    "maximum_premium": null,
+    "bracket_pricing": null,
+    "pricing_factors": {},
+    "effective_from": "2025-09-23",
+    "effective_to": null,
+    "is_active": true
+  }
+},
+{
+  "model": "app.motorpricing",
+  "pk": "5f72b6e1-3f7e-403b-afdf-3e9f9e7844e4",
+  "fields": {
+    "date_created": "2025-09-23T15:24:26.177Z",
+    "date_updated": "2025-09-23T15:24:26.177Z",
+    "subcategory": "d850b486-5ea8-40b1-940d-5c29927fb6c6",
+    "underwriter": "acff5e40-a95b-4dd1-bc06-8e210e1e95bc",
+    "base_premium": "0.00",
+    "minimum_premium": "20000.00",
+    "maximum_premium": null,
+    "bracket_pricing": null,
+    "pricing_factors": {},
+    "effective_from": "2025-09-23",
+    "effective_to": null,
+    "is_active": true
+  }
+},
+{
+  "model": "app.motorpricing",
+  "pk": "60147446-1dd3-4e5b-af2b-093fbec840b2",
+  "fields": {
+    "date_created": "2025-09-23T15:24:26.284Z",
+    "date_updated": "2025-09-23T15:24:26.284Z",
+    "subcategory": "d850b486-5ea8-40b1-940d-5c29927fb6c6",
+    "underwriter": "14900c1c-4327-4366-a1e9-585699b1a495",
+    "base_premium": "0.00",
+    "minimum_premium": "20000.00",
+    "maximum_premium": null,
+    "bracket_pricing": null,
+    "pricing_factors": {},
+    "effective_from": "2025-09-23",
+    "effective_to": null,
+    "is_active": true
+  }
+},
+{
+  "model": "app.motorpricing",
+  "pk": "673b4939-34c4-4a29-add9-c9cf397ae7df",
+  "fields": {
+    "date_created": "2025-09-23T15:24:26.032Z",
+    "date_updated": "2025-09-23T15:24:26.032Z",
+    "subcategory": "0e9334f1-a127-48e0-8a41-623fc00825e3",
+    "underwriter": "acff5e40-a95b-4dd1-bc06-8e210e1e95bc",
+    "base_premium": "5500.00",
+    "minimum_premium": null,
+    "maximum_premium": null,
+    "bracket_pricing": null,
+    "pricing_factors": {},
+    "effective_from": "2025-09-23",
+    "effective_to": null,
+    "is_active": true
+  }
+},
+{
+  "model": "app.motorpricing",
+  "pk": "743609b5-886f-4ea1-9f29-c63dbd9d8564",
+  "fields": {
+    "date_created": "2025-09-28T15:14:46.789Z",
+    "date_updated": "2025-09-28T20:10:44.583Z",
+    "subcategory": "d83ac6d4-9151-417f-b11e-4f2a3277ac82",
+    "underwriter": "771c566f-292a-49f1-97a9-19c2b967335e",
+    "base_premium": "600.00",
+    "minimum_premium": null,
+    "maximum_premium": null,
+    "bracket_pricing": null,
+    "pricing_factors": {
+      "pricing_type": "fixed"
+    },
+    "effective_from": "2025-09-28",
+    "effective_to": null,
+    "is_active": true
+  }
+},
+{
+  "model": "app.motorpricing",
+  "pk": "74e3cb5e-e3c1-4d4c-a37c-9ff380883ed0",
+  "fields": {
+    "date_created": "2025-09-23T15:22:44.999Z",
+    "date_updated": "2025-09-23T15:22:44.999Z",
+    "subcategory": "d83ac6d4-9151-417f-b11e-4f2a3277ac82",
+    "underwriter": "14900c1c-4327-4366-a1e9-585699b1a495",
+    "base_premium": "800.00",
+    "minimum_premium": null,
+    "maximum_premium": null,
+    "bracket_pricing": null,
+    "pricing_factors": {},
+    "effective_from": "2025-09-23",
+    "effective_to": null,
+    "is_active": true
+  }
+},
+{
+  "model": "app.motorpricing",
+  "pk": "7974deb2-1a0f-4340-81d6-449f58a0de6e",
+  "fields": {
+    "date_created": "2025-09-23T15:24:25.981Z",
+    "date_updated": "2025-09-23T15:24:25.981Z",
+    "subcategory": "e5fda96b-fdda-4fe9-a53c-3cd8d5500ada",
+    "underwriter": "acff5e40-a95b-4dd1-bc06-8e210e1e95bc",
+    "base_premium": "5500.00",
+    "minimum_premium": null,
+    "maximum_premium": null,
+    "bracket_pricing": null,
+    "pricing_factors": {},
+    "effective_from": "2025-09-23",
+    "effective_to": null,
+    "is_active": true
+  }
+},
+{
+  "model": "app.motorpricing",
+  "pk": "80f07e91-400e-4e51-a453-1d0d47d96049",
+  "fields": {
+    "date_created": "2025-09-23T15:22:45.107Z",
+    "date_updated": "2025-09-23T15:22:45.107Z",
+    "subcategory": "562464a1-ba36-4db8-95f2-d2c6d7792781",
+    "underwriter": "acff5e40-a95b-4dd1-bc06-8e210e1e95bc",
+    "base_premium": "0.00",
+    "minimum_premium": "20000.00",
+    "maximum_premium": null,
+    "bracket_pricing": null,
+    "pricing_factors": {},
+    "effective_from": "2025-09-23",
+    "effective_to": null,
+    "is_active": true
+  }
+},
+{
+  "model": "app.motorpricing",
+  "pk": "840bd48a-ebf2-431b-a2cf-29bd0ff62475",
+  "fields": {
+    "date_created": "2025-09-23T15:22:45.038Z",
+    "date_updated": "2025-09-23T15:22:45.038Z",
+    "subcategory": "d85a3baa-dc18-4773-9dd4-d5556c66f24c",
+    "underwriter": "14900c1c-4327-4366-a1e9-585699b1a495",
+    "base_premium": "5500.00",
+    "minimum_premium": null,
+    "maximum_premium": null,
+    "bracket_pricing": null,
+    "pricing_factors": {},
+    "effective_from": "2025-09-23",
+    "effective_to": null,
+    "is_active": true
+  }
+},
+{
+  "model": "app.motorpricing",
+  "pk": "88445284-3776-4303-85c7-cd9da750bd00",
+  "fields": {
+    "date_created": "2025-09-28T15:57:16.460Z",
+    "date_updated": "2025-09-28T20:10:44.579Z",
+    "subcategory": "cf9966b7-4e06-4341-a4ca-992f218926d1",
+    "underwriter": "aa85d49e-06a2-40ec-9a22-e09b453f8066",
+    "base_premium": "8000.00",
+    "minimum_premium": "8000.00",
+    "maximum_premium": null,
+    "bracket_pricing": null,
+    "pricing_factors": {
+      "rate": 0.025,
+      "pricing_type": "percentage"
+    },
+    "effective_from": "2025-09-28",
+    "effective_to": null,
+    "is_active": true
+  }
+},
+{
+  "model": "app.motorpricing",
+  "pk": "8bf014db-66b8-480f-8e40-9e414a29b0d6",
+  "fields": {
+    "date_created": "2025-09-23T15:24:26.021Z",
+    "date_updated": "2025-09-23T15:24:26.021Z",
+    "subcategory": "8da7297d-5b17-4969-9b1b-e78bb6d5d40f",
+    "underwriter": "acff5e40-a95b-4dd1-bc06-8e210e1e95bc",
+    "base_premium": "5500.00",
+    "minimum_premium": null,
+    "maximum_premium": null,
+    "bracket_pricing": null,
+    "pricing_factors": {},
+    "effective_from": "2025-09-23",
+    "effective_to": null,
+    "is_active": true
+  }
+},
+{
+  "model": "app.motorpricing",
+  "pk": "8c2e6b9c-7af6-44dd-a6b0-76562dedff72",
+  "fields": {
+    "date_created": "2025-09-23T15:22:44.959Z",
+    "date_updated": "2025-09-23T15:22:44.959Z",
+    "subcategory": "8a6b2335-aa56-4658-a15d-9c0db0062b2c",
+    "underwriter": "acff5e40-a95b-4dd1-bc06-8e210e1e95bc",
+    "base_premium": "5500.00",
+    "minimum_premium": null,
+    "maximum_premium": null,
+    "bracket_pricing": null,
+    "pricing_factors": {},
+    "effective_from": "2025-09-23",
+    "effective_to": null,
+    "is_active": true
+  }
+},
+{
+  "model": "app.motorpricing",
+  "pk": "8cf44948-5eb3-4830-9b2e-a5e92894bb56",
+  "fields": {
+    "date_created": "2025-09-23T15:24:26.270Z",
+    "date_updated": "2025-09-23T15:24:26.270Z",
+    "subcategory": "0b13511b-8e76-4616-934b-a847650f43fa",
+    "underwriter": "14900c1c-4327-4366-a1e9-585699b1a495",
+    "base_premium": "0.00",
+    "minimum_premium": "20000.00",
+    "maximum_premium": null,
+    "bracket_pricing": null,
+    "pricing_factors": {},
+    "effective_from": "2025-09-23",
+    "effective_to": null,
+    "is_active": true
+  }
+},
+{
+  "model": "app.motorpricing",
+  "pk": "8f9625e0-6bea-4acc-aee6-740106248cd5",
+  "fields": {
+    "date_created": "2025-09-23T14:54:14.763Z",
+    "date_updated": "2025-09-23T16:22:13.874Z",
+    "subcategory": "5d6abafb-0ab9-418e-b37e-99d2447c137f",
+    "underwriter": "acff5e40-a95b-4dd1-bc06-8e210e1e95bc",
+    "base_premium": "850.00",
+    "minimum_premium": null,
+    "maximum_premium": null,
+    "bracket_pricing": null,
+    "pricing_factors": {},
+    "effective_from": "2025-09-23",
+    "effective_to": null,
+    "is_active": true
+  }
+},
+{
+  "model": "app.motorpricing",
+  "pk": "93653ca7-651d-4edc-aac0-0254bab9a255",
+  "fields": {
+    "date_created": "2025-09-23T15:24:26.277Z",
+    "date_updated": "2025-09-23T15:24:26.277Z",
+    "subcategory": "c3d87a28-c87a-4b21-951f-1b0586a9d908",
+    "underwriter": "14900c1c-4327-4366-a1e9-585699b1a495",
+    "base_premium": "0.00",
+    "minimum_premium": "20000.00",
+    "maximum_premium": null,
+    "bracket_pricing": null,
+    "pricing_factors": {},
+    "effective_from": "2025-09-23",
+    "effective_to": null,
+    "is_active": true
+  }
+},
+{
+  "model": "app.motorpricing",
+  "pk": "939d71ee-59ed-4f52-aa21-afcdcac0da8c",
+  "fields": {
+    "date_created": "2025-09-28T14:13:09.210Z",
+    "date_updated": "2025-09-28T15:11:22.725Z",
+    "subcategory": "f74414bf-1e4f-4965-a953-dc4f46c3e265",
+    "underwriter": "771c566f-292a-49f1-97a9-19c2b967335e",
+    "base_premium": "3500.00",
+    "minimum_premium": null,
+    "maximum_premium": null,
+    "bracket_pricing": null,
+    "pricing_factors": {
+      "pricing_type": "fixed"
+    },
+    "effective_from": "2025-09-27",
+    "effective_to": null,
+    "is_active": true
+  }
+},
+{
+  "model": "app.motorpricing",
+  "pk": "93e48481-d1e9-4e9b-8891-9d6a91d5062f",
+  "fields": {
+    "date_created": "2025-09-28T15:03:49.381Z",
+    "date_updated": "2025-09-28T20:10:44.570Z",
+    "subcategory": "d83ac6d4-9151-417f-b11e-4f2a3277ac82",
+    "underwriter": "aa85d49e-06a2-40ec-9a22-e09b453f8066",
+    "base_premium": "400.00",
+    "minimum_premium": null,
+    "maximum_premium": null,
+    "bracket_pricing": null,
+    "pricing_factors": {
+      "pricing_type": "fixed"
+    },
+    "effective_from": "2025-09-28",
+    "effective_to": null,
+    "is_active": true
+  }
+},
+{
+  "model": "app.motorpricing",
+  "pk": "a162cd6f-e3df-426d-b318-02ad5210ecc8",
+  "fields": {
+    "date_created": "2025-09-23T15:24:26.085Z",
+    "date_updated": "2025-09-23T15:24:26.085Z",
+    "subcategory": "f1b4d2b9-5654-4146-a799-5a66e44fd01e",
+    "underwriter": "14900c1c-4327-4366-a1e9-585699b1a495",
+    "base_premium": "5500.00",
+    "minimum_premium": null,
+    "maximum_premium": null,
+    "bracket_pricing": null,
+    "pricing_factors": {},
+    "effective_from": "2025-09-23",
+    "effective_to": null,
+    "is_active": true
+  }
+},
+{
+  "model": "app.motorpricing",
+  "pk": "ae881db2-d597-4e1c-9b19-eaa3579e25fc",
+  "fields": {
+    "date_created": "2025-09-28T15:03:49.393Z",
+    "date_updated": "2025-09-28T16:28:56.567Z",
+    "subcategory": "87862519-800b-4655-b480-790228534766",
+    "underwriter": "aa85d49e-06a2-40ec-9a22-e09b453f8066",
+    "base_premium": "3500.00",
+    "minimum_premium": null,
+    "maximum_premium": null,
+    "bracket_pricing": null,
+    "pricing_factors": {
+      "pricing_type": "fixed"
+    },
+    "effective_from": "2025-09-28",
+    "effective_to": null,
+    "is_active": true
+  }
+},
+{
+  "model": "app.motorpricing",
+  "pk": "af11e3e7-414f-45ee-af9f-edc6ae6c4426",
+  "fields": {
+    "date_created": "2025-09-23T15:24:26.099Z",
+    "date_updated": "2025-09-23T15:24:26.099Z",
+    "subcategory": "87862519-800b-4655-b480-790228534766",
+    "underwriter": "14900c1c-4327-4366-a1e9-585699b1a495",
+    "base_premium": "5500.00",
+    "minimum_premium": null,
+    "maximum_premium": null,
+    "bracket_pricing": null,
+    "pricing_factors": {},
+    "effective_from": "2025-09-23",
+    "effective_to": null,
+    "is_active": true
+  }
+},
+{
+  "model": "app.motorpricing",
+  "pk": "b44b86a0-6277-468a-942b-ca5b3d824576",
+  "fields": {
+    "date_created": "2025-09-28T15:03:49.396Z",
+    "date_updated": "2025-09-28T16:28:56.570Z",
+    "subcategory": "c3d87a28-c87a-4b21-951f-1b0586a9d908",
+    "underwriter": "aa85d49e-06a2-40ec-9a22-e09b453f8066",
+    "base_premium": "0.00",
+    "minimum_premium": "15000.00",
+    "maximum_premium": null,
+    "bracket_pricing": null,
+    "pricing_factors": {
+      "rate": 0.03,
+      "pricing_type": "percentage"
+    },
+    "effective_from": "2025-09-28",
+    "effective_to": null,
+    "is_active": true
+  }
+},
+{
+  "model": "app.motorpricing",
+  "pk": "b4e926b8-4bbf-4243-8537-24cdd3c3a5fc",
+  "fields": {
+    "date_created": "2025-09-23T15:24:26.017Z",
+    "date_updated": "2025-09-23T15:24:26.017Z",
+    "subcategory": "87862519-800b-4655-b480-790228534766",
+    "underwriter": "acff5e40-a95b-4dd1-bc06-8e210e1e95bc",
+    "base_premium": "5500.00",
+    "minimum_premium": null,
+    "maximum_premium": null,
+    "bracket_pricing": null,
+    "pricing_factors": {},
+    "effective_from": "2025-09-23",
+    "effective_to": null,
+    "is_active": true
+  }
+},
+{
+  "model": "app.motorpricing",
+  "pk": "b6a79310-6f6e-4ad2-8c21-af5d19d60837",
+  "fields": {
+    "date_created": "2025-09-23T15:24:26.002Z",
+    "date_updated": "2025-09-23T15:24:26.002Z",
+    "subcategory": "47363ab5-bb14-4a5d-bec4-37f5cd8159b3",
+    "underwriter": "acff5e40-a95b-4dd1-bc06-8e210e1e95bc",
+    "base_premium": "5500.00",
+    "minimum_premium": null,
+    "maximum_premium": null,
+    "bracket_pricing": null,
+    "pricing_factors": {},
+    "effective_from": "2025-09-23",
+    "effective_to": null,
+    "is_active": true
+  }
+},
+{
+  "model": "app.motorpricing",
+  "pk": "b885ee7b-ebbe-42c2-a7e4-b189913e0c2e",
+  "fields": {
+    "date_created": "2025-09-23T15:24:26.000Z",
+    "date_updated": "2025-09-23T15:24:26.000Z",
+    "subcategory": "f1b4d2b9-5654-4146-a799-5a66e44fd01e",
+    "underwriter": "acff5e40-a95b-4dd1-bc06-8e210e1e95bc",
+    "base_premium": "5500.00",
+    "minimum_premium": null,
+    "maximum_premium": null,
+    "bracket_pricing": null,
+    "pricing_factors": {},
+    "effective_from": "2025-09-23",
+    "effective_to": null,
+    "is_active": true
+  }
+},
+{
+  "model": "app.motorpricing",
+  "pk": "ba233acd-d75d-41a9-a0a3-ccc38a0d423e",
+  "fields": {
+    "date_created": "2025-09-23T15:24:26.329Z",
+    "date_updated": "2025-09-23T15:24:26.329Z",
+    "subcategory": "d4426841-f3d0-42bf-931e-7662f12405a5",
+    "underwriter": "14900c1c-4327-4366-a1e9-585699b1a495",
+    "base_premium": "0.00",
+    "minimum_premium": "20000.00",
+    "maximum_premium": null,
+    "bracket_pricing": null,
+    "pricing_factors": {},
+    "effective_from": "2025-09-23",
+    "effective_to": null,
+    "is_active": true
+  }
+},
+{
+  "model": "app.motorpricing",
+  "pk": "bd088bc3-30d3-41c5-8291-d12332db3119",
+  "fields": {
+    "date_created": "2025-09-23T15:24:26.068Z",
+    "date_updated": "2025-09-23T15:24:26.068Z",
+    "subcategory": "e5fda96b-fdda-4fe9-a53c-3cd8d5500ada",
+    "underwriter": "14900c1c-4327-4366-a1e9-585699b1a495",
+    "base_premium": "5500.00",
+    "minimum_premium": null,
+    "maximum_premium": null,
+    "bracket_pricing": null,
+    "pricing_factors": {},
+    "effective_from": "2025-09-23",
+    "effective_to": null,
+    "is_active": true
+  }
+},
+{
+  "model": "app.motorpricing",
+  "pk": "bd9f4698-ca3d-437a-9552-5477a497e4af",
+  "fields": {
+    "date_created": "2025-09-23T15:22:44.962Z",
+    "date_updated": "2025-09-23T15:22:44.962Z",
+    "subcategory": "accb806c-d4ba-4aa0-9ff0-bb7505fd78d2",
+    "underwriter": "acff5e40-a95b-4dd1-bc06-8e210e1e95bc",
+    "base_premium": "5500.00",
+    "minimum_premium": null,
+    "maximum_premium": null,
+    "bracket_pricing": null,
+    "pricing_factors": {},
+    "effective_from": "2025-09-23",
+    "effective_to": null,
+    "is_active": true
+  }
+},
+{
+  "model": "app.motorpricing",
+  "pk": "c245c32d-f79f-47bc-ac5c-7a4b7d5d6186",
+  "fields": {
+    "date_created": "2025-09-23T15:24:26.313Z",
+    "date_updated": "2025-09-23T15:24:26.313Z",
+    "subcategory": "a3e56280-79a5-4f31-945f-f15b99f2cb9b",
+    "underwriter": "14900c1c-4327-4366-a1e9-585699b1a495",
+    "base_premium": "0.00",
+    "minimum_premium": "20000.00",
+    "maximum_premium": null,
+    "bracket_pricing": null,
+    "pricing_factors": {},
+    "effective_from": "2025-09-23",
+    "effective_to": null,
+    "is_active": true
+  }
+},
+{
+  "model": "app.motorpricing",
+  "pk": "c3593c84-3b98-4183-89ab-b74ac19c3e96",
+  "fields": {
+    "date_created": "2025-09-23T15:22:45.049Z",
+    "date_updated": "2025-09-23T15:22:45.049Z",
+    "subcategory": "8a6b2335-aa56-4658-a15d-9c0db0062b2c",
+    "underwriter": "14900c1c-4327-4366-a1e9-585699b1a495",
+    "base_premium": "5500.00",
+    "minimum_premium": null,
+    "maximum_premium": null,
+    "bracket_pricing": null,
+    "pricing_factors": {},
+    "effective_from": "2025-09-23",
+    "effective_to": null,
+    "is_active": true
+  }
+},
+{
+  "model": "app.motorpricing",
+  "pk": "c52300a0-592b-4c10-b7af-bfeefd1acb6c",
+  "fields": {
+    "date_created": "2025-09-23T15:24:26.010Z",
+    "date_updated": "2025-09-23T15:24:26.010Z",
+    "subcategory": "55ec10f8-901f-4684-9601-d01944a85987",
+    "underwriter": "acff5e40-a95b-4dd1-bc06-8e210e1e95bc",
+    "base_premium": "5500.00",
+    "minimum_premium": null,
+    "maximum_premium": null,
+    "bracket_pricing": null,
+    "pricing_factors": {},
+    "effective_from": "2025-09-23",
+    "effective_to": null,
+    "is_active": true
+  }
+},
+{
+  "model": "app.motorpricing",
+  "pk": "d17f802a-9743-4809-a860-d57f10e03039",
+  "fields": {
+    "date_created": "2025-09-23T15:22:45.035Z",
+    "date_updated": "2025-09-23T15:22:45.035Z",
+    "subcategory": "f74414bf-1e4f-4965-a953-dc4f46c3e265",
+    "underwriter": "14900c1c-4327-4366-a1e9-585699b1a495",
+    "base_premium": "5500.00",
+    "minimum_premium": null,
+    "maximum_premium": null,
+    "bracket_pricing": null,
+    "pricing_factors": {},
+    "effective_from": "2025-09-23",
+    "effective_to": null,
+    "is_active": true
+  }
+},
+{
+  "model": "app.motorpricing",
+  "pk": "d4942002-3ab7-4717-b648-d5e82a4b0130",
+  "fields": {
+    "date_created": "2025-09-23T15:22:44.948Z",
+    "date_updated": "2025-09-23T15:22:44.948Z",
+    "subcategory": "f74414bf-1e4f-4965-a953-dc4f46c3e265",
+    "underwriter": "acff5e40-a95b-4dd1-bc06-8e210e1e95bc",
+    "base_premium": "5500.00",
+    "minimum_premium": null,
+    "maximum_premium": null,
+    "bracket_pricing": null,
+    "pricing_factors": {},
+    "effective_from": "2025-09-23",
+    "effective_to": null,
+    "is_active": true
+  }
+},
+{
+  "model": "app.motorpricing",
+  "pk": "db186486-700b-4e6d-aa41-282e6eb6de7c",
+  "fields": {
+    "date_created": "2025-09-23T15:22:44.846Z",
+    "date_updated": "2025-09-23T16:22:13.890Z",
+    "subcategory": "5d6abafb-0ab9-418e-b37e-99d2447c137f",
+    "underwriter": "14900c1c-4327-4366-a1e9-585699b1a495",
+    "base_premium": "900.00",
+    "minimum_premium": null,
+    "maximum_premium": null,
+    "bracket_pricing": null,
+    "pricing_factors": {},
+    "effective_from": "2025-09-23",
+    "effective_to": null,
+    "is_active": true
+  }
+},
+{
+  "model": "app.motorpricing",
+  "pk": "dc0bb539-e0b0-42de-8889-8948f0b2fc8d",
+  "fields": {
+    "date_created": "2025-09-23T15:24:26.165Z",
+    "date_updated": "2025-09-23T15:24:26.165Z",
+    "subcategory": "0b13511b-8e76-4616-934b-a847650f43fa",
+    "underwriter": "acff5e40-a95b-4dd1-bc06-8e210e1e95bc",
+    "base_premium": "0.00",
+    "minimum_premium": "20000.00",
+    "maximum_premium": null,
+    "bracket_pricing": null,
+    "pricing_factors": {},
+    "effective_from": "2025-09-23",
+    "effective_to": null,
+    "is_active": true
+  }
+},
+{
+  "model": "app.motorpricing",
+  "pk": "e0ff6265-8ced-4452-9987-3813222ee8a5",
+  "fields": {
+    "date_created": "2025-09-23T15:24:26.292Z",
+    "date_updated": "2025-09-23T15:24:26.292Z",
+    "subcategory": "cf9966b7-4e06-4341-a4ca-992f218926d1",
+    "underwriter": "14900c1c-4327-4366-a1e9-585699b1a495",
+    "base_premium": "0.00",
+    "minimum_premium": "20000.00",
+    "maximum_premium": null,
+    "bracket_pricing": null,
+    "pricing_factors": {},
+    "effective_from": "2025-09-23",
+    "effective_to": null,
+    "is_active": true
+  }
+},
+{
+  "model": "app.motorpricing",
+  "pk": "e1bce172-1d1e-46c3-bbd8-b8a167a5b3f4",
+  "fields": {
+    "date_created": "2025-09-23T15:24:26.233Z",
+    "date_updated": "2025-09-23T15:24:26.233Z",
+    "subcategory": "d4426841-f3d0-42bf-931e-7662f12405a5",
+    "underwriter": "acff5e40-a95b-4dd1-bc06-8e210e1e95bc",
+    "base_premium": "0.00",
+    "minimum_premium": "20000.00",
+    "maximum_premium": null,
+    "bracket_pricing": null,
+    "pricing_factors": {},
+    "effective_from": "2025-09-23",
+    "effective_to": null,
+    "is_active": true
+  }
+},
+{
+  "model": "app.motorpricing",
+  "pk": "ef9d64bf-fab1-4bb4-8d7b-f2ace11fdf6f",
+  "fields": {
+    "date_created": "2025-09-28T15:03:49.389Z",
+    "date_updated": "2025-09-28T16:28:56.562Z",
+    "subcategory": "ce88273c-85b0-4d72-a815-d9e9fef0b66a",
+    "underwriter": "aa85d49e-06a2-40ec-9a22-e09b453f8066",
+    "base_premium": "3500.00",
+    "minimum_premium": null,
+    "maximum_premium": null,
+    "bracket_pricing": null,
+    "pricing_factors": {
+      "pricing_type": "fixed"
+    },
+    "effective_from": "2025-09-28",
+    "effective_to": null,
+    "is_active": true
+  }
+},
+{
+  "model": "app.motorpricing",
+  "pk": "f3a5c2b7-b907-49b6-9200-d0f934f47cb7",
+  "fields": {
+    "date_created": "2025-09-28T14:13:09.214Z",
+    "date_updated": "2025-09-28T15:14:46.792Z",
+    "subcategory": "c3d87a28-c87a-4b21-951f-1b0586a9d908",
+    "underwriter": "771c566f-292a-49f1-97a9-19c2b967335e",
+    "base_premium": "0.00",
+    "minimum_premium": "20000.00",
+    "maximum_premium": null,
+    "bracket_pricing": [
+      {
+        "to": 1500000,
+        "min": 20000,
+        "from": 0,
+        "rate": 0.035
+      },
+      {
+        "to": 3000000,
+        "min": 20000,
+        "from": 1500000,
+        "rate": 0.03
+      },
+      {
+        "to": null,
+        "min": 30000,
+        "from": 3000000,
+        "rate": 0.025
+      }
+    ],
+    "pricing_factors": {
+      "rate": 0.003,
+      "pricing_type": "percentage"
+    },
+    "effective_from": "2025-09-28",
+    "effective_to": null,
+    "is_active": true
+  }
+},
+{
+  "model": "app.motorpricing",
+  "pk": "f3b61a3c-fd58-4f63-a60e-d9ddf6fc6637",
+  "fields": {
+    "date_created": "2025-09-23T15:22:45.066Z",
+    "date_updated": "2025-09-23T15:22:45.066Z",
+    "subcategory": "ce88273c-85b0-4d72-a815-d9e9fef0b66a",
+    "underwriter": "14900c1c-4327-4366-a1e9-585699b1a495",
+    "base_premium": "5500.00",
+    "minimum_premium": null,
+    "maximum_premium": null,
+    "bracket_pricing": null,
+    "pricing_factors": {},
+    "effective_from": "2025-09-23",
+    "effective_to": null,
+    "is_active": true
+  }
+},
+{
+  "model": "app.motorpricing",
+  "pk": "f7bc9c08-45eb-4a91-ae33-5c5bd90e0ff3",
+  "fields": {
+    "date_created": "2025-09-23T15:24:26.104Z",
+    "date_updated": "2025-09-23T15:24:26.104Z",
+    "subcategory": "8da7297d-5b17-4969-9b1b-e78bb6d5d40f",
+    "underwriter": "14900c1c-4327-4366-a1e9-585699b1a495",
+    "base_premium": "5500.00",
+    "minimum_premium": null,
+    "maximum_premium": null,
+    "bracket_pricing": null,
+    "pricing_factors": {},
+    "effective_from": "2025-09-23",
+    "effective_to": null,
+    "is_active": true
+  }
+},
+{
+  "model": "app.motorpricing",
+  "pk": "fbd8b97b-c4bb-429a-9e5a-52745463b375",
+  "fields": {
+    "date_created": "2025-09-28T15:57:16.436Z",
+    "date_updated": "2025-09-28T20:38:56.595Z",
+    "subcategory": "e5fda96b-fdda-4fe9-a53c-3cd8d5500ada",
+    "underwriter": "aa85d49e-06a2-40ec-9a22-e09b453f8066",
+    "base_premium": "100.00",
+    "minimum_premium": null,
+    "maximum_premium": null,
+    "bracket_pricing": null,
+    "pricing_factors": {
+      "pricing_type": "fixed"
+    },
+    "effective_from": "2025-09-28",
+    "effective_to": null,
+    "is_active": true
+  }
+},
+{
+  "model": "app.motorpricing",
+  "pk": "fc8212aa-b1f8-4f46-a7cb-30d98903c0c1",
+  "fields": {
+    "date_created": "2025-09-23T15:24:26.117Z",
+    "date_updated": "2025-09-23T15:24:26.117Z",
+    "subcategory": "0e9334f1-a127-48e0-8a41-623fc00825e3",
+    "underwriter": "14900c1c-4327-4366-a1e9-585699b1a495",
+    "base_premium": "5500.00",
+    "minimum_premium": null,
+    "maximum_premium": null,
+    "bracket_pricing": null,
+    "pricing_factors": {},
+    "effective_from": "2025-09-23",
+    "effective_to": null,
+    "is_active": true
+  }
+},
+{
+  "model": "app.user",
+  "pk": "06925957-1b8f-4bda-ae78-b5c777627bac",
+  "fields": {
+    "password": "pbkdf2_sha256$600000$TBBjvHyLtAEJfUWeAiPvNy$4DC8tTeBOwUOHN6aG2WiRinEuW2Iq5VW5YPNzLjZ83M=",
+    "last_login": null,
+    "date_created": "2025-10-06T16:41:04.991Z",
+    "date_updated": "2025-10-06T16:41:04.991Z",
+    "is_active": true,
+    "email": "nelson@gmail.com",
+    "phonenumber": "792865542",
+    "role": "AGENT",
+    "nationality": "KENYAN",
+    "country_code": "+254",
+    "is_admin": false,
+    "is_staff": false,
+    "created_by": "SYSTEM",
+    "is_default_password": false
+  }
+},
+{
+  "model": "app.user",
+  "pk": "0bc91409-d27a-47fb-9024-468efd3a88bf",
+  "fields": {
+    "password": "pbkdf2_sha256$600000$tagCJxQWRVLQ1JaXw9gOcf$xE+JYSPoBFsdusnscVsdxHYvmIXEySymCyzEs8cJ1dw=",
+    "last_login": null,
+    "date_created": "2025-09-23T17:07:33.305Z",
+    "date_updated": "2025-09-23T17:07:33.305Z",
+    "is_active": true,
+    "email": "test750997861@example.com",
+    "phonenumber": "750997861",
+    "role": "CUSTOMER",
+    "nationality": "KENYAN",
+    "country_code": "+254",
+    "is_admin": false,
+    "is_staff": false,
+    "created_by": "SYSTEM",
+    "is_default_password": false
+  }
+},
+{
+  "model": "app.user",
+  "pk": "1e6925b1-7bab-4cb4-b31d-3f0dcbf18229",
+  "fields": {
+    "password": "pbkdf2_sha256$600000$KV52Yon9VvvWUxZ6wrPFDr$96hyXVD1tdPh1p/iXxofY9vNoS//byfPnRMLQvnTtAA=",
+    "last_login": null,
+    "date_created": "2025-09-28T09:27:43.214Z",
+    "date_updated": "2025-09-28T09:27:43.214Z",
+    "is_active": true,
+    "email": "test761133308@example.com",
+    "phonenumber": "761133308",
+    "role": "CUSTOMER",
+    "nationality": "KENYAN",
+    "country_code": "+254",
+    "is_admin": false,
+    "is_staff": false,
+    "created_by": "SYSTEM",
+    "is_default_password": false
+  }
+},
+{
+  "model": "app.user",
+  "pk": "21955367-50e9-443d-8cb9-8690d1d64ca1",
+  "fields": {
+    "password": "pbkdf2_sha256$600000$Wh2eZBK68M0rVVjtjkIDTY$K/6Msq/x8h62gDSKgbxqlSfLoP51sidywWbEak5lhzs=",
+    "last_login": null,
+    "date_created": "2025-09-23T17:01:52.697Z",
+    "date_updated": "2025-09-23T17:01:52.697Z",
+    "is_active": true,
+    "email": "test731993063@example.com",
+    "phonenumber": "731993063",
+    "role": "CUSTOMER",
+    "nationality": "KENYAN",
+    "country_code": "+254",
+    "is_admin": false,
+    "is_staff": false,
+    "created_by": "SYSTEM",
+    "is_default_password": false
+  }
+},
+{
+  "model": "app.user",
+  "pk": "2e85b1cf-3231-46a8-9678-4a103673e5da",
+  "fields": {
+    "password": "pbkdf2_sha256$600000$MGLziHyEExzoMiKXaTi0Aw$zc10QQamgCu8lokUO8dxhiWASn20rXCos318tq/3/hI=",
+    "last_login": "2025-09-29T08:10:23.089Z",
+    "date_created": "2025-09-23T16:27:28.225Z",
+    "date_updated": "2025-10-17T08:13:29.836Z",
+    "is_active": true,
+    "email": null,
+    "phonenumber": "712345678",
+    "role": "AGENT",
+    "nationality": "KENYAN",
+    "country_code": "+254",
+    "is_admin": true,
+    "is_staff": true,
+    "created_by": "SYSTEM",
+    "is_default_password": false
+  }
+},
+{
+  "model": "app.user",
+  "pk": "30ab6ca1-87cf-4e4c-a049-28d3dab3c779",
+  "fields": {
+    "password": "pbkdf2_sha256$600000$s4v7RKWZr0wjRnATNfiyZ6$IMrPf3bbPo08jI+g9oK5THLEG+eMyEuCAdZ5oMIUbgU=",
+    "last_login": null,
+    "date_created": "2025-09-24T08:20:00.872Z",
+    "date_updated": "2025-09-24T08:20:00.872Z",
+    "is_active": true,
+    "email": "test711535924@example.com",
+    "phonenumber": "711535924",
+    "role": "CUSTOMER",
+    "nationality": "KENYAN",
+    "country_code": "+254",
+    "is_admin": false,
+    "is_staff": false,
+    "created_by": "SYSTEM",
+    "is_default_password": false
+  }
+},
+{
+  "model": "app.user",
+  "pk": "3dc28354-5326-4acb-b194-d2da11fd51c0",
+  "fields": {
+    "password": "pbkdf2_sha256$600000$eTFiN1ktdY8io7sICZNDPR$RsB2zVvvg6AqbwMNaIgKMXcVLOKukvGCBlkfslFd7fA=",
+    "last_login": null,
+    "date_created": "2025-10-10T22:58:32.043Z",
+    "date_updated": "2025-10-10T22:58:32.043Z",
+    "is_active": true,
+    "email": "kip@gmail.com",
+    "phonenumber": "123456789",
+    "role": "AGENT",
+    "nationality": "KENYAN",
+    "country_code": "+254",
+    "is_admin": false,
+    "is_staff": false,
+    "created_by": "SYSTEM",
+    "is_default_password": false
+  }
+},
+{
+  "model": "app.user",
+  "pk": "4535dbf2-1b63-4e23-970f-efcdc09ddbd9",
+  "fields": {
+    "password": "pbkdf2_sha256$600000$iTUEFduOhMZn40PlWLDJwD$SwWz21jH/CGGP2inWzqRU5/L93A90jqOCZH9aqSDuPw=",
+    "last_login": null,
+    "date_created": "2025-09-24T08:24:26.222Z",
+    "date_updated": "2025-09-24T08:24:26.222Z",
+    "is_active": true,
+    "email": "test778501849@example.com",
+    "phonenumber": "778501849",
+    "role": "CUSTOMER",
+    "nationality": "KENYAN",
+    "country_code": "+254",
+    "is_admin": false,
+    "is_staff": false,
+    "created_by": "SYSTEM",
+    "is_default_password": false
+  }
+},
+{
+  "model": "app.user",
+  "pk": "4d5b7b8d-d3fd-4cc8-915f-a362a35fc698",
+  "fields": {
+    "password": "pbkdf2_sha256$600000$BjzhWQg4HUC140JO5XnYew$C5+I9eJnekGni5eOSc0Bw39fPM9AjaCUdmCzoc+GuDE=",
+    "last_login": "2025-10-10T09:32:41.470Z",
+    "date_created": "2025-10-10T07:38:50.039Z",
+    "date_updated": "2025-10-10T07:38:50.531Z",
+    "is_active": true,
+    "email": "admin@patabima.com",
+    "phonenumber": "700000000",
+    "role": "ADMIN",
+    "nationality": "KENYAN",
+    "country_code": "+254",
+    "is_admin": true,
+    "is_staff": true,
+    "created_by": "SYSTEM",
+    "is_default_password": false
+  }
+},
+{
+  "model": "app.user",
+  "pk": "57b8550c-dfaf-4570-b3d9-82363e43ecab",
+  "fields": {
+    "password": "pbkdf2_sha256$600000$5LkxKAGPZak3vbNhAnLXwU$ivT+NrxZ6wxxGEIhJ5AvS6VEXIR1dV9Di39UzR4oppw=",
+    "last_login": null,
+    "date_created": "2025-09-28T09:17:18.681Z",
+    "date_updated": "2025-09-28T09:17:18.681Z",
+    "is_active": true,
+    "email": "test761138501@example.com",
+    "phonenumber": "761138501",
+    "role": "CUSTOMER",
+    "nationality": "KENYAN",
+    "country_code": "+254",
+    "is_admin": false,
+    "is_staff": false,
+    "created_by": "SYSTEM",
+    "is_default_password": false
+  }
+},
+{
+  "model": "app.user",
+  "pk": "69ef537e-08cf-44f6-90e6-902f29d25571",
+  "fields": {
+    "password": "pbkdf2_sha256$600000$ETqJYlT2zdXqGPJzo8ofxt$YmuefMKe+sTVt9nV6qnuVnd+NJO3kUQ8a3Il4CvV120=",
+    "last_login": null,
+    "date_created": "2025-10-19T19:27:53.337Z",
+    "date_updated": "2025-10-19T19:27:53.337Z",
+    "is_active": true,
+    "email": "james@gmail.com",
+    "phonenumber": "792865544",
+    "role": "AGENT",
+    "nationality": "KENYAN",
+    "country_code": "+254",
+    "is_admin": false,
+    "is_staff": false,
+    "created_by": "SYSTEM",
+    "is_default_password": false
+  }
+},
+{
+  "model": "app.user",
+  "pk": "6ab819f5-1763-4d7a-9ef4-8f21fc69b922",
+  "fields": {
+    "password": "pbkdf2_sha256$600000$9sl5NVOt3C3lqfAkDNibUE$ro/khs+Hd/NtWXUgQP2lZcHAg5bGAl7v+KfVOsNxW18=",
+    "last_login": null,
+    "date_created": "2025-09-24T08:44:41.219Z",
+    "date_updated": "2025-09-24T08:44:41.219Z",
+    "is_active": true,
+    "email": "test728732717@example.com",
+    "phonenumber": "728732717",
+    "role": "CUSTOMER",
+    "nationality": "KENYAN",
+    "country_code": "+254",
+    "is_admin": false,
+    "is_staff": false,
+    "created_by": "SYSTEM",
+    "is_default_password": false
+  }
+},
+{
+  "model": "app.user",
+  "pk": "6e17c37a-4d51-4aa7-9f21-3172dbbda0b0",
+  "fields": {
+    "password": "pbkdf2_sha256$600000$cT5PJUMq4WhdYYrZ1ujJS5$BFzWZULmjpmdku5Nj7jEedeL+yrFRT5VOw4qNjOikqI=",
+    "last_login": null,
+    "date_created": "2025-09-23T19:32:00.770Z",
+    "date_updated": "2025-09-23T19:32:00.770Z",
+    "is_active": true,
+    "email": "",
+    "phonenumber": "759384276",
+    "role": "CUSTOMER",
+    "nationality": "KENYAN",
+    "country_code": "+254",
+    "is_admin": false,
+    "is_staff": false,
+    "created_by": "SYSTEM",
+    "is_default_password": false
+  }
+},
+{
+  "model": "app.user",
+  "pk": "706681c2-a083-4a97-be9f-687b41d2dfc5",
+  "fields": {
+    "password": "pbkdf2_sha256$600000$49IO7NOjQYFBE8gcW3qQSB$eR/hd1t8yBQJu8NeBVmHTErOaUrKCnlyD0pe8NiLEtc=",
+    "last_login": null,
+    "date_created": "2025-09-28T09:16:03.472Z",
+    "date_updated": "2025-09-28T09:16:03.472Z",
+    "is_active": true,
+    "email": "test776914706@example.com",
+    "phonenumber": "776914706",
+    "role": "CUSTOMER",
+    "nationality": "KENYAN",
+    "country_code": "+254",
+    "is_admin": false,
+    "is_staff": false,
+    "created_by": "SYSTEM",
+    "is_default_password": false
+  }
+},
+{
+  "model": "app.user",
+  "pk": "7ba7e7cd-31c9-46a1-8e9a-3ffe8b223cec",
+  "fields": {
+    "password": "pbkdf2_sha256$600000$3A7IGnUCI71Nti0xyv74VE$N1jUz34KFIGpzwqj2hzFr//IkfRCO+qYf5WuF22npVo=",
+    "last_login": "2025-09-23T19:36:48.930Z",
+    "date_created": "2025-09-23T19:11:56.777Z",
+    "date_updated": "2025-09-25T19:38:52.700Z",
+    "is_active": true,
+    "email": null,
+    "phonenumber": "792865541",
+    "role": "CUSTOMER",
+    "nationality": "KENYAN",
+    "country_code": "+254",
+    "is_admin": true,
+    "is_staff": true,
+    "created_by": "SYSTEM",
+    "is_default_password": false
+  }
+},
+{
+  "model": "app.user",
+  "pk": "8291a3c5-e933-4801-b6e7-b859e47493fd",
+  "fields": {
+    "password": "pbkdf2_sha256$600000$OLv6n1jVheIUHNknOznxmx$B37y6du2l9lrAEk4l1PqwzjBE8XxntJsT2bFgzbFzfs=",
+    "last_login": null,
+    "date_created": "2025-09-24T08:45:52.849Z",
+    "date_updated": "2025-09-24T08:45:52.849Z",
+    "is_active": true,
+    "email": "test724967463@example.com",
+    "phonenumber": "724967463",
+    "role": "CUSTOMER",
+    "nationality": "KENYAN",
+    "country_code": "+254",
+    "is_admin": false,
+    "is_staff": false,
+    "created_by": "SYSTEM",
+    "is_default_password": false
+  }
+},
+{
+  "model": "app.user",
+  "pk": "95069092-9673-4c6b-a137-19a3f6131272",
+  "fields": {
+    "password": "pbkdf2_sha256$600000$yCnO8rvtkXA81CRTdVB7NY$6imTFaVl+hwBcH3jybS0RzF3jBzbSRX9HohA/YXFPCw=",
+    "last_login": null,
+    "date_created": "2025-09-24T06:57:30.271Z",
+    "date_updated": "2025-10-14T21:55:32.495Z",
+    "is_active": true,
+    "email": "kevin@gmail.com",
+    "phonenumber": "792865547",
+    "role": "AGENT",
+    "nationality": "KENYAN",
+    "country_code": "+254",
+    "is_admin": false,
+    "is_staff": false,
+    "created_by": "SYSTEM",
+    "is_default_password": false
+  }
+},
+{
+  "model": "app.user",
+  "pk": "9a1e8504-228f-43a8-8ea6-081befd7f2d7",
+  "fields": {
+    "password": "pbkdf2_sha256$600000$RjWqgpGMhWv0vpq7J2FdHg$43LFLtd2n7JNcLcFRCA7tqvNnY6olIsBjApaU9H+asQ=",
+    "last_login": null,
+    "date_created": "2025-09-25T06:40:14.457Z",
+    "date_updated": "2025-09-25T06:40:14.457Z",
+    "is_active": true,
+    "email": "test799468940@example.com",
+    "phonenumber": "799468940",
+    "role": "CUSTOMER",
+    "nationality": "KENYAN",
+    "country_code": "+254",
+    "is_admin": false,
+    "is_staff": false,
+    "created_by": "SYSTEM",
+    "is_default_password": false
+  }
+},
+{
+  "model": "app.user",
+  "pk": "a0bfc0a4-8f28-437d-954f-37d2dec58c63",
+  "fields": {
+    "password": "pbkdf2_sha256$600000$5FvqCNVIpfDRLcjtepoalD$dXAT4ci/Qqg2QDFpKa1o91IWXn+jpqu5fBCKSh9pbMQ=",
+    "last_login": null,
+    "date_created": "2025-09-23T17:15:44.579Z",
+    "date_updated": "2025-09-23T17:15:44.579Z",
+    "is_active": true,
+    "email": "test727734287@example.com",
+    "phonenumber": "727734287",
+    "role": "CUSTOMER",
+    "nationality": "KENYAN",
+    "country_code": "+254",
+    "is_admin": false,
+    "is_staff": false,
+    "created_by": "SYSTEM",
+    "is_default_password": false
+  }
+},
+{
+  "model": "app.user",
+  "pk": "e6ab4066-d1d8-4290-a64b-459a02e75315",
+  "fields": {
+    "password": "pbkdf2_sha256$600000$OZD0q4KJoyTQ61Y5V5s7IX$YxFCXOoSfOY+QI7t3n94P/SbKPxuENtBb6M5zApgaZw=",
+    "last_login": null,
+    "date_created": "2025-09-24T08:24:15.010Z",
+    "date_updated": "2025-09-24T08:24:15.010Z",
+    "is_active": true,
+    "email": "test716806467@example.com",
+    "phonenumber": "716806467",
+    "role": "CUSTOMER",
+    "nationality": "KENYAN",
+    "country_code": "+254",
+    "is_admin": false,
+    "is_staff": false,
+    "created_by": "SYSTEM",
+    "is_default_password": false
+  }
+},
+{
+  "model": "app.user",
+  "pk": "eb626f79-4fd4-49ed-a770-514d5b871087",
+  "fields": {
+    "password": "pbkdf2_sha256$600000$hENORZjnUk9fPkdzFEo5Af$BwitQAP6ps2tUhl7B4SkRSs0DlVDUVScA4WUAQvPAw4=",
+    "last_login": null,
+    "date_created": "2025-09-24T08:26:05.914Z",
+    "date_updated": "2025-09-24T08:26:05.914Z",
+    "is_active": true,
+    "email": "test788653005@example.com",
+    "phonenumber": "788653005",
+    "role": "CUSTOMER",
+    "nationality": "KENYAN",
+    "country_code": "+254",
+    "is_admin": false,
+    "is_staff": false,
+    "created_by": "SYSTEM",
+    "is_default_password": false
+  }
+},
+{
+  "model": "app.user",
+  "pk": "f137fd7c-fc2a-4a60-8fbe-dc4752824e43",
+  "fields": {
+    "password": "pbkdf2_sha256$600000$qiwcwwhphjcixxyd0acqQ8$8TJsAeIjxBPIBTXxC40fRaFs8fuM209dFdWDKz3qI3I=",
+    "last_login": null,
+    "date_created": "2025-09-24T08:44:29.958Z",
+    "date_updated": "2025-09-24T08:44:29.958Z",
+    "is_active": true,
+    "email": "test747817930@example.com",
+    "phonenumber": "747817930",
+    "role": "CUSTOMER",
+    "nationality": "KENYAN",
+    "country_code": "+254",
+    "is_admin": false,
+    "is_staff": false,
+    "created_by": "SYSTEM",
+    "is_default_password": false
+  }
+},
+{
+  "model": "app.user",
+  "pk": "f358d3bc-ba14-439b-ac4d-eb402ddb9ae7",
+  "fields": {
+    "password": "pbkdf2_sha256$600000$75EUujFy7xSrkVxUWjHhSk$a/VR8gOQIrQfZXTGsCfk19FESQ7ARqJtIzAWdhB2AWE=",
+    "last_login": null,
+    "date_created": "2025-10-02T11:04:58.245Z",
+    "date_updated": "2025-10-21T09:21:01.452Z",
+    "is_active": true,
+    "email": "kamau@gmail.com",
+    "phonenumber": "079286554",
+    "role": "AGENT",
+    "nationality": "KENYAN",
+    "country_code": "+254",
+    "is_admin": false,
+    "is_staff": false,
+    "created_by": "SYSTEM",
+    "is_default_password": false
+  }
+},
+{
+  "model": "app.user",
+  "pk": "f74384a9-9c2c-4baa-8f3c-304361adb10a",
+  "fields": {
+    "password": "pbkdf2_sha256$600000$flxwmq4GBmBNjTS61q0r3S$ZvFo9FPgz63R3QFBSeSqruaHwKNdRQWx7TfKJkKmSU4=",
+    "last_login": null,
+    "date_created": "2025-09-24T08:20:30.373Z",
+    "date_updated": "2025-09-24T08:20:30.373Z",
+    "is_active": true,
+    "email": "test736539912@example.com",
+    "phonenumber": "736539912",
+    "role": "CUSTOMER",
+    "nationality": "KENYAN",
+    "country_code": "+254",
+    "is_admin": false,
+    "is_staff": false,
+    "created_by": "SYSTEM",
+    "is_default_password": false
+  }
+},
+{
+  "model": "app.user",
+  "pk": "fb39b3bd-a2e1-4a1e-b943-936173ed8e0a",
+  "fields": {
+    "password": "pbkdf2_sha256$600000$4Gq6f0ZnCKYfVFgsCeA7Uz$cTq2lQO7hD8yQcWA+5ywm0ebYsKcZKbO0oN0TR5J46w=",
+    "last_login": null,
+    "date_created": "2025-09-23T17:10:52.587Z",
+    "date_updated": "2025-09-23T17:10:52.587Z",
+    "is_active": true,
+    "email": "test776037404@example.com",
+    "phonenumber": "776037404",
+    "role": "CUSTOMER",
+    "nationality": "KENYAN",
+    "country_code": "+254",
+    "is_admin": false,
+    "is_staff": false,
+    "created_by": "SYSTEM",
+    "is_default_password": false
+  }
+}
+]

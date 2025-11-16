@@ -1,7 +1,0 @@
-{
-  "Records": [
-    {
-      "body": "{\"jobId\": \"test-job-123\", \"objectKey\": \"dev/test-agent/2025/11/test-doc.jpg\", \"docType\": \"logbook\"}"
-    }
-  ]
-}

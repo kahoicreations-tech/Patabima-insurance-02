@@ -1,0 +1,18 @@
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "cloudshell:CreateEnvironment",
+                "cloudshell:CreateSession",
+                "cloudshell:GetFileDownloadUrls",
+                "cloudshell:GetFileUploadUrls",
+                "cloudshell:DeleteEnvironment",
+                "cloudshell:PutCredentials",
+                "cloudshell:GetEnvironmentStatus"
+            ],
+            "Resource": "*"
+        }
+    ]
+}

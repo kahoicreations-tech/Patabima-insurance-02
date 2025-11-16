@@ -1,0 +1,39 @@
+[Unit]
+Description=PataBima Gunicorn daemon
+After=network.target
+
+[Service]
+Type=notify
+User=ec2-user
+Group=ec2-user
+WorkingDirectory=/var/www/patabima
+Environment="PATH=/var/www/patabima/venv/bin"
+Environment="DEBUG=False"
+Environment="SECRET_KEY=JqBr7F59HcizXuTdh4s5rMYRUxtPegb3l_UQ1EvL3C5MwUz_oqin1Tjs9QV8LwHwd5vmmNBKOpR4QYz3KfIbwg"
+Environment="ALLOWED_HOSTS=44.210.245.82,api.patabima.co.ke"
+Environment="RDS_HOSTNAME=patabima-production-db.ca5qwoi4lxw.us-east-1.rds.amazonaws.com"
+Environment="RDS_PORT=5432"
+Environment="RDS_DB_NAME=patabimadb"
+Environment="RDS_USERNAME=patabimaadmin"
+Environment="RDS_PASSWORD=PataB1ma2025Secure"
+Environment="USE_S3_MEDIA=1"
+Environment="AWS_STORAGE_BUCKET_NAME=patabima-media-prod"
+Environment="AWS_S3_REGION_NAME=us-east-1"
+Environment="DMVIC_BASE_URL=https://uat-api.dmvic.com"
+Environment="DMVIC_MEMBER_CODE=PATABIMA"
+ExecStart=/var/www/patabima/venv/bin/gunicorn \
+          --workers 3 \
+          --threads 2 \
+          --timeout 120 \
+          --bind unix:/var/www/patabima/gunicorn.sock \
+          --access-logfile /var/www/patabima/logs/access.log \
+          --error-logfile /var/www/patabima/logs/error.log \
+          --log-level info \
+          insurance.wsgi:application
+ExecReload=/bin/kill -s HUP $MAINPID
+KillMode=mixed
+TimeoutStopSec=5
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,2371 @@
+{% extends "admin/change_form.html" %}
+
+{% block after_field_sets %}
+    {{ block.super }}
+    
+    {% if categories_with_subcategories %}
+    <div class="pricing-builder-section">
+        <h2>Motor Insurance Products Pricing</h2>
+        <p>Configure pricing for motor insurance products. Enable products and set their pricing parameters.</p>
+        
+        <!-- JSON Preview Section -->
+        <div class="preview-section" style="margin-bottom: 20px;">
+            <div class="preview-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <h3 style="margin: 0; color: var(--body-fg);">JSON Configuration Preview</h3>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <button type="button" id="configureAdjustmentsBtn" style="
+                        padding: 6px 12px;
+                        background: #607d8b;
+                        color: white;
+                        border: none;
+                        border-radius: 4px;
+                        cursor: pointer;
+                        font-size: 11px;
+                        font-weight: 500;
+                    ">
+                        ⚙ Adjustment Factors
+                    </button>
+                    <select id="marketPositionSelect" style="
+                        padding: 6px 8px; 
+                        border: 1px solid var(--border-color); 
+                        border-radius: 4px; 
+                        font-size: 11px;
+                        background: var(--body-bg);
+                        color: var(--body-fg);
+                    ">
+                        <option value="budget">Budget</option>
+                        <option value="standard" selected>Standard</option>
+                        <option value="premium">Premium</option>
+                    </select>
+                    <button type="button" id="copyJsonBtn" class="copy-button" style="
+                        background: #28a745; 
+                        color: white; 
+                        border: none; 
+                        padding: 6px 12px; 
+                        border-radius: 4px; 
+                        cursor: pointer;
+                        font-size: 11px;
+                    ">Copy JSON</button>
+                    <button type="button" id="validateConfigBtn" class="validate-button" style="
+                        background: #417690; 
+                        color: white; 
+                        border: none; 
+                        padding: 6px 12px; 
+                        border-radius: 4px; 
+                        cursor: pointer;
+                        font-size: 11px;
+                    ">Validate</button>
+                </div>
+            </div>
+            
+            <div class="preview-content" style="
+                background: #1e1e1e; 
+                border: 1px solid var(--border-color); 
+                border-radius: 4px; 
+                padding: 0;
+                max-height: 400px;
+                overflow-y: auto;
+                position: relative;
+            ">
+                <div class="json-header" style="
+                    background: #2d2d2d; 
+                    padding: 8px 12px; 
+                    border-bottom: 1px solid #444; 
+                    font-size: 11px; 
+                    color: #888;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                ">
+                    <span>Generated Pricing Configuration JSON</span>
+                    <span id="jsonStats" style="color: #0cc;">0 products enabled</span>
+                </div>
+                
+                <pre id="jsonPreview" style="
+                    margin: 0; 
+                    padding: 15px; 
+                    background: transparent; 
+                    color: #f8f8f2; 
+                    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace; 
+                    font-size: 12px; 
+                    line-height: 1.4;
+                    overflow-x: auto;
+                "></pre>
+                
+                <div id="emptyJsonPreview" style="
+                    text-align: center; 
+                    color: #888; 
+                    font-style: italic; 
+                    padding: 40px 20px;
+                    font-family: var(--font-family-primary);
+                ">
+                    Enable products above to see JSON configuration preview...
+                </div>
+                
+                <div id="validationStatus" style="
+                    position: absolute;
+                    top: 8px;
+                    right: 8px;
+                    padding: 4px 8px;
+                    border-radius: 12px;
+                    font-size: 10px;
+                    font-weight: 500;
+                    display: none;
+                "></div>
+            </div>
+        </div>
+        
+        <div class="table-container">
+            <table class="pricing-table">
+                <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th>Enable</th>
+                        <th>Pricing Method</th>
+                        <th>Rate/Premium</th>
+                        <th>Min Premium</th>
+                        <th>Max Premium</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in categories_with_subcategories %}
+                        <tr class="category-header">
+                            <td colspan="6"><strong>{{ item.category.category_name }}</strong></td>
+                        </tr>
+                        {% for subcategory in item.subcategories %}
+                            <tr class="product-row" data-product="{{ subcategory.subcategory_code }}">
+                                <td class="product-name">
+                                    <strong>{{ subcategory.subcategory_name }}</strong>
+                                    <div class="product-code">{{ subcategory.subcategory_code }}</div>
+                                    {% if subcategory.product_type %}
+                                        <span class="type-badge {{ subcategory.product_type|lower }}">{{ subcategory.product_type }}</span>
+                                    {% endif %}
+                                </td>
+                                <td class="enable-column">
+                                    <input type="checkbox" class="product-toggle" 
+                                           data-product="{{ subcategory.subcategory_code }}"
+                                           data-product-type="{{ subcategory.product_type }}"
+                                           data-pricing-model="{{ subcategory.pricing_model }}">
+                                </td>
+                                <td class="pricing-method-column">
+                                    {% if subcategory.product_type == 'COMPREHENSIVE' %}
+                                        <select class="pricing-type-select compact-select" disabled>
+                                            <option value="percentage">Percentage</option>
+                                            <option value="bracket">Bracket (Ranges)</option>
+                                            <option value="fixed">Fixed Amount</option>
+                                        </select>
+                                    {% elif subcategory.product_type == 'TOR' %}
+                                        <span class="method-text">Time on Risk</span>
+                                    {% else %}
+                                        <span class="method-text">Fixed Premium</span>
+                                    {% endif %}
+                                </td>
+                                <td class="rate-column">
+                                    {% if subcategory.product_type == 'COMPREHENSIVE' %}
+                                        <input type="number" class="compact-input percentage-input" 
+                                               data-field="rate" step="0.01" min="0" max="100" disabled
+                                               placeholder="3.5%">
+                                        <input type="number" class="compact-input fixed-input" 
+                                               data-field="base_premium" step="1000" min="0" disabled
+                                               style="display:none" placeholder="20000">
+                                        <button type="button" class="configure-brackets-btn" disabled
+                                                style="display:none; padding: 5px 10px; font-size: 11px; background: #417690; color: white; border: none; border-radius: 4px; cursor: pointer; margin-top: 4px;">
+                                            📊 Configure Brackets
+                                        </button>
+                                    {% elif 'EXT' in subcategory.subcategory_code %}
+                                        <input type="number" class="compact-input" 
+                                               data-field="base_premium" step="100" min="0" disabled
+                                               placeholder="5000">
+                                        <button type="button" class="configure-extendible-btn" disabled
+                                                style="padding: 5px 10px; font-size: 11px; background: #2196f3; color: white; border: none; border-radius: 4px; cursor: pointer; margin-top: 4px;">
+                                            📅 Extension Terms
+                                        </button>
+                                    {% else %}
+                                        <input type="number" class="compact-input" 
+                                               data-field="base_premium" step="100" min="0" disabled
+                                               placeholder="5000">
+                                    {% endif %}
+                                </td>
+                                <td class="min-premium-column">
+                                    {% if subcategory.product_type == 'COMPREHENSIVE' %}
+                                        <input type="number" class="compact-input" 
+                                               data-field="min_premium" step="1000" min="0" disabled
+                                               placeholder="20000">
+                                    {% else %}
+                                        <span class="na-text">N/A</span>
+                                    {% endif %}
+                                </td>
+                                <td class="max-premium-column">
+                                    {% if subcategory.product_type == 'COMPREHENSIVE' %}
+                                        <input type="number" class="compact-input" 
+                                               data-field="max_premium" step="1000" min="0" disabled
+                                               placeholder="500000">
+                                        <button type="button" class="configure-addons-btn" disabled
+                                                style="padding: 5px 10px; font-size: 11px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; margin-left: 6px; margin-top: 4px;">
+                                            + Add-ons
+                                        </button>
+                                        <button type="button" class="configure-product-adjustments-btn" disabled
+                                                style="padding: 5px 10px; font-size: 11px; background: #607d8b; color: white; border: none; border-radius: 4px; cursor: pointer; margin-left: 6px; margin-top: 4px;">
+                                            ⚙ Adjustments
+                                        </button>
+                                    {% elif 'COMMERCIAL' in subcategory.subcategory_code and 'COMP' in subcategory.subcategory_code %}
+                                        <button type="button" class="configure-tonnage-btn" disabled
+                                                style="padding: 5px 10px; font-size: 11px; background: #ff9800; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                                            ⚙ Tonnage
+                                        </button>
+                                        <button type="button" class="configure-addons-btn" disabled
+                                                style="padding: 5px 10px; font-size: 11px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; margin-left: 6px;">
+                                            + Add-ons
+                                        </button>
+                                        <button type="button" class="configure-product-adjustments-btn" disabled
+                                                style="padding: 5px 10px; font-size: 11px; background: #607d8b; color: white; border: none; border-radius: 4px; cursor: pointer; margin-left: 6px; margin-top: 4px;">
+                                            ⚙ Adjustments
+                                        </button>
+                                    {% elif 'PSV' in subcategory.subcategory_code and 'COMP' in subcategory.subcategory_code %}
+                                        <button type="button" class="configure-pll-btn" disabled
+                                                style="padding: 5px 10px; font-size: 11px; background: #9c27b0; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                                            PLL Pricing
+                                        </button>
+                                        <button type="button" class="configure-product-adjustments-btn" disabled
+                                                style="padding: 5px 10px; font-size: 11px; background: #607d8b; color: white; border: none; border-radius: 4px; cursor: pointer; margin-left: 6px;">
+                                            ⚙ Adjustments
+                                        </button>
+                                    {% else %}
+                                        <span class="na-text">N/A</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Bracket Configuration Modal -->
+        <div id="bracketModal" class="pricing-modal" style="display: none;">
+            <div class="modal-overlay"></div>
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 id="bracketModalTitle">Configure Sum Insured Brackets</h3>
+                    <button type="button" class="modal-close">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <p class="modal-description">Define pricing for different sum insured ranges. Each bracket represents a range of coverage amounts.</p>
+                    
+                    <div id="bracketsContainer">
+                        <!-- Brackets will be added dynamically -->
+                    </div>
+                    
+                    <button type="button" class="add-bracket-btn" style="margin-top: 10px; padding: 6px 12px; background: #417690; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                        + Add Bracket
+                    </button>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-cancel">Cancel</button>
+                    <button type="button" class="btn-save-brackets">Save Brackets</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Add-ons Configuration Modal -->
+        <div id="addonsModal" class="pricing-modal" style="display: none;">
+            <div class="modal-overlay"></div>
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 id="addonsModalTitle">Configure Add-ons & Extensions</h3>
+                    <button type="button" class="modal-close">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <p class="modal-description">Configure optional add-ons and coverage extensions for this product.</p>
+                    
+                    <div id="addonsContainer">
+                        <!-- Add-ons will be added dynamically -->
+                    </div>
+                    
+                    <button type="button" class="add-addon-btn" style="margin-top: 10px; padding: 6px 12px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                        + Add Add-on
+                    </button>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-cancel">Cancel</button>
+                    <button type="button" class="btn-save-addons">Save Add-ons</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Commercial Tonnage Pricing Modal -->
+        <div id="tonnageModal" class="pricing-modal" style="display: none;">
+            <div class="modal-overlay"></div>
+            <div class="modal-content" style="max-width: 800px;">
+                <div class="modal-header">
+                    <h3 id="tonnageModalTitle">Configure Commercial Tonnage Pricing</h3>
+                    <button type="button" class="modal-close">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <p class="modal-description">Define pricing for different tonnage ranges (e.g., Upto 3 Tons, 3.5-8 Tons, etc.)</p>
+                    
+                    <div id="tonnageContainer">
+                        <!-- Tonnage ranges will be added dynamically -->
+                    </div>
+                    
+                    <button type="button" class="add-tonnage-btn" style="margin-top: 10px; padding: 6px 12px; background: #417690; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                        + Add Tonnage Range
+                    </button>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-cancel">Cancel</button>
+                    <button type="button" class="btn-save-tonnage">Save Tonnage Pricing</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- PSV PLL Pricing Modal -->
+        <div id="pllModal" class="pricing-modal" style="display: none;">
+            <div class="modal-overlay"></div>
+            <div class="modal-content" style="max-width: 700px;">
+                <div class="modal-header">
+                    <h3 id="pllModalTitle">Configure PSV PLL Pricing</h3>
+                    <button type="button" class="modal-close">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <p class="modal-description">Configure Passenger Legal Liability pricing per person for different PLL amounts (500K, 250K)</p>
+                    
+                    <div id="pllContainer">
+                        <!-- PLL configurations will be added dynamically -->
+                    </div>
+                    
+                    <button type="button" class="add-pll-btn" style="margin-top: 10px; padding: 6px 12px; background: #417690; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                        + Add PLL Configuration
+                    </button>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-cancel">Cancel</button>
+                    <button type="button" class="btn-save-pll">Save PLL Pricing</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Extendible Pricing Modal -->
+        <div id="extendibleModal" class="pricing-modal" style="display: none;">
+            <div class="modal-overlay"></div>
+            <div class="modal-content" style="max-width: 800px;">
+                <div class="modal-header">
+                    <h3 id="extendibleModalTitle">Configure Extendible Product Pricing</h3>
+                    <button type="button" class="modal-close">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <p class="modal-description">Configure initial period pricing and extension terms for Third-Party Extended and TOR Extended products</p>
+                    
+                    <div id="extendibleContainer">
+                        <div class="extendible-config">
+                            <div class="field-row">
+                                <div class="field-group" style="flex: 1;">
+                                    <label>Initial Period (Days)</label>
+                                    <input type="number" id="ext_initial_days" min="1" max="365" value="30" step="1" placeholder="30">
+                                </div>
+                                <div class="field-group" style="flex: 1;">
+                                    <label>Initial Amount (KSh)</label>
+                                    <input type="number" id="ext_initial_amount" min="0" step="100" placeholder="5000">
+                                </div>
+                            </div>
+                            
+                            <div class="field-row">
+                                <div class="field-group" style="flex: 1;">
+                                    <label>Balance Amount (KSh)</label>
+                                    <input type="number" id="ext_balance_amount" min="0" step="100" placeholder="3000">
+                                </div>
+                                <div class="field-group" style="flex: 1;">
+                                    <label>Total Annual Premium (KSh) <span style="color: #999; font-size: 11px;">(Read-only - matches base premium)</span></label>
+                                    <input type="number" id="ext_total_premium" min="0" step="100" placeholder="8000" readonly>
+                                </div>
+                            </div>
+                            
+                            <div class="field-row" style="margin-top: 8px;">
+                                <div class="field-group" style="flex: 1;">
+                                    <p id="ext_validation_msg" style="margin: 0; padding: 8px; border-radius: 4px; font-size: 12px; display: none;"></p>
+                                </div>
+                            </div>
+                            
+                            <div class="field-row">
+                                <div class="field-group" style="flex: 1;">
+                                    <label>Extension Deadline (Days)</label>
+                                    <input type="number" id="ext_deadline_days" min="1" max="90" value="30" step="1" placeholder="30">
+                                </div>
+                                <div class="field-group" style="flex: 1;">
+                                    <label>Grace Period (Days)</label>
+                                    <input type="number" id="ext_grace_days" min="0" max="30" value="7" step="1" placeholder="7">
+                                </div>
+                            </div>
+                            
+                            <div class="field-row">
+                                <div class="field-group" style="flex: 1;">
+                                    <label>Late Extension Penalty (%)</label>
+                                    <input type="number" id="ext_penalty" min="0" max="100" value="0" step="0.5" placeholder="0">
+                                </div>
+                                <div class="field-group" style="flex: 1;">
+                                    <label style="display: flex; align-items: center; gap: 8px;">
+                                        <input type="checkbox" id="ext_partial_allowed">
+                                        <span>Allow Partial Extension</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-cancel">Cancel</button>
+                    <button type="button" class="btn-save-extendible">Save Extendible Pricing</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Vehicle Adjustment Factors Modal -->
+        <div id="adjustmentModal" class="pricing-modal" style="display: none;">
+            <div class="modal-overlay"></div>
+            <div class="modal-content" style="max-width: 800px;">
+                <div class="modal-header">
+                    <h3>Configure Global Vehicle Adjustment Factors</h3>
+                    <button type="button" class="modal-close">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <p class="modal-description">Configure multipliers for vehicle age, usage type, and other adjustment factors that apply to ALL products by default</p>
+                    
+                    <div id="adjustmentContainer">
+                        <!-- Adjustment factors will be added dynamically -->
+                    </div>
+                    
+                    <button type="button" class="add-adjustment-btn" style="margin-top: 10px; padding: 6px 12px; background: #417690; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                        + Add Adjustment Factor
+                    </button>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-cancel">Cancel</button>
+                    <button type="button" class="btn-save-adjustments">Save Global Adjustments</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Product-Specific Adjustment Factors Modal -->
+        <div id="productAdjustmentModal" class="pricing-modal" style="display: none;">
+            <div class="modal-overlay"></div>
+            <div class="modal-content" style="max-width: 800px;">
+                <div class="modal-header">
+                    <h3 id="productAdjustmentModalTitle">Configure Product-Specific Adjustment Factors</h3>
+                    <button type="button" class="modal-close">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <p class="modal-description">Configure multipliers specific to this product. These will override global adjustment factors.</p>
+                    
+                    <div id="productAdjustmentContainer">
+                        <!-- Product adjustment factors will be added dynamically -->
+                    </div>
+                    
+                    <button type="button" class="add-product-adjustment-btn" style="margin-top: 10px; padding: 6px 12px; background: #417690; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                        + Add Adjustment Factor
+                    </button>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-cancel">Cancel</button>
+                    <button type="button" class="btn-save-product-adjustments">Save Product Adjustments</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        /* Theme-aware pricing builder styling */
+        .pricing-builder-section {
+            margin-top: 20px;
+            padding: 20px;
+            background: var(--body-bg, #fff);
+            border: 1px solid var(--border-color, #ddd);
+            border-radius: 4px;
+        }
+
+        .pricing-builder-section h2 {
+            margin: 0 0 10px 0;
+            color: var(--body-fg, #333);
+            font-size: 16px;
+            font-weight: normal;
+            font-family: "Roboto","Lucida Grande","DejaVu Sans","Bitstream Vera Sans",Verdana,Arial,sans-serif;
+        }
+
+        .pricing-builder-section p {
+            margin: 0 0 20px 0;
+            color: var(--body-quiet-color, #666);
+            font-size: 13px;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            margin-bottom: 20px;
+        }
+
+        .pricing-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color, #ddd);
+            font-family: "Roboto","Lucida Grande","DejaVu Sans","Bitstream Vera Sans",Verdana,Arial,sans-serif;
+            font-size: 13px;
+        }
+
+        .pricing-table th {
+            background: var(--darkened-bg, #f8f9fa);
+            color: var(--body-fg, #333);
+            padding: 8px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color, #ddd);
+            border-right: 1px solid var(--border-color, #ddd);
+            font-weight: normal;
+        }
+
+        .pricing-table th:last-child {
+            border-right: none;
+        }
+
+        .pricing-table td {
+            padding: 8px 10px;
+            border-bottom: 1px solid var(--hairline-color, #eee);
+            border-right: 1px solid var(--hairline-color, #eee);
+            vertical-align: middle;
+        }
+
+        .pricing-table td:last-child {
+            border-right: none;
+        }
+
+        .category-header {
+            background: var(--selected-bg, #f0f8ff) !important;
+        }
+
+        .category-header td {
+            font-weight: bold;
+            color: var(--body-fg, #333);
+            padding: 12px 10px;
+        }
+
+        .product-row.enabled {
+            background-color: var(--selected-bg, #f0f8ff);
+        }
+
+        .product-name {
+            max-width: 180px;
+            min-width: 140px;
+        }
+
+        .product-name strong {
+            color: var(--body-fg, #333);
+            font-weight: normal;
+        }
+
+        .product-code {
+            font-size: 11px;
+            color: var(--body-quiet-color, #777);
+            font-family: "Bitstream Vera Sans Mono", Monaco, "Courier New", Courier, monospace;
+            margin-top: 2px;
+        }
+
+        .type-badge {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 10px;
+            text-transform: uppercase;
+            margin-top: 4px;
+        }
+
+        .type-badge.comprehensive {
+            background-color: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .type-badge.tor {
+            background-color: #f3e5f5;
+            color: #7b1fa2;
+        }
+
+        .type-badge.third-party {
+            background-color: #e8f5e8;
+            color: #388e3c;
+        }
+
+        .enable-column {
+            text-align: center;
+            width: 50px;
+        }
+
+        .product-toggle {
+            transform: scale(1.1);
+        }
+
+        .rate-column,
+        .min-premium-column,
+        .max-premium-column {
+            width: 110px;
+        }
+
+        .compact-select,
+        .compact-input {
+            width: 100%;
+            padding: 4px 6px;
+            border: 1px solid var(--border-color, #ccc);
+            border-radius: 4px;
+            background: var(--body-bg, #fff);
+            color: var(--body-fg, #333);
+            font-size: 12px;
+            font-family: "Roboto","Lucida Grande","DejaVu Sans","Bitstream Vera Sans",Verdana,Arial,sans-serif;
+        }
+
+        .compact-select:disabled,
+        .compact-input:disabled {
+            background: var(--darkened-bg, #f5f5f5);
+            color: var(--body-quiet-color, #999);
+            cursor: not-allowed;
+        }
+
+        .compact-select:focus,
+        .compact-input:focus {
+            outline: none;
+            border-color: var(--link-fg, #417690);
+        }
+
+        .method-text {
+            color: var(--body-quiet-color, #777);
+            font-style: italic;
+            font-size: 12px;
+        }
+
+        .na-text {
+            color: var(--body-quiet-color, #999);
+            text-align: center;
+            font-style: italic;
+            font-size: 12px;
+        }
+
+        .preview-section {
+            margin-top: 20px;
+            padding: 15px;
+            background: var(--body-bg, #fff);
+            border: 1px solid var(--border-color, #ddd);
+            border-radius: 4px;
+        }
+
+        .preview-section h3 {
+            margin: 0 0 10px 0;
+            color: var(--body-fg, #333);
+            font-size: 14px;
+            font-weight: normal;
+            font-family: "Roboto","Lucida Grande","DejaVu Sans","Bitstream Vera Sans",Verdana,Arial,sans-serif;
+        }
+
+        .preview-content {
+            background: var(--darkened-bg, #f8f9fa);
+            border: 1px solid var(--hairline-color, #ddd);
+            padding: 10px;
+            font-family: "Bitstream Vera Sans Mono", Monaco, "Courier New", Courier, monospace;
+            font-size: 12px;
+            color: var(--body-fg, #333);
+            max-height: 200px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            line-height: 1.4;
+        }
+        
+        /* Modal Styles */
+        .pricing-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10000;
+        }
+        
+        .modal-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+        }
+        
+        .modal-content {
+            position: relative;
+            width: 90%;
+            max-width: 800px;
+            max-height: 90vh;
+            margin: 5vh auto;
+            background: var(--body-bg, #fff);
+            border-radius: 8px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .modal-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border-color, #ddd);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .modal-header h3 {
+            margin: 0;
+            color: var(--body-fg, #333);
+            font-size: 18px;
+            font-weight: 500;
+        }
+        
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 28px;
+            line-height: 1;
+            color: var(--body-quiet-color, #777);
+            cursor: pointer;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+        }
+        
+        .modal-close:hover {
+            color: var(--body-fg, #333);
+        }
+        
+        .modal-body {
+            padding: 24px;
+            overflow-y: auto;
+            flex: 1;
+        }
+        
+        .modal-description {
+            margin: 0 0 20px 0;
+            color: var(--body-quiet-color, #666);
+            font-size: 13px;
+        }
+        
+        .modal-footer {
+            padding: 16px 24px;
+            border-top: 1px solid var(--border-color, #ddd);
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+        
+        .modal-footer button {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+        
+        .btn-cancel {
+            background: var(--body-bg, #fff);
+            color: var(--body-fg, #333);
+            border: 1px solid var(--border-color, #ddd) !important;
+        }
+        
+        .btn-cancel:hover {
+            background: var(--darkened-bg, #f8f9fa);
+        }
+        
+        .btn-save-brackets,
+        .btn-save-addons {
+            background: #417690;
+            color: white;
+        }
+        
+        .btn-save-brackets:hover,
+        .btn-save-addons:hover {
+            background: #356274;
+        }
+        
+        /* Bracket Item Styles */
+        .bracket-item {
+            background: var(--darkened-bg, #f8f9fa);
+            border: 1px solid var(--border-color, #ddd);
+            border-radius: 4px;
+            padding: 16px;
+            margin-bottom: 12px;
+        }
+        
+        .bracket-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        
+        .bracket-item-header h4 {
+            margin: 0;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--body-fg, #333);
+        }
+        
+        .remove-bracket-btn,
+        .remove-addon-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 11px;
+        }
+        
+        .remove-bracket-btn:hover,
+        .remove-addon-btn:hover {
+            background: #c82333;
+        }
+        
+        .bracket-fields {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 12px;
+        }
+        
+        .field-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .field-group label {
+            font-size: 12px;
+            color: var(--body-quiet-color, #666);
+            margin-bottom: 4px;
+            font-weight: 500;
+        }
+        
+        .field-group input,
+        .field-group select {
+            padding: 6px 8px;
+            border: 1px solid var(--border-color, #ddd);
+            border-radius: 4px;
+            font-size: 13px;
+            background: var(--body-bg, #fff);
+            color: var(--body-fg, #333);
+        }
+        
+        .field-group input:focus,
+        .field-group select:focus {
+            outline: none;
+            border-color: var(--link-fg, #417690);
+        }
+        
+        /* Add-on Item Styles */
+        .addon-item {
+            background: var(--darkened-bg, #f8f9fa);
+            border: 1px solid var(--border-color, #ddd);
+            border-radius: 4px;
+            padding: 16px;
+            margin-bottom: 12px;
+        }
+        
+        .addon-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        
+        .addon-item-header h4 {
+            margin: 0;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--body-fg, #333);
+        }
+        
+        .addon-fields {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr;
+            gap: 12px;
+        }
+    </style>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Get the features textarea (contains the full JSON configuration)
+        const featuresTextArea = document.querySelector('#id_features');
+        let pricingData = {};
+        let marketPosition = 'standard';
+        
+        // Parse existing features data
+        if (featuresTextArea && featuresTextArea.value) {
+            try {
+                const features = JSON.parse(featuresTextArea.value);
+                
+                // Extract pricing data from features.pricing
+                if (features.pricing && typeof features.pricing === 'object') {
+                    // Convert backend format to UI format
+                    Object.keys(features.pricing).forEach(productCode => {
+                        const pricing = features.pricing[productCode];
+                        pricingData[productCode] = {
+                            enabled: true,
+                            pricing_type: pricing.pricing_type || 'fixed',
+                            ...pricing
+                        };
+                        
+                        // Convert rate from decimal to percentage for display
+                        if (pricing.rate !== undefined) {
+                            pricingData[productCode].rate = (pricing.rate * 100).toFixed(2);
+                        }
+                        
+                        // Load brackets if present
+                        if (pricing.brackets && Array.isArray(pricing.brackets)) {
+                            pricingData[productCode].brackets = pricing.brackets;
+                        }
+                        
+                        // Load add-ons if present
+                        if (pricing.addons && Array.isArray(pricing.addons)) {
+                            pricingData[productCode].addons = pricing.addons.map(addon => ({
+                                name: addon.name,
+                                type: addon.type,
+                                // Convert percentage back to display format
+                                value: addon.type === 'percentage' ? (addon.value * 100) : addon.value
+                            }));
+                        }
+                        
+                        // Load tonnage pricing if present (for commercial products)
+                        if (pricing.tonnage_pricing && Array.isArray(pricing.tonnage_pricing)) {
+                            pricingData[productCode].tonnage_pricing = pricing.tonnage_pricing;
+                        }
+                        
+                        // Load PLL pricing if present (for PSV products)
+                        if (pricing.pll_pricing && Array.isArray(pricing.pll_pricing)) {
+                            pricingData[productCode].pll_pricing = pricing.pll_pricing;
+                        }
+                        
+                        // Load extendible configuration if present (for extended products)
+                        if (pricing.extendible_config) {
+                            pricingData[productCode].extendible_config = pricing.extendible_config;
+                        }
+                        
+                        // Load product-specific adjustment factors if present
+                        if (pricing.product_adjustments && Array.isArray(pricing.product_adjustments)) {
+                            pricingData[productCode].product_adjustments = pricing.product_adjustments;
+                        }
+                    });
+                }
+                
+                // Extract market position
+                if (features.market_position) {
+                    marketPosition = features.market_position;
+                }
+                
+                // Extract global adjustment factors
+                if (features.adjustment_factors && Array.isArray(features.adjustment_factors)) {
+                    pricingData.adjustment_factors = features.adjustment_factors;
+                }
+                
+                console.log('[Pricing Builder] Loaded existing pricing data:', pricingData);
+            } catch (e) {
+                console.warn('[Pricing Builder] Could not parse existing features:', e);
+            }
+        }
+
+        // Load existing settings into UI
+        function loadExistingData() {
+            // Set market position
+            const marketSelect = document.getElementById('marketPositionSelect');
+            if (marketSelect && marketPosition) {
+                marketSelect.value = marketPosition;
+            }
+            
+            document.querySelectorAll('.product-toggle').forEach(toggle => {
+                const productCode = toggle.dataset.product;
+                const pricing = pricingData[productCode];
+                
+                if (pricing && pricing.enabled) {
+                    toggle.checked = true;
+                    const row = toggle.closest('.product-row');
+                    enableProductRow(row);
+                    
+                    // Handle pricing type selection for comprehensive products
+                    const pricingSelect = row.querySelector('.pricing-type-select');
+                    if (pricingSelect && pricing.pricing_type) {
+                        pricingSelect.value = pricing.pricing_type;
+                        handlePricingTypeChange(pricingSelect);
+                    }
+                    
+                    // Load field values based on pricing type
+                    if (pricing.pricing_type === 'bracket') {
+                        // Brackets are loaded separately via modal
+                        // Just show the configure button
+                    } else if (pricing.pricing_type === 'percentage') {
+                        // Load percentage rate, min, max
+                        const rateInput = row.querySelector('.percentage-input[data-field="rate"]');
+                        if (rateInput && pricing.rate !== undefined) {
+                            rateInput.value = pricing.rate;
+                        }
+                        const minInput = row.querySelector('[data-field="min_premium"]');
+                        if (minInput && pricing.min_premium !== undefined) {
+                            minInput.value = pricing.min_premium;
+                        }
+                        const maxInput = row.querySelector('[data-field="max_premium"]');
+                        if (maxInput && pricing.max_premium !== undefined) {
+                            maxInput.value = pricing.max_premium;
+                        }
+                    } else if (pricing.pricing_type === 'fixed') {
+                        // Load fixed premium
+                        const premiumInput = row.querySelector('[data-field="base_premium"]');
+                        if (premiumInput && pricing.base_premium !== undefined) {
+                            premiumInput.value = pricing.base_premium;
+                        }
+                    }
+                }
+            });
+            
+            updatePreview();
+            console.log('[Pricing Builder] UI loaded with existing data');
+        }
+        
+        function enableProductRow(row) {
+            row.classList.add('enabled');
+            row.querySelectorAll('.compact-input, .compact-select').forEach(input => {
+                input.disabled = false;
+            });
+        }
+        
+        function disableProductRow(row) {
+            row.classList.remove('enabled');
+            row.querySelectorAll('.compact-input, .compact-select').forEach(input => {
+                input.disabled = true;
+            });
+        }
+
+        // Handle product toggle
+        document.querySelectorAll('.product-toggle').forEach(toggle => {
+            toggle.addEventListener('change', function() {
+                const row = this.closest('.product-row');
+                const productCode = this.dataset.product;
+                const productType = this.dataset.productType;
+                const pricingModel = this.dataset.pricingModel;
+                
+                if (this.checked) {
+                    enableProductRow(row);
+                    
+                    // Initialize product data
+                    if (!pricingData[productCode]) {
+                        pricingData[productCode] = {
+                            product_type: productType,
+                            pricing_model: pricingModel,
+                            enabled: true
+                        };
+                        
+                        // Set default values based on product type
+                        if (productType === 'COMPREHENSIVE') {
+                            pricingData[productCode].pricing_type = 'percentage';
+                            pricingData[productCode].rate = 3.5;
+                            pricingData[productCode].min_premium = 20000;
+                        } else if (productType === 'TOR') {
+                            pricingData[productCode].base_premium = 1500;
+                        } else {
+                            pricingData[productCode].base_premium = 5000;
+                        }
+                    } else {
+                        pricingData[productCode].enabled = true;
+                    }
+                } else {
+                    disableProductRow(row);
+                    if (pricingData[productCode]) {
+                        pricingData[productCode].enabled = false;
+                    }
+                }
+                
+                updatePricingData();
+            });
+        });
+
+        // Handle pricing type changes for comprehensive products
+        function handlePricingTypeChange(select) {
+            const row = select.closest('.product-row');
+            const percentageInputs = row.querySelectorAll('.percentage-input');
+            const fixedInputs = row.querySelectorAll('.fixed-input');
+            const bracketBtn = row.querySelector('.configure-brackets-btn');
+            
+            // Hide all inputs first
+            percentageInputs.forEach(input => input.style.display = 'none');
+            fixedInputs.forEach(input => input.style.display = 'none');
+            if (bracketBtn) bracketBtn.style.display = 'none';
+            
+            if (select.value === 'percentage') {
+                percentageInputs.forEach(input => input.style.display = 'inline-block');
+            } else if (select.value === 'fixed') {
+                fixedInputs.forEach(input => input.style.display = 'inline-block');
+            } else if (select.value === 'bracket') {
+                if (bracketBtn) bracketBtn.style.display = 'inline-block';
+            }
+        }
+        
+        document.querySelectorAll('.pricing-type-select').forEach(select => {
+            select.addEventListener('change', function() {
+                handlePricingTypeChange(this);
+                const row = this.closest('.product-row');
+                const toggle = row.querySelector('.product-toggle');
+                const productCode = toggle.dataset.product;
+                
+                if (pricingData[productCode]) {
+                    pricingData[productCode].pricing_type = this.value;
+                    updatePricingData();
+                }
+            });
+        });
+
+        // Handle input changes
+        document.querySelectorAll('.compact-input').forEach(input => {
+            input.addEventListener('input', function() {
+                const row = this.closest('.product-row');
+                const toggle = row.querySelector('.product-toggle');
+                const productCode = toggle.dataset.product;
+                const field = this.dataset.field;
+                
+                if (toggle.checked && pricingData[productCode]) {
+                    const value = parseFloat(this.value) || 0;
+                    pricingData[productCode][field] = value;
+                    updatePricingData();
+                }
+            });
+        });
+
+        function updatePricingData() {
+            // Just trigger preview update, which will save to features field
+            updatePreview();
+        }
+
+        function updatePreview() {
+            const enabledProducts = Object.keys(pricingData).filter(key => pricingData[key].enabled);
+            const pricingConfig = {};
+            let validCount = 0;
+            let errorCount = 0;
+            
+            // Build pricing configuration in the required format
+            enabledProducts.forEach(productCode => {
+                const product = pricingData[productCode];
+                const validation = validateProduct(productCode, product);
+                
+                if (validation.isValid) {
+                    validCount++;
+                } else {
+                    errorCount++;
+                }
+                
+                // Build pricing entry based on product configuration
+                const pricingEntry = {};
+                
+                if (product.pricing_type === 'bracket' && product.brackets && product.brackets.length > 0) {
+                    // Bracket-based pricing for comprehensive
+                    pricingEntry.pricing_type = 'bracket';
+                    pricingEntry.brackets = product.brackets.map(b => ({
+                        min_value: b.min_value || 0,
+                        max_value: b.max_value || 1000000,
+                        premium: b.premium || 20000
+                    }));
+                } else if (product.pricing_type === 'percentage' || (product.rate && product.pricing_type !== 'fixed')) {
+                    pricingEntry.rate = parseFloat(product.rate) / 100; // Convert percentage to decimal
+                    pricingEntry.pricing_type = 'percentage';
+                    if (product.min_premium) {
+                        pricingEntry.min_premium = parseFloat(product.min_premium);
+                    }
+                    if (product.max_premium) {
+                        pricingEntry.max_premium = parseFloat(product.max_premium);
+                    }
+                } else if (product.pricing_type === 'fixed' || product.base_premium) {
+                    pricingEntry.base_premium = parseFloat(product.base_premium || 0);
+                    pricingEntry.pricing_type = 'fixed';
+                }
+                
+                // Add add-ons if configured
+                if (product.addons && product.addons.length > 0) {
+                    pricingEntry.addons = product.addons.map(addon => ({
+                        name: addon.name,
+                        type: addon.type,
+                        value: addon.type === 'percentage' ? parseFloat(addon.value) / 100 : parseFloat(addon.value)
+                    }));
+                }
+                
+                // Add tonnage pricing for commercial products
+                if (product.tonnage_pricing && product.tonnage_pricing.length > 0) {
+                    pricingEntry.tonnage_pricing = product.tonnage_pricing;
+                }
+                
+                // Add PLL pricing for PSV products
+                if (product.pll_pricing && product.pll_pricing.length > 0) {
+                    pricingEntry.pll_pricing = product.pll_pricing;
+                }
+                
+                // Add extendible configuration for extended products
+                if (product.extendible_config) {
+                    pricingEntry.extendible_config = product.extendible_config;
+                }
+                
+                // Add product-specific adjustment factors if configured
+                if (product.product_adjustments && product.product_adjustments.length > 0) {
+                    pricingEntry.product_adjustments = product.product_adjustments;
+                }
+                
+                pricingConfig[productCode] = pricingEntry;
+            });
+            
+            // Create the final JSON structure matching your format
+            const marketPosition = document.getElementById('marketPositionSelect')?.value || 'standard';
+            const finalJson = {
+                pricing: pricingConfig,
+                addon_overrides: {},
+                market_position: marketPosition
+            };
+            
+            // Add global adjustment factors if configured
+            if (pricingData.adjustment_factors && pricingData.adjustment_factors.length > 0) {
+                finalJson.adjustment_factors = pricingData.adjustment_factors;
+            }
+            
+            // Update JSON preview
+            const jsonPreview = document.getElementById('jsonPreview');
+            const emptyPreview = document.getElementById('emptyJsonPreview');
+            const jsonStats = document.getElementById('jsonStats');
+            const validationStatus = document.getElementById('validationStatus');
+            
+            if (enabledProducts.length === 0) {
+                jsonPreview.style.display = 'none';
+                emptyPreview.style.display = 'block';
+                validationStatus.style.display = 'none';
+                jsonStats.textContent = '0 products enabled';
+            } else {
+                jsonPreview.style.display = 'block';
+                emptyPreview.style.display = 'none';
+                validationStatus.style.display = 'block';
+                
+                // Format and highlight JSON
+                const formattedJson = JSON.stringify(finalJson, null, 2);
+                jsonPreview.textContent = formattedJson;
+                
+                // Apply basic syntax highlighting
+                highlightJson(jsonPreview);
+                
+                // Update stats
+                jsonStats.textContent = `${enabledProducts.length} products enabled`;
+                
+                // Update validation status
+                if (errorCount === 0) {
+                    validationStatus.textContent = '✓ Valid';
+                    validationStatus.style.background = '#28a745';
+                    validationStatus.style.color = 'white';
+                } else {
+                    validationStatus.textContent = `${errorCount} errors`;
+                    validationStatus.style.background = '#dc3545';
+                    validationStatus.style.color = 'white';
+                }
+            }
+            
+            // Update the features textarea with the complete configuration
+            if (featuresTextArea) {
+                featuresTextArea.value = JSON.stringify(finalJson, null, 2);
+            }
+        }
+        
+        function highlightJson(element) {
+            let html = element.textContent;
+            
+            // Highlight strings (keys and values)
+            html = html.replace(/"([^"]*)":/g, '<span style="color: #66d9ef;">"$1"</span>:');
+            html = html.replace(/:\s*"([^"]*)"/g, ': <span style="color: #a6e22e;">"$1"</span>');
+            
+            // Highlight numbers
+            html = html.replace(/:\s*(\d+(?:\.\d+)?)/g, ': <span style="color: #ae81ff;">$1</span>');
+            
+            // Highlight booleans
+            html = html.replace(/:\s*(true|false)/g, ': <span style="color: #fd971f;">$1</span>');
+            
+            // Highlight null
+            html = html.replace(/:\s*(null)/g, ': <span style="color: #f92672;">$1</span>');
+            
+            // Highlight brackets and braces
+            html = html.replace(/([{}[\]])/g, '<span style="color: #f8f8f2; font-weight: bold;">$1</span>');
+            
+            element.innerHTML = html;
+        }
+        
+        function validateProduct(productCode, product) {
+            const errors = [];
+            const warnings = [];
+            let isValid = true;
+            
+            // Basic validation
+            if (!product.rate && !product.fixedPremium) {
+                errors.push(`Missing rate or fixed premium`);
+                isValid = false;
+            }
+            
+            if (product.rate && (product.rate < 0 || product.rate > 50)) {
+                errors.push(`Rate should be between 0% and 50%`);
+                isValid = false;
+            }
+            
+            if (product.minPremium && product.maxPremium && product.minPremium > product.maxPremium) {
+                errors.push(`Minimum premium cannot exceed maximum premium`);
+                isValid = false;
+            }
+            
+            // Warnings
+            if (product.rate && product.rate > 20) {
+                warnings.push(`High rate (${product.rate}%) - verify if correct`);
+            }
+            
+            if (product.minPremium && product.minPremium < 1000) {
+                warnings.push(`Very low minimum premium (KSh ${product.minPremium})`);
+            }
+            
+            return { isValid, errors, warnings };
+        }
+
+        // Initialize
+        loadExistingData();
+        
+        // Add validation button event listener
+        document.getElementById('validateConfigBtn').addEventListener('click', function() {
+            const button = this;
+            const originalText = button.textContent;
+            
+            button.textContent = 'Validating...';
+            button.disabled = true;
+            
+            setTimeout(() => {
+                updatePreview();
+                button.textContent = '✓ Validated';
+                
+                setTimeout(() => {
+                    button.textContent = originalText;
+                    button.disabled = false;
+                }, 1500);
+            }, 500);
+        });
+        
+        // Add copy JSON button event listener
+        document.getElementById('copyJsonBtn').addEventListener('click', function() {
+            const button = this;
+            const originalText = button.textContent;
+            const jsonPreview = document.getElementById('jsonPreview');
+            
+            if (jsonPreview && jsonPreview.textContent.trim()) {
+                // Copy to clipboard
+                navigator.clipboard.writeText(jsonPreview.textContent).then(() => {
+                    button.textContent = '✓ Copied';
+                    button.style.background = '#28a745';
+                    
+                    setTimeout(() => {
+                        button.textContent = originalText;
+                        button.style.background = '#28a745';
+                    }, 2000);
+                }).catch(() => {
+                    // Fallback for older browsers
+                    const textArea = document.createElement('textarea');
+                    textArea.value = jsonPreview.textContent;
+                    document.body.appendChild(textArea);
+                    textArea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textArea);
+                    
+                    button.textContent = '✓ Copied';
+                    setTimeout(() => {
+                        button.textContent = originalText;
+                    }, 2000);
+                });
+            } else {
+                button.textContent = 'No Data';
+                setTimeout(() => {
+                    button.textContent = originalText;
+                }, 1500);
+            }
+        });
+        
+        // Add real-time preview updates
+        document.addEventListener('change', function(e) {
+            if (e.target.matches('.product-toggle, .pricing-type-select, .compact-input, #marketPositionSelect')) {
+                setTimeout(updatePreview, 100);
+            }
+        });
+        
+        document.addEventListener('input', function(e) {
+            if (e.target.matches('.compact-input')) {
+                // Sync base premium with extendible total for EXT products
+                if (e.target.dataset.field === 'base_premium') {
+                    const row = e.target.closest('.product-row');
+                    const productCode = row.dataset.product;
+                    
+                    // Check if this is an extendible product
+                    if (productCode && productCode.includes('EXT')) {
+                        const basePremium = parseFloat(e.target.value) || 0;
+                        
+                        // Update pricingData
+                        if (pricingData[productCode]) {
+                            pricingData[productCode].base_premium = basePremium;
+                            
+                            // If extendible config doesn't exist, initialize it
+                            if (!pricingData[productCode].extendible_config) {
+                                pricingData[productCode].extendible_config = {
+                                    initial_period_days: 30,
+                                    initial_amount: Math.floor(basePremium * 0.6),
+                                    balance_amount: Math.floor(basePremium * 0.4),
+                                    total_annual_premium: basePremium,
+                                    extension_deadline_days: 30,
+                                    grace_period_days: 7,
+                                    penalty_for_late_extension: 0,
+                                    allow_partial_extension: false
+                                };
+                            } else {
+                                // Update total to match base premium
+                                pricingData[productCode].extendible_config.total_annual_premium = basePremium;
+                            }
+                        }
+                    }
+                }
+                
+                setTimeout(updatePreview, 300);
+            }
+        });
+        
+        // Initial preview update
+        setTimeout(updatePreview, 500);
+        
+        // ============================================
+        // BRACKET CONFIGURATION MODAL
+        // ============================================
+        let currentBracketProduct = null;
+        
+        // Enable bracket/addon/tonnage/pll/extendible/adjustment buttons when product is enabled
+        function enableProductRow(row) {
+            row.classList.add('enabled');
+            row.querySelectorAll('.compact-input, .compact-select').forEach(input => {
+                input.disabled = false;
+            });
+            row.querySelectorAll('.configure-brackets-btn, .configure-addons-btn, .configure-tonnage-btn, .configure-pll-btn, .configure-extendible-btn, .configure-product-adjustments-btn').forEach(btn => {
+                btn.disabled = false;
+            });
+        }
+        
+        // Handle configure brackets button click
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('configure-brackets-btn')) {
+                const row = e.target.closest('.product-row');
+                const toggle = row.querySelector('.product-toggle');
+                currentBracketProduct = toggle.dataset.product;
+                const productName = row.querySelector('.product-name strong').textContent;
+                
+                openBracketModal(productName);
+            }
+        });
+        
+        function openBracketModal(productName) {
+            const modal = document.getElementById('bracketModal');
+            const title = document.getElementById('bracketModalTitle');
+            title.textContent = `Configure Brackets: ${productName}`;
+            
+            // Load existing brackets
+            const brackets = pricingData[currentBracketProduct]?.brackets || [];
+            renderBrackets(brackets);
+            
+            modal.style.display = 'block';
+        }
+        
+        function renderBrackets(brackets) {
+            const container = document.getElementById('bracketsContainer');
+            container.innerHTML = '';
+            
+            if (brackets.length === 0) {
+                // Add default bracket
+                brackets.push({
+                    min_value: 0,
+                    max_value: 1000000,
+                    premium: 20000
+                });
+            }
+            
+            brackets.forEach((bracket, index) => {
+                const bracketHTML = `
+                    <div class="bracket-item" data-index="${index}">
+                        <div class="bracket-item-header">
+                            <h4>Bracket ${index + 1}</h4>
+                            ${index > 0 ? '<button type="button" class="remove-bracket-btn" data-index="' + index + '">Remove</button>' : ''}
+                        </div>
+                        <div class="bracket-fields">
+                            <div class="field-group">
+                                <label>Min Sum Insured (KSh)</label>
+                                <input type="number" class="bracket-min" data-index="${index}" value="${bracket.min_value || 0}" step="100000" min="0">
+                            </div>
+                            <div class="field-group">
+                                <label>Max Sum Insured (KSh)</label>
+                                <input type="number" class="bracket-max" data-index="${index}" value="${bracket.max_value || 1000000}" step="100000" min="0">
+                            </div>
+                            <div class="field-group">
+                                <label>Premium (KSh)</label>
+                                <input type="number" class="bracket-premium" data-index="${index}" value="${bracket.premium || 20000}" step="1000" min="0">
+                            </div>
+                        </div>
+                    </div>
+                `;
+                container.insertAdjacentHTML('beforeend', bracketHTML);
+            });
+        }
+        
+        // Add bracket button
+        document.querySelector('.add-bracket-btn').addEventListener('click', function() {
+            const container = document.getElementById('bracketsContainer');
+            const currentBrackets = container.querySelectorAll('.bracket-item');
+            const newIndex = currentBrackets.length;
+            
+            const bracketHTML = `
+                <div class="bracket-item" data-index="${newIndex}">
+                    <div class="bracket-item-header">
+                        <h4>Bracket ${newIndex + 1}</h4>
+                        <button type="button" class="remove-bracket-btn" data-index="${newIndex}">Remove</button>
+                    </div>
+                    <div class="bracket-fields">
+                        <div class="field-group">
+                            <label>Min Sum Insured (KSh)</label>
+                            <input type="number" class="bracket-min" data-index="${newIndex}" value="0" step="100000" min="0">
+                        </div>
+                        <div class="field-group">
+                            <label>Max Sum Insured (KSh)</label>
+                            <input type="number" class="bracket-max" data-index="${newIndex}" value="1000000" step="100000" min="0">
+                        </div>
+                        <div class="field-group">
+                            <label>Premium (KSh)</label>
+                            <input type="number" class="bracket-premium" data-index="${newIndex}" value="20000" step="1000" min="0">
+                        </div>
+                    </div>
+                </div>
+            `;
+            container.insertAdjacentHTML('beforeend', bracketHTML);
+        });
+        
+        // Remove bracket
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('remove-bracket-btn')) {
+                e.target.closest('.bracket-item').remove();
+                // Renumber brackets
+                document.querySelectorAll('.bracket-item').forEach((item, index) => {
+                    item.dataset.index = index;
+                    item.querySelector('h4').textContent = `Bracket ${index + 1}`;
+                });
+            }
+        });
+        
+        // Save brackets
+        document.querySelector('.btn-save-brackets').addEventListener('click', function() {
+            const brackets = [];
+            document.querySelectorAll('.bracket-item').forEach(item => {
+                const index = item.dataset.index;
+                brackets.push({
+                    min_value: parseInt(item.querySelector('.bracket-min').value) || 0,
+                    max_value: parseInt(item.querySelector('.bracket-max').value) || 1000000,
+                    premium: parseInt(item.querySelector('.bracket-premium').value) || 20000
+                });
+            });
+            
+            if (pricingData[currentBracketProduct]) {
+                pricingData[currentBracketProduct].brackets = brackets;
+                updatePricingData();
+            }
+            
+            closeBracketModal();
+        });
+        
+        function closeBracketModal() {
+            document.getElementById('bracketModal').style.display = 'none';
+            currentBracketProduct = null;
+        }
+        
+        // ============================================
+        // ADD-ONS CONFIGURATION MODAL
+        // ============================================
+        let currentAddonProduct = null;
+        
+        // Handle configure add-ons button click
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('configure-addons-btn')) {
+                const row = e.target.closest('.product-row');
+                const toggle = row.querySelector('.product-toggle');
+                currentAddonProduct = toggle.dataset.product;
+                const productName = row.querySelector('.product-name strong').textContent;
+                
+                openAddonsModal(productName);
+            }
+        });
+        
+        function openAddonsModal(productName) {
+            const modal = document.getElementById('addonsModal');
+            const title = document.getElementById('addonsModalTitle');
+            title.textContent = `Configure Add-ons: ${productName}`;
+            
+            // Load existing add-ons
+            const addons = pricingData[currentAddonProduct]?.addons || [];
+            renderAddons(addons);
+            
+            modal.style.display = 'block';
+        }
+        
+        function renderAddons(addons) {
+            const container = document.getElementById('addonsContainer');
+            container.innerHTML = '';
+            
+            const commonAddons = [
+                { name: 'Excess Protector', type: 'fixed' },
+                { name: 'Political Violence & Terrorism', type: 'percentage' },
+                { name: 'Loss of Use', type: 'fixed' },
+                { name: 'Windscreen Extension', type: 'fixed' },
+                { name: 'Radio Cassette', type: 'fixed' },
+                { name: 'Personal Accident', type: 'fixed' }
+            ];
+            
+            if (addons.length === 0) {
+                // Add first default add-on
+                addons.push({
+                    name: 'Excess Protector',
+                    type: 'fixed',
+                    value: 5000
+                });
+            }
+            
+            addons.forEach((addon, index) => {
+                const addonHTML = `
+                    <div class="addon-item" data-index="${index}">
+                        <div class="addon-item-header">
+                            <h4>Add-on ${index + 1}</h4>
+                            <button type="button" class="remove-addon-btn" data-index="${index}">Remove</button>
+                        </div>
+                        <div class="addon-fields">
+                            <div class="field-group">
+                                <label>Add-on Name</label>
+                                <select class="addon-name" data-index="${index}">
+                                    <option value="">Custom...</option>
+                                    ${commonAddons.map(a => `<option value="${a.name}" ${addon.name === a.name ? 'selected' : ''}>${a.name}</option>`).join('')}
+                                </select>
+                            </div>
+                            <div class="field-group">
+                                <label>Pricing Type</label>
+                                <select class="addon-type" data-index="${index}">
+                                    <option value="fixed" ${addon.type === 'fixed' ? 'selected' : ''}>Fixed Amount</option>
+                                    <option value="percentage" ${addon.type === 'percentage' ? 'selected' : ''}>Percentage</option>
+                                </select>
+                            </div>
+                            <div class="field-group">
+                                <label>Value</label>
+                                <input type="number" class="addon-value" data-index="${index}" value="${addon.value || 5000}" step="100" min="0">
+                            </div>
+                        </div>
+                    </div>
+                `;
+                container.insertAdjacentHTML('beforeend', addonHTML);
+            });
+        }
+        
+        // Add addon button
+        document.querySelector('.add-addon-btn').addEventListener('click', function() {
+            const container = document.getElementById('addonsContainer');
+            const currentAddons = container.querySelectorAll('.addon-item');
+            const newIndex = currentAddons.length;
+            
+            const addonHTML = `
+                <div class="addon-item" data-index="${newIndex}">
+                    <div class="addon-item-header">
+                        <h4>Add-on ${newIndex + 1}</h4>
+                        <button type="button" class="remove-addon-btn" data-index="${newIndex}">Remove</button>
+                    </div>
+                    <div class="addon-fields">
+                        <div class="field-group">
+                            <label>Add-on Name</label>
+                            <select class="addon-name" data-index="${newIndex}">
+                                <option value="">Custom...</option>
+                                <option value="Excess Protector">Excess Protector</option>
+                                <option value="Political Violence & Terrorism">Political Violence & Terrorism</option>
+                                <option value="Loss of Use">Loss of Use</option>
+                                <option value="Windscreen Extension">Windscreen Extension</option>
+                                <option value="Radio Cassette">Radio Cassette</option>
+                                <option value="Personal Accident">Personal Accident</option>
+                            </select>
+                        </div>
+                        <div class="field-group">
+                            <label>Pricing Type</label>
+                            <select class="addon-type" data-index="${newIndex}">
+                                <option value="fixed">Fixed Amount</option>
+                                <option value="percentage">Percentage</option>
+                            </select>
+                        </div>
+                        <div class="field-group">
+                            <label>Value</label>
+                            <input type="number" class="addon-value" data-index="${newIndex}" value="5000" step="100" min="0">
+                        </div>
+                    </div>
+                </div>
+            `;
+            container.insertAdjacentHTML('beforeend', addonHTML);
+        });
+        
+        // Remove addon
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('remove-addon-btn')) {
+                e.target.closest('.addon-item').remove();
+                // Renumber addons
+                document.querySelectorAll('.addon-item').forEach((item, index) => {
+                    item.dataset.index = index;
+                    item.querySelector('h4').textContent = `Add-on ${index + 1}`;
+                });
+            }
+        });
+        
+        // Save add-ons
+        document.querySelector('.btn-save-addons').addEventListener('click', function() {
+            const addons = [];
+            document.querySelectorAll('.addon-item').forEach(item => {
+                const index = item.dataset.index;
+                addons.push({
+                    name: item.querySelector('.addon-name').value,
+                    type: item.querySelector('.addon-type').value,
+                    value: parseFloat(item.querySelector('.addon-value').value) || 0
+                });
+            });
+            
+            if (pricingData[currentAddonProduct]) {
+                pricingData[currentAddonProduct].addons = addons;
+                updatePricingData();
+            }
+            
+            closeAddonsModal();
+        });
+        
+        function closeAddonsModal() {
+            document.getElementById('addonsModal').style.display = 'none';
+            currentAddonProduct = null;
+        }
+        
+        // Close modals when clicking outside or on close button
+        document.querySelectorAll('.modal-close, .btn-cancel').forEach(btn => {
+            btn.addEventListener('click', function() {
+                closeBracketModal();
+                closeAddonsModal();
+                closeTonnageModal();
+                closePLLModal();
+                closeExtendibleModal();
+                closeAdjustmentModal();
+                closeProductAdjustmentModal();
+            });
+        });
+        
+        // ============================================
+        // COMMERCIAL TONNAGE PRICING MODAL
+        // ============================================
+        let currentTonnageProduct = null;
+        
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('configure-tonnage-btn')) {
+                const row = e.target.closest('.product-row');
+                const toggle = row.querySelector('.product-toggle');
+                currentTonnageProduct = toggle.dataset.product;
+                const productName = row.querySelector('.product-name strong').textContent;
+                openTonnageModal(productName);
+            }
+        });
+        
+        function openTonnageModal(productName) {
+            const modal = document.getElementById('tonnageModal');
+            const title = document.getElementById('tonnageModalTitle');
+            title.textContent = `Configure Tonnage Pricing: ${productName}`;
+            
+            const tonnages = pricingData[currentTonnageProduct]?.tonnage_pricing || [];
+            renderTonnages(tonnages);
+            
+            modal.style.display = 'block';
+        }
+        
+        function renderTonnages(tonnages) {
+            const container = document.getElementById('tonnageContainer');
+            container.innerHTML = '';
+            
+            const defaultTonnages = [
+                {tonnage_from: 0, tonnage_to: 3, description: 'Upto 3 Tons', base_premium: 30000},
+                {tonnage_from: 3.5, tonnage_to: 8, description: '3.5 to 8 Tons', base_premium: 40000},
+                {tonnage_from: 8.5, tonnage_to: 12, description: '8.5 to 12 Tons', base_premium: 50000},
+                {tonnage_from: 13, tonnage_to: 16, description: '13 to 16 Tons', base_premium: 60000},
+                {tonnage_from: 16.5, tonnage_to: 20, description: '16.5 to 20 Tons', base_premium: 70000},
+                {tonnage_from: 20.5, tonnage_to: null, description: 'Over 20 Tons', base_premium: 85000}
+            ];
+            
+            const dataToRender = tonnages.length > 0 ? tonnages : defaultTonnages;
+            
+            dataToRender.forEach((tonnage, index) => {
+                const tonnageHTML = `
+                    <div class="tonnage-item" data-index="${index}" style="border: 1px solid #ddd; padding: 12px; margin-bottom: 10px; border-radius: 4px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <h4 style="margin: 0;">${tonnage.description}</h4>
+                            <button type="button" class="remove-tonnage-btn" data-index="${index}" style="padding: 4px 8px; background: #dc3545; color: white; border: none; border-radius: 3px; cursor: pointer; font-size: 11px;">Remove</button>
+                        </div>
+                        <div class="field-row" style="display: flex; gap: 10px;">
+                            <div class="field-group" style="flex: 1;">
+                                <label style="font-size: 11px; display: block; margin-bottom: 4px;">From (Tons)</label>
+                                <input type="number" class="tonnage-from" data-index="${index}" value="${tonnage.tonnage_from}" step="0.5" min="0" style="width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 3px;">
+                            </div>
+                            <div class="field-group" style="flex: 1;">
+                                <label style="font-size: 11px; display: block; margin-bottom: 4px;">To (Tons)</label>
+                                <input type="number" class="tonnage-to" data-index="${index}" value="${tonnage.tonnage_to || ''}" step="0.5" min="0" placeholder="Open-ended" style="width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 3px;">
+                            </div>
+                            <div class="field-group" style="flex: 1;">
+                                <label style="font-size: 11px; display: block; margin-bottom: 4px;">Description</label>
+                                <input type="text" class="tonnage-desc" data-index="${index}" value="${tonnage.description}" style="width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 3px;">
+                            </div>
+                            <div class="field-group" style="flex: 1;">
+                                <label style="font-size: 11px; display: block; margin-bottom: 4px;">Premium (KSh)</label>
+                                <input type="number" class="tonnage-premium" data-index="${index}" value="${tonnage.base_premium}" step="1000" min="0" style="width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 3px;">
+                            </div>
+                        </div>
+                    </div>
+                `;
+                container.insertAdjacentHTML('beforeend', tonnageHTML);
+            });
+        }
+        
+        document.querySelector('.add-tonnage-btn').addEventListener('click', function() {
+            const currentTonnages = Array.from(document.querySelectorAll('.tonnage-item')).map((item, index) => ({
+                tonnage_from: parseFloat(item.querySelector('.tonnage-from').value) || 0,
+                tonnage_to: parseFloat(item.querySelector('.tonnage-to').value) || null,
+                description: item.querySelector('.tonnage-desc').value,
+                base_premium: parseFloat(item.querySelector('.tonnage-premium').value) || 0
+            }));
+            
+            currentTonnages.push({
+                tonnage_from: 0,
+                tonnage_to: 1,
+                description: 'New Range',
+                base_premium: 10000
+            });
+            
+            renderTonnages(currentTonnages);
+        });
+        
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('remove-tonnage-btn')) {
+                e.target.closest('.tonnage-item').remove();
+            }
+        });
+        
+        document.querySelector('.btn-save-tonnage').addEventListener('click', function() {
+            const tonnages = [];
+            document.querySelectorAll('.tonnage-item').forEach(item => {
+                tonnages.push({
+                    tonnage_from: parseFloat(item.querySelector('.tonnage-from').value) || 0,
+                    tonnage_to: parseFloat(item.querySelector('.tonnage-to').value) || null,
+                    description: item.querySelector('.tonnage-desc').value,
+                    base_premium: parseFloat(item.querySelector('.tonnage-premium').value) || 0
+                });
+            });
+            
+            if (pricingData[currentTonnageProduct]) {
+                pricingData[currentTonnageProduct].tonnage_pricing = tonnages;
+                updatePricingData();
+            }
+            
+            closeTonnageModal();
+        });
+        
+        function closeTonnageModal() {
+            document.getElementById('tonnageModal').style.display = 'none';
+            currentTonnageProduct = null;
+        }
+        
+        // ============================================
+        // PSV PLL PRICING MODAL
+        // ============================================
+        let currentPLLProduct = null;
+        
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('configure-pll-btn')) {
+                const row = e.target.closest('.product-row');
+                const toggle = row.querySelector('.product-toggle');
+                currentPLLProduct = toggle.dataset.product;
+                const productName = row.querySelector('.product-name strong').textContent;
+                openPLLModal(productName);
+            }
+        });
+        
+        function openPLLModal(productName) {
+            const modal = document.getElementById('pllModal');
+            const title = document.getElementById('pllModalTitle');
+            title.textContent = `Configure PLL Pricing: ${productName}`;
+            
+            const pllConfigs = pricingData[currentPLLProduct]?.pll_pricing || [];
+            renderPLLConfigs(pllConfigs);
+            
+            modal.style.display = 'block';
+        }
+        
+        function renderPLLConfigs(configs) {
+            const container = document.getElementById('pllContainer');
+            container.innerHTML = '';
+            
+            const defaultConfigs = [
+                {pll_amount: 500, rate_per_person: 800, is_commercial_institutional: false},
+                {pll_amount: 250, rate_per_person: 400, is_commercial_institutional: false}
+            ];
+            
+            const dataToRender = configs.length > 0 ? configs : defaultConfigs;
+            
+            dataToRender.forEach((config, index) => {
+                const configHTML = `
+                    <div class="pll-item" data-index="${index}" style="border: 1px solid #ddd; padding: 12px; margin-bottom: 10px; border-radius: 4px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <h4 style="margin: 0;">PLL Configuration ${index + 1}</h4>
+                            <button type="button" class="remove-pll-btn" data-index="${index}" style="padding: 4px 8px; background: #dc3545; color: white; border: none; border-radius: 3px; cursor: pointer; font-size: 11px;">Remove</button>
+                        </div>
+                        <div class="field-row" style="display: flex; gap: 10px; align-items: flex-end;">
+                            <div class="field-group" style="flex: 1;">
+                                <label style="font-size: 11px; display: block; margin-bottom: 4px;">PLL Amount (K)</label>
+                                <input type="number" class="pll-amount" data-index="${index}" value="${config.pll_amount}" step="50" min="0" style="width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 3px;">
+                            </div>
+                            <div class="field-group" style="flex: 1;">
+                                <label style="font-size: 11px; display: block; margin-bottom: 4px;">Rate per Person (KSh)</label>
+                                <input type="number" class="pll-rate" data-index="${index}" value="${config.rate_per_person}" step="50" min="0" style="width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 3px;">
+                            </div>
+                            <div class="field-group">
+                                <label style="font-size: 11px; display: flex; align-items: center; gap: 6px;">
+                                    <input type="checkbox" class="pll-commercial" data-index="${index}" ${config.is_commercial_institutional ? 'checked' : ''}>
+                                    <span>Commercial/Institutional</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                container.insertAdjacentHTML('beforeend', configHTML);
+            });
+        }
+        
+        document.querySelector('.add-pll-btn').addEventListener('click', function() {
+            const currentConfigs = Array.from(document.querySelectorAll('.pll-item')).map(item => ({
+                pll_amount: parseFloat(item.querySelector('.pll-amount').value) || 0,
+                rate_per_person: parseFloat(item.querySelector('.pll-rate').value) || 0,
+                is_commercial_institutional: item.querySelector('.pll-commercial').checked
+            }));
+            
+            currentConfigs.push({
+                pll_amount: 100,
+                rate_per_person: 200,
+                is_commercial_institutional: false
+            });
+            
+            renderPLLConfigs(currentConfigs);
+        });
+        
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('remove-pll-btn')) {
+                e.target.closest('.pll-item').remove();
+            }
+        });
+        
+        document.querySelector('.btn-save-pll').addEventListener('click', function() {
+            const configs = [];
+            document.querySelectorAll('.pll-item').forEach(item => {
+                configs.push({
+                    pll_amount: parseFloat(item.querySelector('.pll-amount').value) || 0,
+                    rate_per_person: parseFloat(item.querySelector('.pll-rate').value) || 0,
+                    is_commercial_institutional: item.querySelector('.pll-commercial').checked
+                });
+            });
+            
+            if (pricingData[currentPLLProduct]) {
+                pricingData[currentPLLProduct].pll_pricing = configs;
+                updatePricingData();
+            }
+            
+            closePLLModal();
+        });
+        
+        function closePLLModal() {
+            document.getElementById('pllModal').style.display = 'none';
+            currentPLLProduct = null;
+        }
+        
+        // ============================================
+        // EXTENDIBLE PRICING MODAL
+        // ============================================
+        let currentExtendibleProduct = null;
+        
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('configure-extendible-btn')) {
+                const row = e.target.closest('.product-row');
+                const toggle = row.querySelector('.product-toggle');
+                currentExtendibleProduct = toggle.dataset.product;
+                const productName = row.querySelector('.product-name strong').textContent;
+                openExtendibleModal(productName);
+            }
+        });
+        
+        function openExtendibleModal(productName) {
+            const modal = document.getElementById('extendibleModal');
+            const title = document.getElementById('extendibleModalTitle');
+            title.textContent = `Configure Extendible Terms: ${productName}`;
+            
+            const config = pricingData[currentExtendibleProduct]?.extendible_config || {};
+            
+            // Get current base premium from the input field
+            const row = document.querySelector(`.product-row[data-product="${currentExtendibleProduct}"]`);
+            const basePremiumInput = row?.querySelector('[data-field="base_premium"]');
+            const currentBasePremium = basePremiumInput ? parseFloat(basePremiumInput.value) || 0 : 0;
+            
+            // Always use current base premium as total
+            const totalPremium = currentBasePremium;
+            
+            // Always start with default 60/40 split when opening modal
+            const defaultInitial = Math.floor(totalPremium * 0.6);
+            const defaultBalance = totalPremium - defaultInitial;
+            
+            document.getElementById('ext_initial_days').value = config.initial_period_days || 30;
+            document.getElementById('ext_initial_amount').value = defaultInitial;
+            document.getElementById('ext_balance_amount').value = defaultBalance;
+            document.getElementById('ext_total_premium').value = totalPremium;
+            document.getElementById('ext_deadline_days').value = config.extension_deadline_days || 30;
+            document.getElementById('ext_grace_days').value = config.grace_period_days || 7;
+            document.getElementById('ext_penalty').value = config.penalty_for_late_extension || 0;
+            document.getElementById('ext_partial_allowed').checked = config.allow_partial_extension || false;
+            
+            // Clear any validation messages
+            const validationMsg = document.getElementById('ext_validation_msg');
+            if (validationMsg) {
+                validationMsg.style.display = 'none';
+            }
+            
+            // Auto-calculate total
+            const initialInput = document.getElementById('ext_initial_amount');
+            const balanceInput = document.getElementById('ext_balance_amount');
+            
+            // Remove old listeners to prevent duplicates
+            initialInput.removeEventListener('input', updateExtTotal);
+            balanceInput.removeEventListener('input', updateExtTotal);
+            
+            // Add listeners
+            initialInput.addEventListener('input', updateExtTotal);
+            balanceInput.addEventListener('input', updateExtTotal);
+            
+            modal.style.display = 'block';
+        }
+        
+        function updateExtTotal() {
+            const initial = parseFloat(document.getElementById('ext_initial_amount').value) || 0;
+            const balance = parseFloat(document.getElementById('ext_balance_amount').value) || 0;
+            const total = parseFloat(document.getElementById('ext_total_premium').value) || 0;
+            const calculatedTotal = initial + balance;
+            
+            const validationMsg = document.getElementById('ext_validation_msg');
+            
+            if (Math.abs(calculatedTotal - total) > 0.01) {
+                // Auto-adjust balance to match total
+                const newBalance = total - initial;
+                if (newBalance >= 0) {
+                    document.getElementById('ext_balance_amount').value = newBalance;
+                    validationMsg.style.display = 'none';
+                } else {
+                    // Initial exceeds total, show warning
+                    validationMsg.textContent = `⚠️ Warning: Initial Amount (${initial.toLocaleString()}) exceeds Total (${total.toLocaleString()})`;
+                    validationMsg.style.display = 'block';
+                    validationMsg.style.background = '#fff3cd';
+                    validationMsg.style.color = '#856404';
+                    validationMsg.style.border = '1px solid #ffeaa7';
+                }
+            } else {
+                // Hide validation message if amounts match
+                validationMsg.style.display = 'none';
+            }
+        }
+        
+        document.querySelector('.btn-save-extendible').addEventListener('click', function() {
+            const totalPremium = parseFloat(document.getElementById('ext_total_premium').value) || 0;
+            const initialAmount = parseFloat(document.getElementById('ext_initial_amount').value) || 0;
+            const balanceAmount = parseFloat(document.getElementById('ext_balance_amount').value) || 0;
+            const calculatedTotal = initialAmount + balanceAmount;
+            
+            // Validate that Initial + Balance = Total
+            if (Math.abs(calculatedTotal - totalPremium) > 0.01) {
+                alert(`Error: Initial Amount (${initialAmount.toLocaleString()}) + Balance Amount (${balanceAmount.toLocaleString()}) must equal Total Annual Premium (${totalPremium.toLocaleString()}).\n\nPlease adjust the split so they add up to the total.`);
+                return; // Don't save
+            }
+            
+            const config = {
+                initial_period_days: parseInt(document.getElementById('ext_initial_days').value) || 30,
+                initial_amount: initialAmount,
+                balance_amount: balanceAmount,
+                total_annual_premium: totalPremium,
+                extension_deadline_days: parseInt(document.getElementById('ext_deadline_days').value) || 30,
+                grace_period_days: parseInt(document.getElementById('ext_grace_days').value) || 7,
+                penalty_for_late_extension: parseFloat(document.getElementById('ext_penalty').value) || 0,
+                allow_partial_extension: document.getElementById('ext_partial_allowed').checked
+            };
+            
+            if (pricingData[currentExtendibleProduct]) {
+                pricingData[currentExtendibleProduct].extendible_config = config;
+                pricingData[currentExtendibleProduct].base_premium = totalPremium;
+                
+                // Update the base premium input field to match
+                const row = document.querySelector(`.product-row[data-product="${currentExtendibleProduct}"]`);
+                const basePremiumInput = row?.querySelector('[data-field="base_premium"]');
+                if (basePremiumInput) {
+                    basePremiumInput.value = totalPremium;
+                }
+                
+                updatePricingData();
+            }
+            
+            closeExtendibleModal();
+        });
+        
+        function closeExtendibleModal() {
+            document.getElementById('extendibleModal').style.display = 'none';
+            currentExtendibleProduct = null;
+        }
+        
+        // ============================================
+        // VEHICLE ADJUSTMENT FACTORS MODAL
+        // ============================================
+        
+        document.getElementById('configureAdjustmentsBtn').addEventListener('click', function() {
+            openAdjustmentModal();
+        });
+        
+        function openAdjustmentModal() {
+            const modal = document.getElementById('adjustmentModal');
+            const adjustments = pricingData.adjustment_factors || [];
+            renderAdjustments(adjustments);
+            modal.style.display = 'block';
+        }
+        
+        function renderAdjustments(adjustments) {
+            const container = document.getElementById('adjustmentContainer');
+            container.innerHTML = '';
+            
+            const defaultAdjustments = [
+                {factor_type: 'vehicle_age', factor_key: '0-1', factor_value: 1.0, description: 'Less than 1 year old'},
+                {factor_type: 'vehicle_age', factor_key: '1-3', factor_value: 1.05, description: '1 to 3 years old'},
+                {factor_type: 'vehicle_age', factor_key: '3-5', factor_value: 1.10, description: '3 to 5 years old'},
+                {factor_type: 'vehicle_age', factor_key: '5+', factor_value: 1.15, description: 'Over 5 years old'},
+                {factor_type: 'usage_type', factor_key: 'private', factor_value: 1.0, description: 'Private use'},
+                {factor_type: 'usage_type', factor_key: 'commercial', factor_value: 1.25, description: 'Commercial use'}
+            ];
+            
+            const dataToRender = adjustments.length > 0 ? adjustments : defaultAdjustments;
+            
+            dataToRender.forEach((adj, index) => {
+                const adjHTML = `
+                    <div class="adjustment-item" data-index="${index}" style="border: 1px solid #ddd; padding: 12px; margin-bottom: 10px; border-radius: 4px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <h4 style="margin: 0;">${adj.factor_type}: ${adj.factor_key}</h4>
+                            <button type="button" class="remove-adjustment-btn" data-index="${index}" style="padding: 4px 8px; background: #dc3545; color: white; border: none; border-radius: 3px; cursor: pointer; font-size: 11px;">Remove</button>
+                        </div>
+                        <div class="field-row" style="display: flex; gap: 10px;">
+                            <div class="field-group" style="flex: 1;">
+                                <label style="font-size: 11px; display: block; margin-bottom: 4px;">Factor Type</label>
+                                <select class="adj-type" data-index="${index}" style="width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 3px;">
+                                    <option value="vehicle_age" ${adj.factor_type === 'vehicle_age' ? 'selected' : ''}>Vehicle Age</option>
+                                    <option value="usage_type" ${adj.factor_type === 'usage_type' ? 'selected' : ''}>Usage Type</option>
+                                    <option value="location" ${adj.factor_type === 'location' ? 'selected' : ''}>Location</option>
+                                    <option value="driver_age" ${adj.factor_type === 'driver_age' ? 'selected' : ''}>Driver Age</option>
+                                </select>
+                            </div>
+                            <div class="field-group" style="flex: 1;">
+                                <label style="font-size: 11px; display: block; margin-bottom: 4px;">Factor Key</label>
+                                <input type="text" class="adj-key" data-index="${index}" value="${adj.factor_key}" style="width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 3px;">
+                            </div>
+                            <div class="field-group" style="flex: 1;">
+                                <label style="font-size: 11px; display: block; margin-bottom: 4px;">Multiplier</label>
+                                <input type="number" class="adj-value" data-index="${index}" value="${adj.factor_value}" step="0.01" min="0" max="10" style="width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 3px;">
+                            </div>
+                            <div class="field-group" style="flex: 2;">
+                                <label style="font-size: 11px; display: block; margin-bottom: 4px;">Description</label>
+                                <input type="text" class="adj-desc" data-index="${index}" value="${adj.description}" style="width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 3px;">
+                            </div>
+                        </div>
+                    </div>
+                `;
+                container.insertAdjacentHTML('beforeend', adjHTML);
+            });
+        }
+        
+        document.querySelector('.add-adjustment-btn').addEventListener('click', function() {
+            const currentAdjustments = Array.from(document.querySelectorAll('.adjustment-item')).map(item => ({
+                factor_type: item.querySelector('.adj-type').value,
+                factor_key: item.querySelector('.adj-key').value,
+                factor_value: parseFloat(item.querySelector('.adj-value').value) || 1.0,
+                description: item.querySelector('.adj-desc').value
+            }));
+            
+            currentAdjustments.push({
+                factor_type: 'vehicle_age',
+                factor_key: 'new',
+                factor_value: 1.0,
+                description: 'New adjustment factor'
+            });
+            
+            renderAdjustments(currentAdjustments);
+        });
+        
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('remove-adjustment-btn')) {
+                e.target.closest('.adjustment-item').remove();
+            }
+        });
+        
+        document.querySelector('.btn-save-adjustments').addEventListener('click', function() {
+            const adjustments = [];
+            document.querySelectorAll('.adjustment-item').forEach(item => {
+                adjustments.push({
+                    factor_type: item.querySelector('.adj-type').value,
+                    factor_key: item.querySelector('.adj-key').value,
+                    factor_value: parseFloat(item.querySelector('.adj-value').value) || 1.0,
+                    description: item.querySelector('.adj-desc').value
+                });
+            });
+            
+            pricingData.adjustment_factors = adjustments;
+            updatePricingData();
+            closeAdjustmentModal();
+        });
+        
+        function closeAdjustmentModal() {
+            document.getElementById('adjustmentModal').style.display = 'none';
+        }
+        
+        // ============================================
+        // PRODUCT-SPECIFIC ADJUSTMENT FACTORS MODAL
+        // ============================================
+        let currentProductAdjustment = null;
+        
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('configure-product-adjustments-btn')) {
+                const row = e.target.closest('.product-row');
+                const toggle = row.querySelector('.product-toggle');
+                currentProductAdjustment = toggle.dataset.product;
+                const productName = row.querySelector('.product-name strong').textContent;
+                openProductAdjustmentModal(productName);
+            }
+        });
+        
+        function openProductAdjustmentModal(productName) {
+            const modal = document.getElementById('productAdjustmentModal');
+            const title = document.getElementById('productAdjustmentModalTitle');
+            title.textContent = `Configure Adjustment Factors: ${productName}`;
+            
+            const adjustments = pricingData[currentProductAdjustment]?.product_adjustments || [];
+            renderProductAdjustments(adjustments);
+            modal.style.display = 'block';
+        }
+        
+        function renderProductAdjustments(adjustments) {
+            const container = document.getElementById('productAdjustmentContainer');
+            container.innerHTML = '';
+            
+            if (adjustments.length === 0) {
+                container.innerHTML = '<p style="color: #888; font-style: italic; padding: 20px; text-align: center;">No product-specific adjustments configured. Global adjustments will apply.</p>';
+                return;
+            }
+            
+            adjustments.forEach((adj, index) => {
+                const adjHTML = `
+                    <div class="adjustment-item" data-index="${index}" style="border: 1px solid #ddd; padding: 12px; margin-bottom: 10px; border-radius: 4px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <h4 style="margin: 0;">${adj.factor_type}: ${adj.factor_key}</h4>
+                            <button type="button" class="remove-product-adjustment-btn" data-index="${index}" style="padding: 4px 8px; background: #dc3545; color: white; border: none; border-radius: 3px; cursor: pointer; font-size: 11px;">Remove</button>
+                        </div>
+                        <div class="field-row" style="display: flex; gap: 10px;">
+                            <div class="field-group" style="flex: 1;">
+                                <label style="font-size: 11px; display: block; margin-bottom: 4px;">Factor Type</label>
+                                <select class="prod-adj-type" data-index="${index}" style="width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 3px;">
+                                    <option value="vehicle_age" ${adj.factor_type === 'vehicle_age' ? 'selected' : ''}>Vehicle Age</option>
+                                    <option value="usage_type" ${adj.factor_type === 'usage_type' ? 'selected' : ''}>Usage Type</option>
+                                    <option value="location" ${adj.factor_type === 'location' ? 'selected' : ''}>Location</option>
+                                    <option value="driver_age" ${adj.factor_type === 'driver_age' ? 'selected' : ''}>Driver Age</option>
+                                    <option value="seating_capacity" ${adj.factor_type === 'seating_capacity' ? 'selected' : ''}>Seating Capacity</option>
+                                    <option value="tonnage" ${adj.factor_type === 'tonnage' ? 'selected' : ''}>Tonnage</option>
+                                </select>
+                            </div>
+                            <div class="field-group" style="flex: 1;">
+                                <label style="font-size: 11px; display: block; margin-bottom: 4px;">Factor Key</label>
+                                <input type="text" class="prod-adj-key" data-index="${index}" value="${adj.factor_key}" style="width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 3px;">
+                            </div>
+                            <div class="field-group" style="flex: 1;">
+                                <label style="font-size: 11px; display: block; margin-bottom: 4px;">Multiplier</label>
+                                <input type="number" class="prod-adj-value" data-index="${index}" value="${adj.factor_value}" step="0.01" min="0" max="10" style="width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 3px;">
+                            </div>
+                            <div class="field-group" style="flex: 2;">
+                                <label style="font-size: 11px; display: block; margin-bottom: 4px;">Description</label>
+                                <input type="text" class="prod-adj-desc" data-index="${index}" value="${adj.description}" style="width: 100%; padding: 6px; border: 1px solid #ddd; border-radius: 3px;">
+                            </div>
+                        </div>
+                    </div>
+                `;
+                container.insertAdjacentHTML('beforeend', adjHTML);
+            });
+        }
+        
+        document.querySelector('.add-product-adjustment-btn').addEventListener('click', function() {
+            const currentAdjustments = Array.from(document.querySelectorAll('#productAdjustmentContainer .adjustment-item')).map(item => ({
+                factor_type: item.querySelector('.prod-adj-type').value,
+                factor_key: item.querySelector('.prod-adj-key').value,
+                factor_value: parseFloat(item.querySelector('.prod-adj-value').value) || 1.0,
+                description: item.querySelector('.prod-adj-desc').value
+            }));
+            
+            currentAdjustments.push({
+                factor_type: 'vehicle_age',
+                factor_key: 'new',
+                factor_value: 1.0,
+                description: 'New adjustment factor'
+            });
+            
+            renderProductAdjustments(currentAdjustments);
+        });
+        
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('remove-product-adjustment-btn')) {
+                e.target.closest('.adjustment-item').remove();
+                // Check if container is empty
+                const container = document.getElementById('productAdjustmentContainer');
+                if (!container.querySelector('.adjustment-item')) {
+                    container.innerHTML = '<p style="color: #888; font-style: italic; padding: 20px; text-align: center;">No product-specific adjustments configured. Global adjustments will apply.</p>';
+                }
+            }
+        });
+        
+        document.querySelector('.btn-save-product-adjustments').addEventListener('click', function() {
+            const adjustments = [];
+            document.querySelectorAll('#productAdjustmentContainer .adjustment-item').forEach(item => {
+                adjustments.push({
+                    factor_type: item.querySelector('.prod-adj-type').value,
+                    factor_key: item.querySelector('.prod-adj-key').value,
+                    factor_value: parseFloat(item.querySelector('.prod-adj-value').value) || 1.0,
+                    description: item.querySelector('.prod-adj-desc').value
+                });
+            });
+            
+            if (pricingData[currentProductAdjustment]) {
+                pricingData[currentProductAdjustment].product_adjustments = adjustments;
+                updatePricingData();
+            }
+            
+            closeProductAdjustmentModal();
+        });
+        
+        function closeProductAdjustmentModal() {
+            document.getElementById('productAdjustmentModal').style.display = 'none';
+            currentProductAdjustment = null;
+        }
+        
+        
+        document.querySelectorAll('.modal-overlay').forEach(overlay => {
+            overlay.addEventListener('click', function() {
+                closeBracketModal();
+                closeAddonsModal();
+            });
+        });
+    });
+    </script>
+    {% endif %}
+{% endblock %}

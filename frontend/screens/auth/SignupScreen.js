@@ -28,9 +28,14 @@ export default function SignupScreen() {
     message: '' 
   });
 
-  // Normalize phone number - accepts both 9 and 10 digits, returns 10 with leading 0
+  // Normalize phone number - accepts Kenyan formats: 0712345678, 712345678, 254712345678
   const normalizePhoneNumber = (phone) => {
     const cleanPhone = phone.replace(/\D/g, ''); // Remove non-digits
+    
+    // 254712345678 (12 digits) -> 0712345678 (10 digits)
+    if (cleanPhone.startsWith('254') && cleanPhone.length === 12) {
+      return '0' + cleanPhone.substring(3);
+    }
     
     // If 9 digits, add leading 0
     if (cleanPhone.length === 9 && !cleanPhone.startsWith('0')) {
@@ -57,32 +62,23 @@ export default function SignupScreen() {
       return; // Don't validate empty field
     }
     
-    // Accept both 9 digits (712345678) and 10 digits with leading 0 (0712345678)
+    // Accept Kenyan formats: 0712345678 (10), 712345678 (9), 254712345678 (12)
     const normalizedPhone = normalizePhoneNumber(cleanPhone);
     
-    if (cleanPhone.length !== 9 && cleanPhone.length !== 10) {
+    if (cleanPhone.length !== 9 && cleanPhone.length !== 10 && cleanPhone.length !== 12) {
       setPhoneValidation({ 
         isValidating: false, 
         isValid: false, 
-        message: 'Enter Kenyan phone number (0712345678)' 
+        message: 'Enter Kenyan phone number: 0712345678 or 254712345678' 
       });
       return;
     }
     
-    if (normalizedPhone.length !== 10 || !normalizedPhone.startsWith('0')) {
+    if (normalizedPhone.length !== 10 || !normalizedPhone.startsWith('07')) {
       setPhoneValidation({ 
         isValidating: false, 
         isValid: false, 
-        message: 'Phone number must be 10 digits with leading 0' 
-      });
-      return;
-    }
-    
-    if (!/^0\d{9}$/.test(normalizedPhone)) {
-      setPhoneValidation({ 
-        isValidating: false, 
-        isValid: false, 
-        message: 'Invalid phone number format' 
+        message: 'Phone number must start with 07' 
       });
       return;
     }
@@ -127,17 +123,17 @@ export default function SignupScreen() {
       return;
     }
 
-    // Normalize and validate phone number (accepts 9 or 10 digits, returns 10 with 0)
+    // Normalize and validate phone number (accepts 0712345678, 712345678, 254712345678)
     const normalizedPhone = normalizePhoneNumber(phoneNumber);
     
-    if (normalizedPhone.length !== 10 || !normalizedPhone.startsWith('0')) {
-      Alert.alert('Error', 'Please enter a valid Kenyan phone number (0712345678)');
+    if (normalizedPhone.length !== 10 || !normalizedPhone.startsWith('07')) {
+      Alert.alert('Error', 'Please enter a valid Kenyan phone number (0712345678 or 254712345678)');
       return;
     }
 
-    // Ensure phone number matches expected format
-    if (!/^0\d{9}$/.test(normalizedPhone)) {
-      Alert.alert('Error', 'Phone number must be 10 digits starting with 0');
+    // Ensure phone number matches expected format (07XXXXXXXX)
+    if (!/^07\d{8}$/.test(normalizedPhone)) {
+      Alert.alert('Error', 'Phone number must be 10 digits starting with 07 (e.g., 0712345678)');
       return;
     }
 

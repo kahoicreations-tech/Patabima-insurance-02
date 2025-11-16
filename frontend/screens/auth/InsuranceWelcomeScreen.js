@@ -1,33 +1,53 @@
 /**
- * InsuranceWelcomeScreen - Initial welcome screen with video background
- * Showcases PataBima's services with an engaging video introduction
+ * InsuranceWelcomeScreen - Initial welcome screen with animated video
+ * Showcases PataBima's services with an engaging animation
  */
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { 
   View, 
   Text, 
   StyleSheet, 
   TouchableOpacity, 
   Animated,
-  Platform,
+  ActivityIndicator,
   Dimensions,
-  Image
+  Platform
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
 import * as ScreenOrientation from 'expo-screen-orientation';
-import { Colors, Typography, Spacing } from '../../constants';
+import { VideoView, useVideoPlayer } from 'expo-video';
+import { Colors, Typography } from '../../constants';
 
 export default function InsuranceWelcomeScreen() {
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
-  const scrollRef = useRef(null);
-  const [activeSlide, setActiveSlide] = useState(0);
+  const [videoError, setVideoError] = React.useState(false);
   
+  // Create video player - auto-play immediately
+  const player = useVideoPlayer(require('../../assets/Splash Screen Animation_V2.mp4'), player => {
+    player.loop = true;
+    player.muted = true;
+    player.play(); // Start playing immediately
+  });
+
+  // Listen for video errors only
+  useEffect(() => {
+    const subscription = player.addListener('statusChange', (status) => {
+      if (status.status === 'error') {
+        setVideoError(true);
+        console.log('Video error:', status.error);
+      }
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, [player]);
+
   // Lock screen to portrait mode
   useEffect(() => {
     ScreenOrientation.lockAsync(ScreenOrientation.OrientationLock.PORTRAIT_UP);
@@ -35,20 +55,6 @@ export default function InsuranceWelcomeScreen() {
       ScreenOrientation.unlockAsync();
     };
   }, []);
-
-  // Auto-slide timer
-  useEffect(() => {
-    const slideInterval = setInterval(() => {
-      if (scrollRef.current) {
-        const { width } = Dimensions.get('window');
-        const nextSlide = (activeSlide + 1) % slides.length;
-        scrollRef.current.scrollTo({ x: nextSlide * width, animated: true });
-        setActiveSlide(nextSlide);
-      }
-    }, 3000); // Change slide every 3 seconds
-
-    return () => clearInterval(slideInterval);
-  }, [activeSlide]);
 
   // Animated value for button pulsation
   const pulseAnim = useRef(new Animated.Value(1)).current;
@@ -70,38 +76,25 @@ export default function InsuranceWelcomeScreen() {
       ])
     ).start();
   }, []);
-  
-  // Slides for lightweight icon slider (no heavy video)
-  const slides = [
-    {
-      key: 'vehicle',
-      icon: 'car-sport',
-      title: 'Motor Insurance',
-      subtitle: 'Instant quotes across Private, Commercial, PSV, and more'
-    },
-    {
-      key: 'medical',
-      icon: 'medkit',
-      title: 'Medical & WIBA',
-      subtitle: 'Admin workflows, pricing, and document support'
-    },
-    {
-      key: 'claims',
-      icon: 'shield-checkmark',
-      title: 'Claims & Renewals',
-      subtitle: 'Track claims and manage upcoming renewals with reminders'
-    },
-    {
-      key: 'payments',
-      icon: 'cash-outline',
-      title: 'Payments & Policies',
-      subtitle: 'M-PESA and gateways with automatic policy generation'
-    }
-  ];
 
   return (
     <View style={styles.container}>
       <StatusBar style="light" />
+      
+      {/* Fullscreen Video Background */}
+      {!videoError ? (
+        <VideoView
+          style={styles.video}
+          player={player}
+          contentFit="cover"
+          nativeControls={false}
+        />
+      ) : (
+        <View style={styles.fallbackContainer}>
+          <Text style={styles.fallbackText}>PataBima Insurance</Text>
+          <Text style={styles.fallbackSubtext}>Your trusted insurance partner</Text>
+        </View>
+      )}
       
       {/* Top curved element - covers entire status bar */}
       <View style={[styles.curvedTopContainer, { height: 80 + insets.top }]}>
@@ -110,71 +103,24 @@ export default function InsuranceWelcomeScreen() {
           style={styles.curvedTop}
         />
       </View>
-      
-      {/* Main content area with fixed height */}
-      <View style={styles.mainContent}>
-        {/* Slider content */}
-        <View style={styles.sliderContainer}>
-          <Animated.ScrollView
-            ref={scrollRef}
-            horizontal
-            pagingEnabled
-            showsHorizontalScrollIndicator={false}
-            onScroll={Animated.event(
-              [{ nativeEvent: { contentOffset: { x: new Animated.Value(0) } } }],
-              { useNativeDriver: false, listener: (e) => {
-                const { width } = Dimensions.get('window');
-                const index = Math.round(e.nativeEvent.contentOffset.x / width);
-                setActiveSlide(index);
-              }}
-            )}
-            scrollEventThrottle={16}
-            contentContainerStyle={styles.scrollContent}
-          >
-            {slides.map((s, index) => (
-              <View key={index} style={styles.slideCentered}>
-                <View style={styles.slideIconWrap}>
-                  <Ionicons name={s.icon} size={90} color={Colors.primary} />
-                </View>
-                <Text style={styles.slideTitle}>{s.title}</Text>
-                <Text style={styles.slideSubtitle}>{s.subtitle}</Text>
-              </View>
-            ))}
-          </Animated.ScrollView>
-          
-          {/* Pagination dots */}
-          <View style={styles.paginationContainer}>
-            {slides.map((_, index) => (
-              <View
-                key={index}
-                style={[
-                  styles.paginationDot,
-                  { backgroundColor: index === activeSlide ? Colors.primary : '#e0e0e0' }
-                ]}
-              />
-            ))}
-          </View>
-        </View>
-      </View>
 
       {/* Actions Container at Bottom */}
       <View style={[styles.actionContainer, { bottom: insets.bottom + 28 }]}>
+        <TouchableOpacity 
+          onPress={() => navigation.navigate('Login')}
+          activeOpacity={0.8}
+          style={styles.skipTouchArea}
+        >
+          <Text style={styles.skipText}>Skip intro</Text>
+        </TouchableOpacity>
+
         <Animated.View
           style={{
             transform: [{ scale: pulseAnim }],
             width: '100%',
             alignItems: 'center',
-            justifyContent: 'center',
           }}
         >
-          <TouchableOpacity 
-            onPress={() => navigation.navigate('Login')}
-            activeOpacity={0.8}
-            style={styles.skipTouchArea}
-          >
-            <Text style={styles.skipText}>Skip intro</Text>
-          </TouchableOpacity>
-
           <TouchableOpacity 
             onPress={() => navigation.navigate('Login')}
             activeOpacity={0.85}
@@ -202,69 +148,37 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#FFFFFF',
   },
-  mainContent: {
-    flex: 1,
-    paddingTop: 100, // Space below curved header
-    paddingBottom: 120, // Space above buttons
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  sliderContainer: {
-    height: 400, // Fixed height for slider container
+  video: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     width: '100%',
+    height: '100%',
+    zIndex: 1,
+  },
+  fallbackContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    zIndex: 1,
   },
-  scrollContent: {
-    alignItems: 'center',
-    justifyContent: 'flex-start',
-  },
-  slide: {
-    width: Dimensions.get('window').width,
-    paddingHorizontal: 32, // Consistent 32px margins
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  slideCentered: {
-    width: Dimensions.get('window').width,
-    paddingHorizontal: 32,
-    alignItems: 'center',
-    justifyContent: 'center',
-    height: 400, // Match sliderContainer height
-  },
-  slideIconWrap: {
-    width: 160,
-    height: 160,
-    borderRadius: 80,
-    backgroundColor: '#fff5f5',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 28,
-    borderWidth: 3,
-    borderColor: '#ffe0e0',
-    shadowColor: Colors.primary,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.2,
-    shadowRadius: 10,
-    elevation: 8,
-  },
-  slideTitle: {
-    fontSize: Typography.fontSize?.xxl || 26,
+  fallbackText: {
+    fontSize: 28,
     fontFamily: Typography.fontFamily?.bold || 'Poppins-Bold',
-    color: Colors.textPrimary,
-    textAlign: 'center',
-    marginBottom: 14,
-    lineHeight: 34,
-    letterSpacing: 0.3,
+    color: Colors.primary,
+    marginBottom: 8,
   },
-  slideSubtitle: {
-    fontSize: Typography.fontSize?.md || 16,
+  fallbackSubtext: {
+    fontSize: 16,
     fontFamily: Typography.fontFamily?.regular || 'Poppins-Regular',
-    color: '#6c757d',
-    textAlign: 'center',
-    paddingHorizontal: 32,
-    lineHeight: 26,
-    letterSpacing: 0.2,
+    color: '#646767',
   },
   curvedTopContainer: {
     position: 'absolute',
@@ -279,23 +193,15 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: 30,
     borderBottomRightRadius: 30,
   },
-  // logo removed to simplify layout per request
-  fullScreenGradient: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    height: '100%',
-  },
   actionContainer: {
     position: 'absolute',
     left: 0,
     right: 0,
-    bottom: 24, // Fixed position from bottom of screen
+    bottom: 24,
     width: '100%',
     alignItems: 'center',
-    zIndex: 5,
+    zIndex: 20,
+    paddingHorizontal: 24,
   },
   getStartedButton: {
     backgroundColor: Colors.primary,
@@ -312,7 +218,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 6,
     elevation: 8,
-    width: '85%', // Reduced from 100% for better proportion
+    width: '85%',
   },
   getStartedButtonText: {
     color: '#FFFFFF',
@@ -320,34 +226,15 @@ const styles = StyleSheet.create({
     fontFamily: Typography.fontFamily?.bold || 'Poppins-Bold',
     letterSpacing: 1.0,
   },
-  skipButton: {
-    paddingVertical: 10,
+  skipTouchArea: {
+    paddingVertical: 8,
     paddingHorizontal: 16,
-    marginBottom: 16,
+    marginBottom: 12,
   },
   skipText: {
     color: Colors.primary,
     fontSize: Typography.fontSize?.md || 15,
     fontFamily: Typography.fontFamily?.semibold || 'Poppins-SemiBold',
     letterSpacing: 0.3,
-  }
-  ,
-  skipTouchArea: {
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    marginBottom: 12,
   },
-  paginationContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingTop: 16,
-    marginTop: 10, // Add margin to create space from slide content
-  },
-  paginationDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    marginHorizontal: 4,
-  }
 });

@@ -22,7 +22,7 @@ export const SEMANTIC = Object.freeze({
 
 export const UI = Object.freeze({
   background: '#FFFFFF',
-  surface: '#FFFFFF',
+  surface: '#F8F8F8', // Subtle dark card background instead of pure white
   backgroundGray: '#F5F5F5',
   backgroundLight: '#FAFAFA',
   border: '#E0E0E0',

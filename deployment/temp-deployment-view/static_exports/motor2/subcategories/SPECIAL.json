@@ -1,0 +1,207 @@
+[
+  {
+    "id": "01409174-e37d-4573-ad01-cd717030ab52",
+    "subcategory_code": "SPECIAL_AGRICULTURAL_TP",
+    "name": "Agricultural Tractor Third-Party",
+    "description": "",
+    "category_code": "SPECIAL",
+    "pricing_model": "TONNAGE",
+    "product_type": "THIRD_PARTY",
+    "is_complex": false,
+    "additional_fields": [
+      "tonnage"
+    ],
+    "pricing_requirements": {
+      "max_tonnage": 31,
+      "requires_tonnage": true
+    },
+    "is_active": true,
+    "show_in_public": true,
+    "public_sort_order": 101,
+    "public_label": "Agricultural Tractor Third-Party"
+  },
+  {
+    "id": "65cb2a5d-36e5-468b-a371-0cf955cbd780",
+    "subcategory_code": "SPECIAL_INSTITUTIONAL_TP",
+    "name": "Commercial Institutional Third-Party",
+    "description": "",
+    "category_code": "SPECIAL",
+    "pricing_model": "PASSENGER",
+    "product_type": "THIRD_PARTY",
+    "is_complex": false,
+    "additional_fields": [
+      "passenger_count",
+      "passenger_type"
+    ],
+    "pricing_requirements": {
+      "requires_passenger_type": true,
+      "requires_passenger_count": true
+    },
+    "is_active": true,
+    "show_in_public": true,
+    "public_sort_order": 102,
+    "public_label": "Commercial Institutional Third-Party"
+  },
+  {
+    "id": "29ee63eb-cc42-4b85-9052-cd515a8dc056",
+    "subcategory_code": "SPECIAL_KG_PLATE_TP",
+    "name": "KG Plate Third-Party",
+    "description": "",
+    "category_code": "SPECIAL",
+    "pricing_model": "FIXED",
+    "product_type": "THIRD_PARTY",
+    "is_complex": false,
+    "additional_fields": [],
+    "pricing_requirements": {},
+    "is_active": true,
+    "show_in_public": true,
+    "public_sort_order": 104,
+    "public_label": "KG Plate Third-Party"
+  },
+  {
+    "id": "dec45528-de0c-4e25-b4d8-4d594237bb1a",
+    "subcategory_code": "SPECIAL_DRIVING_SCHOOL_TP",
+    "name": "Driving School Third-Party",
+    "description": "",
+    "category_code": "SPECIAL",
+    "pricing_model": "TONNAGE",
+    "product_type": "THIRD_PARTY",
+    "is_complex": false,
+    "additional_fields": [
+      "tonnage",
+      "passenger_count"
+    ],
+    "pricing_requirements": {
+      "requires_tonnage": true,
+      "requires_passenger_count": true
+    },
+    "is_active": true,
+    "show_in_public": true,
+    "public_sort_order": 105,
+    "public_label": "Driving School Third-Party"
+  },
+  {
+    "id": "b976507a-d35e-4e84-9ef7-94608abaa1b5",
+    "subcategory_code": "SPECIAL_INSTITUTIONAL_TP_EXT",
+    "name": "Commercial Institutional Third-Party Extendible",
+    "description": "",
+    "category_code": "SPECIAL",
+    "pricing_model": "PASSENGER",
+    "product_type": "THIRD_PARTY_EXT",
+    "is_complex": false,
+    "additional_fields": [
+      "passenger_count",
+      "passenger_type"
+    ],
+    "pricing_requirements": {
+      "requires_passenger_type": true,
+      "requires_passenger_count": true
+    },
+    "is_active": true,
+    "show_in_public": true,
+    "public_sort_order": 203,
+    "public_label": "Commercial Institutional Third-Party Extendible"
+  },
+  {
+    "id": "8e119d96-cd85-4281-b2e3-ed25887c0651",
+    "subcategory_code": "SPECIAL_AGRICULTURAL_COMP",
+    "name": "Agricultural Tractor Comprehensive",
+    "description": "",
+    "category_code": "SPECIAL",
+    "pricing_model": "TONNAGE",
+    "product_type": "COMPREHENSIVE",
+    "is_complex": false,
+    "additional_fields": [
+      "tonnage"
+    ],
+    "pricing_requirements": {
+      "max_tonnage": 31,
+      "requires_tonnage": true
+    },
+    "is_active": true,
+    "show_in_public": true,
+    "public_sort_order": 506,
+    "public_label": "Agricultural Tractor Comprehensive"
+  },
+  {
+    "id": "c5178a09-c508-45ec-8cfa-886b32f3e300",
+    "subcategory_code": "SPECIAL_INSTITUTIONAL_COMP",
+    "name": "Commercial Institutional Comprehensive",
+    "description": "",
+    "category_code": "SPECIAL",
+    "pricing_model": "PASSENGER",
+    "product_type": "COMPREHENSIVE",
+    "is_complex": false,
+    "additional_fields": [
+      "passenger_count",
+      "passenger_type"
+    ],
+    "pricing_requirements": {
+      "requires_passenger_type": true,
+      "requires_passenger_count": true
+    },
+    "is_active": true,
+    "show_in_public": true,
+    "public_sort_order": 507,
+    "public_label": "Commercial Institutional Comprehensive"
+  },
+  {
+    "id": "051a8549-d5fd-4fc7-b176-1d6955ff5f13",
+    "subcategory_code": "SPECIAL_DRIVING_SCHOOL_COMP",
+    "name": "Driving School Comprehensive",
+    "description": "",
+    "category_code": "SPECIAL",
+    "pricing_model": "TONNAGE",
+    "product_type": "COMPREHENSIVE",
+    "is_complex": false,
+    "additional_fields": [
+      "tonnage",
+      "passenger_count"
+    ],
+    "pricing_requirements": {
+      "requires_tonnage": true,
+      "requires_passenger_count": true
+    },
+    "is_active": true,
+    "show_in_public": true,
+    "public_sort_order": 508,
+    "public_label": "Driving School Comprehensive"
+  },
+  {
+    "id": "ac494bc7-5f7c-402e-9a9c-937a131ad25c",
+    "subcategory_code": "SPECIAL_FUEL_TANKER_COMP",
+    "name": "Fuel Tankers Comprehensive",
+    "description": "",
+    "category_code": "SPECIAL",
+    "pricing_model": "TONNAGE",
+    "product_type": "COMPREHENSIVE",
+    "is_complex": false,
+    "additional_fields": [
+      "tonnage"
+    ],
+    "pricing_requirements": {
+      "max_tonnage": 31,
+      "requires_tonnage": true
+    },
+    "is_active": true,
+    "show_in_public": true,
+    "public_sort_order": 509,
+    "public_label": "Fuel Tankers Comprehensive"
+  },
+  {
+    "id": "2f817e5c-17a4-4772-8fbf-627056677cd0",
+    "subcategory_code": "SPECIAL_AMBULANCE_COMP",
+    "name": "Commercial Ambulance Comprehensive",
+    "description": "",
+    "category_code": "SPECIAL",
+    "pricing_model": "FIXED",
+    "product_type": "COMPREHENSIVE",
+    "is_complex": false,
+    "additional_fields": [],
+    "pricing_requirements": {},
+    "is_active": true,
+    "show_in_public": true,
+    "public_sort_order": 510,
+    "public_label": "Commercial Ambulance Comprehensive"
+  }
+]

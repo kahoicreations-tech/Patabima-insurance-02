@@ -1,0 +1,252 @@
+[
+  {
+    "Details": "Success",
+    "Method": "GET",
+    "Status": "✅ PASS",
+    "Endpoint": "/api/v1/health/",
+    "Name": "Health Check (v1)",
+    "ResponseTime": null,
+    "StatusCode": 200
+  },
+  {
+    "Details": "Endpoint not found",
+    "Method": "GET",
+    "Status": "❌ FAIL",
+    "Endpoint": "/api/health/",
+    "Name": "Health Check (root)",
+    "StatusCode": 404
+  },
+  {
+    "Details": "Endpoint not found",
+    "Method": "GET",
+    "Status": "❌ FAIL",
+    "Endpoint": "/api/",
+    "Name": "API Root",
+    "StatusCode": 404
+  },
+  {
+    "Details": "Authentication required (expected)",
+    "Method": "POST",
+    "Status": "🔒 AUTH",
+    "Endpoint": "/api/v1/vehicle/validate-registration/",
+    "Name": "Validate Vehicle Registration",
+    "StatusCode": 401
+  },
+  {
+    "Details": "Authentication required (expected)",
+    "Method": "POST",
+    "Status": "🔒 AUTH",
+    "Endpoint": "/api/v1/vehicle/validate-chassis/",
+    "Name": "Validate Vehicle Chassis",
+    "StatusCode": 401
+  },
+  {
+    "Details": "Success",
+    "Method": "GET",
+    "Status": "✅ PASS",
+    "Endpoint": "/api/v1/motor2/categories/",
+    "Name": "Motor2 Categories",
+    "ResponseTime": null,
+    "StatusCode": 200
+  },
+  {
+    "Details": "Response status code does not indicate success: 400 (Bad Request).",
+    "Method": "GET",
+    "Status": "❌ FAIL",
+    "Endpoint": "/api/v1/motor2/subcategories/",
+    "Name": "Motor2 Subcategories",
+    "StatusCode": 400
+  },
+  {
+    "Details": "Response status code does not indicate success: 400 (Bad Request).",
+    "Method": "GET",
+    "Status": "❌ FAIL",
+    "Endpoint": "/api/v1/motor2/field-requirements/",
+    "Name": "Motor2 Field Requirements",
+    "StatusCode": 400
+  },
+  {
+    "Details": "Success",
+    "Method": "GET",
+    "Status": "✅ PASS",
+    "Endpoint": "/api/v1/motor/categories/",
+    "Name": "Motor Categories (Legacy)",
+    "ResponseTime": null,
+    "StatusCode": 200
+  },
+  {
+    "Details": "Response status code does not indicate success: 400 (Bad Request).",
+    "Method": "GET",
+    "Status": "❌ FAIL",
+    "Endpoint": "/api/v1/motor/subcategories/",
+    "Name": "Motor Subcategories (Legacy)",
+    "StatusCode": 400
+  },
+  {
+    "Details": "Success",
+    "Method": "GET",
+    "Status": "✅ PASS",
+    "Endpoint": "/api/v1/motor2/subcategories/?category=PRIVATE",
+    "Name": "Private Subcategories",
+    "ResponseTime": null,
+    "StatusCode": 200
+  },
+  {
+    "Details": "Success",
+    "Method": "GET",
+    "Status": "✅ PASS",
+    "Endpoint": "/api/v1/public_app/insurance/get_underwriters/",
+    "Name": "Get Underwriters",
+    "ResponseTime": null,
+    "StatusCode": 200
+  },
+  {
+    "Details": "Success",
+    "Method": "POST",
+    "Status": "✅ PASS",
+    "Endpoint": "/api/v1/public_app/insurance/compare_motor_pricing/",
+    "Name": "Compare Motor Pricing",
+    "ResponseTime": null,
+    "StatusCode": 200
+  },
+  {
+    "Details": "Success",
+    "Method": "POST",
+    "Status": "✅ PASS",
+    "Endpoint": "/api/v1/public_app/insurance/calculate_motor_premium/",
+    "Name": "Calculate Motor Premium",
+    "ResponseTime": null,
+    "StatusCode": 200
+  },
+  {
+    "Details": "Success",
+    "Method": "GET",
+    "Status": "✅ PASS",
+    "Endpoint": "/api/v1/public_app/insurance/addons/",
+    "Name": "Get Addons",
+    "ResponseTime": null,
+    "StatusCode": 200
+  },
+  {
+    "Details": "Success",
+    "Method": "POST",
+    "Status": "✅ PASS",
+    "Endpoint": "/api/v1/public_app/insurance/submit_motor_quotation/",
+    "Name": "Submit Motor Quotation",
+    "ResponseTime": null,
+    "StatusCode": 200
+  },
+  {
+    "Details": "Success",
+    "Method": "GET",
+    "Status": "✅ PASS",
+    "Endpoint": "/api/v1/public_app/insurance/get_quotations/",
+    "Name": "Get Public Quotations",
+    "ResponseTime": null,
+    "StatusCode": 200
+  },
+  {
+    "Details": "Authentication required (expected)",
+    "Method": "GET",
+    "Status": "🔒 AUTH",
+    "Endpoint": "/api/v1/policies/motor/",
+    "Name": "List Motor Policies",
+    "StatusCode": 401
+  },
+  {
+    "Details": "Authentication required (expected)",
+    "Method": "POST",
+    "Status": "🔒 AUTH",
+    "Endpoint": "/api/v1/policies/motor/create/",
+    "Name": "Create Motor Policy",
+    "StatusCode": 401
+  },
+  {
+    "Details": "Authentication required (expected)",
+    "Method": "GET",
+    "Status": "🔒 AUTH",
+    "Endpoint": "/api/v1/policies/motor/upcoming-renewals/",
+    "Name": "Upcoming Renewals",
+    "StatusCode": 401
+  },
+  {
+    "Details": "Authentication required (expected)",
+    "Method": "GET",
+    "Status": "🔒 AUTH",
+    "Endpoint": "/api/v1/policies/motor/upcoming-extensions/",
+    "Name": "Upcoming Extensions",
+    "StatusCode": 401
+  },
+  {
+    "Details": "Authentication required (expected)",
+    "Method": "POST",
+    "Status": "🔒 AUTH",
+    "Endpoint": "/api/v1/documents/upload-kyc/",
+    "Name": "Upload KYC Document",
+    "StatusCode": 401
+  },
+  {
+    "Details": "Authentication required (expected)",
+    "Method": "POST",
+    "Status": "🔒 AUTH",
+    "Endpoint": "/api/v1/documents/ocr-process/",
+    "Name": "Simulate OCR Processing",
+    "StatusCode": 403
+  },
+  {
+    "Details": "Authentication required (expected)",
+    "Method": "POST",
+    "Status": "🔒 AUTH",
+    "Endpoint": "/api/v1/policies/create-quote/",
+    "Name": "Create Policy Quote",
+    "StatusCode": 401
+  },
+  {
+    "Details": "Authentication required (expected)",
+    "Method": "GET",
+    "Status": "🔒 AUTH",
+    "Endpoint": "/api/v1/policies/receipt/POL-2025-001234/",
+    "Name": "Generate Receipt",
+    "StatusCode": 401
+  },
+  {
+    "Details": "Authentication required (expected)",
+    "Method": "POST",
+    "Status": "🔒 AUTH",
+    "Endpoint": "/api/v1/payments/mpesa/initiate/",
+    "Name": "Initiate M-PESA Payment",
+    "StatusCode": 401
+  },
+  {
+    "Details": "Authentication required (expected)",
+    "Method": "POST",
+    "Status": "🔒 AUTH",
+    "Endpoint": "/api/v1/payments/dpo/initiate/",
+    "Name": "Initiate DPO Payment",
+    "StatusCode": 401
+  },
+  {
+    "Details": "Authentication required (expected)",
+    "Method": "POST",
+    "Status": "🔒 AUTH",
+    "Endpoint": "/api/v1/payments/callback/",
+    "Name": "Payment Callback",
+    "StatusCode": 401
+  },
+  {
+    "Details": "Conversion from JSON failed with error: Unexpected character encountered while parsing value: <. Path '', line 0, position 0.",
+    "Method": "GET",
+    "Status": "❌ FAIL",
+    "Endpoint": "/admin/",
+    "Name": "Django Admin",
+    "StatusCode": null
+  },
+  {
+    "Details": "Endpoint not found",
+    "Method": "GET",
+    "Status": "❌ FAIL",
+    "Endpoint": "/api/admin/",
+    "Name": "API Admin Root",
+    "StatusCode": 404
+  }
+]

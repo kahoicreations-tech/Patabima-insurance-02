@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, StatusBar } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import DevEnvBanner from './components/DevEnvBanner';
 // Note: remove manual splash/update control in dev to avoid startup hang
 // import * as SplashScreen from 'expo-splash-screen';
 // import * as Updates from 'expo-updates';
@@ -32,7 +31,6 @@ export default function App() {
           barStyle="light-content" 
           translucent={false}
         />
-        {__DEV__ ? <DevEnvBanner /> : null}
         <AuthProvider>
           <AWSProviderDev>
             <MotorInsuranceProvider>

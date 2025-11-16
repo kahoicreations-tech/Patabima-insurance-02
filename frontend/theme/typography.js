@@ -2,20 +2,20 @@
 import { Platform } from 'react-native';
 
 export const FONT_SIZES = Object.freeze({
-  h1: 24,
-  h2: 20,
-  h3: 18,
-  h4: 16,
-  body: 14,
-  bodyLarge: 16,
+  h1: 22,
+  h2: 18,
+  h3: 16,
+  h4: 14,
+  body: 13,
+  bodyLarge: 14,
   bodySmall: 12,
-  button: 16,
-  buttonSmall: 14,
-  input: 14,
-  label: 14,
-  caption: 12,
-  badge: 12,
-  tiny: 10,
+  button: 14,
+  buttonSmall: 13,
+  input: 13,
+  label: 13,
+  caption: 11,
+  badge: 11,
+  tiny: 8,
 });
 
 export const FONT_WEIGHTS = Object.freeze({
@@ -37,11 +37,11 @@ export const LETTER_SPACING = Object.freeze({
   wide: 0.5,
 });
 
-// If Poppins not loaded, fall back to platform defaults
+// Use system fonts to avoid mismatches when custom fonts aren't loaded
 const SYS_REG = Platform.OS === 'ios' ? 'System' : 'sans-serif';
 const SYS_MED = Platform.OS === 'ios' ? 'System' : 'sans-serif-medium';
 
-// Use system fonts to avoid mismatches when custom fonts aren't loaded
+// Use system fonts throughout the app
 export const FONT_FAMILIES = Object.freeze({
   regular: SYS_REG,
   medium: SYS_MED,

@@ -1,0 +1,1984 @@
+{% extends "admin/change_form.html" %}
+
+{% block after_field_sets %}
+    {{ block.super }}
+    
+    {% if categories_with_subcategories %}
+    <div class="pricing-builder-section">
+        <h2>Motor Insurance Products Pricing</h2>
+        <p>Configure pricing for motor insurance products. Enable products and set their pricing parameters.</p>
+        
+        <div class="table-container">
+            <table class="pricing-table">
+                <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th>Enable</th>
+                        <th>Pricing Method</th>
+                        <th>Rate/Premium</th>
+                        <th>Min Premium</th>
+                        <th>Max Premium</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in categories_with_subcategories %}
+                        <tr class="category-header">
+                            <td colspan="6"><strong>{{ item.category.category_name }}</strong></td>
+                        </tr>
+                        {% for subcategory in item.subcategories %}
+                            <tr class="product-row" data-product="{{ subcategory.subcategory_code }}">
+                                <td class="product-name">
+                                    <strong>{{ subcategory.subcategory_name }}</strong>
+                                    <div class="product-code">{{ subcategory.subcategory_code }}</div>
+                                    {% if subcategory.product_type %}
+                                        <span class="type-badge {{ subcategory.product_type|lower }}">{{ subcategory.product_type }}</span>
+                                    {% endif %}
+                                </td>
+                                <td class="enable-column">
+                                    <input type="checkbox" class="product-toggle" 
+                                           data-product="{{ subcategory.subcategory_code }}"
+                                           data-product-type="{{ subcategory.product_type }}"
+                                           data-pricing-model="{{ subcategory.pricing_model }}">
+                                </td>
+                                <td class="pricing-method-column">
+                                    {% if subcategory.product_type == 'COMPREHENSIVE' %}
+                                        <select class="pricing-type-select compact-select" disabled>
+                                            <option value="percentage">Percentage</option>
+                                            <option value="fixed">Fixed Amount</option>
+                                        </select>
+                                    {% elif subcategory.product_type == 'TOR' %}
+                                        <span class="method-text">Time on Risk</span>
+                                    {% else %}
+                                        <span class="method-text">Fixed Premium</span>
+                                    {% endif %}
+                                </td>
+                                <td class="rate-column">
+                                    {% if subcategory.product_type == 'COMPREHENSIVE' %}
+                                        <input type="number" class="compact-input percentage-input" 
+                                               data-field="rate" step="0.01" min="0" max="100" disabled
+                                               placeholder="3.5%">
+                                        <input type="number" class="compact-input fixed-input" 
+                                               data-field="base_premium" step="1000" min="0" disabled
+                                               style="display:none" placeholder="20000">
+                                    {% else %}
+                                        <input type="number" class="compact-input" 
+                                               data-field="base_premium" step="100" min="0" disabled
+                                               placeholder="5000">
+                                    {% endif %}
+                                </td>
+                                <td class="min-premium-column">
+                                    {% if subcategory.product_type == 'COMPREHENSIVE' %}
+                                        <input type="number" class="compact-input" 
+                                               data-field="min_premium" step="1000" min="0" disabled
+                                               placeholder="20000">
+                                    {% else %}
+                                        <span class="na-text">N/A</span>
+                                    {% endif %}
+                                </td>
+                                <td class="max-premium-column">
+                                    {% if subcategory.product_type == 'COMPREHENSIVE' %}
+                                        <input type="number" class="compact-input" 
+                                               data-field="max_premium" step="1000" min="0" disabled
+                                               placeholder="500000">
+                                    {% else %}
+                                        <span class="na-text">N/A</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="preview-section">
+            <h3>📄 JSON Preview</h3>
+            <div class="preview-content" id="jsonPreview">
+                Click "Enable" on products to see pricing configuration...
+            </div>
+        </div>
+    </div>
+
+    <style>
+        /* Theme-aware pricing builder styling */
+        .pricing-builder-section {
+            margin-top: 20px;
+            padding: 20px;
+            background: var(--body-bg, #fff);
+            border: 1px solid var(--border-color, #ddd);
+            border-radius: 4px;
+        }
+
+        .pricing-builder-section h2 {
+            margin: 0 0 10px 0;
+            color: var(--body-fg, #333);
+            font-size: 16px;
+            font-weight: normal;
+            font-family: "Roboto","Lucida Grande","DejaVu Sans","Bitstream Vera Sans",Verdana,Arial,sans-serif;
+        }
+
+        .pricing-builder-section p {
+            margin: 0 0 20px 0;
+            color: var(--body-quiet-color, #666);
+            font-size: 13px;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            margin-bottom: 20px;
+        }
+
+        .pricing-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--border-color, #ddd);
+            font-family: "Roboto","Lucida Grande","DejaVu Sans","Bitstream Vera Sans",Verdana,Arial,sans-serif;
+            font-size: 13px;
+        }
+
+        .pricing-table th {
+            background: var(--darkened-bg, #f8f9fa);
+            color: var(--body-fg, #333);
+            padding: 8px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color, #ddd);
+            border-right: 1px solid var(--border-color, #ddd);
+            font-weight: normal;
+        }
+
+        .pricing-table th:last-child {
+            border-right: none;
+        }
+
+        .pricing-table td {
+            padding: 8px;
+            border-bottom: 1px solid var(--hairline-color, #eee);
+            border-right: 1px solid var(--hairline-color, #eee);
+            vertical-align: middle;
+        }
+
+        .pricing-table td:last-child {
+            border-right: none;
+        }
+
+        .category-header {
+            background: var(--selected-bg, #f0f8ff) !important;
+        }
+
+        .category-header td {
+            font-weight: bold;
+            color: var(--body-fg, #333);
+            padding: 12px 8px;
+        }
+
+        .product-row.enabled {
+            background-color: var(--selected-bg, #f0f8ff);
+        }
+
+        .product-name {
+            min-width: 200px;
+        }
+
+        .product-name strong {
+            color: var(--body-fg, #333);
+            font-weight: normal;
+        }
+
+        .product-code {
+            font-size: 11px;
+            color: var(--body-quiet-color, #777);
+            font-family: "Bitstream Vera Sans Mono", Monaco, "Courier New", Courier, monospace;
+            margin-top: 2px;
+        }
+
+        .type-badge {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 10px;
+            text-transform: uppercase;
+            margin-top: 4px;
+        }
+
+        .type-badge.comprehensive {
+            background-color: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .type-badge.tor {
+            background-color: #f3e5f5;
+            color: #7b1fa2;
+        }
+
+        .type-badge.third-party {
+            background-color: #e8f5e8;
+            color: #388e3c;
+        }
+
+        .enable-column {
+            text-align: center;
+            width: 80px;
+        }
+
+        .product-toggle {
+            transform: scale(1.2);
+        }
+
+        .rate-column,
+        .min-premium-column,
+        .max-premium-column {
+            width: 120px;
+        }
+
+        .compact-select,
+        .compact-input {
+            width: 100%;
+            padding: 4px 6px;
+            border: 1px solid var(--border-color, #ccc);
+            border-radius: 4px;
+            background: var(--body-bg, #fff);
+            color: var(--body-fg, #333);
+            font-size: 12px;
+            font-family: "Roboto","Lucida Grande","DejaVu Sans","Bitstream Vera Sans",Verdana,Arial,sans-serif;
+        }
+
+        .compact-select:disabled,
+        .compact-input:disabled {
+            background: var(--darkened-bg, #f5f5f5);
+            color: var(--body-quiet-color, #999);
+            cursor: not-allowed;
+        }
+
+        .compact-select:focus,
+        .compact-input:focus {
+            outline: none;
+            border-color: var(--link-fg, #417690);
+        }
+
+        .method-text {
+            color: var(--body-quiet-color, #777);
+            font-style: italic;
+            font-size: 12px;
+        }
+
+        .na-text {
+            color: var(--body-quiet-color, #999);
+            text-align: center;
+            font-style: italic;
+            font-size: 12px;
+        }
+
+        .preview-section {
+            margin-top: 20px;
+            padding: 15px;
+            background: var(--body-bg, #fff);
+            border: 1px solid var(--border-color, #ddd);
+            border-radius: 4px;
+        }
+
+        .preview-section h3 {
+            margin: 0 0 10px 0;
+            color: var(--body-fg, #333);
+            font-size: 14px;
+            font-weight: normal;
+            font-family: "Roboto","Lucida Grande","DejaVu Sans","Bitstream Vera Sans",Verdana,Arial,sans-serif;
+        }
+
+        .preview-content {
+            background: var(--darkened-bg, #f8f9fa);
+            border: 1px solid var(--hairline-color, #ddd);
+            padding: 10px;
+            font-family: "Bitstream Vera Sans Mono", Monaco, "Courier New", Courier, monospace;
+            font-size: 12px;
+            color: var(--body-fg, #333);
+            max-height: 200px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            line-height: 1.4;
+        }
+    </style>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const textArea = document.querySelector('#id_pricing_data');
+        let pricingData = {};
+        
+        // Parse existing data
+        if (textArea && textArea.value) {
+            try {
+                pricingData = JSON.parse(textArea.value);
+            } catch (e) {
+                console.log('No existing pricing data found');
+            }
+        }
+
+        // Load existing settings into UI
+        function loadExistingData() {
+            document.querySelectorAll('.product-toggle').forEach(toggle => {
+                const productCode = toggle.dataset.product;
+                if (pricingData[productCode]) {
+                    toggle.checked = true;
+                    const row = toggle.closest('.product-row');
+                    enableProductRow(row);
+                    
+                    // Load field values
+                    const data = pricingData[productCode];
+                    row.querySelectorAll('.compact-input').forEach(input => {
+                        const field = input.dataset.field;
+                        if (data[field] !== undefined) {
+                            input.value = data[field];
+                        }
+                    });
+                    
+                    // Handle pricing type selection for comprehensive products
+                    const pricingSelect = row.querySelector('.pricing-type-select');
+                    if (pricingSelect && data.pricing_type) {
+                        pricingSelect.value = data.pricing_type;
+                        handlePricingTypeChange(pricingSelect);
+                    }
+                }
+            });
+            updatePreview();
+        }
+        
+        function enableProductRow(row) {
+            row.classList.add('enabled');
+            row.querySelectorAll('.compact-input, .compact-select').forEach(input => {
+                input.disabled = false;
+            });
+        }
+        
+        function disableProductRow(row) {
+            row.classList.remove('enabled');
+            row.querySelectorAll('.compact-input, .compact-select').forEach(input => {
+                input.disabled = true;
+            });
+        }
+
+        // Handle product toggle
+        document.querySelectorAll('.product-toggle').forEach(toggle => {
+            toggle.addEventListener('change', function() {
+                const row = this.closest('.product-row');
+                const productCode = this.dataset.product;
+                const productType = this.dataset.productType;
+                const pricingModel = this.dataset.pricingModel;
+                
+                if (this.checked) {
+                    enableProductRow(row);
+                    
+                    // Initialize product data
+                    if (!pricingData[productCode]) {
+                        pricingData[productCode] = {
+                            product_type: productType,
+                            pricing_model: pricingModel,
+                            enabled: true
+                        };
+                        
+                        // Set default values based on product type
+                        if (productType === 'COMPREHENSIVE') {
+                            pricingData[productCode].pricing_type = 'percentage';
+                            pricingData[productCode].rate = 3.5;
+                            pricingData[productCode].min_premium = 20000;
+                        } else if (productType === 'TOR') {
+                            pricingData[productCode].base_premium = 1500;
+                        } else {
+                            pricingData[productCode].base_premium = 5000;
+                        }
+                    } else {
+                        pricingData[productCode].enabled = true;
+                    }
+                } else {
+                    disableProductRow(row);
+                    if (pricingData[productCode]) {
+                        pricingData[productCode].enabled = false;
+                    }
+                }
+                
+                updatePricingData();
+            });
+        });
+
+        // Handle pricing type changes for comprehensive products
+        function handlePricingTypeChange(select) {
+            const row = select.closest('.product-row');
+            const percentageInputs = row.querySelectorAll('.percentage-input');
+            const fixedInputs = row.querySelectorAll('.fixed-input');
+            
+            if (select.value === 'percentage') {
+                percentageInputs.forEach(input => input.style.display = 'inline-block');
+                fixedInputs.forEach(input => input.style.display = 'none');
+            } else if (select.value === 'fixed') {
+                percentageInputs.forEach(input => input.style.display = 'none');
+                fixedInputs.forEach(input => input.style.display = 'inline-block');
+            }
+        }
+        
+        document.querySelectorAll('.pricing-type-select').forEach(select => {
+            select.addEventListener('change', function() {
+                handlePricingTypeChange(this);
+                const row = this.closest('.product-row');
+                const toggle = row.querySelector('.product-toggle');
+                const productCode = toggle.dataset.product;
+                
+                if (pricingData[productCode]) {
+                    pricingData[productCode].pricing_type = this.value;
+                    updatePricingData();
+                }
+            });
+        });
+
+        // Handle input changes
+        document.querySelectorAll('.compact-input').forEach(input => {
+            input.addEventListener('input', function() {
+                const row = this.closest('.product-row');
+                const toggle = row.querySelector('.product-toggle');
+                const productCode = toggle.dataset.product;
+                const field = this.dataset.field;
+                
+                if (toggle.checked && pricingData[productCode]) {
+                    const value = parseFloat(this.value) || 0;
+                    pricingData[productCode][field] = value;
+                    updatePricingData();
+                }
+            });
+        });
+
+        function updatePricingData() {
+            if (!textArea) return;
+            
+            const enabledData = {};
+            Object.keys(pricingData).forEach(key => {
+                if (pricingData[key].enabled) {
+                    enabledData[key] = pricingData[key];
+                }
+            });
+            
+            textArea.value = JSON.stringify(enabledData, null, 2);
+            updatePreview();
+        }
+
+        function updatePreview() {
+            const preview = document.getElementById('jsonPreview');
+            if (preview) {
+                const enabledData = {};
+                Object.keys(pricingData).forEach(key => {
+                    if (pricingData[key].enabled) {
+                        enabledData[key] = pricingData[key];
+                    }
+                });
+                
+                if (Object.keys(enabledData).length > 0) {
+                    preview.textContent = JSON.stringify(enabledData, null, 2);
+                } else {
+                    preview.textContent = 'Click "Enable" on products to see pricing configuration...';
+                }
+            }
+        }
+
+        // Initialize
+        loadExistingData();
+    });
+    </script>
+    {% endif %}
+{% endblock %}
+{% load static %}
+
+{% block submit_buttons_bottom %}
+{{ block.super }}
+
+{% if original and original.pk %}
+<div class="pricing-builder-section">
+    <h3>🏗️ Pricing Builder - Visual Setup</h3>
+    <p><strong>Set up pricing for your insurance products using the simple forms below. No technical knowledge required!</strong></p>
+    
+    <!-- Visual Pricing Builder -->
+    <div class="visual-pricing-builder">
+        <div class="pricing-tabs">
+            <button type="button" class="tab-button active" data-tab="simple">📊 Simple Setup</button>
+            <button type="button" class="tab-button" data-tab="advanced">⚙️ Advanced Setup</button>
+            <button type="button" class="tab-button" data-tab="json">💻 Technical JSON</button>
+        </div>
+        
+        <!-- Simple Setup Tab -->
+        <div id="simple-tab" class="tab-content active">
+            <div class="pricing-wizard">
+                <h4>🚗 Insurance Product Setup</h4>
+                <p>Configure pricing for all available insurance products by category:</p>
+                
+                {% if categories_with_subcategories %}
+                    {% for category_data in categories_with_subcategories %}
+                    <div class="category-section">
+                        <h5 class="category-header">
+                            {{ category_data.category.icon }} {{ category_data.category.name }}
+                            <span class="category-description">{{ category_data.category.description }}</span>
+                        </h5>
+                        
+                        <div class="table-container">
+                            <table class="pricing-table">
+                                <thead>
+                                    <tr>
+                                        <th>Product</th>
+                                        <th>Type</th>
+                                        <th>Enable</th>
+                                        <th>Pricing Method</th>
+                                        <th>Rate/Amount</th>
+                                        <th>Min Premium</th>
+                                        <th>Max Premium</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for subcategory in category_data.subcategories %}
+                                    <tr class="product-row" data-category="{{ category_data.category.code }}">
+                                        <td class="product-name">
+                                            <strong>{{ subcategory.subcategory_name }}</strong>
+                                            <div class="product-code">{{ subcategory.subcategory_code }}</div>
+                                        </td>
+                                        <td>
+                                            <span class="product-type-badge" data-type="{{ subcategory.product_type }}">
+                                                {{ subcategory.product_type }}
+                                            </span>
+                                        </td>
+                                        <td class="enable-column">
+                                            <input type="checkbox" class="product-toggle" 
+                                                   data-product="{{ subcategory.subcategory_code }}"
+                                                   data-product-type="{{ subcategory.product_type }}"
+                                                   data-pricing-model="{{ subcategory.pricing_model }}">
+                                        </td>
+                                        <td class="pricing-method-column">
+                                            {% if subcategory.product_type == 'COMPREHENSIVE' %}
+                                                <select class="pricing-type-select compact-select" disabled>
+                                                    <option value="percentage">Percentage</option>
+                                                    <option value="fixed">Fixed Amount</option>
+                                                    {% if subcategory.pricing_model == 'BRACKET' %}
+                                                    <option value="bracket">Bracket-based</option>
+                                                    {% endif %}
+                                                </select>
+                                            {% else %}
+                                                <span class="method-text">Fixed Amount</span>
+                                            {% endif %}
+                                        </td>
+                                        <td class="rate-column">
+                                            {% if subcategory.product_type == 'COMPREHENSIVE' %}
+                                                <div class="rate-inputs">
+                                                    <input type="number" class="price-input compact-input rate-input" 
+                                                           data-field="rate" value="0.3" min="0.1" max="5" step="0.1" 
+                                                           placeholder="0.3%" disabled>
+                                                    <input type="number" class="price-input compact-input fixed-input" 
+                                                           data-field="base_premium" value="25000" min="5000" step="1000" 
+                                                           placeholder="KSh" style="display: none;" disabled>
+                                                </div>
+                                            {% elif subcategory.product_type == 'TOR' %}
+                                                <input type="number" class="price-input compact-input" 
+                                                       data-field="base_premium" value="1500" min="500" max="20000" step="100" 
+                                                       placeholder="KSh" disabled>
+                                            {% else %}
+                                                <input type="number" class="price-input compact-input" 
+                                                       data-field="base_premium" value="5000" min="1000" max="50000" step="100" 
+                                                       placeholder="KSh" disabled>
+                                            {% endif %}
+                                        </td>
+                                        <td class="min-premium-column">
+                                            {% if subcategory.product_type == 'COMPREHENSIVE' %}
+                                                <input type="number" class="price-input compact-input" 
+                                                       data-field="min_premium" value="20000" min="5000" step="1000" 
+                                                       placeholder="KSh" disabled>
+                                            {% else %}
+                                                <span class="na-text">N/A</span>
+                                            {% endif %}
+                                        </td>
+                                        <td class="max-premium-column">
+                                            {% if subcategory.pricing_model != 'FIXED' %}
+                                                <input type="number" class="price-input compact-input" 
+                                                       data-field="max_premium" min="10000" step="1000" 
+                                                       placeholder="Optional" disabled>
+                                            {% else %}
+                                                <span class="na-text">N/A</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% if subcategory.pricing_model != 'FIXED' %}
+                                    <tr class="product-notes-row" style="display: none;">
+                                        <td colspan="7" class="notes-cell">
+                                            {% if subcategory.pricing_model == 'TONNAGE' %}
+                                                <div class="pricing-note tonnage-note">
+                                                    <strong>Tonnage-based pricing:</strong> Different rates apply based on vehicle weight categories.
+                                                </div>
+                                            {% elif subcategory.pricing_model == 'PASSENGER' %}
+                                                <div class="pricing-note passenger-note">
+                                                    <strong>Passenger-based pricing:</strong> Rates vary by seating capacity.
+                                                </div>
+                                            {% elif subcategory.pricing_model == 'ENGINE_CC' %}
+                                                <div class="pricing-note engine-note">
+                                                    <strong>Engine capacity-based pricing:</strong> Rates vary by engine CC.
+                                                </div>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endif %}
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="no-subcategories">
+                        <p>No subcategories found. Please ensure motor categories are properly seeded in the database.</p>
+                    </div>
+                {% endif %}
+                
+                <div class="pricing-preview">
+                    <h4>📋 Pricing Summary</h4>
+                    <div class="preview-content">
+                        <p>Configure products above to see your pricing summary here.</p>
+                    </div>
+                </div>
+                
+                <div class="action-buttons">
+                    <button type="button" class="btn-generate-json">🔄 Generate Configuration</button>
+                    <button type="button" class="btn-copy-to-features">📋 Apply to Features Field</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Advanced Setup Tab -->
+        <div id="advanced-tab" class="tab-content">
+            <div class="advanced-builder">
+                <h4>⚙️ Advanced Product Configuration</h4>
+                <p>Set up complex pricing with brackets, commercial vehicles, and custom rules:</p>
+                
+                <div class="advanced-options">
+                    <div class="option-group">
+                        <h5>🚛 Commercial Vehicles</h5>
+                        <label class="checkbox-label">
+                            <input type="checkbox" class="commercial-toggle">
+                            Enable commercial vehicle pricing by tonnage
+                        </label>
+                    </div>
+                    
+                    <div class="option-group">
+                        <h5>🚌 PSV (Public Service Vehicles)</h5>
+                        <label class="checkbox-label">
+                            <input type="checkbox" class="psv-toggle">
+                            Enable PSV pricing by passenger capacity
+                        </label>
+                    </div>
+                    
+                    <div class="option-group">
+                        <h5>📊 Bracket Pricing for Comprehensive</h5>
+                        <label class="checkbox-label">
+                            <input type="checkbox" class="bracket-toggle">
+                            Use different rates based on vehicle value ranges
+                        </label>
+                        
+                        <div class="bracket-setup" style="display: none;">
+                            <div class="bracket-item">
+                                <span>KSh 0 - 500,000:</span>
+                                <input type="number" placeholder="Rate %" min="0.1" max="5" step="0.1" value="0.4">
+                                <input type="number" placeholder="Min KSh" min="5000" step="1000" value="15000">
+                            </div>
+                            <div class="bracket-item">
+                                <span>KSh 500,001 - 1,500,000:</span>
+                                <input type="number" placeholder="Rate %" min="0.1" max="5" step="0.1" value="0.3">
+                                <input type="number" placeholder="Min KSh" min="5000" step="1000" value="20000">
+                            </div>
+                            <div class="bracket-item">
+                                <span>KSh 1,500,001+:</span>
+                                <input type="number" placeholder="Rate %" min="0.1" max="5" step="0.1" value="0.25">
+                                <input type="number" placeholder="Min KSh" min="5000" step="1000" value="25000">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Technical JSON Tab -->
+        <div id="json-tab" class="tab-content">
+            <div class="json-editor">
+                <h4>💻 Technical JSON Configuration</h4>
+                <p>For advanced users: Edit the raw JSON configuration directly</p>
+                
+                <div class="json-tools">
+                    <button type="button" class="btn-format-json">🎨 Format JSON</button>
+                    <button type="button" class="btn-validate-json">✅ Validate JSON</button>
+                    <button type="button" class="btn-reset-json">🔄 Reset to Default</button>
+                </div>
+                
+                <textarea class="json-editor-textarea" rows="20" placeholder="JSON configuration will appear here...">{
+  "pricing": {
+    "PRIVATE_THIRD_PARTY": {
+      "pricing_type": "fixed",
+      "base_premium": 5200
+    },
+    "PRIVATE_TOR": {
+      "pricing_type": "fixed", 
+      "base_premium": 1500
+    },
+    "PRIVATE_COMPREHENSIVE": {
+      "pricing_type": "percentage",
+      "rate": 0.003,
+      "min_premium": 20000,
+      "bracket_pricing": {
+        "0-500000": {"rate": 0.004, "min": 15000},
+        "500001-1500000": {"rate": 0.003, "min": 20000},
+        "1500001-999999999": {"rate": 0.0025, "min": 25000}
+      }
+    }
+  }
+}</textarea>
+                
+                <div class="json-status">
+                    <span class="status-indicator">✅ Valid JSON</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="final-actions">
+        <h4>🚀 Next Steps:</h4>
+        <ol class="action-steps">
+            <li>Configure your products using the tabs above</li>
+            <li>Click "Apply to Features Field" to save your configuration</li>
+            <li>Save this Insurance Provider record</li>
+            <li>Go to Insurance Provider list and select this provider</li>
+            <li>Use "Materialize pricing from features" action</li>
+        </ol>
+        
+        <a href="{% url 'admin:app_motorpricing_changelist' %}?underwriter__id__exact={{ original.pk }}" 
+           class="btn-view-pricing">
+           🔍 View Generated Motor Pricing
+        </a>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extrahead %}
+{{ block.super }}
+<style>
+/* Visual Pricing Builder Styles */
+.pricing-builder-section {
+    margin: 24px 0;
+    padding: 24px;
+    border: 1px solid var(--border-color, #ddd);
+    border-radius: 12px;
+    background: var(--body-bg, #f8f8f8);
+    color: var(--body-fg, #333);
+}
+
+.pricing-builder-section h3 {
+    font-size: inherit;
+    margin-bottom: 8px;
+    font-weight: inherit;
+}
+
+.pricing-builder-section > p {
+    font-size: inherit;
+    line-height: 1.6;
+    margin-bottom: 20px;
+    color: var(--text-muted, #777);
+}
+
+/* CSS Variables for theme awareness */
+:root {
+    --primary-color: var(--primary, #417690);
+    --primary-dark: var(--primary-hover, #2d5aa0);
+    --bg-light: var(--darkened-bg, #f9f9f9);
+    --text-muted: var(--body-quiet-color, #777);
+    --border-color: var(--border-color, #ddd);
+    --success-color: #28a745;
+    --warning-color: #ffc107;
+    --info-color: #17a2b8;
+}
+
+.pricing-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 24px;
+    border-bottom: 2px solid var(--border-color, #ddd);
+    padding-bottom: 4px;
+}
+
+.tab-button {
+    padding: 12px 24px;
+    background: transparent;
+    border: none;
+    border-bottom: 3px solid transparent;
+    border-radius: 8px 8px 0 0;
+    cursor: pointer;
+    font-size: inherit;
+    font-weight: 500;
+    color: var(--body-fg, #666);
+    transition: all 0.3s ease;
+    white-space: nowrap;
+}
+
+.tab-button.active {
+    color: var(--primary, #417690);
+    border-bottom-color: var(--primary, #417690);
+    font-weight: bold;
+}
+
+.tab-button:hover {
+    background: var(--darkened-bg, #f0f0f0);
+}
+
+.tab-content {
+    display: none;
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 20px 4px 20px 0;
+    margin-right: -4px;
+    scroll-behavior: smooth;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+/* Custom scrollbar styling */
+.tab-content::-webkit-scrollbar {
+    width: 8px;
+}
+
+.tab-content::-webkit-scrollbar-track {
+    background: var(--bg-light, #f1f1f1);
+    border-radius: 4px;
+}
+
+.tab-content::-webkit-scrollbar-thumb {
+    background: var(--primary-color, #417690);
+    border-radius: 4px;
+}
+
+.tab-content::-webkit-scrollbar-thumb:hover {
+    background: var(--primary-dark, #2d5aa0);
+}
+
+.pricing-wizard h4 {
+    font-size: inherit;
+    margin-bottom: 12px;
+    font-weight: inherit;
+    color: var(--primary-color, #417690);
+}
+
+.pricing-wizard > p {
+    font-size: inherit;
+    line-height: 1.6;
+    margin-bottom: 24px;
+    color: var(--text-muted, #777);
+}
+
+/* Table-based Product Setup */
+.table-container {
+    padding: 0;
+    background: var(--body-bg, #fff);
+    overflow-x: auto;
+}
+
+.pricing-table {
+    width: 100%;
+    border-collapse: collapse;
+    border: 1px solid #ddd;
+}
+
+.pricing-table th {
+    background: #f8f9fa;
+    padding: 8px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+    border-right: 1px solid #ddd;
+}
+
+.pricing-table th:last-child {
+    border-right: none;
+}
+
+.pricing-table td {
+    padding: 8px;
+    border-bottom: 1px solid #eee;
+    border-right: 1px solid #eee;
+}
+
+.pricing-table td:last-child {
+    border-right: none;
+}
+
+.product-row.enabled {
+    background-color: #f0f8ff;
+}
+
+.product-name {
+    min-width: 200px;
+}
+
+.product-code {
+    font-size: 0.9em;
+    color: #777;
+    font-family: monospace;
+}
+
+.enable-column {
+    text-align: center;
+    width: 80px;
+}
+
+.rate-column,
+.min-premium-column,
+.max-premium-column {
+    width: 120px;
+}
+
+.compact-select,
+.compact-input {
+    width: 100%;
+    padding: 4px;
+    border: 1px solid #ccc;
+    font-size: 12px;
+}
+
+.compact-select:disabled,
+.compact-input:disabled {
+    background: #f5f5f5;
+    color: #999;
+}
+
+.na-text {
+    color: #999;
+    text-align: center;
+    font-style: italic;
+}
+
+/* Simple checkbox */
+.product-toggle {
+    transform: scale(1.2);
+}
+
+
+
+
+.product-form.hiding {
+    animation: slideUp 0.2s ease forwards;
+}
+
+.product-form label {
+    display: block;
+    margin: 16px 0 8px 0;
+    font-weight: inherit;
+    color: var(--body-fg, #555);
+    font-size: inherit;
+    line-height: 1.4;
+}
+
+.price-input, .pricing-type-select {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid var(--border-color, #ddd);
+    border-radius: 6px;
+    background: var(--body-bg, #fff);
+    color: var(--body-fg, #333);
+    font-size: inherit;
+    line-height: 1.4;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    min-height: 44px;
+}
+
+.price-input:focus, .pricing-type-select:focus {
+    outline: none;
+    border-color: var(--primary-color, #417690);
+    box-shadow: 0 0 0 2px rgba(65, 118, 144, 0.2);
+}
+
+.price-input:hover, .pricing-type-select:hover {
+    border-color: var(--primary-color, #417690);
+}
+
+.product-form small {
+    display: block;
+    margin-top: 6px;
+    margin-bottom: 12px;
+    color: var(--text-muted, #777);
+    font-size: 0.9em;
+    line-height: 1.4;
+    font-style: italic;
+}
+
+/* Pricing Preview */
+.pricing-preview {
+    margin: 32px 0;
+    padding: 24px;
+    background: var(--bg-light, #f9f9f9);
+    border-radius: 12px;
+    border: 1px solid var(--border-color, #ddd);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.pricing-preview h4 {
+    margin: 0 0 16px 0;
+    color: var(--primary-color, #417690);
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+.preview-content {
+    font-family: monospace;
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+/* Category Sections */
+.category-section {
+    margin-bottom: 2.5rem;
+    border: 1px solid var(--border-color, #ddd);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.category-header {
+    background: linear-gradient(135deg, var(--primary-color, #417690), var(--primary-dark, #2d5aa0));
+    color: white;
+    padding: 1.25rem 1.75rem;
+    margin: 0;
+    font-size: inherit;
+    font-weight: inherit;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    letter-spacing: 0.025em;
+}
+
+.category-description {
+    font-size: 0.9em;
+    opacity: 0.9;
+    font-weight: 400;
+    margin-top: 4px;
+}
+
+.product-setup-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 1rem;
+    padding: 1.5rem;
+    background: var(--bg-light, #f9f9f9);
+}
+
+.no-subcategories {
+    padding: 2rem;
+    text-align: center;
+    color: var(--text-muted, #777);
+    background: var(--bg-light, #f9f9f9);
+    border: 2px dashed var(--border-color, #ddd);
+    border-radius: 8px;
+    margin: 1rem;
+}
+
+/* Product Type Badges */
+.product-type-badge {
+    display: inline-block;
+    background: var(--primary-color, #417690);
+    color: white;
+    padding: 6px 12px;
+    border-radius: 16px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+    margin-bottom: 16px;
+    transition: background-color 0.2s ease;
+}
+
+.product-card:hover .product-type-badge {
+    background: var(--primary-dark, #2d5aa0);
+}
+
+/* Specific badge colors that adapt to theme */
+.product-type-badge[data-type="COMPREHENSIVE"] {
+    background: var(--success-color, #28a745);
+}
+
+.product-type-badge[data-type="TOR"] {
+    background: var(--warning-color, #ffc107);
+    color: var(--body-fg, #000);
+}
+
+.product-type-badge[data-type="THIRD_PARTY"] {
+    background: var(--info-color, #17a2b8);
+}
+
+/* Advanced Options */
+.advanced-options-toggle {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-color, #ddd);
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    color: var(--text-muted, #777);
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+
+.checkbox-label:hover {
+    color: var(--body-fg, #333);
+}
+
+.checkbox-label input[type="checkbox"] {
+    margin: 0;
+    accent-color: var(--primary-color, #417690);
+}
+
+.advanced-pricing-options {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: var(--bg-light, #f9f9f9);
+    border-radius: 6px;
+    border: 1px solid var(--border-color, #ddd);
+    transition: all 0.2s ease;
+}
+
+.tonnage-info, .passenger-info, .engine-info {
+    background: #e3f2fd;
+    border-left: 4px solid #2196f3;
+    padding: 0.75rem;
+    margin-bottom: 1rem;
+    border-radius: 0 6px 6px 0;
+}
+
+/* Preview Improvements */
+.category-preview {
+    margin-bottom: 20px;
+    border: 1px solid var(--border-color, #ddd);
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.category-preview h5 {
+    background: var(--primary-color, #417690);
+    color: white;
+    padding: 12px 16px;
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.products-list {
+    padding: 16px;
+}
+
+.product-preview {
+    background: var(--bg-light, #f9f9f9);
+    padding: 12px 16px;
+    margin-bottom: 8px;
+    border-radius: 6px;
+    border-left: 3px solid var(--primary-color, #417690);
+    font-size: inherit;
+    line-height: 1.5;
+}
+
+.product-preview:last-child {
+    margin-bottom: 0;
+}
+
+.product-preview strong {
+    font-weight: 600;
+    color: var(--body-fg, #333);
+}
+
+.no-products {
+    padding: 24px;
+    text-align: center;
+    color: var(--text-muted, #777);
+    font-style: italic;
+    font-size: inherit;
+    line-height: 1.5;
+}
+
+.no-subcategories {
+    padding: 32px 24px;
+    text-align: center;
+    color: var(--text-muted, #777);
+    background: var(--bg-light, #f9f9f9);
+    border: 2px dashed var(--border-color, #ddd);
+    border-radius: 12px;
+    margin: 20px;
+    font-size: inherit;
+    line-height: 1.5;
+}
+
+/* Better focus indicators for accessibility */
+.compact-input:focus,
+.compact-select:focus,
+.product-toggle:focus + .slider,
+.tab-button:focus,
+button:focus {
+    outline: 2px solid var(--primary-color, #417690);
+    outline-offset: 2px;
+}
+
+/* Loading states */
+.pricing-builder-section.loading {
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+.pricing-builder-section.loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 20px;
+    height: 20px;
+    margin: -10px 0 0 -10px;
+    border: 2px solid var(--primary-color, #417690);
+    border-top: 2px solid transparent;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Action Buttons */
+.action-buttons {
+    display: flex;
+    gap: 16px;
+    margin: 24px 0;
+    flex-wrap: wrap;
+}
+
+.btn-generate-json, .btn-copy-to-features, .btn-view-pricing {
+    padding: 14px 28px;
+    background: var(--primary-color, #417690);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: inherit;
+    font-weight: inherit;
+    text-decoration: none;
+    display: inline-block;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-generate-json:hover, .btn-copy-to-features:hover, .btn-view-pricing:hover {
+    background: var(--primary-dark, #2d5aa0);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+    color: white;
+    text-decoration: none;
+}
+
+.btn-generate-json:active, .btn-copy-to-features:active, .btn-view-pricing:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Advanced Builder */
+.option-group {
+    margin: 20px 0;
+    padding: 15px;
+    border: 1px solid var(--border-color, #ddd);
+    border-radius: 6px;
+    background: var(--darkened-bg, #fafafa);
+}
+
+.option-group h5 {
+    margin: 0 0 10px 0;
+    color: var(--body-fg, #444);
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.bracket-setup {
+    margin-top: 15px;
+    animation: slideDown 0.3s ease;
+}
+
+.bracket-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 10px 0;
+    flex-wrap: wrap;
+}
+
+.bracket-item span {
+    min-width: 200px;
+    font-weight: 600;
+}
+
+.bracket-item input {
+    flex: 1;
+    min-width: 100px;
+    padding: 6px 10px;
+    border: 1px solid var(--border-color, #ddd);
+    border-radius: 4px;
+}
+
+/* JSON Editor */
+.json-tools {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+    flex-wrap: wrap;
+}
+
+.btn-format-json, .btn-validate-json, .btn-reset-json {
+    padding: 8px 16px;
+    background: var(--bg-light, #f5f5f5);
+    border: 1px solid var(--border-color, #ddd);
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    color: var(--body-fg, #666);
+    transition: all 0.2s ease;
+}
+
+.btn-format-json:hover, .btn-validate-json:hover, .btn-reset-json:hover {
+    background: var(--primary-color, #417690);
+    color: white;
+    border-color: var(--primary-color, #417690);
+}
+
+.json-editor-textarea {
+    width: 100%;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    background: var(--body-bg, #f8f8f8);
+    border: 1px solid var(--border-color, #ddd);
+    border-radius: 4px;
+    padding: 15px;
+    color: var(--body-fg, #333);
+    resize: vertical;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.json-editor-textarea:focus {
+    outline: none;
+    border-color: var(--primary-color, #417690);
+    box-shadow: 0 0 0 2px rgba(65, 118, 144, 0.2);
+}
+
+.json-status {
+    margin-top: 10px;
+    padding: 8px 12px;
+    border-radius: 4px;
+    background: var(--success-color, #d4edda);
+    color: var(--success-text, #155724);
+    font-size: 13px;
+    border: 1px solid var(--success-border, #c3e6cb);
+}
+
+/* Final Actions */
+.final-actions {
+    margin-top: 30px;
+    padding: 20px;
+    background: var(--darkened-bg, #f0f8ff);
+    border-radius: 8px;
+    border: 1px solid var(--border-color, #b3d9ff);
+}
+
+.action-steps {
+    padding-left: 20px;
+    margin: 15px 0;
+}
+
+.action-steps li {
+    margin: 8px 0;
+    line-height: 1.4;
+    font-size: inherit;
+}
+
+/* Mobile Responsive */
+@media (max-width: 1024px) {
+    .product-setup-grid {
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 16px;
+    }
+    
+    .pricing-builder-section {
+        padding: 20px;
+        margin: 20px 0;
+    }
+    
+    .category-header {
+        padding: 1rem 1.25rem;
+        font-size: 1.1rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .pricing-builder-section {
+        max-height: 70vh;
+        padding: 16px;
+        margin: 16px 0;
+    }
+    
+    .pricing-tabs {
+        flex-direction: column;
+        gap: 4px;
+    }
+    
+    .tab-button {
+        padding: 12px 16px;
+        font-size: inherit;
+        text-align: center;
+        border-radius: 6px;
+    }
+    
+    .product-setup-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+    
+    .action-buttons {
+        flex-direction: column;
+        gap: 12px;
+    }
+    
+    .btn-generate-json, .btn-copy-to-features, .btn-view-pricing {
+        width: 100%;
+        padding: 16px;
+        font-size: inherit;
+    }
+    
+    .product-card {
+        padding: 16px;
+    }
+    
+    .category-header {
+        padding: 0.875rem 1rem;
+        font-size: inherit;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+    }
+    
+    .category-description {
+        font-size: 0.9em;
+    }
+    
+    .product-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+    
+    .product-header h6 {
+        margin-right: 0;
+        font-size: inherit;
+    }
+}
+
+@media (max-width: 480px) {
+    .pricing-builder-section {
+        padding: 12px;
+        margin: 12px 0;
+        border-radius: 8px;
+    }
+    
+    .tab-content {
+        padding: 16px 2px 16px 0;
+    }
+    
+    .product-card {
+        padding: 12px;
+        border-radius: 8px;
+    }
+    
+    .price-input, .pricing-type-select {
+        padding: 12px;
+        font-size: 16px; /* Prevents zoom on iOS - keep this specific size */
+    }
+    
+    .category-header {
+        padding: 0.75rem 0.875rem;
+        font-size: inherit;
+    }
+}
+
+/* Dark mode and theme adaptation support */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --bg-light: var(--darkened-bg, #2b2b2b);
+        --text-muted: var(--body-quiet-color, #999);
+        --border-color: var(--border-color, #454545);
+        --success-color: #198754;
+        --warning-color: #e0a800;
+        --info-color: #0dcaf0;
+    }
+}
+
+/* Force theme awareness for Django admin dark mode */
+[data-theme="dark"] .pricing-builder-section,
+[data-theme="dark"] .product-card,
+[data-theme="dark"] .option-group,
+[data-theme="dark"] .pricing-preview,
+[data-theme="dark"] .final-actions {
+    background: var(--darkened-bg, #2b2b2b) !important;
+    border-color: var(--border-color, #454545) !important;
+    color: var(--body-fg, #e1e1e1) !important;
+}
+
+[data-theme="dark"] .price-input,
+[data-theme="dark"] .pricing-type-select,
+[data-theme="dark"] .json-editor-textarea {
+    background: var(--body-bg, #1e1e1e) !important;
+    border-color: var(--border-color, #454545) !important;
+    color: var(--body-fg, #e1e1e1) !important;
+}
+
+[data-theme="dark"] .price-input:focus,
+[data-theme="dark"] .pricing-type-select:focus,
+[data-theme="dark"] .json-editor-textarea:focus {
+    border-color: var(--primary-color, #417690) !important;
+    box-shadow: 0 0 0 2px rgba(65, 118, 144, 0.3) !important;
+}
+
+[data-theme="dark"] .product-form small,
+[data-theme="dark"] .checkbox-label {
+    color: var(--text-muted, #999) !important;
+}
+
+/* Auto-detect dark mode from Django admin body class */
+.theme-auto .pricing-builder-section,
+.theme-dark .pricing-builder-section {
+    background: var(--darkened-bg, #2b2b2b);
+    border-color: var(--border-color, #454545);
+    color: var(--body-fg, #e1e1e1);
+}
+
+.theme-auto .price-input,
+.theme-auto .pricing-type-select,
+.theme-auto .json-editor-textarea,
+.theme-dark .price-input,
+.theme-dark .pricing-type-select,
+.theme-dark .json-editor-textarea {
+    background: var(--body-bg, #1e1e1e);
+    border-color: var(--border-color, #454545);
+    color: var(--body-fg, #e1e1e1);
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const textArea = document.getElementById('id_pricing_data');
+    const previewDiv = document.getElementById('preview-content');
+    
+    // Theme detection and dynamic styling
+    function detectAndApplyTheme() {
+        const body = document.body;
+        const isDark = body.classList.contains('theme-dark') || 
+                      body.classList.contains('theme-auto') && 
+                      window.matchMedia('(prefers-color-scheme: dark)').matches;
+        
+        const pricingSection = document.querySelector('.pricing-builder-section');
+        if (pricingSection) {
+            if (isDark) {
+                pricingSection.classList.add('dark-theme');
+            } else {
+                pricingSection.classList.remove('dark-theme');
+            }
+        }
+        
+        // Update CSS custom properties for better theme support
+        const root = document.documentElement;
+        if (isDark) {
+            root.style.setProperty('--pricing-bg', 'var(--darkened-bg, #2b2b2b)');
+            root.style.setProperty('--pricing-text', 'var(--body-fg, #e1e1e1)');
+            root.style.setProperty('--pricing-border', 'var(--border-color, #454545)');
+        } else {
+            root.style.setProperty('--pricing-bg', 'var(--body-bg, #f8f8f8)');
+            root.style.setProperty('--pricing-text', 'var(--body-fg, #333)');
+            root.style.setProperty('--pricing-border', 'var(--border-color, #ddd)');
+        }
+    }
+    
+    // Apply theme on load
+    detectAndApplyTheme();
+    
+    // Watch for theme changes
+    const observer = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+            if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+                detectAndApplyTheme();
+            }
+        });
+    });
+    
+    observer.observe(document.body, {
+        attributes: true,
+        attributeFilter: ['class']
+    });
+    
+    // Watch for system theme changes
+    if (window.matchMedia) {
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', detectAndApplyTheme);
+    }
+    
+    // Initialize with existing data
+    let pricingData = {};
+    try {
+        if (textArea && textArea.value) {
+            pricingData = JSON.parse(textArea.value);
+        }
+    } catch(e) {
+        console.log('Invalid JSON, starting fresh');
+        pricingData = {};
+    }
+    
+    // Tab functionality
+    const tabButtons = document.querySelectorAll('.tab-button');
+    const tabContents = document.querySelectorAll('.tab-content');
+    
+    tabButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const targetTab = this.dataset.tab;
+            
+            // Remove active class from all tabs and contents
+            tabButtons.forEach(btn => btn.classList.remove('active'));
+            tabContents.forEach(content => content.classList.remove('active'));
+            
+            // Add active class to clicked tab and corresponding content
+            this.classList.add('active');
+            document.getElementById(targetTab + '-tab').classList.add('active');
+        });
+    });
+    
+    // Load existing settings into UI
+    function loadExistingData() {
+        document.querySelectorAll('.product-toggle').forEach(toggle => {
+            const productCode = toggle.dataset.product;
+            if (pricingData[productCode]) {
+                toggle.checked = true;
+                const row = toggle.closest('.product-row');
+                enableProductRow(row);
+                
+                // Load field values
+                const data = pricingData[productCode];
+                row.querySelectorAll('.compact-input').forEach(input => {
+                    const field = input.dataset.field;
+                    if (data[field] !== undefined) {
+                        input.value = data[field];
+                    }
+                });
+                
+                // Handle pricing type selection for comprehensive products
+                const pricingSelect = row.querySelector('.pricing-type-select');
+                if (pricingSelect && data.pricing_type) {
+                    pricingSelect.value = data.pricing_type;
+                    handlePricingTypeChange(pricingSelect);
+                }
+            }
+        });
+        updatePreview();
+    }
+    
+    function enableProductRow(row) {
+        row.classList.add('enabled');
+        row.querySelectorAll('.compact-input, .compact-select').forEach(input => {
+            input.disabled = false;
+        });
+        
+        // Show notes row if it exists
+        const notesRow = row.nextElementSibling;
+        if (notesRow && notesRow.classList.contains('product-notes-row')) {
+            notesRow.style.display = 'table-row';
+        }
+    }
+    
+    function disableProductRow(row) {
+        row.classList.remove('enabled');
+        row.querySelectorAll('.compact-input, .compact-select').forEach(input => {
+            input.disabled = true;
+        });
+        
+        // Hide notes row if it exists
+        const notesRow = row.nextElementSibling;
+        if (notesRow && notesRow.classList.contains('product-notes-row')) {
+            notesRow.style.display = 'none';
+        }
+    }
+    
+    // Handle product toggle
+    document.querySelectorAll('.product-toggle').forEach(toggle => {
+        toggle.addEventListener('change', function() {
+            const row = this.closest('.product-row');
+            const productCode = this.dataset.product;
+            const productType = this.dataset.productType;
+            const pricingModel = this.dataset.pricingModel;
+            
+            // Add visual feedback
+            if (this.checked) {
+                enableProductRow(row);
+                
+                // Initialize product data
+                if (!pricingData[productCode]) {
+                    pricingData[productCode] = {
+                        product_type: productType,
+                        pricing_model: pricingModel,
+                        enabled: true
+                    };
+                    
+                    // Set default values based on product type
+                    if (productType === 'COMPREHENSIVE') {
+                        pricingData[productCode].pricing_type = 'percentage';
+                        pricingData[productCode].rate = 0.3;
+                        pricingData[productCode].min_premium = 20000;
+                    } else if (productType === 'TOR') {
+                        pricingData[productCode].base_premium = 1500;
+                    } else {
+                        pricingData[productCode].base_premium = 5000;
+                    }
+                } else {
+                    pricingData[productCode].enabled = true;
+                }
+            } else {
+                disableProductRow(row);
+                if (pricingData[productCode]) {
+                    pricingData[productCode].enabled = false;
+                }
+            }
+            
+            updatePricingData();
+        });
+    });
+    
+    // Handle pricing type changes for comprehensive products
+    function handlePricingTypeChange(select) {
+        const row = select.closest('.product-row');
+        const percentageInputs = row.querySelectorAll('.percentage-input');
+        const fixedInputs = row.querySelectorAll('.fixed-input');
+        
+        if (select.value === 'percentage') {
+            percentageInputs.forEach(input => input.style.display = 'inline-block');
+            fixedInputs.forEach(input => input.style.display = 'none');
+        } else if (select.value === 'fixed') {
+            percentageInputs.forEach(input => input.style.display = 'none');
+            fixedInputs.forEach(input => input.style.display = 'inline-block');
+        } else {
+            percentageInputs.forEach(input => input.style.display = 'inline-block');
+            fixedInputs.forEach(input => input.style.display = 'none');
+        }
+    }
+    
+    document.querySelectorAll('.pricing-type-select').forEach(select => {
+        select.addEventListener('change', function() {
+            handlePricingTypeChange(this);
+            const row = this.closest('.product-row');
+            const toggle = row.querySelector('.product-toggle');
+            const productCode = toggle.dataset.product;
+            
+            if (pricingData[productCode]) {
+                pricingData[productCode].pricing_type = this.value;
+                updatePricingData();
+            }
+        });
+    });
+
+    
+    // Handle input changes
+    document.querySelectorAll('.compact-input').forEach(input => {
+        input.addEventListener('input', function() {
+            const row = this.closest('.product-row');
+            const toggle = row.querySelector('.product-toggle');
+            const productCode = toggle.dataset.product;
+            const field = this.dataset.field;
+            
+            if (toggle.checked && pricingData[productCode]) {
+                const value = parseFloat(this.value) || 0;
+                pricingData[productCode][field] = value;
+                updatePricingData();
+            }
+        });
+    });
+    
+    function updatePricingData() {
+        if (!textArea) return;
+        
+        // Filter out disabled products
+        const enabledData = {};
+        Object.keys(pricingData).forEach(key => {
+            if (pricingData[key].enabled !== false) {
+                enabledData[key] = {...pricingData[key]};
+                delete enabledData[key].enabled; // Clean up internal flag
+            }
+        });
+        
+        textArea.value = JSON.stringify(enabledData, null, 2);
+        updatePreview();
+    }
+    
+    function updatePreview() {
+        if (!previewDiv) return;
+        
+        const enabledProducts = Object.keys(pricingData).filter(key => 
+            pricingData[key].enabled !== false
+        );
+        
+        let html = '<div class="preview-summary">';
+        html += `<h4>📋 Active Products: ${enabledProducts.length}</h4>`;
+        
+        if (enabledProducts.length === 0) {
+            html += '<p class="no-products">No products configured yet. Enable some products above to get started.</p>';
+        } else {
+            // Group by category
+            const categorizedProducts = {};
+            enabledProducts.forEach(productCode => {
+                const toggle = document.querySelector(`[data-product="${productCode}"]`);
+                if (toggle) {
+                    const category = toggle.closest('.product-card').dataset.category || 'OTHER';
+                    if (!categorizedProducts[category]) {
+                        categorizedProducts[category] = [];
+                    }
+                    const nameElement = toggle.closest('.product-card').querySelector('h6');
+                    categorizedProducts[category].push({
+                        code: productCode,
+                        data: pricingData[productCode],
+                        name: nameElement ? nameElement.textContent : productCode
+                    });
+                }
+            });
+            
+            // Display by category
+            Object.keys(categorizedProducts).forEach(categoryCode => {
+                const categoryProducts = categorizedProducts[categoryCode];
+                const categoryName = getCategoryName(categoryCode);
+                
+                html += `<div class="category-preview">`;
+                html += `<h5>${categoryName} (${categoryProducts.length})</h5>`;
+                html += '<div class="products-list">';
+                
+                categoryProducts.forEach(product => {
+                    const data = product.data;
+                    html += `<div class="product-preview">`;
+                    html += `<strong>${product.name}</strong><br>`;
+                    
+                    if (data.product_type === 'COMPREHENSIVE') {
+                        if (data.pricing_type === 'percentage') {
+                            html += `Rate: ${data.rate}% | Min: KSh ${(data.min_premium || 0).toLocaleString()}`;
+                        } else {
+                            html += `Fixed: KSh ${(data.base_premium || 0).toLocaleString()}`;
+                        }
+                    } else {
+                        html += `Premium: KSh ${(data.base_premium || 0).toLocaleString()}`;
+                    }
+                    
+                    if (data.max_premium) {
+                        html += ` | Max: KSh ${data.max_premium.toLocaleString()}`;
+                    }
+                    html += '</div>';
+                });
+                
+                html += '</div></div>';
+            });
+        }
+        
+        html += '</div>';
+        previewDiv.innerHTML = html;
+    }
+    
+    function getCategoryName(categoryCode) {
+        const categoryMap = {
+            'PRIVATE': '🚗 Private Vehicles',
+            'COMMERCIAL': '🚛 Commercial Vehicles', 
+            'PSV': '🚌 Public Service Vehicles',
+            'MOTORCYCLE': '🏍️ Motorcycles',
+            'TUKTUK': '🛺 TukTuks',
+            'SPECIAL': '🚜 Special Vehicles'
+        };
+        return categoryMap[categoryCode] || `📋 ${categoryCode}`;
+    }
+    
+    // JSON generation functionality for other tabs
+    document.querySelector('.btn-generate-json')?.addEventListener('click', function() {
+        const pricingConfig = { pricing: {} };
+        
+        Object.keys(pricingData).forEach(productCode => {
+            if (pricingData[productCode].enabled !== false) {
+                const data = {...pricingData[productCode]};
+                delete data.enabled;
+                pricingConfig.pricing[productCode] = data;
+            }
+        });
+        
+        const jsonEditor = document.querySelector('.json-editor-textarea');
+        if (jsonEditor) {
+            jsonEditor.value = JSON.stringify(pricingConfig, null, 2);
+        }
+        
+        // Switch to JSON tab
+        const jsonTab = document.querySelector('[data-tab="json"]');
+        if (jsonTab) {
+            jsonTab.click();
+        }
+        
+        alert('✅ JSON configuration generated! You can now review it in the Technical JSON tab.');
+    });
+    
+    // Copy to features field
+    document.querySelector('.btn-copy-to-features')?.addEventListener('click', function() {
+        const jsonValue = document.querySelector('.json-editor-textarea')?.value;
+        const featuresField = document.querySelector('#id_features');
+        
+        if (featuresField && jsonValue && jsonValue.trim()) {
+            featuresField.value = jsonValue;
+            alert('✅ Configuration copied to Features field! Don\'t forget to save the Insurance Provider.');
+        } else {
+            alert('⚠️ Please generate JSON configuration first or ensure Features field exists.');
+        }
+    });
+    
+    // JSON tools
+    document.querySelector('.btn-format-json')?.addEventListener('click', function() {
+        const jsonEditor = document.querySelector('.json-editor-textarea');
+        const statusDiv = document.querySelector('.json-status');
+        if (jsonEditor && statusDiv) {
+            try {
+                const parsed = JSON.parse(jsonEditor.value);
+                jsonEditor.value = JSON.stringify(parsed, null, 2);
+                statusDiv.innerHTML = '<span style="color: green;">✅ JSON formatted successfully</span>';
+            } catch (e) {
+                statusDiv.innerHTML = '<span style="color: red;">❌ Invalid JSON: ' + e.message + '</span>';
+            }
+        }
+    });
+    
+    document.querySelector('.btn-validate-json')?.addEventListener('click', function() {
+        const jsonEditor = document.querySelector('.json-editor-textarea');
+        const statusDiv = document.querySelector('.json-status');
+        if (jsonEditor && statusDiv) {
+            try {
+                JSON.parse(jsonEditor.value);
+                statusDiv.innerHTML = '<span style="color: green;">✅ Valid JSON</span>';
+            } catch (e) {
+                statusDiv.innerHTML = '<span style="color: red;">❌ Invalid JSON: ' + e.message + '</span>';
+            }
+        }
+    });
+    
+    // Load existing data on page load
+    loadExistingData();
+});
+</script>
+{% endblock %}

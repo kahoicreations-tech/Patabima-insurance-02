@@ -1,11 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator, Alert } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, ActivityIndicator, Alert, TouchableOpacity, ScrollView } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import DjangoAPIService from '../../../../../services/DjangoAPIService';
 import StoragePurge from '../../../../../services/StoragePurge';
 import { useMotorInsurance } from '../../../../../contexts/MotorInsuranceContext';
 import { useNavigation } from '@react-navigation/native';
 import DoubleInsuranceWarningModal from '../../../../../components/modals/DoubleInsuranceWarningModal';
+import { Ionicons } from '@expo/vector-icons';
 
 /**
  * Validates extendible configuration for extendible products
@@ -301,8 +302,9 @@ export default function PolicySubmission({
   onSubmissionComplete,
   onSubmissionError
 }) {
-  const [progress, setProgress] = useState('Preparing policy data...');
-  const [step, setStep] = useState(1);
+  const [progress, setProgress] = useState('Ready to submit');
+  const [step, setStep] = useState(0); // Start at 0 (not submitting yet)
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const totalSteps = 4;
   
   // Double-insurance modal state
@@ -314,9 +316,8 @@ export default function PolicySubmission({
   const { state: motorState, actions: motorActions } = useMotorInsurance();
   const navigation = useNavigation();
 
-  useEffect(() => {
-    submitPolicy();
-  }, []);
+  // NO AUTO-SUBMIT! User must click the button
+  // useEffect removed - submission is now manual via button press
 
   const submitPolicy = async () => {
     try {
@@ -925,48 +926,218 @@ export default function PolicySubmission({
     }
   };
 
-  return (
-    <View style={styles.container}>
-      <View style={styles.contentCard}>
-        <ActivityIndicator size="large" color="#D5222B" />
-        
-        <Text style={styles.progressText}>{progress}</Text>
-        
-        <View style={styles.stepsContainer}>
-          <Text style={styles.stepsText}>
-            Step {step} of {totalSteps}
-          </Text>
+  // Handle manual submission triggered by user button press
+  const handleSubmit = async () => {
+    setIsSubmitting(true);
+    setStep(1);
+    setProgress('Preparing policy data...');
+    await submitPolicy();
+  };
+
+  // Render submission screen based on state
+  if (isSubmitting) {
+    // Show improved loading screen during active submission
+    return (
+      <View style={styles.container}>
+        <View style={styles.contentCard}>
+          {/* Loading Icon */}
+          <View style={styles.loadingIconContainer}>
+            <ActivityIndicator size="large" color="#D5222B" />
+          </View>
           
-          <View style={styles.progressBar}>
-            <View 
-              style={[
-                styles.progressBarFill, 
-                { width: `${(step / totalSteps) * 100}%` }
-              ]} 
-            />
+          {/* Progress Text */}
+          <Text style={styles.progressText}>{progress}</Text>
+          
+          {/* Progress Steps */}
+          <View style={styles.stepsContainer}>
+            <Text style={styles.stepsText}>
+              Step {step} of {totalSteps}
+            </Text>
+            
+            <View style={styles.progressBar}>
+              <View 
+                style={[
+                  styles.progressBarFill, 
+                  { width: `${(step / totalSteps) * 100}%` }
+                ]} 
+              />
+            </View>
+          </View>
+          
+          {/* Please Wait Message */}
+          <Text style={styles.pleaseWait}>Please wait while we process your policy...</Text>
+          
+          {/* Info Note */}
+          <View style={styles.loadingInfoBox}>
+            <Text style={styles.loadingInfoText}>
+              ℹ️ We're creating your policy and issuing your DMVIC certificate
+            </Text>
           </View>
         </View>
-        
-        <Text style={styles.pleaseWait}>Please wait while we process your policy...</Text>
-      </View>
 
-      {/* DMVIC Double-Insurance BLOCKED Modal - Informational Only */}
-      <DoubleInsuranceWarningModal
-        visible={showDoubleInsuranceModal}
-        dmvicPolicy={dmvicPolicy}
-        onClose={() => {
-          console.log('[PolicySubmission] ❌ DMVIC double-insurance - submission blocked');
-          setShowDoubleInsuranceModal(false);
-          // Remove guard and navigate back
-          AsyncStorage.removeItem('policy_submission_guard').catch(console.warn);
-          if (onSubmissionError) {
-            onSubmissionError(new Error('DMVIC blocked: Active insurance coverage detected'));
-          } else {
-            navigation.goBack();
-          }
-        }}
-        // NO onProceed - DMVIC authority is final, cannot bypass
-      />
+        {/* DMVIC Double-Insurance BLOCKED Modal - Informational Only */}
+        <DoubleInsuranceWarningModal
+          visible={showDoubleInsuranceModal}
+          dmvicPolicy={dmvicPolicy}
+          onClose={() => {
+            console.log('[PolicySubmission] ❌ DMVIC double-insurance - submission blocked');
+            setShowDoubleInsuranceModal(false);
+            setIsSubmitting(false);
+            // Remove guard and navigate back
+            AsyncStorage.removeItem('policy_submission_guard').catch(console.warn);
+            if (onSubmissionError) {
+              onSubmissionError(new Error('DMVIC blocked: Active insurance coverage detected'));
+            } else {
+              navigation.goBack();
+            }
+          }}
+          // NO onProceed - DMVIC authority is final, cannot bypass
+        />
+      </View>
+    );
+  }
+
+  // Show summary/confirmation screen with submit button
+  const formatCurrency = (amount) => {
+    return `KSh ${Number(amount || 0).toLocaleString('en-KE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  };
+
+  // Extract data from context or props (context takes priority)
+  const contextClient = motorState?.clientDetails || {};
+  const contextVehicle = motorState?.vehicleDetails || {};
+  const contextUnderwriter = motorState?.selectedUnderwriter || {};
+  const contextProduct = motorState?.selectedSubcategory || {};
+  const contextPremium = contextUnderwriter?.total_premium || motorState?.calculatedPremium;
+  const contextBreakdown = contextUnderwriter?.breakdown || {};
+
+  // Merge with props (context overrides props)
+  const finalClient = { ...clientDetails, ...contextClient };
+  const finalVehicle = { ...vehicleDetails, ...contextVehicle };
+  const finalUnderwriter = { ...underwriterDetails, ...contextUnderwriter };
+  const finalProduct = { ...productDetails, ...contextProduct };
+  
+  // Client name with fallbacks
+  const clientName = finalClient.full_name || 
+    (finalClient.first_name && finalClient.last_name ? `${finalClient.first_name} ${finalClient.last_name}` : null) ||
+    finalClient.name || 
+    'Not provided';
+
+  // Premium breakdown with fallbacks
+  const finalPremium = premiumBreakdown?.totalAmount || contextPremium || finalUnderwriter.total_premium || 0;
+  const finalBreakdown = premiumBreakdown?.breakdown || contextBreakdown || {};
+
+  return (
+    <View style={styles.container}>
+      <ScrollView style={styles.scrollContainer} contentContainerStyle={styles.scrollContent}>
+        <View style={styles.summaryCard}>
+          {/* Compact Header */}
+          <View style={styles.header}>
+            <Ionicons name="checkmark-circle" size={48} color="#28a745" />
+            <Text style={styles.headerTitle}>Ready to Submit</Text>
+            <Text style={styles.headerSubtitle}>Review policy details</Text>
+          </View>
+
+          {/* Client Details */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Client Information</Text>
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>Name:</Text>
+              <Text style={styles.detailValue} numberOfLines={1}>{clientName}</Text>
+            </View>
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>ID:</Text>
+              <Text style={styles.detailValue}>{finalClient.id_number || 'N/A'}</Text>
+            </View>
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>Phone:</Text>
+              <Text style={styles.detailValue}>{finalClient.phone_number || finalClient.phone || 'N/A'}</Text>
+            </View>
+          </View>
+
+          {/* Vehicle Details */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Vehicle Information</Text>
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>Reg:</Text>
+              <Text style={styles.detailValue}>{finalVehicle.registrationNumber || finalVehicle.registration || 'N/A'}</Text>
+            </View>
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>Make:</Text>
+              <Text style={styles.detailValue} numberOfLines={1}>
+                {finalVehicle.make || 'N/A'} {finalVehicle.model ? `${finalVehicle.model}` : ''}
+              </Text>
+            </View>
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>Cover Start:</Text>
+              <Text style={styles.detailValue}>{finalVehicle.cover_start_date || 'N/A'}</Text>
+            </View>
+          </View>
+
+          {/* Underwriter & Premium */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Insurance Coverage</Text>
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>Underwriter:</Text>
+              <Text style={styles.detailValue} numberOfLines={1}>
+                {finalUnderwriter.name || finalUnderwriter.underwriter_name || 'N/A'}
+              </Text>
+            </View>
+            <View style={styles.detailRow}>
+              <Text style={styles.detailLabel}>Type:</Text>
+              <Text style={styles.detailValue} numberOfLines={1}>
+                {finalProduct.coverage_type || finalProduct.subcategory_name || finalProduct.name || 'N/A'}
+              </Text>
+            </View>
+            {finalBreakdown.base && (
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Base:</Text>
+                <Text style={styles.detailValue}>{formatCurrency(finalBreakdown.base)}</Text>
+              </View>
+            )}
+            {finalBreakdown.itl && (
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>ITL:</Text>
+                <Text style={styles.detailValue}>{formatCurrency(finalBreakdown.itl)}</Text>
+              </View>
+            )}
+            {finalBreakdown.pcf && (
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>PCF:</Text>
+                <Text style={styles.detailValue}>{formatCurrency(finalBreakdown.pcf)}</Text>
+              </View>
+            )}
+            {finalBreakdown.stamp_duty && (
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Stamp:</Text>
+                <Text style={styles.detailValue}>{formatCurrency(finalBreakdown.stamp_duty)}</Text>
+              </View>
+            )}
+            <View style={[styles.detailRow, styles.totalRow]}>
+              <Text style={styles.totalLabel}>Total Premium:</Text>
+              <Text style={styles.totalValue}>{formatCurrency(finalPremium)}</Text>
+            </View>
+          </View>
+
+          {/* Submit Button */}
+          <TouchableOpacity 
+            style={styles.submitButton}
+            onPress={handleSubmit}
+            activeOpacity={0.8}
+          >
+            <Ionicons name="paper-plane" size={18} color="#fff" style={styles.buttonIcon} />
+            <Text style={styles.submitButtonText}>Submit Policy</Text>
+          </TouchableOpacity>
+
+          {/* Cancel Button */}
+          <TouchableOpacity 
+            style={styles.cancelButton}
+            onPress={() => navigation.goBack()}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.cancelButtonText}>Go Back</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
     </View>
   );
 }
@@ -974,39 +1145,169 @@ export default function PolicySubmission({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
     backgroundColor: '#f8f9fa',
   },
+  scrollContainer: {
+    flex: 1,
+  },
+  scrollContent: {
+    padding: 10,
+    paddingBottom: 16,
+  },
+  summaryCard: {
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    padding: 12,
+    shadowColor: '#000',
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+  header: {
+    alignItems: 'center',
+    marginBottom: 12,
+    paddingBottom: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e9ecef',
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#2c3e50',
+    marginTop: 6,
+    fontFamily: 'Poppins-Bold',
+  },
+  headerSubtitle: {
+    fontSize: 11,
+    color: '#6c757d',
+    marginTop: 2,
+    textAlign: 'center',
+    fontFamily: 'Poppins-Regular',
+  },
+  section: {
+    marginBottom: 12,
+    paddingBottom: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e9ecef',
+  },
+  sectionTitle: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#D5222B',
+    marginBottom: 6,
+    fontFamily: 'Poppins-SemiBold',
+  },
+  detailRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 3,
+    alignItems: 'center',
+  },
+  detailLabel: {
+    fontSize: 11,
+    color: '#6c757d',
+    flex: 1,
+    fontFamily: 'Poppins-Regular',
+  },
+  detailValue: {
+    fontSize: 11,
+    color: '#2c3e50',
+    fontWeight: '500',
+    flex: 1.5,
+    textAlign: 'right',
+    fontFamily: 'Poppins-Medium',
+  },
+  totalRow: {
+    marginTop: 6,
+    paddingTop: 6,
+    borderTopWidth: 2,
+    borderTopColor: '#D5222B',
+  },
+  totalLabel: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#2c3e50',
+    fontFamily: 'Poppins-Bold',
+  },
+  totalValue: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#D5222B',
+    fontFamily: 'Poppins-Bold',
+  },
+  submitButton: {
+    backgroundColor: '#D5222B',
+    borderRadius: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 6,
+    shadowColor: '#D5222B',
+    shadowOpacity: 0.25,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+  buttonIcon: {
+    marginRight: 6,
+  },
+  submitButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '700',
+    fontFamily: 'Poppins-Bold',
+  },
+  cancelButton: {
+    backgroundColor: 'transparent',
+    borderRadius: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    alignItems: 'center',
+    marginTop: 6,
+  },
+  cancelButtonText: {
+    color: '#6c757d',
+    fontSize: 12,
+    fontWeight: '600',
+    fontFamily: 'Poppins-SemiBold',
+  },
+  // Loading screen styles (when isSubmitting === true)
   contentCard: {
     backgroundColor: '#fff',
-    borderRadius: 16,
-    padding: 30,
+    borderRadius: 12,
+    padding: 24,
     alignItems: 'center',
-    width: '100%',
+    width: '90%',
     maxWidth: 400,
     shadowColor: '#000',
     shadowOpacity: 0.1,
     shadowRadius: 10,
     elevation: 5,
   },
+  loadingIconContainer: {
+    marginBottom: 16,
+  },
   progressText: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '700',
     color: '#2c3e50',
-    marginTop: 20,
+    marginTop: 12,
+    marginBottom: 20,
     textAlign: 'center',
+    fontFamily: 'Poppins-Bold',
   },
   stepsContainer: {
-    marginTop: 20,
+    marginTop: 16,
+    marginBottom: 16,
     width: '100%',
   },
   stepsText: {
-    fontSize: 14,
+    fontSize: 13,
     color: '#6c757d',
     textAlign: 'center',
     marginBottom: 10,
+    fontFamily: 'Poppins-Medium',
   },
   progressBar: {
     height: 8,
@@ -1022,7 +1323,23 @@ const styles = StyleSheet.create({
   pleaseWait: {
     fontSize: 14,
     color: '#6c757d',
-    marginTop: 15,
+    marginTop: 16,
+    marginBottom: 16,
     textAlign: 'center',
+    fontFamily: 'Poppins-Regular',
+  },
+  loadingInfoBox: {
+    backgroundColor: '#e7f3ff',
+    borderRadius: 8,
+    padding: 12,
+    marginTop: 8,
+    width: '100%',
+  },
+  loadingInfoText: {
+    fontSize: 12,
+    color: '#495057',
+    textAlign: 'center',
+    lineHeight: 16,
+    fontFamily: 'Poppins-Regular',
   },
 });

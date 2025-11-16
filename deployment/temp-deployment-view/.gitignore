@@ -1,0 +1,19 @@
+# created by virtualenv automatically
+bin
+lib
+pyvenv.cfg
+
+*.pyc
+db.sqlite3
+*.exe
+*.bat
+
+venv/
+
+__pycache__/
+settings.cpython-311.pyc
+
+# Elastic Beanstalk Files
+.elasticbeanstalk/*
+!.elasticbeanstalk/*.cfg.yml
+!.elasticbeanstalk/*.global.yml

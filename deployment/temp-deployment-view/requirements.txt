@@ -1,0 +1,22 @@
+asgiref==3.9.1
+Django==4.2.16
+django-cors-headers==4.3.1
+django-filter==23.3
+djangorestframework==3.14.0
+djangorestframework-simplejwt==5.3.1
+PyJWT==2.10.1
+sqlparse==0.5.3
+pytz==2025.2
+requests==2.32.3
+dj-database-url==2.1.0
+psycopg[binary]==3.2.10
+python-dotenv==1.0.1
+boto3==1.35.23
+django-storages==1.14.4
+Pillow==11.3.0
+reportlab==4.0.7
+django-ses==4.2.0
+# DMVIC Integration Dependencies
+pyOpenSSL==24.3.0
+cryptography==44.0.0  # Pinned: DMVIC certificate has negative serial number (RFC 5280 violation). Do not upgrade until certificate is replaced.
+gunicorn==21.2.0

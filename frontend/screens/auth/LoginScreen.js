@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert, KeyboardAvoidingView, Platform, Keyboard, TouchableWithoutFeedback, ScrollView, ActivityIndicator } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useNavigation } from '@react-navigation/native';
@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, Spacing, Typography } from '../../constants';
 import { authAPI } from '../../services/auth';
+import OTPService from '../../services/OTPService';
 import { useAuth } from '../../contexts/AuthContext';
 import { useAppData } from '../../contexts/AppDataContext';
 import djangoAPI from '../../services/DjangoAPIService';
@@ -142,25 +143,26 @@ export default function LoginScreen() {
           : cleanPhoneNumber;
         const result = await authAPI.authLogin(normalizedPhone, password, otp);
         if (result.access) {
-          // Set transitioning for overlay only after successful login
-          setIsLoading(false); // Stop button loading
-          setTransitioning(true); // Show full-screen overlay
+          // Keep loading state, show transitioning overlay
+          setTransitioning(true);
           
           try { await djangoAPI.initialize(); } catch {}
           // Only call refreshAuthState - it will handle user profile fetching
           await refreshAuthState();
           
-          // Add a small delay to ensure navigation completes, then cleanup
+          // Navigation will happen automatically, cleanup after a moment
           setTimeout(() => {
+            setIsLoading(false);
             setTransitioning(false);
-          }, 500);
+          }, 300);
         } else {
           Alert.alert('Invalid OTP', 'The verification code you entered is incorrect. Please try again.');
           setIsLoading(false);
         }
       } catch (error) {
         console.log('OTP verification error:', error);
-        setTransitioning(false); // Reset transitioning state on error
+        setIsLoading(false);
+        setTransitioning(false);
         let errorMessage = 'OTP verification failed. Please try again.';
         let errorTitle = 'Verification Failed';
         if (error.response?.status === 400) {
@@ -170,8 +172,6 @@ export default function LoginScreen() {
           errorMessage = 'The verification code is incorrect or has expired. Please try again.';
         }
         Alert.alert(errorTitle, errorMessage);
-      } finally {
-        setIsLoading(false);
       }
     }
   };
@@ -180,12 +180,26 @@ export default function LoginScreen() {
     if (otpTimer > 0) return;
     setIsLoading(true);
     try {
-      const cleanPhoneNumber = phoneNumber.replace(/\D/g, '');
-      const result = await authAPI.login(cleanPhoneNumber, password);
-      const message = result?.detail || result?.message || '';
-      if (message.includes('OTP sent')) {
+      // Use new OTPService
+      const result = await OTPService.resendOTP(phoneNumber, 'LOGIN');
+      
+      if (result.success) {
         startOtpCountdown();
-        Alert.alert('OTP Sent', 'A new verification code has been sent to your phone');
+        // In development, show OTP code in alert
+        const message = result.otpCode 
+          ? `A new verification code has been sent: ${result.otpCode}`
+          : 'A new verification code has been sent to your phone';
+        Alert.alert('OTP Sent', message);
+        
+        // Auto-fill OTP in development
+        if (result.otpCode) {
+          setOtp(result.otpCode);
+        }
+      } else {
+        const errorMsg = result.rateLimited 
+          ? result.error 
+          : 'Failed to resend OTP. Please try again.';
+        Alert.alert('Error', errorMsg);
       }
     } catch (error) {
       Alert.alert('Error', 'Failed to resend OTP. Please try again.');
@@ -204,6 +218,12 @@ export default function LoginScreen() {
     }
   };
 
+  // Memoize content container style to prevent re-renders
+  const contentContainerStyle = useMemo(() => ([
+    styles.content, 
+    { paddingBottom: insets.bottom + 20 }
+  ]), [insets.bottom]);
+
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <KeyboardAvoidingView
@@ -215,6 +235,7 @@ export default function LoginScreen() {
           {transitioning && (
             <View style={styles.transitionOverlay}>
               <ActivityIndicator size="large" color="#D5222B" />
+              <Text style={styles.transitionText}>Loading your account...</Text>
             </View>
           )}
           <StatusBar style="light" />
@@ -227,7 +248,7 @@ export default function LoginScreen() {
 
           <ScrollView
             style={styles.scrollContainer}
-            contentContainerStyle={[styles.content, { paddingBottom: insets.bottom + 20 }]}
+            contentContainerStyle={contentContainerStyle}
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled"
           >
@@ -248,11 +269,11 @@ export default function LoginScreen() {
                   <View style={styles.inputContainer}>
                     <TextInput
                       style={styles.input}
-                      placeholder="0722123456 or 722123456"
+                      placeholder="Mobile Number (e.g., 0712345678)"
                       value={phoneNumber}
                       onChangeText={setPhoneNumber}
                       keyboardType="phone-pad"
-                      maxLength={10}
+                      maxLength={12}
                       placeholderTextColor={Colors.textLight}
                       returnKeyType="next"
                       autoCapitalize="none"
@@ -326,12 +347,14 @@ export default function LoginScreen() {
                   <TouchableOpacity
                     style={styles.signInButton}
                     onPress={handleLogin}
-                    disabled={isLoading || transitioning}
+                    disabled={isLoading}
                     activeOpacity={0.8}
                   >
-                    <Text style={styles.signInButtonText}>
-                      {isLoading ? 'Verifying...' : transitioning ? 'Loading...' : 'Verify & Sign In'}
-                    </Text>
+                    {isLoading ? (
+                      <ActivityIndicator size="small" color={Colors.background} />
+                    ) : (
+                      <Text style={styles.signInButtonText}>Verify & Sign In</Text>
+                    )}
                   </TouchableOpacity>
 
                   <View style={styles.otpActions}>
@@ -378,7 +401,7 @@ export default function LoginScreen() {
               <View style={styles.footerContainer}>
                 <View style={styles.termsContainer}>
                   <Text style={styles.termsText}>Review our </Text>
-                  <TouchableOpacity>
+                  <TouchableOpacity activeOpacity={0.7}>
                     <Text style={styles.termsLink}>Terms and Policies</Text>
                   </TouchableOpacity>
                 </View>
@@ -403,10 +426,16 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(255,255,255,0.85)',
+    backgroundColor: 'rgba(255,255,255,0.95)',
     zIndex: 10,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  transitionText: {
+    marginTop: 16,
+    fontSize: Typography.fontSize.md,
+    fontFamily: Typography.fontFamily.medium,
+    color: Colors.textSecondary,
   },
   scrollContainer: {
     flex: 1,

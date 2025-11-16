@@ -1,0 +1,24 @@
+{% extends "admin/base_site.html" %}
+{% block content %}
+<h1>System Health</h1>
+<h3>Database</h3>
+<ul>
+	<li>Total users: {{ db_stats.total_users }}</li>
+	<li>Total quotations: {{ db_stats.total_quotations }}</li>
+	<li>Total documents: {{ db_stats.total_documents }}</li>
+	<li>Recent logins (7d): {{ db_stats.recent_logins }}</li>
+	</ul>
+<h3>APIs</h3>
+<ul>
+	<li>Total API calls: {{ api_health.total_api_calls }}</li>
+	<li>Successful: {{ api_health.successful_calls }}</li>
+	<li>Failed: {{ api_health.failed_calls }}</li>
+	<li>Recent errors (24h): {{ api_health.recent_errors }}</li>
+</ul>
+<h3>Documents</h3>
+<ul>
+	<li>Processed: {{ doc_health.processed_documents }}</li>
+	<li>Failed: {{ doc_health.failed_documents }}</li>
+	<li>Pending: {{ doc_health.pending_documents }}</li>
+</ul>
+{% endblock %}

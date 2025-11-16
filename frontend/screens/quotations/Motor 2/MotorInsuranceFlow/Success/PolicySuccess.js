@@ -255,6 +255,13 @@ export default function PolicySuccess({ route }) {
               <Text style={styles.certificateTitle}>DMVIC Certificate</Text>
             </View>
             
+            {/* DMVIC Source Note */}
+            <View style={styles.dmvicSourceNote}>
+              <Text style={styles.dmvicSourceText}>
+                Official certificate from Department of Motor Vehicle Insurance Control
+              </Text>
+            </View>
+            
             {dmvicCertificate.status === 'ACTIVE' && dmvicCertificate.certificateNumber ? (
               <>
                 <View style={styles.certificateDetails}>
@@ -287,7 +294,7 @@ export default function PolicySuccess({ route }) {
                   )}
                 </View>
 
-                {/* Download Certificate Button */}
+                {/* Download DMVIC Certificate Button */}
                 <TouchableOpacity 
                   style={[
                     styles.downloadCertificateButton,
@@ -300,27 +307,53 @@ export default function PolicySuccess({ route }) {
                   {downloadingCertificate ? (
                     <>
                       <ActivityIndicator color="#FFFFFF" size="small" />
-                      <Text style={styles.downloadCertificateButtonText}>Downloading...</Text>
+                      <Text style={styles.downloadCertificateButtonText}>Downloading from DMVIC...</Text>
                     </>
                   ) : certificateDownloaded ? (
                     <Text style={styles.downloadCertificateButtonText}>✓ Downloaded</Text>
                   ) : (
-                    <Text style={styles.downloadCertificateButtonText}>📥 Download Certificate</Text>
+                    <Text style={styles.downloadCertificateButtonText}>📥 Download DMVIC Certificate</Text>
                   )}
                 </TouchableOpacity>
               </>
             ) : (
               <View style={styles.pendingCertificateInfo}>
-                <Text style={styles.pendingIcon}>⏳</Text>
-                <Text style={styles.pendingText}>
-                  {dmvicCertificate.error || 'DMVIC certificate issuance is in progress.'}
+                <Text style={styles.pendingIcon}>
+                  {dmvicCertificate.status === 'UAT_ERROR' || dmvicCertificate.error ? '⚠️' : '⏳'}
                 </Text>
-                {dmvicCertificate.action_required && (
-                  <Text style={styles.pendingAction}>{dmvicCertificate.action_required}</Text>
+                
+                {/* Check for UAT/System issues */}
+                {dmvicCertificate.status === 'UAT_ERROR' || 
+                 (dmvicCertificate.error && dmvicCertificate.error.includes('UAT')) ? (
+                  <>
+                    <Text style={styles.uatErrorTitle}>DMVIC UAT Environment Issue</Text>
+                    <Text style={styles.uatErrorText}>
+                      {dmvicCertificate.error || 
+                       'The DMVIC UAT testing environment is currently unavailable. This is expected in test mode.'}
+                    </Text>
+                    <View style={styles.uatErrorInfoBox}>
+                      <Text style={styles.uatErrorInfoTitle}>📋 What this means:</Text>
+                      <Text style={styles.uatErrorInfoText}>
+                        • Your policy is valid and active{'\n'}
+                        • Certificate will be issued in production{'\n'}
+                        • This only affects test/UAT environment{'\n'}
+                        • No action required from you
+                      </Text>
+                    </View>
+                  </>
+                ) : (
+                  <>
+                    <Text style={styles.pendingText}>
+                      {dmvicCertificate.error || 'DMVIC certificate issuance is in progress.'}
+                    </Text>
+                    {dmvicCertificate.action_required && (
+                      <Text style={styles.pendingAction}>{dmvicCertificate.action_required}</Text>
+                    )}
+                    <Text style={styles.pendingNote}>
+                      Your policy is active. The DMVIC certificate will be available shortly.
+                    </Text>
+                  </>
                 )}
-                <Text style={styles.pendingNote}>
-                  Your policy is active. The certificate will be available shortly.
-                </Text>
                 
                 {/* Retry Certificate Button */}
                 <TouchableOpacity 
@@ -328,7 +361,7 @@ export default function PolicySuccess({ route }) {
                   onPress={handleRetryCertificate}
                   activeOpacity={0.8}
                 >
-                  <Text style={styles.retryCertificateButtonText}>🔄 Retry Certificate Issuance</Text>
+                  <Text style={styles.retryCertificateButtonText}>🔄 Retry DMVIC Certificate</Text>
                 </TouchableOpacity>
               </View>
             )}
@@ -402,122 +435,144 @@ const styles = StyleSheet.create({
     backgroundColor: '#f8f9fa',
   },
   contentContainer: {
-    padding: 20,
-    paddingBottom: 40,
+    padding: 16,
+    paddingBottom: 32,
   },
   successCard: {
     backgroundColor: '#fff',
-    borderRadius: 16,
-    padding: 30,
+    borderRadius: 12,
+    padding: 20,
     alignItems: 'center',
     shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
-    elevation: 5,
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 4,
   },
   iconContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+    width: 70,
+    height: 70,
+    borderRadius: 35,
     backgroundColor: '#d4edda',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 20,
+    marginBottom: 16,
   },
   checkmark: {
-    fontSize: 48,
+    fontSize: 40,
     color: '#28a745',
     fontWeight: 'bold',
   },
   title: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: '700',
     color: '#2c3e50',
-    marginBottom: 20,
+    marginBottom: 16,
     textAlign: 'center',
+    fontFamily: 'Poppins-Bold',
   },
   policyNumberContainer: {
     backgroundColor: '#fff5f5',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 20,
+    borderRadius: 10,
+    padding: 14,
+    marginBottom: 16,
     width: '100%',
     borderWidth: 1.5,
     borderColor: '#D5222B',
   },
   policyNumberLabel: {
-    fontSize: 12,
+    fontSize: 11,
     color: '#6c757d',
     marginBottom: 4,
     textAlign: 'center',
     fontWeight: '500',
+    fontFamily: 'Poppins-Medium',
   },
   policyNumber: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: '700',
     color: '#D5222B',
     textAlign: 'center',
+    fontFamily: 'Poppins-Bold',
   },
   infoCard: {
     backgroundColor: '#e7f3ff',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 30,
+    borderRadius: 10,
+    padding: 14,
+    marginBottom: 20,
     width: '100%',
     alignItems: 'center',
   },
   infoIcon: {
-    fontSize: 24,
-    marginBottom: 8,
+    fontSize: 22,
+    marginBottom: 6,
   },
   infoText: {
-    fontSize: 14,
+    fontSize: 13,
     color: '#495057',
-    lineHeight: 20,
+    lineHeight: 18,
     textAlign: 'center',
-    marginBottom: 6,
+    marginBottom: 4,
+    fontFamily: 'Poppins-Regular',
   },
   certificateContainer: {
     backgroundColor: '#F0F8F5',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 20,
+    borderRadius: 10,
+    padding: 14,
+    marginBottom: 16,
     width: '100%',
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: '#28A745',
   },
   certificateHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 8,
     justifyContent: 'center',
   },
   certificateIcon: {
-    fontSize: 24,
-    marginRight: 8,
+    fontSize: 22,
+    marginRight: 6,
   },
   certificateTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '700',
     color: '#28A745',
+    fontFamily: 'Poppins-Bold',
+  },
+  dmvicSourceNote: {
+    backgroundColor: '#E8F5E9',
+    borderRadius: 6,
+    padding: 8,
+    marginBottom: 10,
+    borderLeftWidth: 3,
+    borderLeftColor: '#28A745',
+  },
+  dmvicSourceText: {
+    fontSize: 11,
+    color: '#2E7D32',
+    textAlign: 'center',
+    fontFamily: 'Poppins-Medium',
+    lineHeight: 15,
   },
   certificateDetails: {
-    marginBottom: 16,
+    marginBottom: 12,
   },
   certificateRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 8,
+    marginBottom: 6,
   },
   certificateLabel: {
-    fontSize: 14,
+    fontSize: 12,
     color: '#646767',
     fontWeight: '600',
+    fontFamily: 'Poppins-SemiBold',
   },
   certificateValue: {
-    fontSize: 14,
+    fontSize: 12,
     color: '#333',
     fontWeight: '700',
+    fontFamily: 'Poppins-Bold',
   },
   activeStatus: {
     color: '#28A745',
@@ -533,152 +588,182 @@ const styles = StyleSheet.create({
   },
   downloadCertificateButtonDisabled: {
     backgroundColor: '#6c757d',
-    opacity: 0.6,
+    opacity: 0.7,
   },
   downloadCertificateButtonText: {
     color: '#FFFFFF',
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: '700',
+    fontFamily: 'Poppins-Bold',
   },
   pendingCertificateCard: {
     backgroundColor: '#FFF3CD',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 20,
+    borderRadius: 10,
+    padding: 14,
+    marginBottom: 16,
     width: '100%',
     alignItems: 'center',
     borderWidth: 1,
     borderColor: '#FFC107',
   },
   pendingIcon: {
-    fontSize: 32,
-    marginBottom: 8,
+    fontSize: 28,
+    marginBottom: 6,
   },
   pendingText: {
-    fontSize: 14,
+    fontSize: 13,
     color: '#856404',
     textAlign: 'center',
-    lineHeight: 20,
-    marginBottom: 8,
+    lineHeight: 18,
+    marginBottom: 6,
+    fontFamily: 'Poppins-Regular',
   },
   pendingAction: {
-    fontSize: 12,
+    fontSize: 11,
     color: '#856404',
     textAlign: 'center',
     fontStyle: 'italic',
+    fontFamily: 'Poppins-Italic',
   },
   actionsContainer: {
     width: '100%',
-    gap: 12,
+    gap: 10,
   },
   primaryButton: {
     backgroundColor: '#D5222B',
     borderRadius: 10,
-    paddingVertical: 16,
+    paddingVertical: 14,
     alignItems: 'center',
     shadowColor: '#D5222B',
-    shadowOpacity: 0.3,
+    shadowOpacity: 0.25,
     shadowRadius: 4,
     elevation: 3,
   },
   primaryButtonText: {
     color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: 15,
+    fontWeight: '700',
+    fontFamily: 'Poppins-Bold',
   },
   secondaryButton: {
     backgroundColor: '#fff',
     borderRadius: 10,
-    paddingVertical: 16,
+    paddingVertical: 14,
     alignItems: 'center',
     borderWidth: 1.5,
     borderColor: '#D5222B',
   },
   secondaryButtonText: {
     color: '#D5222B',
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '600',
+    fontFamily: 'Poppins-SemiBold',
   },
   tertiaryButton: {
     backgroundColor: '#fff',
     borderRadius: 10,
-    paddingVertical: 16,
+    paddingVertical: 14,
     alignItems: 'center',
     borderWidth: 1.5,
     borderColor: '#6c757d',
   },
   tertiaryButtonText: {
     color: '#6c757d',
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '600',
+    fontFamily: 'Poppins-SemiBold',
   },
   linkButton: {
-    paddingVertical: 14,
+    paddingVertical: 12,
     alignItems: 'center',
   },
   linkButtonText: {
     color: '#6c757d',
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '500',
+    fontFamily: 'Poppins-Medium',
   },
   footerNote: {
-    marginTop: 20,
-    padding: 16,
+    marginTop: 16,
+    padding: 14,
     backgroundColor: '#fff',
-    borderRadius: 12,
+    borderRadius: 10,
     alignItems: 'center',
   },
   footerText: {
-    fontSize: 14,
+    fontSize: 12,
     color: '#6c757d',
     textAlign: 'center',
-    lineHeight: 20,
+    lineHeight: 18,
+    fontFamily: 'Poppins-Regular',
   },
   pendingCertificateInfo: {
     backgroundColor: '#FFF9E6',
-    borderRadius: 10,
-    padding: 16,
-    marginTop: 12,
+    borderRadius: 8,
+    padding: 14,
+    marginTop: 10,
     borderWidth: 1,
     borderColor: '#FFD700',
   },
-  pendingIcon: {
-    fontSize: 32,
-    textAlign: 'center',
-    marginBottom: 8,
-  },
-  pendingText: {
-    fontSize: 14,
-    color: '#856404',
-    textAlign: 'center',
-    marginBottom: 8,
-    lineHeight: 20,
-  },
-  pendingAction: {
-    fontSize: 12,
-    color: '#856404',
-    textAlign: 'center',
-    fontWeight: '600',
-    marginTop: 8,
-  },
   pendingNote: {
-    fontSize: 13,
+    fontSize: 12,
     color: '#856404',
     textAlign: 'center',
     marginTop: 8,
     fontStyle: 'italic',
+    fontFamily: 'Poppins-Italic',
   },
   retryCertificateButton: {
     backgroundColor: '#FFD700',
     borderRadius: 8,
     paddingVertical: 12,
-    paddingHorizontal: 20,
-    marginTop: 16,
+    paddingHorizontal: 16,
+    marginTop: 12,
     alignItems: 'center',
   },
   retryCertificateButtonText: {
     color: '#856404',
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '600',
+    fontFamily: 'Poppins-SemiBold',
+  },
+  // UAT Error Styles
+  uatErrorTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#D32F2F',
+    textAlign: 'center',
+    marginBottom: 8,
+    fontFamily: 'Poppins-Bold',
+  },
+  uatErrorText: {
+    fontSize: 12,
+    color: '#856404',
+    textAlign: 'center',
+    lineHeight: 18,
+    marginBottom: 12,
+    fontFamily: 'Poppins-Regular',
+  },
+  uatErrorInfoBox: {
+    backgroundColor: '#FFF3CD',
+    borderRadius: 6,
+    padding: 10,
+    marginTop: 8,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: '#FFC107',
+  },
+  uatErrorInfoTitle: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#856404',
+    marginBottom: 6,
+    fontFamily: 'Poppins-Bold',
+  },
+  uatErrorInfoText: {
+    fontSize: 11,
+    color: '#856404',
+    lineHeight: 17,
+    fontFamily: 'Poppins-Regular',
   },
 });

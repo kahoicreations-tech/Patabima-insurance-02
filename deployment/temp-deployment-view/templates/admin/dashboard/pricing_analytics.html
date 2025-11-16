@@ -1,0 +1,22 @@
+{% extends "admin/base_site.html" %}
+{% block content %}
+<h1>Pricing Analytics</h1>
+<h3>By Underwriter</h3>
+<ul>
+	{% for row in pricing_by_underwriter %}
+		<li>{{ row.underwriter__name }}: {{ row.count }} rules, avg premium {{ row.avg_premium }}</li>
+	{% empty %}
+		<li>No data.</li>
+	{% endfor %}
+	</ul>
+<h3>Category Distribution</h3>
+<ul>
+	{% for row in category_distribution %}
+		<li>{{ row.category__category_name }}: {{ row.count }}</li>
+	{% empty %}
+		<li>No categories.</li>
+	{% endfor %}
+	</ul>
+<h3>Extendibles</h3>
+<p>Total extendible: {{ extendible_analytics.total_extendible }}, Rules: {{ extendible_analytics.extendible_pricing_rules }}, Pending: {{ extendible_analytics.pending_extensions }}, Successful: {{ extendible_analytics.successful_extensions }}</p>
+{% endblock %}

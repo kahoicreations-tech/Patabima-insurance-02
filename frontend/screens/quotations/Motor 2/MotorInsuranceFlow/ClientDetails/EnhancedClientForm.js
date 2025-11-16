@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, TextInput, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { VEHICLE_MAKES, getModelsForMake } from '../../../../../constants/vehicleCatalog';
+import { useMotorInsurance } from '@contexts/MotorInsuranceContext';
 
 const DEBUG = false; // Toggle verbose console logs for this form
 
@@ -37,6 +38,10 @@ export default function EnhancedClientForm({
   vehicleData
 }) {
   const [fieldErrors, setFieldErrors] = useState({});
+  const { actions } = useMotorInsurance();
+  
+  // Track if fields were manually edited (to clear DMVIC cache)
+  const manuallyEditedRef = useRef(new Set());
   
   const update = (k, v) => {
     if (DEBUG) {
@@ -45,6 +50,21 @@ export default function EnhancedClientForm({
     // Avoid emitting changes when value hasn't changed
     const prev = values ? values[k] : undefined;
     if (prev === v) return;
+    
+    // Special handling for registration number (PRIMARY KEY)
+    // If user edits registration, clear DMVIC cache AND all manual edit flags
+    // so that DMVIC can fetch fresh data and populate ALL fields
+    if (k === 'vehicle_registration') {
+      console.log('[EnhancedClientForm] Registration changed - Clearing DMVIC cache and reset manual edits');
+      actions.clearDMVICCache?.();
+      manuallyEditedRef.current.clear(); // Reset all manual edit flags
+    }
+    // For other vehicle fields (chassis, make, model, year), mark as manually edited
+    else if (['chassis_number', 'vehicle_make', 'vehicle_model', 'vehicle_year'].includes(k)) {
+      manuallyEditedRef.current.add(k);
+      console.log('[EnhancedClientForm] Vehicle field manually edited:', k);
+      // Don't clear cache - let registration drive the DMVIC fetch
+    }
     
     // Clear field error when user starts typing
     if (fieldErrors[k]) {
@@ -98,23 +118,61 @@ export default function EnhancedClientForm({
   const hasAppliedExtractedData = useRef(false);
 
   // Prefer values from Vehicle Details step when present (keeps UX consistent)
+  // DMVIC data is the source of truth - REGISTRATION NUMBER is the primary key
+  // If vehicleData has registration, ALL other fields must match DMVIC (unless manually edited)
   useEffect(() => {
     if (!vehicleData) return;
     const patch = {};
-    if (!values.vehicle_make && vehicleData.make) patch.vehicle_make = vehicleData.make;
-    if (!values.vehicle_model && vehicleData.model) patch.vehicle_model = vehicleData.model;
-    // NEW: Also prefer registration and chassis from DMVIC/Vehicle Details
-    if (!values.vehicle_registration) {
-      const reg = vehicleData.registrationNumber || vehicleData.registration_number || vehicleData.Registration_Number;
-      if (reg) patch.vehicle_registration = String(reg).toUpperCase();
+    
+    // Registration Number - ALWAYS update (primary key from DMVIC)
+    const reg = vehicleData.registrationNumber || vehicleData.registration_number || vehicleData.Registration_Number;
+    if (reg && String(reg).toUpperCase() !== values.vehicle_registration) {
+      patch.vehicle_registration = String(reg).toUpperCase();
+      // When registration changes, clear manual edit flags so DMVIC data populates all fields
+      manuallyEditedRef.current.clear();
     }
-    if (!values.chassis_number) {
+    
+    // Chassis Number - update if different AND not manually edited (unless registration just changed)
+    if (!manuallyEditedRef.current.has('chassis_number')) {
       const ch = vehicleData.chassisNumber || vehicleData.chassis_number;
-      if (ch) patch.chassis_number = String(ch).toUpperCase();
+      if (ch && String(ch).toUpperCase() !== values.chassis_number) {
+        patch.chassis_number = String(ch).toUpperCase();
+      }
     }
+    
+    // Make - update if different AND not manually edited
+    if (!manuallyEditedRef.current.has('vehicle_make')) {
+      if (vehicleData.make && vehicleData.make !== values.vehicle_make) {
+        patch.vehicle_make = vehicleData.make;
+      }
+    }
+    
+    // Model - update if different AND not manually edited
+    if (!manuallyEditedRef.current.has('vehicle_model')) {
+      if (vehicleData.model && vehicleData.model !== values.vehicle_model) {
+        patch.vehicle_model = vehicleData.model;
+      }
+    }
+    
+    // Year - update if different AND not manually edited
+    if (!manuallyEditedRef.current.has('vehicle_year')) {
+      if (vehicleData.year && vehicleData.year !== values.vehicle_year) {
+        patch.vehicle_year = vehicleData.year;
+      }
+    }
+    
     if (Object.keys(patch).length) onChange?.({ ...(values || {}), ...patch });
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [vehicleData?.make, vehicleData?.model]);
+  }, [
+    vehicleData?.registrationNumber, 
+    vehicleData?.registration_number, 
+    vehicleData?.Registration_Number,
+    vehicleData?.chassisNumber,
+    vehicleData?.chassis_number,
+    vehicleData?.make, 
+    vehicleData?.model,
+    vehicleData?.year
+  ]);
   
   // Validate required fields and document extraction completeness
   const validateFields = () => {

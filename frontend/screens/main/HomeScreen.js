@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, FlatList, Alert, Image, Linking, Animated, ActivityIndicator, RefreshControl } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, FlatList, Alert, Image, Linking, Animated, ActivityIndicator, RefreshControl, Dimensions } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { StatusBar } from 'expo-status-bar';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
@@ -47,7 +47,8 @@ const STATIC_INSURANCE_CATEGORIES = [
   {
     id: 2,
     name: 'Medical Insurance',
-    icon: 'medical',
+    icon: 'medkit',
+    color: '#D5222B',
     screen: 'MedicalCategory',
     status: CATEGORY_STATUS.ACTIVE,
   },
@@ -140,8 +141,10 @@ export default function HomeScreen() {
   const campaignAutoScrollRef = useRef(null);
   const isCampaignInteractingRef = useRef(false);
   const trackedImpressions = useRef(new Set()); // Track which campaigns had impressions logged
-  const ITEM_WIDTH = 150; // Card width
-  const ITEM_SPACING = 12; // Space between cards
+  const screenWidth = Dimensions.get('window').width;
+  const ITEM_SPACING = 4; // 4px space between cards
+  const CARDS_VISIBLE = 3.2; // Show 3.2 cards for peek effect
+  const ITEM_WIDTH = (screenWidth - (Spacing.md * 2) - (ITEM_SPACING * CARDS_VISIBLE)) / CARDS_VISIBLE; // Responsive card width
   const ITEM_SIZE = ITEM_WIDTH + ITEM_SPACING; // Total size including spacing
   const CAMPAIGN_CARD_WIDTH = 280;
   const CAMPAIGN_SPACING = 12;
@@ -640,7 +643,7 @@ export default function HomeScreen() {
               </Text>
               <Text style={styles.welcomeDescription}>
                 {agentData?.fullName ? 
-                  `Welcome back! Ready to help customers secure their future today.` :
+                  `Welcome! Ready to help customers secure their future today.` :
                   'Welcome to PataBima! Ready to start your insurance journey.'
                 }
               </Text>
@@ -653,7 +656,7 @@ export default function HomeScreen() {
                   <View style={styles.commissionBadge}>
                     <Ionicons name="wallet-outline" size={12} color="#D5222B" />
                     <Text style={styles.commissionText}>
-                      Next: {formatCommissionDate(agentData.nextPayout)}
+                      Payment: {formatCommissionDate(agentData.nextPayout)}
                     </Text>
                   </View>
                 ) : (
@@ -738,7 +741,7 @@ export default function HomeScreen() {
                     }}
                   >
                     <View style={[styles.categoryIconContainer, { backgroundColor: item.color + '15' }]}>
-                      <Ionicons name={item.icon} size={34} color={item.color} />
+                      <Ionicons name={item.icon} size={20} color={item.color} />
                     </View>
                     <Text style={styles.categoryName}>{item.name}</Text>
                   </TouchableOpacity>
@@ -1129,6 +1132,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     marginBottom: Spacing.sm,
+    gap: Spacing.sm,
   },
   commissionBadge: {
     flexDirection: 'row',
@@ -1195,8 +1199,8 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.xs,
   },
   categoryCard: {
-    width: 150,
-    height: 140,
+    width: (Dimensions.get('window').width - (Spacing.md * 2) - (4 * 3.2)) / 3.2, // Dynamic width for 3.2 cards with 4px spacing
+    height: 110,
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: Colors.backgroundCard,
@@ -1217,12 +1221,12 @@ const styles = StyleSheet.create({
     // Removed - animation handles visual state
   },
   categoryIconContainer: {
-    width: 64,
-    height: 64,
-    borderRadius: 20,
+    width: 36,
+    height: 36,
+    borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: Spacing.sm,
+    marginBottom: 6,
   },
   categoryName: {
     fontSize: Typography.fontSize.sm,

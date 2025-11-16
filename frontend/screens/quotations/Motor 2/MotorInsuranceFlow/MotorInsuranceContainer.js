@@ -364,6 +364,7 @@ export default function MotorInsuranceContainer({ route, navigation }) {
 
   const stepName = steps[currentStep] || '';
   const isFirstStep = currentStep === 0;
+  const isLastStep = currentStep === steps.length - 1; // Last step is Submission
 
   // Optional: support direct payment deep-link
   useEffect(() => {
@@ -504,8 +505,8 @@ export default function MotorInsuranceContainer({ route, navigation }) {
           <Text style={styles.validationText}>{validationMessage}</Text>
         )}
         
-        {/* Next Button - Full Width */}
-        {!isFirstStep && (
+        {/* Next Button - Full Width (Hidden on first step and last step/Submission) */}
+        {!isFirstStep && !isLastStep && (
           <TouchableOpacity
             style={[styles.nextButton, styles.nextButtonFullWidth, !canProceed && styles.nextButtonDisabled]}
             onPress={goNext}
