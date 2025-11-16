@@ -6,3 +6,15 @@ node_modules
 .env.local
 .env.ec2
 *.env.backup
+# Large deployment files
+deployment/*.zip
+deployment/latest-deployment.zip
+deployment/patabima-backend.zip
+deployment/temp-deployment-view/
+patabima-backend*.zip
+
+# Large media files
+frontend/assets/*.gif
+frontend/assets/*.mp4
+# But keep the splash screen
+!frontend/assets/Splash Screen Animation_V2.mp4
