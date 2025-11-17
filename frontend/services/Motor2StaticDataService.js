@@ -16,17 +16,17 @@
  */
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { MOTOR_CATEGORIES } from '../data/motor2/categories.static';
-import { MOTOR2_STATIC_METADATA } from '../data/motor2/metadata';
+import { MOTOR_CATEGORIES } from '../data/motor2/categories.static.js';
+import { MOTOR2_STATIC_METADATA } from '../data/motor2/metadata.js';
 import DjangoAPIService from './DjangoAPIService';
 
 // Import all subcategory files
-import PRIVATE_SUBCATEGORIES from '../data/motor2/subcategories/PRIVATE.static';
-import COMMERCIAL_SUBCATEGORIES from '../data/motor2/subcategories/COMMERCIAL.static';
-import PSV_SUBCATEGORIES from '../data/motor2/subcategories/PSV.static';
-import MOTORCYCLE_SUBCATEGORIES from '../data/motor2/subcategories/MOTORCYCLE.static';
-import TUKTUK_SUBCATEGORIES from '../data/motor2/subcategories/TUKTUK.static';
-import SPECIAL_SUBCATEGORIES from '../data/motor2/subcategories/SPECIAL.static';
+import PRIVATE_SUBCATEGORIES from '../data/motor2/subcategories/PRIVATE.static.js';
+import COMMERCIAL_SUBCATEGORIES from '../data/motor2/subcategories/COMMERCIAL.static.js';
+import PSV_SUBCATEGORIES from '../data/motor2/subcategories/PSV.static.js';
+import MOTORCYCLE_SUBCATEGORIES from '../data/motor2/subcategories/MOTORCYCLE.static.js';
+import TUKTUK_SUBCATEGORIES from '../data/motor2/subcategories/TUKTUK.static.js';
+import SPECIAL_SUBCATEGORIES from '../data/motor2/subcategories/SPECIAL.static.js';
 
 // Map category codes to their subcategory imports
 const SUBCATEGORIES_MAP = {
