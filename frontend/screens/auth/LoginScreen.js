@@ -373,7 +373,7 @@ export default function LoginScreen() {
   const contentContainerStyle = useMemo(() => {
     return {
       ...styles.content,
-      paddingBottom: insets.bottom + 20
+      paddingBottom: insets.bottom + 80
     };
   }, [insets.bottom]);
 
@@ -413,6 +413,7 @@ export default function LoginScreen() {
             contentContainerStyle={contentContainerStyle}
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled"
+            bounces={false}
           >
             <View style={styles.headerContainer}>
               <Text style={styles.title}>
@@ -553,7 +554,7 @@ export default function LoginScreen() {
 
                   <View style={styles.signUpContainer}>
                     <Text style={styles.signUpText}>Don't have an account? </Text>
-                    <TouchableOpacity onPress={() => navigation.navigate('Signup')}>
+                    <TouchableOpacity onPress={() => navigation.navigate('Signup')} activeOpacity={0.7}>
                       <Text style={styles.signUpLink}>Sign Up</Text>
                     </TouchableOpacity>
                   </View>
@@ -745,6 +746,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     paddingHorizontal: 24,
     paddingTop: 16,
+    minHeight: '100%',
   },
   headerContainer: {
     alignItems: 'center',
@@ -860,7 +862,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: Spacing.md,
+    marginTop: 8,
+    marginBottom: 16,
+    paddingVertical: 8,
   },
   signUpText: {
     fontSize: Typography.fontSize.md,

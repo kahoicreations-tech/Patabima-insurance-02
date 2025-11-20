@@ -16,7 +16,7 @@ export default function SignupScreen() {
   const scrollContentStyle = useMemo(() => {
     return {
       ...styles.scrollContent,
-      paddingBottom: insets.bottom + 20
+      paddingBottom: insets.bottom + 80
     };
   }, [insets.bottom]);
   
@@ -278,6 +278,7 @@ export default function SignupScreen() {
         contentContainerStyle={scrollContentStyle}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
+        bounces={false}
       >
         
         {/* Header */}
@@ -436,7 +437,7 @@ export default function SignupScreen() {
 
           <View style={styles.signInContainer}>
             <Text style={styles.signInText}>Have an account? </Text>
-            <TouchableOpacity onPress={() => navigation.navigate('Login')}>
+            <TouchableOpacity onPress={() => navigation.navigate('Login')} activeOpacity={0.7}>
               <Text style={styles.signInLink}>Sign In</Text>
             </TouchableOpacity>
           </View>
@@ -522,6 +523,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     paddingHorizontal: 24,
     paddingTop: 16,
+    minHeight: '100%',
   },
   headerContainer: {
     alignItems: 'center',
@@ -630,7 +632,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: Spacing.md,
+    marginTop: 8,
+    marginBottom: 16,
+    paddingVertical: 8,
   },
   signInText: {
     fontSize: Typography.fontSize.md,
