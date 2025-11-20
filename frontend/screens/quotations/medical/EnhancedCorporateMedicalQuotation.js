@@ -392,7 +392,7 @@ const EnhancedCorporateMedicalQuotation = () => {
         {renderPolicyDetails()}
         {renderClientDetails()}
       </ScrollView>
-      <View style={[styles.footer, { paddingBottom: insets.bottom }]}>
+      <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 16) + 16 }]}>
         <TouchableOpacity
           style={[styles.submitBtn, (!isFormValid() || loading || submitting) && styles.submitBtnDisabled]}
           onPress={handleFinalSubmit}

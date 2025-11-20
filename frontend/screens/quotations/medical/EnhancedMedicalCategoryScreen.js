@@ -52,7 +52,8 @@ const EnhancedMedicalCategoryScreen = ({ navigation }) => {
         <View style={styles.topSpacer} />
         
         {/* Main Content */}
-        <Heading4 style={styles.title}>Select Medical Insurance Type</Heading4>
+        <View>
+          <Heading4 style={styles.title}>Select Medical Insurance Type</Heading4>
           <Body1 style={styles.subtitle}>
             Choose the appropriate insurance category for your needs
           </Body1>
@@ -90,7 +91,8 @@ const EnhancedMedicalCategoryScreen = ({ navigation }) => {
               </Body2>
             </View>
           </TouchableOpacity>
-        </ScrollView>
+        </View>
+      </ScrollView>
     </SafeAreaView>
   );
 };

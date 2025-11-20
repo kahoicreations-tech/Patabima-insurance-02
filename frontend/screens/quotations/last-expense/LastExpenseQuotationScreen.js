@@ -323,7 +323,7 @@ export default function LastExpenseQuotationScreen({ navigation }) {
           )}
         </View>
       </ScrollView>
-      <View style={[styles.footer, { paddingBottom: insets.bottom }]}>
+      <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 16) + 16 }]}>
         <TouchableOpacity
           disabled={!canSubmit || submitting}
           onPress={handleSubmit}

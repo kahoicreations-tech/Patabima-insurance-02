@@ -722,7 +722,7 @@ const EnhancedIndividualMedicalQuotation = () => {
         {renderClientDetails()}
       </ScrollView>
 
-      <View style={[styles.footer, { paddingBottom: insets.bottom }]}>
+      <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 16) + 16 }]}>
         {submitError && (
           <View style={styles.submitErrorContainer}>
             <View style={styles.submitErrorHeader}>

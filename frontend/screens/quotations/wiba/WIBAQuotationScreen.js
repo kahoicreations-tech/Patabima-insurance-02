@@ -351,7 +351,7 @@ export default function WIBAQuotationScreen({ navigation }) {
       </ScrollView>
 
       {/* Submit Bar */}
-      <View style={[styles.footer, { paddingBottom: insets.bottom }]}>
+      <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 16) + 16 }]}>
         <TouchableOpacity disabled={!canSubmit || submitting} onPress={handleSubmit} style={[styles.submitBtn, (!canSubmit||submitting) && styles.submitBtnDisabled]}>
           <ButtonText style={styles.submitText}>{submitting ? 'Submitting...' : 'Request Quote'}</ButtonText>
         </TouchableOpacity>
