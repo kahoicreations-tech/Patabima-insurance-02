@@ -8,11 +8,10 @@ import {
   View,
   StyleSheet,
   TouchableOpacity,
-  SafeAreaView,
   FlatList
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '../../../constants';
 import { Heading5, Heading6, Body1, Body2 } from '../../../components/typography/Text';
@@ -69,17 +68,17 @@ export default function MedicalQuotationScreen({ navigation }) {
   );
 
   return (
-    <SafeAreaView style={[styles.container, { paddingTop: insets.top }]}>
+    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <StatusBar style="dark" />
-      
+
       <View style={styles.header}>
-        <TouchableOpacity 
-          style={styles.backButton} 
+        <TouchableOpacity
+          style={styles.backButton}
           onPress={() => navigation.goBack()}
         >
           <Ionicons name="arrow-back" size={24} color="#fff" />
         </TouchableOpacity>
-  <Heading6 style={styles.headerTitle}>Medical Insurance</Heading6>
+        <Heading6 style={styles.headerTitle}>Medical Insurance</Heading6>
         <View style={{ width: 40 }} />
       </View>
 
