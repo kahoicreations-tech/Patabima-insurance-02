@@ -2,11 +2,11 @@
 # Execute commands on EC2 directly from local PowerShell
 
 param(
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory = $false)]
     [ValidateSet('logs', 'restart', 'status', 'migrate', 'collectstatic', 'create-admin', 'update', 'shell', 'custom')]
     [string]$Action = 'status',
     
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory = $false)]
     [string]$CustomCommand = ''
 )
 
@@ -72,7 +72,8 @@ function Execute-SSMCommand {
             Write-Host "`n⚠️  Errors:" -ForegroundColor Yellow
             Write-Host $Output.StandardErrorContent -ForegroundColor Yellow
         }
-    } else {
+    }
+    else {
         Write-Host "❌ Command failed with status: $($Output.Status)" -ForegroundColor Red
         Write-Host $Output.StandardErrorContent -ForegroundColor Red
     }

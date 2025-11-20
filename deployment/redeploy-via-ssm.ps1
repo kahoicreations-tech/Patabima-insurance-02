@@ -27,7 +27,8 @@ if (-not $s3Check) {
     Write-Host "  ⬆️  Uploading to S3..." -ForegroundColor Cyan
     aws s3 cp $ZipFile "s3://patabima-media-prod/deployment/" --region us-east-1
     Write-Host "  ✅ Uploaded" -ForegroundColor Green
-} else {
+}
+else {
     Write-Host "  ✅ Already in S3" -ForegroundColor Green
 }
 
@@ -159,7 +160,8 @@ try {
         Write-Host "🧪 Test endpoints:" -ForegroundColor Cyan
         Write-Host "   curl http://44.200.182.180/api/v1/motor2/categories/" -ForegroundColor DarkGray
         Write-Host ""
-    } else {
+    }
+    else {
         Write-Host ""
         Write-Host "❌ DEPLOYMENT FAILED!" -ForegroundColor Red
         Write-Host "   Status: $($finalResult.Status)" -ForegroundColor Yellow
@@ -167,7 +169,8 @@ try {
         exit 1
     }
     
-} catch {
+}
+catch {
     Write-Host ""
     Write-Host "❌ SSM Command Failed!" -ForegroundColor Red
     Write-Host "   Error: $($_.Exception.Message)" -ForegroundColor Yellow

@@ -11,7 +11,8 @@ const ENV_BASE = envObj.EXPO_PUBLIC_API_BASE_URL || envObj.EXPO_PUBLIC_API_URL |
 
 // Base configuration
 export const API_CONFIG = {
-  // Django backend base URL - prefer env, else fall back to DjangoAPIService base
+  // Django backend base URL - HTTPS production with SSL
+  // Falls back to DjangoAPIService.baseUrl (https://api.hugo-shopping.com)
   BASE_URL: `${(ENV_BASE || DjangoAPIService.baseUrl).replace(/\/$/, '')}/api/v1/public_app`,
   
   TIMEOUT: 30000, // 30 seconds
@@ -67,8 +68,13 @@ apiClient.interceptors.request.use(
       // Optional dynamic base URL override (prefer env, then stored, then DjangoAPIService)
       const envBase = ENV_BASE;
       let storedUrl = await AsyncStorage.getItem('api_base_url');
-      if (envBase) {
-        // If env base is set, ensure we clear any stale stored override
+      const isForced = storedUrl && storedUrl.startsWith('override:');
+      const forcedUrl = isForced ? storedUrl.replace(/^override:/, '') : null;
+      if (forcedUrl) {
+        // Forced runtime override always wins
+        config.baseURL = `${forcedUrl.replace(/\/$/, '')}/api/v1/public_app`;
+      } else if (envBase) {
+        // If env base is set, ensure we clear any stale stored (non-forced) override
         if (storedUrl) { await AsyncStorage.removeItem('api_base_url'); storedUrl = null; }
         config.baseURL = `${envBase.replace(/\/$/, '')}/api/v1/public_app`;
       } else {

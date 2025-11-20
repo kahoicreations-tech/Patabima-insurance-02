@@ -1,4 +1,5 @@
 # Frontend Connectivity Report
+
 **Test Date:** November 16, 2025  
 **Status:** ✅ **ALL SYSTEMS OPERATIONAL**
 
@@ -7,16 +8,19 @@
 ## ✅ Test Results: 100% PASS
 
 ### Environment Configuration
+
 - ✅ `.env` configured: `http://44.200.182.180`
 - ✅ `.env.local` configured: `http://44.200.182.180`
 - ✅ Active backend: **EC2 Production** (`http://44.200.182.180`)
 
 ### Backend API Connectivity
+
 - ✅ **Health Check**: PASS
   - Service: `pata-bima-api`
   - Response time: <1 second
 
 ### Motor Insurance System
+
 - ✅ **Categories**: 6 categories loaded
   - Private, Commercial, PSV, Motorcycle, TukTuk, Special
 - ✅ **Subcategories**: Loading by category (Private tested)
@@ -24,6 +28,7 @@
   - Pacis, CIC, Britam, Madison, Jubilee, UAP, APA, etc.
 
 ### Motor 2 Flow Critical Endpoints (5/5 Working)
+
 1. ✅ **GET** `/api/v1/motor2/categories/` - Load categories
 2. ✅ **GET** `/api/v1/motor2/subcategories/?category=PRIVATE` - Load subcategories
 3. ✅ **GET** `/api/v1/public_app/insurance/get_underwriters/` - Load underwriters
@@ -31,6 +36,7 @@
 5. ✅ **POST** `/api/v1/public_app/insurance/submit_motor_quotation/` - Submit quotation
 
 ### Service Configuration
+
 - ✅ `DjangoAPIService.js` - Correctly reads `EXPO_PUBLIC_API_BASE_URL`
 - ✅ `MotorInsurancePricingService.js` - Service file exists
 - ✅ Environment variable override working
@@ -40,6 +46,7 @@
 ## 🚀 Frontend is Production Ready!
 
 ### What's Working
+
 1. **Backend Connection** - Frontend can communicate with EC2
 2. **Motor Categories** - All 6 categories loading
 3. **Underwriter Pricing** - All 8 underwriters accessible
@@ -49,11 +56,13 @@
 ### Configuration Details
 
 **Active Environment:**
+
 ```env
 EXPO_PUBLIC_API_BASE_URL=http://44.200.182.180
 ```
 
 **Backend Instance:**
+
 - Instance ID: `i-0d0f116005d812275`
 - Public IP: `44.200.182.180`
 - Region: `us-east-1`
@@ -64,16 +73,19 @@ EXPO_PUBLIC_API_BASE_URL=http://44.200.182.180
 ## 📱 How to Run the App
 
 ### Option 1: Start Fresh
+
 ```bash
 cd frontend
 npm start
 ```
 
 ### Option 2: If Already Running
+
 1. Press `r` in the Metro terminal to reload
 2. App will now connect to EC2 backend
 
 ### Option 3: Clear Cache (If Needed)
+
 ```bash
 cd frontend
 npm start --clear
@@ -84,6 +96,7 @@ npm start --clear
 ## 🧪 Testing the Motor 2 Flow
 
 ### Test Steps:
+
 1. **Launch App** - Start Expo dev server
 2. **Navigate to Motor Insurance** - Tap "Motor Insurance" on dashboard
 3. **Select Category** - Choose "Private"
@@ -93,6 +106,7 @@ npm start --clear
 7. **Submit Quotation** - Complete form and submit
 
 ### Expected Behavior:
+
 - ✅ Categories load from EC2
 - ✅ Subcategories load based on category
 - ✅ Underwriters display with live pricing
@@ -104,19 +118,25 @@ npm start --clear
 ## 🔍 Troubleshooting
 
 ### Issue: "Network Error" in App
+
 **Solution:**
+
 1. Restart Metro bundler: `npm start`
 2. Press `r` to reload app
 3. Verify EC2 is running: `curl http://44.200.182.180/api/v1/health/`
 
 ### Issue: "Cannot connect to backend"
+
 **Solution:**
+
 1. Check `.env` file: Should have `http://44.200.182.180`
 2. Restart Expo: `npm start`
 3. Clear Metro cache: `npm start --clear`
 
 ### Issue: App still using localhost
+
 **Solution:**
+
 1. Stop Expo completely (Ctrl+C)
 2. Delete `.expo` cache folder
 3. Restart: `npm start`
@@ -125,16 +145,16 @@ npm start --clear
 
 ## 📊 API Endpoint Coverage
 
-| Endpoint | Status | Description |
-|----------|--------|-------------|
-| `/api/v1/health/` | ✅ | Health check |
-| `/api/v1/motor2/categories/` | ✅ | Motor categories |
-| `/api/v1/motor2/subcategories/` | ✅ | Motor subcategories |
-| `/api/v1/public_app/insurance/get_underwriters/` | ✅ | Underwriters list |
-| `/api/v1/public_app/insurance/calculate_motor_premium/` | ✅ | Premium calculation |
-| `/api/v1/public_app/insurance/compare_motor_pricing/` | ✅ | Pricing comparison |
-| `/api/v1/public_app/insurance/submit_motor_quotation/` | ✅ | Submit quotation |
-| `/api/v1/public_app/insurance/get_quotations/` | ✅ | Get quotations |
+| Endpoint                                                | Status | Description         |
+| ------------------------------------------------------- | ------ | ------------------- |
+| `/api/v1/health/`                                       | ✅     | Health check        |
+| `/api/v1/motor2/categories/`                            | ✅     | Motor categories    |
+| `/api/v1/motor2/subcategories/`                         | ✅     | Motor subcategories |
+| `/api/v1/public_app/insurance/get_underwriters/`        | ✅     | Underwriters list   |
+| `/api/v1/public_app/insurance/calculate_motor_premium/` | ✅     | Premium calculation |
+| `/api/v1/public_app/insurance/compare_motor_pricing/`   | ✅     | Pricing comparison  |
+| `/api/v1/public_app/insurance/submit_motor_quotation/`  | ✅     | Submit quotation    |
+| `/api/v1/public_app/insurance/get_quotations/`          | ✅     | Get quotations      |
 
 **Coverage: 8/8 (100%)**
 
@@ -143,16 +163,19 @@ npm start --clear
 ## 🎯 Next Steps
 
 ### Immediate
+
 1. ✅ **Start Expo** - Run `npm start` in frontend directory
 2. ✅ **Test Motor 2 Flow** - Complete end-to-end quote
 3. ✅ **Verify Data Persistence** - Check quotations save to database
 
 ### Short Term
+
 1. **User Authentication** - Test login/signup flows
 2. **Payment Integration** - Test M-PESA payment flow
 3. **Policy Generation** - Test policy creation after payment
 
 ### Production Readiness
+
 1. **HTTPS Configuration** - Add SSL certificate to EC2
 2. **Custom Domain** - Point `api.patabima.co.ke` to EC2
 3. **Error Monitoring** - Set up Sentry/logging
@@ -189,6 +212,7 @@ npm start --clear
 **Frontend is fully configured and ready to connect to EC2 backend!**
 
 All critical Motor Insurance endpoints are working. The React Native app can now:
+
 - Load motor categories
 - Display underwriters
 - Calculate premiums

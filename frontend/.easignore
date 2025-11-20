@@ -1,0 +1,133 @@
+# Development and cache files
+node_modules/
+venv/
+.venv/
+.expo/
+.expo-shared/
+node_modules/.cache/
+.npm/
+.yarn/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Native build folders (EAS builds from source, not prebuilt native code)
+android/
+ios/
+
+# Build output
+dist/
+build/
+
+# Parent directories - CRITICAL (saves 1.5+ GB!)
+../_archive/
+../deployment/
+../insurance-app/
+../backend/
+../.venv/
+../venv/
+../docs/
+../infrastructure/
+../lambda_build/
+../lambda-deployed/
+../amplify/
+../LocalPilotMCP/
+../scripts/
+../.git/
+../*.zip
+../*.tar.gz
+../*.backup
+
+# Parent directory exclusions (note: EAS only includes this project dir)
+# Kept for local tar tests; EAS will ignore entries outside the project
+../_archive/
+../insurance-app/
+../backend/
+../docs/
+../amplify/
+../lambda_build/
+../lambda-deployed/
+../.venv/
+../deployment/
+../.git/
+../*.zip
+../patabima-backend.zip
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Test files
+__tests__/
+*.test.js
+*.test.ts
+*.test.tsx
+*.spec.js
+*.spec.ts
+*.spec.tsx
+coverage/
+
+# Documentation
+*.md
+!README.md
+docs/
+
+# Build artifacts
+dist/
+build/
+*.tgz
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Large asset sources (keep compressed versions only)
+*.psd
+*.ai
+*.sketch
+*.fig
+*.mov
+*.avi
+
+# Environment files (using eas.json env config instead)
+.env.local
+.env.local.backup
+.env.example
+
+# Scripts and tools
+scripts/
+patches/
+
+# Backup files
+*.backup
+*.bak
+*-backup.*
+*Copy*
+
+# Large images
+assets/images/new design.png
+assets/PataLogo - Copy.png
+assets/Splash Screen Animation_V2.gif
+
+# Keep: assets/Splash Screen Animation_V2.mp4 (needed for splash screen)
+
+# Development tools (keep config files needed by Metro/Babel)
+.eslintrc*
+.prettierrc*
+# tsconfig is small and safe to include; Babel config MUST be included for path aliases
+# (do NOT ignore these)
+# tsconfig.json
+# babel.config.js
+
+# Explicitly include static data to avoid accidental exclusions
+!data/**

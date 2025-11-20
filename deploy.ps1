@@ -28,7 +28,8 @@ git commit -m "$CommitMessage"
 
 if ($LASTEXITCODE -ne 0) {
     Write-Host "ℹ️  No changes to commit" -ForegroundColor Gray
-} else {
+}
+else {
     Write-Host "✅ Changes committed" -ForegroundColor Green
 }
 
@@ -43,7 +44,8 @@ if ($LASTEXITCODE -eq 0) {
     Write-Host "   2. Build the application" -ForegroundColor White
     Write-Host "   3. Deploy to EC2 (if configured)" -ForegroundColor White
     Write-Host "`n📊 Check progress: https://github.com/kahoicreations-tech/Patabima-insurance-02/actions" -ForegroundColor Cyan
-} else {
+}
+else {
     Write-Host "❌ Push failed. Check your connection and credentials." -ForegroundColor Red
     exit 1
 }

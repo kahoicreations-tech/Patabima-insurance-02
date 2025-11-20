@@ -1,8 +1,8 @@
 {
   "expo": {
-    "name": "PataBima Agency",
+    "name": "PataBima Agent",
     "slug": "patabima-agent",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "orientation": "portrait",
     "jsEngine": "hermes",
     "icon": "./assets/icon.png",
@@ -14,9 +14,10 @@
       "imageMode": "center"
     },
     "updates": {
-      "enabled": false,
-      "checkAutomatically": "ON_ERROR_RECOVERY",
-      "fallbackToCacheTimeout": 0
+      "enabled": true,
+      "checkAutomatically": "ON_LOAD",
+      "fallbackToCacheTimeout": 0,
+      "url": "https://u.expo.dev/05038c89-0d3b-4bba-a357-c3fa6af17848"
     },
     "assetBundlePatterns": [
       "assets/fonts/**/*",
@@ -24,6 +25,13 @@
       "assets/*.png",
       "assets/*.jpg"
     ],
+    "extra": {
+      "eas": {
+        "projectId": "05038c89-0d3b-4bba-a357-c3fa6af17848"
+      },
+      "apiBaseUrl": "${EXPO_PUBLIC_API_BASE_URL}",
+      "apiUrl": "${EXPO_PUBLIC_API_URL}"
+    },
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.patabima.agent"
@@ -35,8 +43,8 @@
         "backgroundColor": "#D5222B",
         "monochromeImage": "./assets/adaptive-icon.png"
       },
+      "usesCleartextTraffic": true,
       "package": "com.patabima.agent",
-      "versionCode": 2,
       "softwareKeyboardLayoutMode": "resize",
       "permissions": [
         "android.permission.CAMERA",
@@ -63,17 +71,9 @@
       ]
     },
     "owner": "kahoikreations",
-    "extra": {
-      "eas": {
-        "projectId": "05038c89-0d3b-4bba-a357-c3fa6af17848"
-      },
-      "docsPipelineEnabled": true
-    },
     "plugins": [
       "expo-secure-store"
     ],
-    "runtimeVersion": {
-      "policy": "appVersion"
-    }
+    "runtimeVersion": "1.0.2"
   }
 }

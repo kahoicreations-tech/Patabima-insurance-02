@@ -2,7 +2,7 @@
 # Quick commands to connect and work directly on EC2 instance
 
 param(
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory = $false)]
     [ValidateSet("connect", "logs", "restart", "status", "shell", "migrate", "collectstatic")]
     [string]$Action = "connect"
 )

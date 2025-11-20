@@ -2,11 +2,11 @@
 # Execute commands on EC2 directly from local PowerShell using SSH
 
 param(
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory = $false)]
     [ValidateSet('status', 'logs', 'restart', 'migrate', 'collectstatic', 'create-admin', 'update', 'shell', 'custom')]
     [string]$Action = 'status',
     
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory = $false)]
     [string]$CustomCommand = ''
 )
 
@@ -41,7 +41,8 @@ function Execute-SSHCommand {
         Write-Host $Output -ForegroundColor White
         Write-Host "═══════════════════════════════════════════`n" -ForegroundColor DarkGray
         return $true
-    } else {
+    }
+    else {
         Write-Host "❌ Command failed" -ForegroundColor Red
         Write-Host $Output -ForegroundColor Red
         Write-Host "`n💡 Troubleshooting:" -ForegroundColor Yellow
@@ -83,7 +84,7 @@ switch ($Action) {
     }
     
     'create-admin' {
-        $cmd = "cd $ProjectPath && source venv/bin/activate && export `$(grep -v '^#' .env | xargs) && python manage.py shell -c 'from django.contrib.auth import get_user_model; User = get_user_model(); user, created = User.objects.get_or_create(phonenumber=\"0741590055\"); user.set_password(\"Best254#\"); user.is_staff = True; user.is_admin = True; user.email = \"admin@patabima.com\"; user.save(); print(f\"Admin: {user.phonenumber}, Staff: {user.is_staff}, Admin: {user.is_admin}\")'"
+        $cmd = "cd $ProjectPath && source venv/bin/activate && export `$(grep -v '^#' .env | xargs) && python manage.py shell -c 'from django.contrib.auth import get_user_model; User = get_user_model(); user, created = User.objects.get_or_create(phonenumber=\"0741590055\"); user.set_password(\"Best254#\"); user.is_staff = True; user.is_admin = True; user.email = \"admin@patabima.com\"; user.save(); print(f\"Admin: { user.phonenumber }, Staff: { user.is_staff }, Admin: { user.is_admin }\")'"
         
         if (Execute-SSHCommand -Command $cmd -Description "Create Admin User (0741590055 / Best254#)") {
             Write-Host "🎉 Test login at: http://44.200.182.180/admin/" -ForegroundColor Green
@@ -121,7 +122,8 @@ switch ($Action) {
         
         if (Test-Path $KeyPath) {
             ssh -i $KeyPath -t $EC2_USER@$EC2_IP "cd $ProjectPath && source venv/bin/activate && export `$(grep -v '^#' .env | xargs) && python manage.py shell"
-        } else {
+        }
+        else {
             Write-Host "❌ SSH key not found: $KeyPath" -ForegroundColor Red
             Write-Host "Run: .\deployment\setup-ec2-ssh.ps1`n" -ForegroundColor Yellow
         }

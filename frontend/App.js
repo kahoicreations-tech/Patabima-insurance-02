@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { View, StatusBar } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-// Note: remove manual splash/update control in dev to avoid startup hang
-// import * as SplashScreen from 'expo-splash-screen';
-// import * as Updates from 'expo-updates';
+import * as SplashScreen from 'expo-splash-screen';
+import * as Updates from 'expo-updates';
 // Temporarily disable lazy loading for debugging
 import AppNavigator from './navigation';
 import { AWSProviderDev } from './contexts/AWSContextDev';
@@ -14,13 +13,42 @@ import { AppDataProvider } from './contexts/AppDataContext';
 // Do not call SplashScreen.preventAutoHideAsync() in development
 
 export default function App() {
-  // Render immediately in development; remove complex splash gating
-  const [appIsReady, setAppIsReady] = useState(true);
+  const [appIsReady, setAppIsReady] = useState(__DEV__ ? true : false);
 
   useEffect(() => {
-    console.log('[App] Dev fast boot active');
+    const run = async () => {
+      try {
+        if (__DEV__) {
+          console.log('[App] Dev fast boot active');
+          setAppIsReady(true);
+          return;
+        }
+
+        // Keep splash until we check for updates (production only)
+        await SplashScreen.preventAutoHideAsync();
+
+        // If there is an update available, fetch and reload before showing UI
+        const update = await Updates.checkForUpdateAsync();
+        if (update.isAvailable) {
+          console.log('[App] Update available. Fetching...');
+          await Updates.fetchUpdateAsync();
+          console.log('[App] Update fetched. Reloading...');
+          await Updates.reloadAsync();
+          return; // reloadAsync will remount the app
+        }
+      } catch (e) {
+        console.warn('[App] Update check failed (continuing):', e?.message || e);
+      } finally {
+        setAppIsReady(true);
+        try { await SplashScreen.hideAsync(); } catch {}
+      }
+    };
+    run();
   }, []);
-  // Always render in development
+
+  if (!appIsReady) {
+    return null; // Keep native splash until ready
+  }
 
   console.log('[App] Rendering main app...');
 

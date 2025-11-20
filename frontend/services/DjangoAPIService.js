@@ -11,10 +11,9 @@ import SecureTokenStorage from './SecureTokenStorage';
 
 // Django backend configuration - Updated to match actual backend
 const API_CONFIG = {
-  // Check environment variables first, then fall back to conditional defaults
-  BASE_URL: (typeof process !== 'undefined' && process.env && (process.env.EXPO_PUBLIC_API_BASE_URL || process.env.EXPO_PUBLIC_API_URL)) 
-    ? (process.env.EXPO_PUBLIC_API_BASE_URL || process.env.EXPO_PUBLIC_API_URL)
-    : (__DEV__ ? 'http://127.0.0.1:8000' : 'http://ec2-34-203-241-81.compute-1.amazonaws.com'),
+  // PRODUCTION BACKEND - HTTPS with SSL
+  // Use custom domain with Let's Encrypt SSL certificate
+  BASE_URL: 'https://api.hugo-shopping.com',
   API_VERSION: 'api/v1',
   ENDPOINTS: {
     AUTH: {
@@ -279,23 +278,70 @@ class DjangoAPIService {
     try {
       // Prefer explicit env/config when provided
       const envObj = (typeof process !== 'undefined' && process.env) ? process.env : {};
-      const envUrl = envObj.EXPO_PUBLIC_API_BASE_URL || envObj.EXPO_PUBLIC_API_URL || (Constants?.expoConfig?.extra?.apiUrl || null);
+
+      // Helper: treat unresolved placeholders and invalid strings as null
+      const isPlaceholder = (val) => typeof val === 'string' && /\$\{\s*EXPO_.+?\s*\}/.test(val);
+      const normalizeUrl = (val) => {
+        if (!val || typeof val !== 'string') return null;
+        const s = val.trim();
+        if (!s || s === 'undefined' || s === 'null' || isPlaceholder(s)) return null;
+        if (!/^https?:\/\//i.test(s)) return null;
+        return s.replace(/\/$/, '');
+      };
+
+      // Resolve candidates from process.env and app config extras
+      const candidateEnvBase = normalizeUrl(envObj.EXPO_PUBLIC_API_BASE_URL);
+      const candidateEnvUrl = normalizeUrl(envObj.EXPO_PUBLIC_API_URL);
+      const candidateExtraApiUrl = normalizeUrl(Constants?.expoConfig?.extra?.apiUrl);
+      const candidateExtraApiBase = normalizeUrl(Constants?.expoConfig?.extra?.apiBaseUrl);
+      const envUrl = candidateEnvBase || candidateEnvUrl || candidateExtraApiUrl || candidateExtraApiBase || null;
       // Read any previously stored URL once (needed later for localhost fix decision)
       let storedUrl = await AsyncStorage.getItem('api_base_url');
+      let forcedOverrideUrl = null;
+      if (storedUrl && typeof storedUrl === 'string' && storedUrl.startsWith('override:')) {
+        forcedOverrideUrl = storedUrl.replace(/^override:/, '');
+      }
 
-      // IMPORTANT: Always prefer env URL over stored URL
-      // If env URL exists, clear any old stored URL to prevent conflicts
+      // Auto-clear HTTP overrides when hardcoded config is HTTPS (migration safety)
+      if (!envUrl && forcedOverrideUrl && 
+          API_CONFIG.BASE_URL.startsWith('https://') && 
+          forcedOverrideUrl.startsWith('http://')) {
+        console.log('[DjangoAPIService] 🔄 Auto-migration: Clearing HTTP override, using HTTPS config:', API_CONFIG.BASE_URL);
+        await AsyncStorage.removeItem('api_base_url');
+        storedUrl = null;
+        forcedOverrideUrl = null;
+      }
+
+      // PRIORITY: Environment variables ALWAYS take precedence over stored overrides
+      // This ensures OTA updates can properly update the backend URL
       if (envUrl) {
+        // Environment URL is present - use it and clear any conflicting overrides
         this.updateBaseUrl(envUrl);
-        if (storedUrl) {
-          await AsyncStorage.removeItem('api_base_url'); // Clear old stored URL
+        
+        // Auto-clear old HTTP overrides when env is HTTPS
+        if (envUrl.startsWith('https://') && forcedOverrideUrl && forcedOverrideUrl.startsWith('http://')) {
+          console.log('[DjangoAPIService] 🔄 Auto-clearing old HTTP override, using HTTPS env:', envUrl);
+          await AsyncStorage.removeItem('api_base_url');
+          storedUrl = null;
+          forcedOverrideUrl = null;
+        } else if (storedUrl) {
+          // Clear any non-matching stored URL
+          await AsyncStorage.removeItem('api_base_url');
           storedUrl = null;
         }
-        if (this._debug) console.log('[DjangoAPIService] Using env URL (cleared storage if existed):', envUrl);
+        
+        console.log('[DjangoAPIService] ✅ Using environment URL:', envUrl);
+      } else if (forcedOverrideUrl) {
+        // Only use forced override if NO environment URL is provided
+        this.updateBaseUrl(forcedOverrideUrl);
+        console.log('[DjangoAPIService] ⚠️ Using stored override URL:', forcedOverrideUrl);
       } else if (storedUrl) {
-        // Only use stored URL if no env URL provided
+        // Only use stored URL if no env URL or override provided
         this.updateBaseUrl(storedUrl);
-        if (this._debug) console.log('[DjangoAPIService] Using stored URL:', storedUrl);
+        console.log('[DjangoAPIService] Using stored URL:', storedUrl);
+      } else {
+        // No env, no override, no stored URL - use hardcoded BASE_URL from constructor
+        console.log('[DjangoAPIService] ✅ Using hardcoded BASE_URL from config:', this.baseUrl);
       }
 
       // Use SecureTokenStorage for token management

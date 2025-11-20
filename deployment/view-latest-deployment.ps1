@@ -14,26 +14,28 @@ if (Test-Path ".\patabima-backend.zip") {
     Write-Host "  File: $($localZip.Name)" -ForegroundColor White
     Write-Host "  Date: $($localZip.LastWriteTime)" -ForegroundColor White
     Write-Host "  Size: $([math]::Round($localZip.Length/1MB, 2)) MB" -ForegroundColor White
-} elseif (Test-Path "..\patabima-backend.zip") {
+}
+elseif (Test-Path "..\patabima-backend.zip") {
     $localZip = Get-Item "..\patabima-backend.zip"
     Write-Host "  File: $($localZip.Name)" -ForegroundColor White
     Write-Host "  Date: $($localZip.LastWriteTime)" -ForegroundColor White
     Write-Host "  Size: $([math]::Round($localZip.Length/1MB, 2)) MB" -ForegroundColor White
-} else {
+}
+else {
     Write-Host "  ⚠️  No local backend ZIP found" -ForegroundColor Red
 }
 
 Write-Host "`n🚀 Deployment Scripts:" -ForegroundColor Yellow
-Get-ChildItem -Path "." -Filter "*.sh" | Where-Object {$_.Name -like "*deploy*" -or $_.Name -like "*setup*"} | 
-    Sort-Object LastWriteTime -Descending | 
-    Select-Object -First 5 Name, LastWriteTime | 
-    Format-Table -AutoSize
+Get-ChildItem -Path "." -Filter "*.sh" | Where-Object { $_.Name -like "*deploy*" -or $_.Name -like "*setup*" } | 
+Sort-Object LastWriteTime -Descending | 
+Select-Object -First 5 Name, LastWriteTime | 
+Format-Table -AutoSize
 
 Write-Host "`n⚙️  Configuration Files:" -ForegroundColor Yellow
-Get-ChildItem -Path ".\systemd\",".\nginx\" -ErrorAction SilentlyContinue | 
-    Sort-Object LastWriteTime -Descending | 
-    Select-Object Name, DirectoryName, LastWriteTime | 
-    Format-Table -AutoSize
+Get-ChildItem -Path ".\systemd\", ".\nginx\" -ErrorAction SilentlyContinue | 
+Sort-Object LastWriteTime -Descending | 
+Select-Object Name, DirectoryName, LastWriteTime | 
+Format-Table -AutoSize
 
 Write-Host "`n🌐 Live EC2 Instance:" -ForegroundColor Yellow
 aws ec2 describe-instances --instance-ids i-0d0f116005d812275 --region us-east-1 --query 'Reservations[0].Instances[0].[InstanceId,State.Name,PublicIpAddress,LaunchTime]' --output table
@@ -43,7 +45,8 @@ try {
     $health = curl -s http://44.200.182.180/api/v1/health/ 2>$null | ConvertFrom-Json
     Write-Host "  Status: $($health.status)" -ForegroundColor Green
     Write-Host "  Service: $($health.service)" -ForegroundColor Green
-} catch {
+}
+catch {
     Write-Host "  ⚠️  Could not reach API" -ForegroundColor Red
 }
 
@@ -85,8 +88,8 @@ switch ($choice) {
         
         Write-Host "`n📋 Deployed Files:" -ForegroundColor Cyan
         Get-ChildItem -Path $tempDir -Recurse -File | 
-            Select-Object -First 50 @{N='File';E={$_.FullName.Replace($tempDir, '').TrimStart('\')}} | 
-            Format-Table -AutoSize
+        Select-Object -First 50 @{N = 'File'; E = { $_.FullName.Replace($tempDir, '').TrimStart('\') } } | 
+        Format-Table -AutoSize
         
         Write-Host "`n✅ Extracted to: $tempDir" -ForegroundColor Green
         Write-Host "  You can now inspect the deployed code" -ForegroundColor White

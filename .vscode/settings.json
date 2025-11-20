@@ -16,5 +16,6 @@
                 "NODE_ENV": "production"
             }
         }
-    }
+    },
+    "postman.settings.dotenv-detection-notification-visibility": false
 }

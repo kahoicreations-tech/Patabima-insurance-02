@@ -15,7 +15,8 @@ if (Test-Path $envFile) {
     $apiUrl = Get-Content $envFile | Select-String "^EXPO_PUBLIC_API_BASE_URL=" | ForEach-Object { $_.ToString().Split('=')[1] }
     Write-Host "✅ .env file found" -ForegroundColor Green
     Write-Host "   API URL: $apiUrl" -ForegroundColor White
-} else {
+}
+else {
     Write-Host "❌ .env file not found!" -ForegroundColor Red
     exit 1
 }
@@ -25,7 +26,8 @@ if (Test-Path $envLocalFile) {
     Write-Host "✅ .env.local file found (overrides .env)" -ForegroundColor Green
     Write-Host "   API URL: $apiUrlLocal" -ForegroundColor White
     $finalUrl = $apiUrlLocal
-} else {
+}
+else {
     Write-Host "⚠️  .env.local not found (using .env)" -ForegroundColor Yellow
     $finalUrl = $apiUrl
 }
@@ -45,10 +47,12 @@ try {
     if ($health.status -eq "ok") {
         Write-Host "✅ Health Check: PASS" -ForegroundColor Green
         Write-Host "   Service: $($health.service)" -ForegroundColor DarkGray
-    } else {
+    }
+    else {
         Write-Host "⚠️  Health Check: Unexpected response" -ForegroundColor Yellow
     }
-} catch {
+}
+catch {
     Write-Host "❌ Health Check: FAILED" -ForegroundColor Red
     Write-Host "   Error: $($_.Exception.Message)" -ForegroundColor Red
     Write-Host "`n⚠️  Backend is not reachable. Frontend will not work!" -ForegroundColor Red
@@ -68,10 +72,12 @@ try {
         $categories.categories | Select-Object -First 3 | ForEach-Object {
             Write-Host "   - $($_.name) ($($_.code))" -ForegroundColor DarkGray
         }
-    } else {
+    }
+    else {
         Write-Host "⚠️  Motor Categories: Empty response" -ForegroundColor Yellow
     }
-} catch {
+}
+catch {
     Write-Host "❌ Motor Categories: FAILED" -ForegroundColor Red
     Write-Host "   Error: $($_.Exception.Message)" -ForegroundColor Red
 }
@@ -89,10 +95,12 @@ try {
         $underwriters.underwriters | Select-Object -First 3 | ForEach-Object {
             Write-Host "   - $($_.name) ($($_.code))" -ForegroundColor DarkGray
         }
-    } else {
+    }
+    else {
         Write-Host "⚠️  Underwriters: Empty response" -ForegroundColor Yellow
     }
-} catch {
+}
+catch {
     Write-Host "❌ Underwriters: FAILED" -ForegroundColor Red
     Write-Host "   Error: $($_.Exception.Message)" -ForegroundColor Red
 }
@@ -109,7 +117,8 @@ if (Test-Path $serviceFile) {
     $content = Get-Content $serviceFile -Raw
     if ($content -match "EXPO_PUBLIC_API_BASE_URL") {
         Write-Host "✅ Service reads EXPO_PUBLIC_API_BASE_URL" -ForegroundColor Green
-    } else {
+    }
+    else {
         Write-Host "⚠️  Service may not read environment variable" -ForegroundColor Yellow
     }
     
@@ -117,7 +126,8 @@ if (Test-Path $serviceFile) {
     if ($content -match "BASE_URL.*127\.0\.0\.1:8000") {
         Write-Host "⚠️  Fallback URL is localhost (will be used in dev mode)" -ForegroundColor Yellow
     }
-} else {
+}
+else {
     Write-Host "❌ DjangoAPIService.js not found!" -ForegroundColor Red
 }
 
@@ -128,7 +138,8 @@ Write-Host "-" * 80 -ForegroundColor DarkGray
 $pricingService = ".\frontend\services\MotorInsurancePricingService.js"
 if (Test-Path $pricingService) {
     Write-Host "✅ MotorInsurancePricingService.js found" -ForegroundColor Green
-} else {
+}
+else {
     Write-Host "⚠️  MotorInsurancePricingService.js not found" -ForegroundColor Yellow
 }
 
@@ -137,11 +148,11 @@ Write-Host "`n🎯 Step 5: Motor 2 Flow Critical Endpoints" -ForegroundColor Yel
 Write-Host "-" * 80 -ForegroundColor DarkGray
 
 $motor2Endpoints = @(
-    @{Name="Categories"; Path="/api/v1/motor2/categories/"; Method="GET"},
-    @{Name="Subcategories (Private)"; Path="/api/v1/motor2/subcategories/?category=PRIVATE"; Method="GET"},
-    @{Name="Underwriters"; Path="/api/v1/public_app/insurance/get_underwriters/"; Method="GET"},
-    @{Name="Calculate Premium"; Path="/api/v1/public_app/insurance/calculate_motor_premium/"; Method="POST"},
-    @{Name="Submit Quotation"; Path="/api/v1/public_app/insurance/submit_motor_quotation/"; Method="POST"}
+    @{Name = "Categories"; Path = "/api/v1/motor2/categories/"; Method = "GET" },
+    @{Name = "Subcategories (Private)"; Path = "/api/v1/motor2/subcategories/?category=PRIVATE"; Method = "GET" },
+    @{Name = "Underwriters"; Path = "/api/v1/public_app/insurance/get_underwriters/"; Method = "GET" },
+    @{Name = "Calculate Premium"; Path = "/api/v1/public_app/insurance/calculate_motor_premium/"; Method = "POST" },
+    @{Name = "Submit Quotation"; Path = "/api/v1/public_app/insurance/submit_motor_quotation/"; Method = "POST" }
 )
 
 $passCount = 0
@@ -153,7 +164,8 @@ foreach ($endpoint in $motor2Endpoints) {
     try {
         if ($endpoint.Method -eq "GET") {
             $response = Invoke-WebRequest -Uri "$baseUrl$($endpoint.Path)" -Method GET -TimeoutSec 5 -ErrorAction Stop
-        } else {
+        }
+        else {
             # POST with minimal body
             $body = @{} | ConvertTo-Json
             $response = Invoke-WebRequest -Uri "$baseUrl$($endpoint.Path)" -Method POST -Body $body -ContentType "application/json" -TimeoutSec 5 -ErrorAction Stop
@@ -162,15 +174,18 @@ foreach ($endpoint in $motor2Endpoints) {
         if ($response.StatusCode -eq 200) {
             Write-Host " ✅" -ForegroundColor Green
             $passCount++
-        } else {
+        }
+        else {
             Write-Host " ⚠️  (Status: $($response.StatusCode))" -ForegroundColor Yellow
         }
-    } catch {
+    }
+    catch {
         $statusCode = $_.Exception.Response.StatusCode.Value__
         if ($statusCode -eq 400 -or $statusCode -eq 401) {
             Write-Host " ⚠️  (Auth/Validation required - endpoint exists)" -ForegroundColor Cyan
             $passCount++  # Still counts as working
-        } else {
+        }
+        else {
             Write-Host " ❌ (Status: $statusCode)" -ForegroundColor Red
         }
     }
@@ -197,10 +212,12 @@ if ($percentage -eq 100) {
     Write-Host "   1. Start Expo dev server: npm start" -ForegroundColor White
     Write-Host "   2. Press 'r' to reload" -ForegroundColor White
     Write-Host "   3. Test Motor Insurance flow in app" -ForegroundColor White
-} elseif ($percentage -ge 80) {
+}
+elseif ($percentage -ge 80) {
     Write-Host "`n⚠️  MOSTLY WORKING - $percentage% endpoints operational" -ForegroundColor Yellow
     Write-Host "`n📱 Frontend can work with minor issues" -ForegroundColor Yellow
-} else {
+}
+else {
     Write-Host "`n❌ CRITICAL ISSUES - Only $percentage% endpoints working" -ForegroundColor Red
     Write-Host "`n⚠️  Frontend will have significant problems!" -ForegroundColor Red
 }

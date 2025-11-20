@@ -1,5 +1,7 @@
 node_modules
 .expo/
+frontend/.expo/
+**/.expo
 
 # Environment files (keep local configs private)
 .env

@@ -60,7 +60,14 @@ config.transformer.getTransformOptions = async () => ({
 
 // Optimize resolver performance (keep defaults reasonable)
 config.resolver.platforms = ['ios', 'android', 'web'];
-config.resolver.sourceExts = ['js', 'jsx', 'ts', 'tsx', 'json'];
+
+// Extend default sourceExts instead of replacing them
+const defaultSourceExts = config.resolver.sourceExts || [];
+config.resolver.sourceExts = [...new Set([...defaultSourceExts, 'js', 'jsx', 'ts', 'tsx', 'json'])];
+
+// Extend default assetExts instead of replacing them
+const defaultAssetExts = config.resolver.assetExts || [];
+config.resolver.assetExts = [...new Set([...defaultAssetExts])];
 
 // Enable package exports to support modern libraries like axios
 config.resolver.unstable_enablePackageExports = true;

@@ -7,6 +7,7 @@ You have **3 options** to undo the EC2 deployment, depending on how much you wan
 ## ✅ Option 1: Clean Rollback (Recommended)
 
 **What it does:**
+
 - Stops Gunicorn and Nginx services
 - Removes application files from `/var/www/patabima`
 - Removes systemd service configurations
@@ -14,11 +15,13 @@ You have **3 options** to undo the EC2 deployment, depending on how much you wan
 - **Keeps:** EC2 instance running, Python/Nginx installed
 
 **When to use:**
+
 - You want to redeploy from scratch
 - You want to test a different deployment approach
 - You want to clean up but keep the server
 
 **How to run:**
+
 ```powershell
 .\deployment\rollback-ec2.ps1
 ```
@@ -30,16 +33,19 @@ You have **3 options** to undo the EC2 deployment, depending on how much you wan
 ## 🔥 Option 2: Manual SSH Cleanup
 
 **What it does:**
+
 - Connect to EC2 via SSH
 - Manually remove specific files/services
 - Full control over what gets deleted
 
 **When to use:**
+
 - You want to inspect what's installed first
 - You want to remove only specific components
 - You want to troubleshoot issues
 
 **How to run:**
+
 ```powershell
 # Connect to EC2
 ssh -i ~/.ssh/aws-eb ec2-user@44.200.182.180
@@ -63,16 +69,19 @@ sudo rm -rf /var/www/patabima
 ## ⚠️ Option 3: Terminate EC2 Instance (Nuclear Option)
 
 **What it does:**
+
 - **PERMANENTLY DELETES** the entire EC2 instance
 - All data on the instance is LOST
 - You get a new public IP when you recreate
 
 **When to use:**
+
 - The instance is completely broken
 - You want to start from absolute zero
 - You want to change instance type/configuration
 
 **How to run:**
+
 ```powershell
 .\deployment\terminate-ec2.ps1
 ```
@@ -80,12 +89,14 @@ sudo rm -rf /var/www/patabima
 **WARNING:** This requires **3 confirmations** and CANNOT be undone!
 
 **What's preserved:**
+
 - ✅ RDS Database (all your data is safe)
 - ✅ S3 buckets and files
 - ✅ IAM roles and security groups
 - ✅ SSH key pair
 
 **What's lost:**
+
 - ❌ The EC2 instance itself
 - ❌ Public IP address (you'll get a new one)
 - ❌ All installed software
@@ -95,12 +106,12 @@ sudo rm -rf /var/www/patabima
 
 ## Quick Decision Guide
 
-| Situation | Recommended Option |
-|-----------|-------------------|
-| "I want to redeploy cleanly" | **Option 1** (Clean Rollback) |
-| "I need to debug what's wrong" | **Option 2** (Manual SSH) |
-| "Instance is completely broken" | **Option 3** (Terminate) |
-| "I want to change instance size" | **Option 3** (Terminate) |
+| Situation                              | Recommended Option            |
+| -------------------------------------- | ----------------------------- |
+| "I want to redeploy cleanly"           | **Option 1** (Clean Rollback) |
+| "I need to debug what's wrong"         | **Option 2** (Manual SSH)     |
+| "Instance is completely broken"        | **Option 3** (Terminate)      |
+| "I want to change instance size"       | **Option 3** (Terminate)      |
 | "App is running but I want fresh code" | **Option 1** (Clean Rollback) |
 
 ---
@@ -108,18 +119,21 @@ sudo rm -rf /var/www/patabima
 ## After Rollback - Redeployment
 
 ### If you used Option 1 (Clean Rollback):
+
 ```powershell
 # Instance is ready, just redeploy
 .\deployment\complete_ec2_deployment.ps1
 ```
 
 ### If you used Option 2 (Manual SSH):
+
 ```powershell
 # Finish cleanup, then redeploy
 .\deployment\complete_ec2_deployment.ps1
 ```
 
 ### If you used Option 3 (Terminate):
+
 ```powershell
 # Create new EC2 instance first
 .\deployment\create-fresh-ec2.ps1
@@ -138,6 +152,7 @@ sudo rm -rf /var/www/patabima
 **Name:** `patabima--agency`
 
 **Current deployment:**
+
 - Django API is **LIVE** at: http://44.200.182.180
 - Health check: http://44.200.182.180/api/v1/health/
 - Nginx: Running
@@ -148,16 +163,19 @@ sudo rm -rf /var/www/patabima
 ## Need Help?
 
 Check current deployment status:
+
 ```powershell
 curl http://44.200.182.180/api/v1/health/
 ```
 
 SSH into the instance:
+
 ```powershell
 ssh -i ~/.ssh/aws-eb ec2-user@44.200.182.180
 ```
 
 Check what's running:
+
 ```bash
 sudo systemctl status patabima
 sudo systemctl status nginx

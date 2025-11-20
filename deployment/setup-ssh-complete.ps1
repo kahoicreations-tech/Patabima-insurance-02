@@ -115,29 +115,29 @@ Write-Host "`n══════════════════════
 # Offer to run Step 1 automatically
 $response = Read-Host "Would you like to generate the SSH key now? (Y/N)"
 if ($response -eq 'Y' -or $response -eq 'y') {
-    Write-Host "`n🔑 Generating SSH key..." -ForegroundColor Cyan
-    ssh-keygen -t rsa -b 4096 -f "$env:USERPROFILE\.ssh\patabima-ec2" -N '""'
+  Write-Host "`n🔑 Generating SSH key..." -ForegroundColor Cyan
+  ssh-keygen -t rsa -b 4096 -f "$env:USERPROFILE\.ssh\patabima-ec2" -N '""'
     
-    if ($LASTEXITCODE -eq 0) {
-        Write-Host "`n✅ SSH key generated successfully!" -ForegroundColor Green
-        Write-Host "📁 Location: $env:USERPROFILE\.ssh\patabima-ec2`n" -ForegroundColor White
+  if ($LASTEXITCODE -eq 0) {
+    Write-Host "`n✅ SSH key generated successfully!" -ForegroundColor Green
+    Write-Host "📁 Location: $env:USERPROFILE\.ssh\patabima-ec2`n" -ForegroundColor White
         
-        Write-Host "Copying public key to clipboard..." -ForegroundColor Yellow
-        Get-Content "$env:USERPROFILE\.ssh\patabima-ec2.pub" | Set-Clipboard
-        Write-Host "✅ Public key copied to clipboard!`n" -ForegroundColor Green
+    Write-Host "Copying public key to clipboard..." -ForegroundColor Yellow
+    Get-Content "$env:USERPROFILE\.ssh\patabima-ec2.pub" | Set-Clipboard
+    Write-Host "✅ Public key copied to clipboard!`n" -ForegroundColor Green
         
-        Write-Host "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" -ForegroundColor Cyan
-        Write-Host "📋 NEXT: Add this key to EC2" -ForegroundColor Yellow
-        Write-Host "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`n" -ForegroundColor Cyan
+    Write-Host "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" -ForegroundColor Cyan
+    Write-Host "📋 NEXT: Add this key to EC2" -ForegroundColor Yellow
+    Write-Host "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`n" -ForegroundColor Cyan
         
-        Write-Host "In the EC2 browser SSH (already open), run:`n" -ForegroundColor White
-        Write-Host "mkdir -p ~/.ssh && chmod 700 ~/.ssh" -ForegroundColor Green
-        Write-Host "echo '" -NoNewline -ForegroundColor Green
-        Write-Host (Get-Content "$env:USERPROFILE\.ssh\patabima-ec2.pub" -Raw).Trim() -NoNewline -ForegroundColor Yellow
-        Write-Host "' >> ~/.ssh/authorized_keys" -ForegroundColor Green
-        Write-Host "chmod 600 ~/.ssh/authorized_keys`n" -ForegroundColor Green
+    Write-Host "In the EC2 browser SSH (already open), run:`n" -ForegroundColor White
+    Write-Host "mkdir -p ~/.ssh && chmod 700 ~/.ssh" -ForegroundColor Green
+    Write-Host "echo '" -NoNewline -ForegroundColor Green
+    Write-Host (Get-Content "$env:USERPROFILE\.ssh\patabima-ec2.pub" -Raw).Trim() -NoNewline -ForegroundColor Yellow
+    Write-Host "' >> ~/.ssh/authorized_keys" -ForegroundColor Green
+    Write-Host "chmod 600 ~/.ssh/authorized_keys`n" -ForegroundColor Green
         
-        Write-Host "Then test connection:" -ForegroundColor Cyan
-        Write-Host "ssh -i $env:USERPROFILE\.ssh\patabima-ec2 ec2-user@44.200.182.180`n" -ForegroundColor White
-    }
+    Write-Host "Then test connection:" -ForegroundColor Cyan
+    Write-Host "ssh -i $env:USERPROFILE\.ssh\patabima-ec2 ec2-user@44.200.182.180`n" -ForegroundColor White
+  }
 }

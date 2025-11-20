@@ -3,12 +3,14 @@
 ## Connect to EC2
 
 ### Browser SSH (No key needed) ⭐ RECOMMENDED
+
 1. Open: https://console.aws.amazon.com/ec2/
 2. Select instance: `i-0d0f116005d812275`
 3. Click **Connect** → **EC2 Instance Connect**
 4. Click **Connect**
 
 ### Navigate to Project
+
 ```bash
 cd /var/www/patabima
 source venv/bin/activate
@@ -20,27 +22,32 @@ export $(grep -v '^#' .env | xargs)
 ## Update Code on EC2
 
 ### Pull Latest Changes
+
 ```bash
 cd /var/www/patabima
 git pull origin main
 ```
 
 ### Install Dependencies (if updated)
+
 ```bash
 pip install -r requirements.txt
 ```
 
 ### Run Migrations (if models changed)
+
 ```bash
 python manage.py migrate
 ```
 
 ### Collect Static Files (if admin/static changed)
+
 ```bash
 python manage.py collectstatic --noinput
 ```
 
 ### Restart Services
+
 ```bash
 sudo systemctl restart patabima
 sudo systemctl restart nginx
@@ -51,11 +58,13 @@ sudo systemctl restart nginx
 ## Service Management
 
 ### Check Status
+
 ```bash
 sudo systemctl status patabima nginx
 ```
 
 ### View Logs
+
 ```bash
 # Real-time Gunicorn logs
 sudo journalctl -u patabima -f --no-pager
@@ -71,6 +80,7 @@ sudo tail -f /var/log/nginx/access.log
 ```
 
 ### Restart Services
+
 ```bash
 sudo systemctl restart patabima
 sudo systemctl restart nginx
@@ -81,6 +91,7 @@ sudo systemctl restart nginx
 ## Database Operations
 
 ### Django Shell
+
 ```bash
 cd /var/www/patabima
 source venv/bin/activate
@@ -103,6 +114,7 @@ User.objects.filter(is_admin=True).values('phonenumber', 'email')
 ```
 
 ### Create Admin User
+
 ```bash
 python manage.py shell -c "
 from django.contrib.auth import get_user_model;
@@ -118,6 +130,7 @@ print(f'Admin: {user.phonenumber}, Staff: {user.is_staff}')
 ```
 
 ### Database Connection Test
+
 ```bash
 python manage.py check --database default
 ```
@@ -127,6 +140,7 @@ python manage.py check --database default
 ## API Testing
 
 ### Test from EC2
+
 ```bash
 # Categories endpoint
 curl -sS http://localhost/api/v1/motor2/categories/ | python -m json.tool | head -30
@@ -139,6 +153,7 @@ curl -sS http://localhost/api/v1/health/
 ```
 
 ### Test from Browser
+
 - Categories: http://44.200.182.180/api/v1/motor2/categories/
 - Admin: http://44.200.182.180/admin/
 
@@ -147,6 +162,7 @@ curl -sS http://localhost/api/v1/health/
 ## Common Tasks
 
 ### After Code Changes (Standard Workflow)
+
 ```bash
 cd /var/www/patabima
 git pull origin main
@@ -159,17 +175,20 @@ sudo systemctl status patabima
 ```
 
 ### Check What Changed
+
 ```bash
 git log -5 --oneline
 git diff HEAD~1
 ```
 
 ### View Environment Variables
+
 ```bash
 cat .env | grep -v '^#'
 ```
 
 ### Disk Space Check
+
 ```bash
 df -h
 du -sh /var/www/patabima/*
@@ -204,6 +223,7 @@ du -sh /var/www/patabima/*
 ## Emergency Commands
 
 ### Service Down
+
 ```bash
 sudo systemctl restart patabima nginx
 sudo systemctl status patabima nginx
@@ -211,6 +231,7 @@ sudo journalctl -u patabima -n 100
 ```
 
 ### Database Connection Issues
+
 ```bash
 cd /var/www/patabima
 source venv/bin/activate
@@ -220,6 +241,7 @@ python manage.py dbshell
 ```
 
 ### Nginx 502 Error
+
 ```bash
 sudo systemctl restart patabima
 sudo systemctl status patabima

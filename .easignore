@@ -2,16 +2,18 @@
 
 # Files and directories listed here will be excluded from EAS builds
 
-# Video files - keep locally but exclude from builds to reduce size
+# Video files - exclude by default to keep archive small
+# Keep our splash animation explicitly
 
-_.mp4
-_.mov
-_.avi
-_.mkv
-_.webm
-frontend/assets/_.mp4
-frontend/assets/\*.mov
+*.mp4
+*.mov
+*.avi
+*.mkv
+*.webm
 assets/videos/
+
+# Keep the splash animation used by the app
+!frontend/assets/Splash Screen Animation_V2.mp4
 
 # Documentation - not needed in build
 
@@ -49,6 +51,18 @@ Dockerfile
 
 insurance-app/
 backend/
+.venv/
+venv/
+
+# Frontend build artifacts and dependencies (CRITICAL - 400+ MB)
+frontend/node_modules/
+frontend/venv/
+frontend/.venv/
+frontend/dist/
+frontend/build/
+frontend/android/
+frontend/ios/
+frontend/.expo/
 
 # Local development tools
 
@@ -79,9 +93,11 @@ _.apk
 _.aab
 \*.ipa
 
-# Unnecessary data files
+# Unnecessary data files at repository root only (keep frontend/data)
 
-data/
+/data/**
+# Ensure RN static data is included
+!frontend/data/**
 
 # Large design and media files
 

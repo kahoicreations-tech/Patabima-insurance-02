@@ -1,5 +1,5 @@
-import React, { useEffect, useRef, useState, useMemo } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert, KeyboardAvoidingView, Platform, Keyboard, TouchableWithoutFeedback, ScrollView, ActivityIndicator } from 'react-native';
+import React, { useEffect, useRef, useState, useMemo, useCallback } from 'react';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert, KeyboardAvoidingView, Platform, Keyboard, TouchableWithoutFeedback, ScrollView, ActivityIndicator, Modal } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -11,6 +11,8 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useAppData } from '../../contexts/AppDataContext';
 import djangoAPI from '../../services/DjangoAPIService';
 import { SafeScreen, CompactCurvedHeader } from '../../components';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import Constants from 'expo-constants';
 
 export default function LoginScreen() {
   const navigation = useNavigation();
@@ -26,6 +28,13 @@ export default function LoginScreen() {
   const [otpTimer, setOtpTimer] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [transitioning, setTransitioning] = useState(false);
+  const [devTapCount, setDevTapCount] = useState(0);
+  const [showBackendModal, setShowBackendModal] = useState(false);
+  const [backendInput, setBackendInput] = useState('');
+  const [effectiveBase, setEffectiveBase] = useState('');
+  const [envBase, setEnvBase] = useState('');
+  const [storedOverride, setStoredOverride] = useState('');
+  const [pingResult, setPingResult] = useState('');
 
   const passwordInputRef = useRef(null);
   const otpInputRef = useRef(null);
@@ -38,6 +47,148 @@ export default function LoginScreen() {
         timerRef.current = null;
       }
     };
+  }, []);
+
+  // Hidden dev toggle: tap version 7x to open backend switcher
+  const handleDevTap = async () => {
+    const next = devTapCount + 1;
+    setDevTapCount(next);
+    if (next >= 7) {
+      setDevTapCount(0);
+      await populateBackendInfo();
+      setShowBackendModal(true);
+    }
+  };
+
+  const populateBackendInfo = useCallback(async () => {
+    try {
+      // Check Expo Constants first (works in built apps), then process.env (development)
+      const expoExtra = Constants.expoConfig?.extra;
+      let e = expoExtra?.apiBaseUrl || expoExtra?.apiUrl || '';
+      
+      // Fall back to process.env for development
+      if (!e && typeof process !== 'undefined' && process.env) {
+        e = process.env.EXPO_PUBLIC_API_BASE_URL || process.env.EXPO_PUBLIC_API_URL || '';
+      }
+      
+      setEnvBase(e);
+      const stored = await AsyncStorage.getItem('api_base_url');
+      setStoredOverride(stored || '');
+      // Ensure service initialized to reflect current base
+      try { await djangoAPI.initialize(); } catch {}
+      setEffectiveBase(djangoAPI.baseUrl || '');
+      setBackendInput((stored && stored.replace(/^override:/, '')) || djangoAPI.baseUrl || '');
+      
+      // Debug info for OTA update verification
+      console.log('🔍 Backend Switcher Debug:');
+      console.log('  Environment Base:', e || '(none)');
+      console.log('  Stored Override:', stored || '(none)');
+      console.log('  Effective Base:', djangoAPI.baseUrl || '(unknown)');
+      console.log('  DjangoAPIService initialized:', !!djangoAPI.baseUrl);
+      console.log('  OTA Update Timestamp:', new Date().toISOString());
+      
+      setPingResult('');
+    } catch {}
+  }, []);
+
+  const saveBackendOverride = useCallback(async () => {
+    const val = (backendInput || '').trim();
+    if (!val || !/^https?:\/\//i.test(val)) {
+      Alert.alert('Invalid URL', 'Enter a valid http(s) base URL, e.g. http://44.200.182.180');
+      return;
+    }
+    try {
+      await AsyncStorage.setItem('api_base_url', `override:${val}`);
+      djangoAPI.updateBaseUrl(val.replace(/\/$/, ''));
+      setEffectiveBase(djangoAPI.baseUrl);
+      setStoredOverride(`override:${val}`);
+      Alert.alert('Backend Updated', 'Using runtime override for backend base URL.');
+    } catch (e) {
+      Alert.alert('Error', 'Failed to save override');
+    }
+  }, [backendInput]);
+
+  const clearBackendOverride = useCallback(async () => {
+    try {
+      await AsyncStorage.removeItem('api_base_url');
+      await djangoAPI.initialize();
+      setEffectiveBase(djangoAPI.baseUrl || '');
+      setStoredOverride('');
+      setBackendInput(djangoAPI.baseUrl || '');
+      Alert.alert('Override Cleared', 'Reverted to environment/default backend.');
+    } catch {}
+  }, []);
+
+  const testPing = useCallback(async () => {
+    setPingResult('Testing endpoints...\n\n');
+    try {
+      const base = (djangoAPI.baseUrl || '').replace(/\/$/, '');
+      const isHttps = base.startsWith('https://');
+      
+      // Updated endpoints to match actual backend routes
+      const endpoints = [
+        { name: 'Health', url: `${base}/api/v1/health/`, method: 'GET', critical: true },
+        { name: 'Motor Categories', url: `${base}/api/v1/motor2/categories/`, method: 'GET', critical: true },
+        { name: 'Auth Validate', url: `${base}/api/v1/public_app/auth/validate_phone`, method: 'POST', body: { phonenumber: '0790000000' }, critical: false },
+      ];
+      
+      let results = [];
+      let successCount = 0;
+      let criticalFailed = false;
+      
+      for (const ep of endpoints) {
+        try {
+          const controller = new AbortController();
+          const timeout = setTimeout(() => controller.abort(), 8000);
+          
+          const options = {
+            method: ep.method,
+            signal: controller.signal,
+            headers: { 'Content-Type': 'application/json' },
+          };
+          
+          if (ep.body) {
+            options.body = JSON.stringify(ep.body);
+          }
+          
+          const response = await fetch(ep.url, options);
+          clearTimeout(timeout);
+          
+          const statusEmoji = response.status === 200 || response.status === 201 ? '✅' : 
+                             response.status >= 400 && response.status < 500 ? '⚠️' : '❌';
+          
+          results.push(`${statusEmoji} ${ep.name}: ${response.status}`);
+          
+          if (response.status === 200 || response.status === 201) {
+            successCount++;
+          } else if (ep.critical) {
+            criticalFailed = true;
+          }
+          
+          // Log response for debugging
+          if (response.status === 200) {
+            try {
+              const json = await response.json();
+              console.log(`[${ep.name}] Response:`, json);
+            } catch {}
+          }
+        } catch (error) {
+          const errMsg = error.name === 'AbortError' ? 'Timeout' : error.message || 'Network error';
+          results.push(`❌ ${ep.name}: ${errMsg}`);
+          if (ep.critical) {
+            criticalFailed = true;
+          }
+        }
+      }
+      
+      // Summary with SSL info
+      const protocol = isHttps ? 'HTTPS ✅' : 'HTTP ⚠️';
+      const summary = `\n━━━━━━━━━━━━━━━━━━━\n${protocol} | ${successCount}/${endpoints.length} OK\n${criticalFailed ? '⚠️ Critical endpoints failed!' : '✅ All critical endpoints OK'}`;
+      
+      setPingResult(results.join('\n') + summary);
+    } catch (err) {
+      setPingResult(`❌ Test failed: ${err?.message || 'unknown error'}`);
+    }
   }, []);
 
   const startOtpCountdown = () => {
@@ -218,11 +369,22 @@ export default function LoginScreen() {
     }
   };
 
-  // Memoize content container style to prevent re-renders
-  const contentContainerStyle = useMemo(() => ([
-    styles.content, 
-    { paddingBottom: insets.bottom + 20 }
-  ]), [insets.bottom]);
+  // Memoize content container style to prevent re-renders causing flickering
+  const contentContainerStyle = useMemo(() => {
+    return {
+      ...styles.content,
+      paddingBottom: insets.bottom + 20
+    };
+  }, [insets.bottom]);
+
+  // Memoize resend button styles to prevent flickering
+  const resendButtonStyle = useMemo(() => {
+    return [styles.resendButton, otpTimer > 0 && styles.resendButtonDisabled];
+  }, [otpTimer]);
+
+  const resendButtonTextStyle = useMemo(() => {
+    return [styles.resendButtonText, otpTimer > 0 && styles.resendButtonTextDisabled];
+  }, [otpTimer]);
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
@@ -367,12 +529,12 @@ export default function LoginScreen() {
                     </TouchableOpacity>
 
                     <TouchableOpacity
-                      style={[styles.resendButton, otpTimer > 0 && styles.resendButtonDisabled]}
+                      style={resendButtonStyle}
                       onPress={handleResendOTP}
                       disabled={otpTimer > 0 || isLoading}
                       activeOpacity={0.7}
                     >
-                      <Text style={[styles.resendButtonText, otpTimer > 0 && styles.resendButtonTextDisabled]}>
+                      <Text style={resendButtonTextStyle}>
                         {otpTimer > 0 ? `Resend in ${otpTimer}s` : 'Resend OTP'}
                       </Text>
                     </TouchableOpacity>
@@ -405,10 +567,149 @@ export default function LoginScreen() {
                     <Text style={styles.termsLink}>Terms and Policies</Text>
                   </TouchableOpacity>
                 </View>
-                <Text style={styles.versionText}>PataBima - Ver 1.0.0</Text>
+                <Text style={styles.versionText} onPress={handleDevTap}>PataBima - Ver 1.0.0</Text>
               </View>
             </View>
           </ScrollView>
+          <Modal visible={showBackendModal} transparent animationType="fade" onRequestClose={() => setShowBackendModal(false)}>
+            <View style={styles.modalBackdrop}>
+              <View style={[styles.modalCard, { maxHeight: '85%' }]}>
+                <Text style={styles.modalTitle}>🔧 Backend Switcher - Dev Tools</Text>
+                
+                <ScrollView style={{ maxHeight: 500 }} showsVerticalScrollIndicator={true}>
+                  {/* SSL & Environment Status */}
+                  <View style={{ backgroundColor: djangoAPI.baseUrl?.startsWith('https://') ? '#e8f5e9' : '#fff3e0', padding: 12, borderRadius: 8, marginBottom: 12, borderWidth: 1, borderColor: djangoAPI.baseUrl?.startsWith('https://') ? '#4caf50' : '#ff9800' }}>
+                    <Text style={[styles.modalLabel, { fontSize: 12, color: djangoAPI.baseUrl?.startsWith('https://') ? '#2e7d32' : '#e65100', fontWeight: 'bold', marginBottom: 8 }]}>
+                      {djangoAPI.baseUrl?.startsWith('https://') ? '🔒 HTTPS ENABLED - SSL Certificate Active' : '⚠️ HTTP ONLY - No SSL Encryption'}
+                    </Text>
+                    <Text style={[styles.modalValue, { fontSize: 10, color: '#666' }]}>
+                      {djangoAPI.baseUrl?.startsWith('https://') 
+                        ? '✅ All API calls are encrypted and secure'
+                        : '⚠️ Unencrypted connection - Use HTTPS in production'}
+                    </Text>
+                  </View>
+
+                  {/* Current Configuration */}
+                  <View style={{ backgroundColor: '#f5f5f5', padding: 10, borderRadius: 8, marginBottom: 12 }}>
+                    <Text style={[styles.modalLabel, { fontSize: 11, color: '#666', fontWeight: 'bold', marginBottom: 8 }]}>📊 Current Configuration:</Text>
+                    
+                    <Text style={[styles.modalValue, { fontSize: 10, color: '#0066cc', fontWeight: 'bold', marginTop: 4 }]}>
+                      🌐 Active URL: {djangoAPI.baseUrl || 'NONE'}
+                    </Text>
+                    
+                    <Text style={[styles.modalValue, { fontSize: 10, color: envBase ? '#0a7' : '#D5222B', marginTop: 4 }]}>
+                      📦 Environment: {envBase || '(not set)'}
+                    </Text>
+                    
+                    <Text style={[styles.modalValue, { fontSize: 10, color: storedOverride ? '#ff9800' : '#999', marginTop: 4 }]}>
+                      ⚙️ Override: {storedOverride ? storedOverride.replace('override:', '') : '(none)'}
+                    </Text>
+                  </View>
+
+                  {/* Runtime Information */}
+                  <View style={{ backgroundColor: '#f0f0f0', padding: 10, borderRadius: 8, marginBottom: 12 }}>
+                    <Text style={[styles.modalLabel, { fontSize: 11, color: '#666', fontWeight: 'bold', marginBottom: 8 }]}>🔍 Runtime Information:</Text>
+                    
+                    <Text style={[styles.modalValue, { fontSize: 10, color: '#333', marginTop: 4 }]}>
+                      📱 Build: 1.0.2 | {new Date().toLocaleString()}
+                    </Text>
+                    
+                    <Text style={[styles.modalValue, { fontSize: 10, color: __DEV__ ? '#ff9800' : '#0a7', marginTop: 4 }]}>
+                      🛠️ Mode: {__DEV__ ? 'DEVELOPMENT' : 'PRODUCTION'}
+                    </Text>
+                    
+                    <Text style={[styles.modalValue, { fontSize: 10, color: djangoAPI.baseUrl ? '#0a7' : '#D5222B', marginTop: 4 }]}>
+                      🔧 Django Service: {djangoAPI.baseUrl ? '✓ Initialized' : '✗ Not Initialized'}
+                    </Text>
+                    
+                    <Text style={[styles.modalValue, { fontSize: 10, color: '#666', marginTop: 4 }]}>
+                      🔑 Expo Config: {Constants.expoConfig ? '✓ Available' : '✗ Missing'}
+                    </Text>
+                  </View>
+
+                  {/* Environment Variables Debug */}
+                  <View style={{ backgroundColor: '#e3f2fd', padding: 10, borderRadius: 8, marginBottom: 12 }}>
+                    <Text style={[styles.modalLabel, { fontSize: 11, color: '#1565c0', fontWeight: 'bold', marginBottom: 8 }]}>🌍 Environment Variables:</Text>
+                    
+                    <Text style={[styles.modalValue, { fontSize: 9, color: '#666', marginTop: 4, fontFamily: 'monospace' }]}>
+                      EXPO_PUBLIC_API_BASE_URL:{'\n'}{typeof process !== 'undefined' && process.env?.EXPO_PUBLIC_API_BASE_URL ? process.env.EXPO_PUBLIC_API_BASE_URL : 'undefined'}
+                    </Text>
+                    
+                    <Text style={[styles.modalValue, { fontSize: 9, color: '#666', marginTop: 6, fontFamily: 'monospace' }]}>
+                      Extra.apiBaseUrl:{'\n'}{Constants.expoConfig?.extra?.apiBaseUrl || 'undefined'}
+                    </Text>
+                    
+                    <Text style={[styles.modalValue, { fontSize: 9, color: '#666', marginTop: 6, fontFamily: 'monospace' }]}>
+                      Extra.apiUrl:{'\n'}{Constants.expoConfig?.extra?.apiUrl || 'undefined'}
+                    </Text>
+                  </View>
+
+                  {/* Working Endpoints Reference */}
+                  <View style={{ backgroundColor: '#f3e5f5', padding: 10, borderRadius: 8, marginBottom: 12 }}>
+                    <Text style={[styles.modalLabel, { fontSize: 11, color: '#6a1b9a', fontWeight: 'bold', marginBottom: 8 }]}>✅ Known Working Endpoints:</Text>
+                    
+                    <Text style={[styles.modalValue, { fontSize: 9, color: '#666', marginTop: 4, fontFamily: 'monospace' }]}>
+                      Health Check:{'\n'}/api/v1/health/
+                    </Text>
+                    
+                    <Text style={[styles.modalValue, { fontSize: 9, color: '#666', marginTop: 6, fontFamily: 'monospace' }]}>
+                      Motor Categories:{'\n'}/api/v1/motor2/categories/
+                    </Text>
+                    
+                    <Text style={[styles.modalValue, { fontSize: 9, color: '#666', marginTop: 6, fontFamily: 'monospace' }]}>
+                      Auth Login:{'\n'}/api/v1/public_app/auth/login
+                    </Text>
+                    
+                    <Text style={[styles.modalValue, { fontSize: 9, color: '#666', marginTop: 6, fontFamily: 'monospace' }]}>
+                      Validate Phone:{'\n'}/api/v1/public_app/auth/validate_phone
+                    </Text>
+                  </View>
+
+                  {/* Manual Override Section */}
+                  <View style={{ backgroundColor: '#fff9c4', padding: 10, borderRadius: 8, marginBottom: 12, borderWidth: 1, borderColor: '#fbc02d' }}>
+                    <Text style={[styles.modalLabel, { fontSize: 11, color: '#f57f17', fontWeight: 'bold', marginBottom: 8 }]}>⚠️ Manual Override (Dev Only):</Text>
+                    
+                    <TextInput
+                      style={[styles.input, { fontSize: 11, padding: 8 }]}
+                      placeholder="https://api.hugo-shopping.com"
+                      value={backendInput}
+                      onChangeText={setBackendInput}
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                    />
+                    
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 8 }}>
+                      <TouchableOpacity style={[styles.signInButton, { flex: 1, marginRight: 8, paddingVertical: 8 }]} onPress={saveBackendOverride}>
+                        <Text style={[styles.signInButtonText, { fontSize: 11 }]}>Save Override</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity style={[styles.signInButton, { backgroundColor: '#666', flex: 1, marginLeft: 8, paddingVertical: 8 }]} onPress={clearBackendOverride}>
+                        <Text style={[styles.signInButtonText, { fontSize: 11 }]}>Clear Override</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+
+                  {/* Test Endpoints Section */}
+                  <View style={{ backgroundColor: '#e8f5e9', padding: 10, borderRadius: 8, marginBottom: 12 }}>
+                    <Text style={[styles.modalLabel, { fontSize: 11, color: '#2e7d32', fontWeight: 'bold', marginBottom: 8 }]}>🧪 Endpoint Testing:</Text>
+                    
+                    <TouchableOpacity style={[styles.signInButton, { backgroundColor: '#0a7', paddingVertical: 10 }]} onPress={testPing}>
+                      <Text style={[styles.signInButtonText, { fontSize: 12 }]}>🔍 Test All Endpoints</Text>
+                    </TouchableOpacity>
+                    
+                    {pingResult ? (
+                      <View style={{ backgroundColor: '#fff', padding: 8, borderRadius: 4, marginTop: 8, borderWidth: 1, borderColor: '#ddd' }}>
+                        <Text style={[styles.modalValue, { fontSize: 9, fontFamily: 'monospace', color: '#333' }]}>{pingResult}</Text>
+                      </View>
+                    ) : null}
+                  </View>
+                </ScrollView>
+
+                <TouchableOpacity onPress={() => setShowBackendModal(false)} style={[styles.signInButton, { marginTop: 12, backgroundColor: '#D5222B' }]}>
+                  <Text style={styles.signInButtonText}>Close Dev Tools</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </Modal>
         </SafeScreen>
       </KeyboardAvoidingView>
     </TouchableWithoutFeedback>
@@ -625,5 +926,34 @@ const styles = StyleSheet.create({
   },
   resendButtonTextDisabled: {
     color: Colors.textLight,
+  },
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 24,
+  },
+  modalCard: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 16,
+    width: '100%',
+  },
+  modalTitle: {
+    fontSize: Typography.fontSize.lg,
+    fontFamily: Typography.fontFamily.bold,
+    color: Colors.textPrimary,
+    marginBottom: 8,
+  },
+  modalLabel: {
+    fontSize: 12,
+    fontFamily: Typography.fontFamily.medium,
+    color: Colors.textSecondary,
+  },
+  modalValue: {
+    fontSize: 12,
+    fontFamily: Typography.fontFamily.regular,
+    color: Colors.textPrimary,
   },
 });

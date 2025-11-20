@@ -5,13 +5,13 @@
 #########################################################
 
 param(
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory = $false)]
     [string]$InstanceIP = "44.200.182.180",
     
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory = $false)]
     [string]$KeyPath = "$HOME\.ssh\aws-eb",
     
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory = $false)]
     [switch]$ConfirmFirst = $true
 )
 
@@ -88,7 +88,8 @@ if ($LASTEXITCODE -eq 0) {
     Write-Host "You can redeploy anytime with:" -ForegroundColor White
     Write-Host "  .\deployment\complete_ec2_deployment.ps1" -ForegroundColor Cyan
     Write-Host ""
-} else {
+}
+else {
     Write-Host "❌ Rollback encountered errors" -ForegroundColor Red
     Write-Host "Check the output above for details." -ForegroundColor Yellow
     Write-Host ""

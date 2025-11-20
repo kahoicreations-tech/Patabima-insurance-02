@@ -2,14 +2,14 @@
 # Upload files from local machine directly to EC2 using SCP
 
 param(
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory = $false)]
     [ValidateSet('setup', 'upload-all', 'upload-backend', 'upload-file', 'sync')]
     [string]$Action = 'setup',
     
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory = $false)]
     [string]$FilePath = '',
     
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory = $false)]
     [string]$RemotePath = ''
 )
 
@@ -111,7 +111,8 @@ chmod 700 ~/.ssh
                 $exclude `
                 "$LOCAL_BACKEND/" `
                 "${EC2_USER}@${EC2_IP}:$REMOTE_BACKEND/"
-        } else {
+        }
+        else {
             Write-Host "⚠️  rsync not found, using scp (slower)..." -ForegroundColor Yellow
             Write-Host "Install rsync for faster uploads: winget install rsync`n" -ForegroundColor DarkGray
             
@@ -136,7 +137,8 @@ sudo systemctl status patabima --no-pager
             
             Write-Host "`n✅ Backend updated successfully!" -ForegroundColor Green
             Write-Host "🔍 Verify at: http://$EC2_IP/admin/`n" -ForegroundColor Cyan
-        } else {
+        }
+        else {
             Write-Host "`n❌ Upload failed!" -ForegroundColor Red
         }
     }
@@ -208,7 +210,8 @@ sudo systemctl status patabima --no-pager
         
         if ($LASTEXITCODE -eq 0) {
             Write-Host "`n✅ File uploaded successfully!`n" -ForegroundColor Green
-        } else {
+        }
+        else {
             Write-Host "`n❌ Upload failed!`n" -ForegroundColor Red
         }
     }

@@ -15,7 +15,7 @@ function Test-Endpoint {
         [string]$Endpoint,
         [string]$Method = "GET",
         [hashtable]$Body = $null,
-        [hashtable]$Headers = @{"Content-Type" = "application/json"}
+        [hashtable]$Headers = @{"Content-Type" = "application/json" }
     )
     
     Write-Host "Testing: $Name" -ForegroundColor Yellow -NoNewline
@@ -26,7 +26,8 @@ function Test-Endpoint {
         
         if ($Method -eq "GET") {
             $response = Invoke-WebRequest -Uri $uri -Method GET -Headers $Headers -TimeoutSec 10 -ErrorAction Stop
-        } else {
+        }
+        else {
             $jsonBody = $Body | ConvertTo-Json -Depth 10
             $response = Invoke-WebRequest -Uri $uri -Method $Method -Headers $Headers -Body $jsonBody -TimeoutSec 10 -ErrorAction Stop
         }
@@ -45,28 +46,30 @@ function Test-Endpoint {
             }
             
             return @{
-                Name = $Name
-                Endpoint = $Endpoint
-                Method = $Method
-                Status = "✅ PASS"
-                StatusCode = $statusCode
+                Name         = $Name
+                Endpoint     = $Endpoint
+                Method       = $Method
+                Status       = "✅ PASS"
+                StatusCode   = $statusCode
                 ResponseTime = $response.Headers["X-Response-Time"]
-                Details = "Success"
+                Details      = "Success"
             }
-        } else {
+        }
+        else {
             Write-Host "  ⚠️  UNEXPECTED STATUS" -ForegroundColor Yellow -NoNewline
             Write-Host " (Status: $statusCode)" -ForegroundColor DarkGray
             
             return @{
-                Name = $Name
-                Endpoint = $Endpoint
-                Method = $Method
-                Status = "⚠️  WARN"
+                Name       = $Name
+                Endpoint   = $Endpoint
+                Method     = $Method
+                Status     = "⚠️  WARN"
                 StatusCode = $statusCode
-                Details = "Unexpected status code"
+                Details    = "Unexpected status code"
             }
         }
-    } catch {
+    }
+    catch {
         $errorMsg = $_.Exception.Message
         $statusCode = $_.Exception.Response.StatusCode.Value__
         
@@ -75,36 +78,38 @@ function Test-Endpoint {
             Write-Host " (Status: $statusCode)" -ForegroundColor DarkGray
             
             return @{
-                Name = $Name
-                Endpoint = $Endpoint
-                Method = $Method
-                Status = "🔒 AUTH"
+                Name       = $Name
+                Endpoint   = $Endpoint
+                Method     = $Method
+                Status     = "🔒 AUTH"
                 StatusCode = $statusCode
-                Details = "Authentication required (expected)"
+                Details    = "Authentication required (expected)"
             }
-        } elseif ($statusCode -eq 404) {
+        }
+        elseif ($statusCode -eq 404) {
             Write-Host "  ❌ NOT FOUND" -ForegroundColor Red -NoNewline
             Write-Host " (Status: 404)" -ForegroundColor DarkGray
             
             return @{
-                Name = $Name
-                Endpoint = $Endpoint
-                Method = $Method
-                Status = "❌ FAIL"
+                Name       = $Name
+                Endpoint   = $Endpoint
+                Method     = $Method
+                Status     = "❌ FAIL"
                 StatusCode = 404
-                Details = "Endpoint not found"
+                Details    = "Endpoint not found"
             }
-        } else {
+        }
+        else {
             Write-Host "  ❌ ERROR" -ForegroundColor Red -NoNewline
             Write-Host " ($errorMsg)" -ForegroundColor DarkGray
             
             return @{
-                Name = $Name
-                Endpoint = $Endpoint
-                Method = $Method
-                Status = "❌ FAIL"
+                Name       = $Name
+                Endpoint   = $Endpoint
+                Method     = $Method
+                Status     = "❌ FAIL"
                 StatusCode = $statusCode
-                Details = $errorMsg
+                Details    = $errorMsg
             }
         }
     }
@@ -153,28 +158,28 @@ $results += Test-Endpoint -Name "Private Subcategories" -Endpoint "/api/v1/motor
 # Underwriters & Pricing
 $results += Test-Endpoint -Name "Get Underwriters" -Endpoint "/api/v1/public_app/insurance/get_underwriters/"
 $results += Test-Endpoint -Name "Compare Motor Pricing" -Endpoint "/api/v1/public_app/insurance/compare_motor_pricing/" -Method "POST" -Body @{
-    category = "PRIVATE"
-    subcategory = "THIRD_PARTY"
+    category     = "PRIVATE"
+    subcategory  = "THIRD_PARTY"
     registration = "KDA123A"
 }
 $results += Test-Endpoint -Name "Calculate Motor Premium" -Endpoint "/api/v1/public_app/insurance/calculate_motor_premium/" -Method "POST" -Body @{
-    category = "PRIVATE"
+    category    = "PRIVATE"
     subcategory = "THIRD_PARTY"
 }
 $results += Test-Endpoint -Name "Get Addons" -Endpoint "/api/v1/public_app/insurance/addons/"
 
 # Quotations & Policies
 $results += Test-Endpoint -Name "Submit Motor Quotation" -Endpoint "/api/v1/public_app/insurance/submit_motor_quotation/" -Method "POST" -Body @{
-    category = "PRIVATE"
+    category         = "PRIVATE"
     subcategory_code = "PRIVATE_THIRD_PARTY"
-    vehicle_details = @{
-        registration = "KDA 123A"
+    vehicle_details  = @{
+        registration     = "KDA 123A"
         cover_start_date = "2025-11-20"
     }
-    client_details = @{
-        id_number = "12345678"
+    client_details   = @{
+        id_number    = "12345678"
         phone_number = "0712345678"
-        email = "test@example.com"
+        email        = "test@example.com"
     }
 }
 $results += Test-Endpoint -Name "Get Public Quotations" -Endpoint "/api/v1/public_app/insurance/get_quotations/"
@@ -213,7 +218,7 @@ Write-Host "-" * 80 -ForegroundColor DarkGray
 
 $results += Test-Endpoint -Name "Initiate M-PESA Payment" -Endpoint "/api/v1/payments/mpesa/initiate/" -Method "POST" -Body @{
     phone_number = "0712345678"
-    amount = 3000
+    amount       = 3000
 }
 $results += Test-Endpoint -Name "Initiate DPO Payment" -Endpoint "/api/v1/payments/dpo/initiate/" -Method "POST"
 $results += Test-Endpoint -Name "Payment Callback" -Endpoint "/api/v1/payments/callback/" -Method "POST"
@@ -254,10 +259,10 @@ Write-Host "`n" -NoNewline
 # Detailed Results Table
 Write-Host "`n📋 DETAILED RESULTS" -ForegroundColor Cyan
 Write-Host "-" * 80 -ForegroundColor DarkGray
-$results | Format-Table -Property @{Label="Status"; Expression={$_.Status}; Width=10}, 
-                                  @{Label="Endpoint"; Expression={$_.Endpoint}; Width=50}, 
-                                  @{Label="Code"; Expression={$_.StatusCode}; Width=5},
-                                  @{Label="Details"; Expression={$_.Details}; Width=30} -Wrap
+$results | Format-Table -Property @{Label = "Status"; Expression = { $_.Status }; Width = 10 }, 
+@{Label = "Endpoint"; Expression = { $_.Endpoint }; Width = 50 }, 
+@{Label = "Code"; Expression = { $_.StatusCode }; Width = 5 },
+@{Label = "Details"; Expression = { $_.Details }; Width = 30 } -Wrap
 
 # Export to JSON
 $jsonPath = ".\endpoint-test-results.json"

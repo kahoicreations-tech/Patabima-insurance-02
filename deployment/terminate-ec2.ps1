@@ -5,10 +5,10 @@
 #########################################################
 
 param(
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory = $false)]
     [string]$InstanceId = "i-0d0f116005d812275",
     
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory = $false)]
     [string]$Region = "us-east-1"
 )
 
@@ -96,7 +96,8 @@ if ($LASTEXITCODE -eq 0) {
     Write-Host ""
     Write-Host "Note: You will get a NEW public IP address." -ForegroundColor Yellow
     Write-Host ""
-} else {
+}
+else {
     Write-Host ""
     Write-Host "❌ Termination failed!" -ForegroundColor Red
     Write-Host "Check AWS console or IAM permissions." -ForegroundColor Yellow

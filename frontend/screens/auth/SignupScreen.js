@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, ScrollView, Image, Alert, KeyboardAvoidingView, Platform, ActivityIndicator } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useNavigation } from '@react-navigation/native';
@@ -11,6 +11,14 @@ import { authAPI } from '../../services/auth';
 export default function SignupScreen() {
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
+  
+  // Memoize content container style to prevent re-renders causing flickering
+  const scrollContentStyle = useMemo(() => {
+    return {
+      ...styles.scrollContent,
+      paddingBottom: insets.bottom + 20
+    };
+  }, [insets.bottom]);
   
   // Only the fields required by Django RegisterPublicUserSerializer
   const [fullName, setFullName] = useState('');
@@ -27,6 +35,19 @@ export default function SignupScreen() {
     isValid: null, 
     message: '' 
   });
+
+  // Memoize button disabled state to prevent flickering
+  const isButtonDisabled = useMemo(() => {
+    return isLoading || phoneValidation.isValid === false;
+  }, [isLoading, phoneValidation.isValid]);
+
+  // Memoize button style to prevent re-renders
+  const signUpButtonStyle = useMemo(() => {
+    return [
+      styles.signUpButton,
+      isButtonDisabled && styles.signUpButtonDisabled
+    ];
+  }, [isButtonDisabled]);
 
   // Normalize phone number - accepts Kenyan formats: 0712345678, 712345678, 254712345678
   const normalizePhoneNumber = (phone) => {
@@ -254,7 +275,7 @@ export default function SignupScreen() {
 
       <ScrollView 
         style={styles.scrollContainer}
-        contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 20 }]}
+        contentContainerStyle={scrollContentStyle}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
@@ -403,12 +424,9 @@ export default function SignupScreen() {
           </View>
 
           <TouchableOpacity 
-            style={[
-              styles.signUpButton,
-              (isLoading || phoneValidation.isValid === false) && styles.signUpButtonDisabled
-            ]}
+            style={signUpButtonStyle}
             onPress={handleSignup}
-            disabled={isLoading || phoneValidation.isValid === false}
+            disabled={isButtonDisabled}
             activeOpacity={0.8}
           >
             <Text style={styles.signUpButtonText}>

@@ -13,6 +13,7 @@
 ```
 
 This will:
+
 1. ✅ Stage all changes
 2. 💾 Commit to git
 3. 🔄 Push to GitHub
@@ -28,11 +29,11 @@ Go to: `https://github.com/kahoicreations-tech/Patabima-insurance-02/settings/se
 
 Add these secrets:
 
-| Secret Name | Value | How to Get |
-|-------------|-------|------------|
-| `AWS_ACCESS_KEY_ID` | Your AWS access key | AWS IAM Console |
-| `AWS_SECRET_ACCESS_KEY` | Your AWS secret key | AWS IAM Console |
-| `EC2_INSTANCE_ID` | `i-07a424fd876416ad0` | From EC2 console |
+| Secret Name             | Value                 | How to Get       |
+| ----------------------- | --------------------- | ---------------- |
+| `AWS_ACCESS_KEY_ID`     | Your AWS access key   | AWS IAM Console  |
+| `AWS_SECRET_ACCESS_KEY` | Your AWS secret key   | AWS IAM Console  |
+| `EC2_INSTANCE_ID`       | `i-07a424fd876416ad0` | From EC2 console |
 
 ### 2. EC2 Initial Setup
 
@@ -67,6 +68,7 @@ sudo chmod +x /var/www/patabima/scripts/deploy_ec2.sh
 ### Automatic Deployment (GitHub Actions)
 
 Every push to `main` branch automatically:
+
 1. Runs tests
 2. Deploys to EC2 via AWS SSM
 3. Restarts services
@@ -120,6 +122,7 @@ curl http://44.210.245.82/api/motor2/categories/
 **Problem:** Instance not registered with SSM
 
 **Solution:**
+
 ```bash
 # On EC2, check SSM agent status
 sudo systemctl status amazon-ssm-agent
@@ -134,6 +137,7 @@ sudo systemctl enable amazon-ssm-agent
 **Problem:** Gunicorn or Nginx fails to restart
 
 **Solution:**
+
 ```bash
 # Check what's wrong
 sudo systemctl status patabima
@@ -149,6 +153,7 @@ sudo systemctl restart nginx
 **Problem:** Django can't connect to RDS
 
 **Solution:**
+
 ```bash
 # Verify environment variables
 sudo cat /etc/systemd/system/patabima.service | grep Environment
@@ -193,19 +198,22 @@ These are set in `/etc/systemd/system/patabima.service`:
 **EC2 Instance:** `i-07a424fd876416ad0`  
 **Public IP:** `44.210.245.82`  
 **Database:** `patabima-production-db.ca5qwoi4lxw.us-east-1.rds.amazonaws.com`  
-**S3 Bucket:** `patabima-media-prod`  
+**S3 Bucket:** `patabima-media-prod`
 
 **SSH Access:**
+
 ```bash
 ssh -i ~/.ssh/aws-eb ec2-user@44.210.245.82
 ```
 
 **Application URL:**
+
 ```
 http://44.210.245.82
 ```
 
 **GitHub Actions:**
+
 ```
 https://github.com/kahoicreations-tech/Patabima-insurance-02/actions
 ```

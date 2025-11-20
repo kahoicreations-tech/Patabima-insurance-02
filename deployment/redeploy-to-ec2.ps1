@@ -38,7 +38,8 @@ if (-not $s3Check) {
         exit 1
     }
     Write-Host "  ✅ Uploaded successfully" -ForegroundColor Green
-} else {
+}
+else {
     Write-Host "  ✅ Already in S3" -ForegroundColor Green
 }
 
@@ -175,7 +176,8 @@ if ($LASTEXITCODE -eq 0) {
     Write-Host "🧪 Test Motor 2 endpoints:" -ForegroundColor Cyan
     Write-Host "   curl http://$EC2IP/api/v1/motor2/categories/" -ForegroundColor DarkGray
     Write-Host ""
-} else {
+}
+else {
     Write-Host "`n❌ DEPLOYMENT FAILED!" -ForegroundColor Red
     Write-Host "   Check the error messages above" -ForegroundColor Yellow
     exit 1

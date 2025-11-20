@@ -3,6 +3,7 @@
 ## Quick Deployment Steps
 
 ### ✅ What Was Done:
+
 1. ✅ Created deployment package: `patabima-backend-20251116-210558.zip` (72 MB)
 2. ✅ Uploaded to S3: `s3://patabima-media-prod/deployment/`
 3. ✅ Deployment scripts created
@@ -12,22 +13,26 @@
 ## Option 1: Deploy via AWS CloudShell (Recommended)
 
 ### Step 1: Open AWS CloudShell
+
 1. Go to AWS Console: https://console.aws.amazon.com
 2. Click the **CloudShell** icon (terminal icon) in the top navigation bar
 3. Wait for CloudShell to initialize
 
 ### Step 2: Download Deployment Script
+
 ```bash
 aws s3 cp s3://patabima-media-prod/deployment/cloudshell-deploy.sh ./ --region us-east-1
 chmod +x cloudshell-deploy.sh
 ```
 
 ### Step 3: Run Deployment
+
 ```bash
 ./cloudshell-deploy.sh
 ```
 
 **That's it!** The script will:
+
 - Download the latest deployment package from S3
 - Upload to EC2
 - Stop services
@@ -108,16 +113,19 @@ cd deployment
 ## Verification After Deployment
 
 ### Test Health Endpoint
+
 ```bash
 curl http://44.200.182.180/api/v1/health/
 ```
 
 **Expected Response:**
+
 ```json
-{"status": "ok", "service": "pata-bima-api"}
+{ "status": "ok", "service": "pata-bima-api" }
 ```
 
 ### Test Motor Categories
+
 ```bash
 curl http://44.200.182.180/api/v1/motor2/categories/
 ```
@@ -125,7 +133,9 @@ curl http://44.200.182.180/api/v1/motor2/categories/
 **Should return:** List of 6 motor insurance categories
 
 ### Test from Frontend
+
 Update frontend `.env`:
+
 ```env
 API_BASE_URL=http://44.200.182.180
 ```
@@ -137,6 +147,7 @@ Then test Motor 2 flow in React Native app.
 ## Troubleshooting
 
 ### If SSH key is not found in CloudShell:
+
 ```bash
 # Upload your local key to CloudShell
 aws s3 cp ~/.ssh/aws-eb s3://patabima-media-prod/keys/aws-eb
@@ -147,6 +158,7 @@ chmod 400 ~/.ssh/aws-eb
 ```
 
 ### If services don't start:
+
 ```bash
 # Check logs
 sudo journalctl -u patabima -n 50
@@ -154,6 +166,7 @@ sudo tail -f /var/www/patabima/insurance-app/logs/error.log
 ```
 
 ### If health check fails:
+
 ```bash
 # Check Nginx
 sudo systemctl status nginx
@@ -170,6 +183,7 @@ sudo systemctl status patabima
 📦 **Package:** `patabima-backend-20251116-210558.zip` (72.12 MB)
 
 ### Changes Included:
+
 - ✅ Latest insurance-app code (all recent commits)
 - ✅ Updated dependencies (requirements.txt)
 - ✅ Database migrations
@@ -179,6 +193,7 @@ sudo systemctl status patabima
 - ✅ DMVIC integration updates
 
 ### Excluded (for performance):
+
 - ❌ `venv/` (14,192 files - will be recreated on EC2)
 - ❌ `__pycache__/` (cache files)
 - ❌ `.git/` (version control)

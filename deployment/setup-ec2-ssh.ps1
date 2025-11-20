@@ -2,7 +2,7 @@
 # This script helps you configure SSH key pair for direct EC2 access
 
 param(
-    [Parameter(Mandatory=$false)]
+    [Parameter(Mandatory = $false)]
     [ValidateSet('create-key', 'download-key', 'test-connection', 'setup-all')]
     [string]$Action = 'setup-all'
 )
@@ -22,7 +22,8 @@ function Create-SSHDirectory {
         Write-Host "📁 Creating .ssh directory..." -ForegroundColor Yellow
         New-Item -ItemType Directory -Path $SSHDir -Force | Out-Null
         Write-Host "✅ Created: $SSHDir`n" -ForegroundColor Green
-    } else {
+    }
+    else {
         Write-Host "✅ .ssh directory exists: $SSHDir`n" -ForegroundColor Green
     }
 }
@@ -66,7 +67,8 @@ function Create-KeyPair {
         
         Write-Host "⚠️  IMPORTANT: Attach this key to your EC2 instance!" -ForegroundColor Yellow
         Write-Host "Run: .\deployment\setup-ec2-ssh.ps1 -Action attach-key`n" -ForegroundColor Cyan
-    } else {
+    }
+    else {
         Write-Host "❌ Failed to create key pair" -ForegroundColor Red
     }
 }
@@ -120,7 +122,8 @@ function Test-SSHConnection {
         
         Write-Host "Or use the direct execution script:" -ForegroundColor Cyan
         Write-Host "  .\deployment\ec2-ssh-exec.ps1 -Action status`n" -ForegroundColor White
-    } else {
+    }
+    else {
         Write-Host "`n❌ SSH connection failed" -ForegroundColor Red
         Write-Host "`nCommon issues:" -ForegroundColor Yellow
         Write-Host "  1. Public key not added to EC2 instance" -ForegroundColor White
@@ -150,7 +153,8 @@ function Show-NextSteps {
         
         Write-Host "4️⃣  Use direct execution:" -ForegroundColor Cyan
         Write-Host "    .\deployment\ec2-ssh-exec.ps1 -Action create-admin`n" -ForegroundColor White
-    } else {
+    }
+    else {
         Write-Host "1️⃣  Create SSH key pair:" -ForegroundColor Cyan
         Write-Host "    .\deployment\setup-ec2-ssh.ps1 -Action create-key`n" -ForegroundColor White
     }
@@ -178,7 +182,8 @@ switch ($Action) {
         if (Test-Path $KeyPath) {
             Write-Host "✅ Key already exists: $KeyPath`n" -ForegroundColor Green
             Test-SSHConnection
-        } else {
+        }
+        else {
             Write-Host "No SSH key found. Let's create one!`n" -ForegroundColor Yellow
             Create-KeyPair
         }
