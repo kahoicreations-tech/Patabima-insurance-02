@@ -232,13 +232,17 @@ export default function WIBAQuotationScreen({ navigation }) {
         {/* Company Name */}
         <View style={styles.fieldBlock}>
           <Subtitle2 style={styles.label}>Company Name</Subtitle2>
+          <View style={styles.cardInputContainer}>
             <TextInput placeholder="Enter company name" placeholderTextColor={UI.textSecondary} style={styles.input} value={companyName} onChangeText={setCompanyName} />
+          </View>
         </View>
 
         {/* Nature of Business */}
         <View style={styles.fieldBlock}>
           <Subtitle2 style={styles.label}>Nature of Business</Subtitle2>
+          <View style={styles.cardInputContainer}>
             <TextInput placeholder="Describe main business activity" placeholderTextColor={UI.textSecondary} style={styles.input} value={natureOfBusiness} onChangeText={setNatureOfBusiness} />
+          </View>
         </View>
 
         {/* Contact section removed in simplified flow */}
@@ -246,9 +250,13 @@ export default function WIBAQuotationScreen({ navigation }) {
         {/* Workforce & Industry */}
         <View style={styles.fieldBlock}>
           <Subtitle2 style={styles.label}>Workforce & Industry</Subtitle2>
-          <TextInput placeholder="Number of employees" placeholderTextColor={UI.textSecondary} style={styles.input} value={numberOfEmployees} onChangeText={setNumberOfEmployees} keyboardType="number-pad" />
-          <TextInput placeholder="Average monthly salary (KES)" placeholderTextColor={UI.textSecondary} style={[styles.input,{marginTop:12}]} value={averageMonthlySalary} onChangeText={setAverageMonthlySalary} keyboardType="number-pad" />
-          <TouchableOpacity onPress={()=>setShowIndustryList(s=>!s)} style={[styles.input,{marginTop:12, flexDirection:'row', alignItems:'center', justifyContent:'space-between'}]}>
+          <View style={styles.cardInputContainer}>
+            <TextInput placeholder="Number of employees" placeholderTextColor={UI.textSecondary} style={styles.input} value={numberOfEmployees} onChangeText={setNumberOfEmployees} keyboardType="number-pad" />
+          </View>
+          <View style={[styles.cardInputContainer, { marginTop: 12 }]}>
+            <TextInput placeholder="Average monthly salary (KES)" placeholderTextColor={UI.textSecondary} style={styles.input} value={averageMonthlySalary} onChangeText={setAverageMonthlySalary} keyboardType="number-pad" />
+          </View>
+          <TouchableOpacity onPress={()=>setShowIndustryList(s=>!s)} style={[styles.cardInputContainer, {marginTop:12, flexDirection:'row', alignItems:'center', justifyContent:'space-between'}]}>
             <Body1 style={{color: industryClassification? UI.textPrimary: UI.textSecondary}}>{industryClassification? industryClassification.name : 'Select industry classification'}</Body1>
             <Ionicons name={showIndustryList? 'chevron-up' : 'chevron-down'} size={18} color={UI.textSecondary} />
           </TouchableOpacity>
@@ -391,8 +399,25 @@ const styles = StyleSheet.create({
   stepCircleText: { color:'#fff', fontWeight:'600' },
   stepTitle: { color: BRAND.primary },
   fieldBlock: { marginBottom: 28 },
-  label: { marginBottom: 8 },
-  input: { borderRadius:BORDER_RADIUS.md, backgroundColor:UI.backgroundGray, paddingHorizontal:SPACING.lg, paddingVertical:SPACING.md, fontSize:FONT_SIZES.input, color: UI.textPrimary },
+  label: { marginBottom: 8, fontWeight: '500' },
+  cardInputContainer: {
+    backgroundColor: '#fff',
+    borderRadius: BORDER_RADIUS.lg,
+    paddingHorizontal: SPACING.lg,
+    paddingVertical: SPACING.sm,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  input: {
+    backgroundColor: 'transparent',
+    paddingHorizontal: 0,
+    paddingVertical: 8,
+    fontSize: FONT_SIZES.input,
+    color: UI.textPrimary
+  },
   helper: { color: UI.textSecondary, marginBottom: SPACING.lg },
   departmentRow: { flexDirection:'row', alignItems:'center', padding:12, backgroundColor:'#fafafa', borderRadius:8, marginBottom:10, borderWidth:1, borderColor:'#e4e6e8' },
   departmentInfo: { flex:1 },

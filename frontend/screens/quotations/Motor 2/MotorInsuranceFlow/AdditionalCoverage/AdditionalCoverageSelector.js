@@ -1,5 +1,8 @@
-import React, { useState } from 'react';
-import { View, ScrollView, Text, StyleSheet, Switch, TextInput, TouchableOpacity } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, ScrollView, Text, StyleSheet, Switch, TouchableOpacity } from 'react-native';
+import StableTextInput from '../../../../../components/common/StableTextInput';
+import { DEFAULT_ADD_ONS, normalizeAddOns } from '../../../../../constants/additionalCoverage';
+import djangoAPI from '../../../../../services/DjangoAPIService';
 
 const AdditionalCoverageSelector = ({ 
   values, 
@@ -9,56 +12,36 @@ const AdditionalCoverageSelector = ({
   initialSelection = [] 
 }) => {
   const [selectedCoverages, setSelectedCoverages] = useState(initialSelection);
+  const [availableCoverages, setAvailableCoverages] = useState(DEFAULT_ADD_ONS);
+  const [loading, setLoading] = useState(false);
   
   const update = (k, v) => onChange?.({ ...values, [k]: v });
 
   // Enhanced coverage options based on product type
-  const getAvailableCoverages = () => {
-    if (!selectedProduct && !values) return getLegacyCoverages();
-
-    const baseCoverages = [
-      {
-        id: 'pll',
-        name: 'Passenger Legal Liability',
-        description: 'Covers legal liability for passengers in case of injury or death',
-        premium: 2000,
-        recommended: true,
-        type: 'switch'
-      },
-      {
-        id: 'riot_strike',
-        name: 'Riot & Strike Coverage',
-        description: 'Protection against damage from riots, strikes, and civil commotion',
-        premium: 1500,
-        recommended: false,
-        type: 'switch'
-      },
-      {
-        id: 'emergency_medical',
-        name: 'Emergency Medical Expenses',
-        description: 'Covers emergency medical treatment for driver and passengers',
-        premium: 2500,
-        recommended: true,
-        type: 'switch'
-      },
-      {
-        id: 'windscreen',
-        name: 'Windscreen Cover',
-        description: 'Coverage for windscreen replacement and repair',
-        type: 'amount',
-        placeholder: 'Enter windscreen value'
-      },
-      {
-        id: 'accessories',
-        name: 'Radio/Accessories',
-        description: 'Coverage for aftermarket accessories',
-        type: 'amount',
-        placeholder: 'Enter accessories value'
+  // Dynamically fetch add-ons per subcategory; fallback to constants
+  useEffect(() => {
+    const fetchAddOns = async () => {
+      const sub = selectedProduct?.subcategory_code || selectedProduct?.code;
+      if (!sub) {
+        setAvailableCoverages(DEFAULT_ADD_ONS);
+        return;
       }
-    ];
-
-    return baseCoverages;
-  };
+      try {
+        setLoading(true);
+        const res = await djangoAPI.makeRequest(`/api/motor2/products/${encodeURIComponent(sub)}/addons/`, {
+          method: 'GET',
+        });
+        const list = Array.isArray(res?.addons) ? res.addons : Array.isArray(res) ? res : [];
+        const normalized = normalizeAddOns(list);
+        setAvailableCoverages(normalized.length ? normalized : DEFAULT_ADD_ONS);
+      } catch (e) {
+        setAvailableCoverages(DEFAULT_ADD_ONS);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchAddOns();
+  }, [selectedProduct?.subcategory_code, selectedProduct?.code]);
 
   const getLegacyCoverages = () => [
     { key: 'excess_protector', label: 'Excess Protector', type: 'switch' },
@@ -114,7 +97,7 @@ const AdditionalCoverageSelector = ({
             />
           </View>
           <Text style={styles.coverageDescription}>{coverage.description}</Text>
-          {coverage.premium && (
+          {typeof coverage.premium === 'number' && (
             <Text style={styles.premiumText}>
               Additional Premium: {formatCurrency(coverage.premium)}
             </Text>
@@ -126,12 +109,13 @@ const AdditionalCoverageSelector = ({
         <View key={coverage.id} style={styles.amountCard}>
           <Text style={styles.amountLabel}>{coverage.name}</Text>
           <Text style={styles.amountDescription}>{coverage.description}</Text>
-          <TextInput
+          <StableTextInput
             style={styles.amountInput}
             keyboardType="numeric"
             value={String(values?.[coverage.id] || '')}
             onChangeText={(v) => update(coverage.id, v)}
-            placeholder={coverage.placeholder}
+            placeholder={coverage.placeholder || ''}
+            debounceMs={300}
           />
         </View>
       );
@@ -158,11 +142,12 @@ const AdditionalCoverageSelector = ({
       return (
         <View key={coverage.key}>
           <Text style={styles.label}>{coverage.label}</Text>
-          <TextInput 
+          <StableTextInput 
             style={styles.input} 
             keyboardType="numeric" 
             value={String(values?.[coverage.key] || '')} 
             onChangeText={(v) => update(coverage.key, v)} 
+            debounceMs={300}
           />
         </View>
       );
@@ -171,7 +156,7 @@ const AdditionalCoverageSelector = ({
 
   // Enhanced mode when product is available
   if (selectedProduct || onCoverageChange) {
-    const coverages = getAvailableCoverages();
+    const coverages = availableCoverages;
     const totalAdditionalPremium = selectedCoverages.reduce((total, coverage) => total + (coverage.premium || 0), 0);
 
     return (
@@ -182,6 +167,12 @@ const AdditionalCoverageSelector = ({
             Enhance your policy with optional coverage
           </Text>
         </View>
+
+        {loading && (
+          <View style={{ paddingHorizontal: 16 }}>
+            <Text style={{ color: '#646767' }}>Loading available add-ons...</Text>
+          </View>
+        )}
 
         {/* Summary */}
         <View style={styles.summaryCard}>

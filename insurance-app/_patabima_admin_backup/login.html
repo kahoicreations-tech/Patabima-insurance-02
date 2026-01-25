@@ -1,0 +1,155 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static %}
+
+{% block extrastyle %}
+{{ block.super }}
+<link rel="stylesheet" type="text/css" href="{% static 'admin/css/patabima-admin.css' %}">
+<style>
+/* Inline fallback styles in case CSS file doesn't load */
+body.login {
+    background: linear-gradient(135deg, #D5222B 0%, #B01E26 100%);
+}
+
+#login {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 20px;
+}
+
+#login #content {
+    background: white;
+    padding: 40px;
+    border-radius: 16px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+    max-width: 420px;
+    width: 100%;
+}
+
+#login #header h1 {
+    margin: 0 0 30px 0;
+    text-align: center;
+}
+
+#login #header h1 a {
+    color: #D5222B;
+    font-size: 28px;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+#login .form-row {
+    margin-bottom: 15px;
+}
+
+#login label {
+    display: block;
+    color: #333;
+    font-weight: 500;
+    margin-bottom: 5px;
+    font-size: 14px;
+}
+
+#login input[type="text"],
+#login input[type="password"] {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1px solid #E0E0E0;
+    border-radius: 8px;
+    font-size: 14px;
+    box-sizing: border-box;
+}
+
+#login input[type="text"]:focus,
+#login input[type="password"]:focus {
+    outline: none;
+    border-color: #D5222B;
+    box-shadow: 0 0 0 3px rgba(213, 34, 43, 0.1);
+}
+
+#login .submit-row {
+    margin-top: 20px;
+    padding: 0;
+}
+
+#login input[type="submit"] {
+    width: 100%;
+    background: #D5222B;
+    color: white;
+    border: none;
+    padding: 14px;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+#login input[type="submit"]:hover {
+    background: #B01E26;
+}
+
+.errornote {
+    background: #DC3545;
+    color: white;
+    padding: 10px 15px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+}
+</style>
+{% endblock %}
+
+{% block bodyclass %}{{ block.super }} login{% endblock %}
+
+{% block usertools %}{% endblock %}
+
+{% block nav-global %}{% endblock %}
+
+{% block nav-sidebar %}{% endblock %}
+
+{% block content_title %}{% endblock %}
+
+{% block breadcrumbs %}{% endblock %}
+
+{% block content %}
+<div id="content-main">
+
+{% if form.errors and not form.non_field_errors %}
+<p class="errornote">
+{% if form.errors.items|length == 1 %}{% translate "Please correct the error below." %}{% else %}{% translate "Please correct the errors below." %}{% endif %}
+</p>
+{% endif %}
+
+{% if form.non_field_errors %}
+{% for error in form.non_field_errors %}
+<p class="errornote">
+    {{ error }}
+</p>
+{% endfor %}
+{% endif %}
+
+<div id="content" class="colM">
+    <form action="{{ app_path }}" method="post" id="login-form">{% csrf_token %}
+      <div class="form-row">
+        {{ form.username.errors }}
+        {{ form.username.label_tag }} {{ form.username }}
+      </div>
+      <div class="form-row">
+        {{ form.password.errors }}
+        {{ form.password.label_tag }} {{ form.password }}
+        <input type="hidden" name="next" value="{{ next }}">
+      </div>
+      {% url 'admin_password_reset' as password_reset_url %}
+      {% if password_reset_url %}
+      <div class="password-reset-link">
+        <a href="{{ password_reset_url }}">{% translate 'Forgotten your password or username?' %}</a>
+      </div>
+      {% endif %}
+      <div class="submit-row">
+        <input type="submit" value="{% translate 'Log in' %}">
+      </div>
+    </form>
+</div>
+
+</div>
+{% endblock %}

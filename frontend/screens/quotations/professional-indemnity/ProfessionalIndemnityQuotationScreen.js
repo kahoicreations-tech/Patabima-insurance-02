@@ -337,24 +337,28 @@ export default function ProfessionalIndemnityQuotationScreen({ navigation }) {
 
         <View style={styles.fieldBlock}>
           <Subtitle2 style={styles.label}>Business Name</Subtitle2>
-          <TextInput
-            placeholder="Legal business name"
-            placeholderTextColor={UI.textSecondary}
-            style={styles.input}
-            value={businessName}
-            onChangeText={setBusinessName}
-          />
+          <View style={styles.cardInputContainer}>
+            <TextInput
+              placeholder="Legal business name"
+              placeholderTextColor={UI.textSecondary}
+              style={styles.input}
+              value={businessName}
+              onChangeText={setBusinessName}
+            />
+          </View>
         </View>
 
         <View style={styles.fieldBlock}>
           <Subtitle2 style={styles.label}>Business Registration Number</Subtitle2>
-          <TextInput
-            placeholder="Company registration number"
-            placeholderTextColor={UI.textSecondary}
-            style={styles.input}
-            value={businessRegistrationNumber}
-            onChangeText={setBusinessRegistrationNumber}
-          />
+          <View style={styles.cardInputContainer}>
+            <TextInput
+              placeholder="Company registration number"
+              placeholderTextColor={UI.textSecondary}
+              style={styles.input}
+              value={businessRegistrationNumber}
+              onChangeText={setBusinessRegistrationNumber}
+            />
+          </View>
         </View>
 
         <View style={styles.fieldBlock}>
@@ -393,50 +397,58 @@ export default function ProfessionalIndemnityQuotationScreen({ navigation }) {
 
         <View style={styles.fieldBlock}>
           <Subtitle2 style={styles.label}>Principal Contact Name</Subtitle2>
-          <TextInput
-            placeholder="Full name of principal contact"
-            placeholderTextColor={UI.textSecondary}
-            style={styles.input}
-            value={principalContactName}
-            onChangeText={setPrincipalContactName}
-          />
+          <View style={styles.cardInputContainer}>
+            <TextInput
+              placeholder="Full name of principal contact"
+              placeholderTextColor={UI.textSecondary}
+              style={styles.input}
+              value={principalContactName}
+              onChangeText={setPrincipalContactName}
+            />
+          </View>
         </View>
 
         <View style={styles.fieldBlock}>
           <Subtitle2 style={styles.label}>Phone Number</Subtitle2>
-          <TextInput
-            placeholder="e.g., +254712345678"
-            placeholderTextColor={UI.textSecondary}
-            style={styles.input}
-            value={phoneNumber}
-            onChangeText={setPhoneNumber}
-            keyboardType="phone-pad"
-          />
+          <View style={styles.cardInputContainer}>
+            <TextInput
+              placeholder="e.g., +254712345678"
+              placeholderTextColor={UI.textSecondary}
+              style={styles.input}
+              value={phoneNumber}
+              onChangeText={setPhoneNumber}
+              keyboardType="phone-pad"
+            />
+          </View>
         </View>
 
         <View style={styles.fieldBlock}>
           <Subtitle2 style={styles.label}>Email Address</Subtitle2>
-          <TextInput
-            placeholder="business@example.com"
-            placeholderTextColor={UI.textSecondary}
-            style={styles.input}
-            value={emailAddress}
-            onChangeText={setEmailAddress}
-            keyboardType="email-address"
-            autoCapitalize="none"
-          />
+          <View style={styles.cardInputContainer}>
+            <TextInput
+              placeholder="business@example.com"
+              placeholderTextColor={UI.textSecondary}
+              style={styles.input}
+              value={emailAddress}
+              onChangeText={setEmailAddress}
+              keyboardType="email-address"
+              autoCapitalize="none"
+            />
+          </View>
         </View>
 
         <View style={styles.fieldBlock}>
           <Subtitle2 style={styles.label}>Physical Address</Subtitle2>
-          <TextInput
-            placeholder="Business physical address"
-            placeholderTextColor={UI.textSecondary}
-            style={styles.input}
-            value={physicalAddress}
-            onChangeText={setPhysicalAddress}
-            multiline
-          />
+          <View style={styles.cardInputContainer}>
+            <TextInput
+              placeholder="Business physical address"
+              placeholderTextColor={UI.textSecondary}
+              style={styles.input}
+              value={physicalAddress}
+              onChangeText={setPhysicalAddress}
+              multiline
+            />
+          </View>
         </View>
 
         {/* Section 2: Professional Details */}
@@ -481,62 +493,72 @@ export default function ProfessionalIndemnityQuotationScreen({ navigation }) {
 
         <View style={styles.fieldBlock}>
           <Subtitle2 style={styles.label}>Years in Business</Subtitle2>
-          <TextInput
-            placeholder="Number of years in operation"
-            placeholderTextColor={UI.textSecondary}
-            style={styles.input}
-            value={yearsInBusiness}
-            onChangeText={setYearsInBusiness}
-            keyboardType="number-pad"
-          />
+          <View style={styles.cardInputContainer}>
+            <TextInput
+              placeholder="Number of years in operation"
+              placeholderTextColor={UI.textSecondary}
+              style={styles.input}
+              value={yearsInBusiness}
+              onChangeText={setYearsInBusiness}
+              keyboardType="number-pad"
+            />
+          </View>
         </View>
 
         <View style={styles.fieldBlock}>
           <Subtitle2 style={styles.label}>Number of Employees</Subtitle2>
-          <TextInput
-            placeholder="Total number of employees"
-            placeholderTextColor={UI.textSecondary}
-            style={styles.input}
-            value={numberOfEmployees}
-            onChangeText={setNumberOfEmployees}
-            keyboardType="number-pad"
-          />
+          <View style={styles.cardInputContainer}>
+            <TextInput
+              placeholder="Total number of employees"
+              placeholderTextColor={UI.textSecondary}
+              style={styles.input}
+              value={numberOfEmployees}
+              onChangeText={setNumberOfEmployees}
+              keyboardType="number-pad"
+            />
+          </View>
         </View>
 
         <View style={styles.fieldBlock}>
           <Subtitle2 style={styles.label}>Annual Turnover (KES)</Subtitle2>
-          <TextInput
-            placeholder="Annual business turnover"
-            placeholderTextColor={UI.textSecondary}
-            style={styles.input}
-            value={annualTurnover}
-            onChangeText={setAnnualTurnover}
-            keyboardType="number-pad"
-          />
+          <View style={styles.cardInputContainer}>
+            <TextInput
+              placeholder="Annual business turnover"
+              placeholderTextColor={UI.textSecondary}
+              style={styles.input}
+              value={annualTurnover}
+              onChangeText={setAnnualTurnover}
+              keyboardType="number-pad"
+            />
+          </View>
         </View>
 
         <View style={styles.fieldBlock}>
           <Subtitle2 style={styles.label}>Professional Qualifications</Subtitle2>
           <Body2 style={styles.helper}>Relevant degrees, certifications, licenses</Body2>
-          <TextInput
-            placeholder="e.g., CPA, LLB, MBChB, etc."
-            placeholderTextColor={UI.textSecondary}
-            style={styles.input}
-            value={professionalQualifications}
-            onChangeText={setProfessionalQualifications}
-          />
+          <View style={styles.cardInputContainer}>
+            <TextInput
+              placeholder="e.g., CPA, LLB, MBChB, etc."
+              placeholderTextColor={UI.textSecondary}
+              style={styles.input}
+              value={professionalQualifications}
+              onChangeText={setProfessionalQualifications}
+            />
+          </View>
         </View>
 
         <View style={styles.fieldBlock}>
           <Subtitle2 style={styles.label}>Professional Bodies/Associations</Subtitle2>
           <Body2 style={styles.helper}>Membership in professional organizations</Body2>
-          <TextInput
-            placeholder="e.g., ICPAK, LSK, IEK, etc."
-            placeholderTextColor={UI.textSecondary}
-            style={styles.input}
-            value={professionalBodies}
-            onChangeText={setProfessionalBodies}
-          />
+          <View style={styles.cardInputContainer}>
+            <TextInput
+              placeholder="e.g., ICPAK, LSK, IEK, etc."
+              placeholderTextColor={UI.textSecondary}
+              style={styles.input}
+              value={professionalBodies}
+              onChangeText={setProfessionalBodies}
+            />
+          </View>
         </View>
 
         {/* Section 3: Coverage Selection */}
@@ -772,17 +794,28 @@ const styles = StyleSheet.create({
     marginRight: SPACING.md
   },
   stepCircleText: { color: '#fff', fontWeight: '600' },
-  stepTitle: { color: BRAND.primary },
+  stepTitle: { color: BRAND.primary, fontWeight: '600' },
   fieldBlock: { marginBottom: SPACING.xl },
-  label: { marginBottom: SPACING.sm },
+  label: { marginBottom: SPACING.sm, fontWeight: '500' },
   helper: { color: UI.textSecondary, marginBottom: SPACING.sm },
-  input: {
-    borderRadius: BORDER_RADIUS.md,
-    backgroundColor: UI.backgroundGray,
+  cardInputContainer: {
+    backgroundColor: '#fff',
+    borderRadius: BORDER_RADIUS.lg,
     paddingHorizontal: SPACING.lg,
-    paddingVertical: SPACING.md,
+    paddingVertical: SPACING.sm,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  input: {
+    width: '100%',
+    backgroundColor: 'transparent',
+    paddingHorizontal: 0,
+    paddingVertical: 8,
     fontSize: FONT_SIZES.input,
-    color: UI.textPrimary
+    color: UI.textPrimary,
   },
   dropdown: {
     marginTop: SPACING.md,

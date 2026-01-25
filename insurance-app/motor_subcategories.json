@@ -1,0 +1,1420 @@
+[
+{
+  "model": "app.motorsubcategory",
+  "pk": "01409174-e37d-4573-ad01-cd717030ab52",
+  "fields": {
+    "date_created": "2025-09-29T00:12:30.215Z",
+    "date_updated": "2025-09-29T00:12:30.215Z",
+    "category": "63206394-bcc9-4ca4-9a2f-faf4cbadddb0",
+    "subcategory_code": "SPECIAL_AGRICULTURAL_TP",
+    "subcategory_name": "Agricultural Tractor Third-Party",
+    "product_type": "THIRD_PARTY",
+    "pricing_model": "TONNAGE",
+    "is_complex": false,
+    "additional_fields": [
+      "tonnage"
+    ],
+    "pricing_requirements": {
+      "max_tonnage": 31,
+      "requires_tonnage": true
+    },
+    "is_active": true,
+    "show_in_public": true,
+    "public_sort_order": 101,
+    "public_label": "Agricultural Tractor Third-Party"
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "051a8549-d5fd-4fc7-b176-1d6955ff5f13",
+  "fields": {
+    "date_created": "2025-09-29T00:12:30.226Z",
+    "date_updated": "2025-09-29T00:12:30.226Z",
+    "category": "63206394-bcc9-4ca4-9a2f-faf4cbadddb0",
+    "subcategory_code": "SPECIAL_DRIVING_SCHOOL_COMP",
+    "subcategory_name": "Driving School Comprehensive",
+    "product_type": "COMPREHENSIVE",
+    "pricing_model": "TONNAGE",
+    "is_complex": false,
+    "additional_fields": [
+      "tonnage",
+      "passenger_count"
+    ],
+    "pricing_requirements": {
+      "requires_tonnage": true,
+      "requires_passenger_count": true
+    },
+    "is_active": true,
+    "show_in_public": true,
+    "public_sort_order": 508,
+    "public_label": "Driving School Comprehensive"
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "0b13511b-8e76-4616-934b-a847650f43fa",
+  "fields": {
+    "date_created": "2025-09-28T22:50:23.603Z",
+    "date_updated": "2025-10-16T09:11:47.942Z",
+    "category": "02a099fd-e88b-4b61-8f64-0e3eb7ee173f",
+    "subcategory_code": "COMMERCIAL_OWN_GOODS_COMP",
+    "subcategory_name": "COMMERCIAL_OWN_GOODS_COMP",
+    "product_type": "THIRD_PARTY",
+    "pricing_model": "FIXED",
+    "is_complex": false,
+    "additional_fields": [],
+    "pricing_requirements": {},
+    "is_active": false,
+    "show_in_public": false,
+    "public_sort_order": 0,
+    "public_label": null
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "0e9334f1-a127-48e0-8a41-623fc00825e3",
+  "fields": {
+    "date_created": "2025-09-28T22:50:23.606Z",
+    "date_updated": "2025-10-16T09:11:47.956Z",
+    "category": "02a099fd-e88b-4b61-8f64-0e3eb7ee173f",
+    "subcategory_code": "SPECIAL_AGRICULTURAL_TP",
+    "subcategory_name": "SPECIAL_AGRICULTURAL_TP",
+    "product_type": "THIRD_PARTY",
+    "pricing_model": "FIXED",
+    "is_complex": false,
+    "additional_fields": [],
+    "pricing_requirements": {},
+    "is_active": false,
+    "show_in_public": false,
+    "public_sort_order": 0,
+    "public_label": null
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "0ea55fb0-2580-4e81-b4cb-d4a0ce9e2d0e",
+  "fields": {
+    "date_created": "2025-09-29T00:05:54.489Z",
+    "date_updated": "2025-09-29T00:05:54.489Z",
+    "category": "d4ee8d63-363f-40e1-a5fc-41748a26ef42",
+    "subcategory_code": "PSV_TUKTUK_TP_EXT",
+    "subcategory_name": "PSV Tuk-Tuk Third-Party Extendible",
+    "product_type": "THIRD_PARTY_EXT",
+    "pricing_model": "PASSENGER",
+    "is_complex": false,
+    "additional_fields": [
+      "passenger_count"
+    ],
+    "pricing_requirements": {
+      "requires_passenger_count": true
+    },
+    "is_active": true,
+    "show_in_public": true,
+    "public_sort_order": 203,
+    "public_label": "PSV Tuk-Tuk Third-Party Extendible"
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "115f0d9a-3a1c-43eb-8cde-03441d4fda05",
+  "fields": {
+    "date_created": "2025-09-29T00:05:54.498Z",
+    "date_updated": "2025-09-29T00:05:54.498Z",
+    "category": "d4ee8d63-363f-40e1-a5fc-41748a26ef42",
+    "subcategory_code": "PSV_TOUR_VAN_TP",
+    "subcategory_name": "PSV Tour Van Third-Party",
+    "product_type": "THIRD_PARTY",
+    "pricing_model": "PASSENGER",
+    "is_complex": false,
+    "additional_fields": [
+      "passenger_count"
+    ],
+    "pricing_requirements": {
+      "requires_passenger_count": true
+    },
+    "is_active": true,
+    "show_in_public": true,
+    "public_sort_order": 107,
+    "public_label": "PSV Tour Van Third-Party"
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "20ff31a0-8000-4c03-9cd9-2313da80fa72",
+  "fields": {
+    "date_created": "2025-09-29T00:05:54.493Z",
+    "date_updated": "2025-09-29T00:05:54.493Z",
+    "category": "d4ee8d63-363f-40e1-a5fc-41748a26ef42",
+    "subcategory_code": "PSV_MATATU_1M_TP",
+    "subcategory_name": "1 Month PSV Matatu Third-Party",
+    "product_type": "THIRD_PARTY",
+    "pricing_model": "PASSENGER",
+    "is_complex": false,
+    "additional_fields": [
+      "passenger_count"
+    ],
+    "pricing_requirements": {
+      "requires_passenger_count": true
+    },
+    "is_active": true,
+    "show_in_public": true,
+    "public_sort_order": 104,
+    "public_label": "1 Month PSV Matatu Third-Party"
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "29ee63eb-cc42-4b85-9052-cd515a8dc056",
+  "fields": {
+    "date_created": "2025-09-29T00:12:30.219Z",
+    "date_updated": "2025-09-29T00:12:30.219Z",
+    "category": "63206394-bcc9-4ca4-9a2f-faf4cbadddb0",
+    "subcategory_code": "SPECIAL_KG_PLATE_TP",
+    "subcategory_name": "KG Plate Third-Party",
+    "product_type": "THIRD_PARTY",
+    "pricing_model": "FIXED",
+    "is_complex": false,
+    "additional_fields": [],
+    "pricing_requirements": {},
+    "is_active": true,
+    "show_in_public": true,
+    "public_sort_order": 104,
+    "public_label": "KG Plate Third-Party"
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "2ed6271a-1b24-4463-b7a9-29021ca597ab",
+  "fields": {
+    "date_created": "2025-09-29T00:05:54.497Z",
+    "date_updated": "2025-09-29T00:05:54.497Z",
+    "category": "d4ee8d63-363f-40e1-a5fc-41748a26ef42",
+    "subcategory_code": "PSV_UBER_TP_EXT",
+    "subcategory_name": "PSV Uber Third-Party Extendible",
+    "product_type": "THIRD_PARTY_EXT",
+    "pricing_model": "PASSENGER",
+    "is_complex": false,
+    "additional_fields": [
+      "passenger_count"
+    ],
+    "pricing_requirements": {
+      "requires_passenger_count": true
+    },
+    "is_active": true,
+    "show_in_public": true,
+    "public_sort_order": 206,
+    "public_label": "PSV Uber Third-Party Extendible"
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "2f817e5c-17a4-4772-8fbf-627056677cd0",
+  "fields": {
+    "date_created": "2025-09-29T00:12:30.229Z",
+    "date_updated": "2025-09-29T00:12:30.229Z",
+    "category": "63206394-bcc9-4ca4-9a2f-faf4cbadddb0",
+    "subcategory_code": "SPECIAL_AMBULANCE_COMP",
+    "subcategory_name": "Commercial Ambulance Comprehensive",
+    "product_type": "COMPREHENSIVE",
+    "pricing_model": "FIXED",
+    "is_complex": false,
+    "additional_fields": [],
+    "pricing_requirements": {},
+    "is_active": true,
+    "show_in_public": true,
+    "public_sort_order": 510,
+    "public_label": "Commercial Ambulance Comprehensive"
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "30318080-02ef-4c91-902f-169cc49e5cd3",
+  "fields": {
+    "date_created": "2025-09-29T00:05:54.495Z",
+    "date_updated": "2025-09-29T00:05:54.495Z",
+    "category": "d4ee8d63-363f-40e1-a5fc-41748a26ef42",
+    "subcategory_code": "PSV_MATATU_2WKS_TP",
+    "subcategory_name": "2 Weeks PSV Matatu Third-Party",
+    "product_type": "THIRD_PARTY",
+    "pricing_model": "PASSENGER",
+    "is_complex": false,
+    "additional_fields": [
+      "passenger_count"
+    ],
+    "pricing_requirements": {
+      "requires_passenger_count": true
+    },
+    "is_active": true,
+    "show_in_public": true,
+    "public_sort_order": 105,
+    "public_label": "2 Weeks PSV Matatu Third-Party"
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "3600f66f-b8dd-45b5-bbef-1316b6fb90fb",
+  "fields": {
+    "date_created": "2025-09-29T00:12:30.191Z",
+    "date_updated": "2025-09-29T00:12:30.192Z",
+    "category": "fe27c128-972d-4a08-8893-1ad922d882bd",
+    "subcategory_code": "COMMERCIAL_OWN_GOODS_COMP",
+    "subcategory_name": "Own Goods Comprehensive",
+    "product_type": "COMPREHENSIVE",
+    "pricing_model": "TONNAGE",
+    "is_complex": false,
+    "additional_fields": [
+      "tonnage"
+    ],
+    "pricing_requirements": {
+      "max_tonnage": 31,
+      "requires_tonnage": true
+    },
+    "is_active": true,
+    "show_in_public": true,
+    "public_sort_order": 509,
+    "public_label": "Own Goods Comprehensive"
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "47363ab5-bb14-4a5d-bec4-37f5cd8159b3",
+  "fields": {
+    "date_created": "2025-09-28T22:50:23.580Z",
+    "date_updated": "2025-10-16T09:11:47.944Z",
+    "category": "02a099fd-e88b-4b61-8f64-0e3eb7ee173f",
+    "subcategory_code": "COMMERCIAL_OWN_GOODS_TP",
+    "subcategory_name": "COMMERCIAL_OWN_GOODS_TP",
+    "product_type": "THIRD_PARTY",
+    "pricing_model": "FIXED",
+    "is_complex": false,
+    "additional_fields": [],
+    "pricing_requirements": {},
+    "is_active": false,
+    "show_in_public": false,
+    "public_sort_order": 0,
+    "public_label": null
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "55ec10f8-901f-4684-9601-d01944a85987",
+  "fields": {
+    "date_created": "2025-09-28T22:50:23.590Z",
+    "date_updated": "2025-10-16T09:11:47.950Z",
+    "category": "02a099fd-e88b-4b61-8f64-0e3eb7ee173f",
+    "subcategory_code": "PSV_MATATU_1M_TP",
+    "subcategory_name": "PSV_MATATU_1M_TP",
+    "product_type": "THIRD_PARTY",
+    "pricing_model": "FIXED",
+    "is_complex": false,
+    "additional_fields": [],
+    "pricing_requirements": {},
+    "is_active": false,
+    "show_in_public": false,
+    "public_sort_order": 0,
+    "public_label": null
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "562464a1-ba36-4db8-95f2-d2c6d7792781",
+  "fields": {
+    "date_created": "2025-09-28T22:50:23.596Z",
+    "date_updated": "2025-10-16T09:11:47.961Z",
+    "category": "02a099fd-e88b-4b61-8f64-0e3eb7ee173f",
+    "subcategory_code": "TUKTUK_COMMERCIAL_COMP",
+    "subcategory_name": "TUKTUK_COMMERCIAL_COMP",
+    "product_type": "THIRD_PARTY",
+    "pricing_model": "FIXED",
+    "is_complex": false,
+    "additional_fields": [],
+    "pricing_requirements": {},
+    "is_active": false,
+    "show_in_public": false,
+    "public_sort_order": 0,
+    "public_label": null
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "563e94a4-6304-438a-9b5f-25b72bce2773",
+  "fields": {
+    "date_created": "2025-09-29T00:12:30.204Z",
+    "date_updated": "2025-09-29T00:12:30.204Z",
+    "category": "4f87a0cc-d791-4e20-9b96-39855211270e",
+    "subcategory_code": "TUKTUK_PSV_TP",
+    "subcategory_name": "PSV Tuk-Tuk Third-Party",
+    "product_type": "THIRD_PARTY",
+    "pricing_model": "PASSENGER",
+    "is_complex": false,
+    "additional_fields": [
+      "passenger_count"
+    ],
+    "pricing_requirements": {
+      "requires_passenger_count": true
+    },
+    "is_active": true,
+    "show_in_public": true,
+    "public_sort_order": 101,
+    "public_label": "PSV Tuk-Tuk Third-Party"
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "5d6abafb-0ab9-418e-b37e-99d2447c137f",
+  "fields": {
+    "date_created": "2025-09-28T22:50:23.585Z",
+    "date_updated": "2025-10-16T09:11:47.946Z",
+    "category": "02a099fd-e88b-4b61-8f64-0e3eb7ee173f",
+    "subcategory_code": "COMMERCIAL_TOR",
+    "subcategory_name": "COMMERCIAL_TOR",
+    "product_type": "THIRD_PARTY",
+    "pricing_model": "FIXED",
+    "is_complex": false,
+    "additional_fields": [],
+    "pricing_requirements": {},
+    "is_active": false,
+    "show_in_public": false,
+    "public_sort_order": 0,
+    "public_label": null
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "65cb2a5d-36e5-468b-a371-0cf955cbd780",
+  "fields": {
+    "date_created": "2025-09-29T00:12:30.216Z",
+    "date_updated": "2025-09-29T00:12:30.216Z",
+    "category": "63206394-bcc9-4ca4-9a2f-faf4cbadddb0",
+    "subcategory_code": "SPECIAL_INSTITUTIONAL_TP",
+    "subcategory_name": "Commercial Institutional Third-Party",
+    "product_type": "THIRD_PARTY",
+    "pricing_model": "PASSENGER",
+    "is_complex": false,
+    "additional_fields": [
+      "passenger_count",
+      "passenger_type"
+    ],
+    "pricing_requirements": {
+      "requires_passenger_type": true,
+      "requires_passenger_count": true
+    },
+    "is_active": true,
+    "show_in_public": true,
+    "public_sort_order": 102,
+    "public_label": "Commercial Institutional Third-Party"
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "792f2b97-9bd0-480d-a5cf-6d213196591c",
+  "fields": {
+    "date_created": "2025-09-28T22:50:23.578Z",
+    "date_updated": "2025-10-16T09:11:47.958Z",
+    "category": "02a099fd-e88b-4b61-8f64-0e3eb7ee173f",
+    "subcategory_code": "SPECIAL_AMBULANCE_COMP",
+    "subcategory_name": "SPECIAL_AMBULANCE_COMP",
+    "product_type": "THIRD_PARTY",
+    "pricing_model": "FIXED",
+    "is_complex": false,
+    "additional_fields": [],
+    "pricing_requirements": {},
+    "is_active": false,
+    "show_in_public": false,
+    "public_sort_order": 0,
+    "public_label": null
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "80830f4d-a48a-4bb7-aabd-a5b418c14868",
+  "fields": {
+    "date_created": "2025-09-29T00:05:54.503Z",
+    "date_updated": "2025-09-29T00:05:54.503Z",
+    "category": "d4ee8d63-363f-40e1-a5fc-41748a26ef42",
+    "subcategory_code": "PSV_TOUR_VAN_TP_EXT",
+    "subcategory_name": "PSV Tour Van Third-Party Extendible",
+    "product_type": "THIRD_PARTY_EXT",
+    "pricing_model": "PASSENGER",
+    "is_complex": false,
+    "additional_fields": [
+      "passenger_count"
+    ],
+    "pricing_requirements": {
+      "requires_passenger_count": true
+    },
+    "is_active": true,
+    "show_in_public": true,
+    "public_sort_order": 210,
+    "public_label": "PSV Tour Van Third-Party Extendible"
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "8309f7db-23f7-4c96-a565-631a6f98cbf2",
+  "fields": {
+    "date_created": "2025-09-29T00:05:54.500Z",
+    "date_updated": "2025-09-29T00:05:54.500Z",
+    "category": "d4ee8d63-363f-40e1-a5fc-41748a26ef42",
+    "subcategory_code": "PSV_MATATU_1WK_TP_EXT",
+    "subcategory_name": "1 Week PSV Matatu Third-Party Extendible",
+    "product_type": "THIRD_PARTY_EXT",
+    "pricing_model": "PASSENGER",
+    "is_complex": false,
+    "additional_fields": [
+      "passenger_count"
+    ],
+    "pricing_requirements": {
+      "requires_passenger_count": true
+    },
+    "is_active": true,
+    "show_in_public": true,
+    "public_sort_order": 208,
+    "public_label": "1 Week PSV Matatu Third-Party Extendible"
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "87862519-800b-4655-b480-790228534766",
+  "fields": {
+    "date_created": "2025-09-23T14:54:13.113Z",
+    "date_updated": "2025-09-23T16:22:12.211Z",
+    "category": "83a003d5-9c80-422b-9350-583f92bb9d55",
+    "subcategory_code": "MOTORCYCLE_PRIVATE_TP",
+    "subcategory_name": "Private motorcycle third party",
+    "product_type": "THIRD_PARTY",
+    "pricing_model": "ENGINE_CC",
+    "is_complex": false,
+    "additional_fields": [],
+    "pricing_requirements": {},
+    "is_active": true,
+    "show_in_public": true,
+    "public_sort_order": 101,
+    "public_label": "Private Motorcycle Third Party"
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "89b3450a-72d7-4e4d-a777-a195b27f20d1",
+  "fields": {
+    "date_created": "2025-09-29T00:05:54.501Z",
+    "date_updated": "2025-09-29T00:05:54.501Z",
+    "category": "d4ee8d63-363f-40e1-a5fc-41748a26ef42",
+    "subcategory_code": "PSV_PLAIN_TPO",
+    "subcategory_name": "PSV Plain TPO",
+    "product_type": "THIRD_PARTY",
+    "pricing_model": "PASSENGER",
+    "is_complex": false,
+    "additional_fields": [
+      "passenger_count"
+    ],
+    "pricing_requirements": {
+      "requires_passenger_count": true
+    },
+    "is_active": true,
+    "show_in_public": true,
+    "public_sort_order": 109,
+    "public_label": "PSV Plain TPO"
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "8a6b2335-aa56-4658-a15d-9c0db0062b2c",
+  "fields": {
+    "date_created": "2025-09-23T14:54:13.104Z",
+    "date_updated": "2025-09-23T16:22:12.184Z",
+    "category": "d4ee8d63-363f-40e1-a5fc-41748a26ef42",
+    "subcategory_code": "PSV_UBER_TP",
+    "subcategory_name": "PSV Uber Third-Party",
+    "product_type": "THIRD_PARTY",
+    "pricing_model": "PASSENGER",
+    "is_complex": false,
+    "additional_fields": [],
+    "pricing_requirements": {},
+    "is_active": true,
+    "show_in_public": true,
+    "public_sort_order": 101,
+    "public_label": "PSV Uber Third-Party"
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "8b31baec-cc54-4de4-9e60-82d932a61c85",
+  "fields": {
+    "date_created": "2025-09-29T00:12:30.197Z",
+    "date_updated": "2025-09-29T00:12:30.197Z",
+    "category": "83a003d5-9c80-422b-9350-583f92bb9d55",
+    "subcategory_code": "MOTORCYCLE_PSV_TP_6M",
+    "subcategory_name": "PSV motorcycle third-party 6 months",
+    "product_type": "THIRD_PARTY",
+    "pricing_model": "ENGINE_CC",
+    "is_complex": false,
+    "additional_fields": [
+      "engine_capacity"
+    ],
+    "pricing_requirements": {
+      "requires_engine_capacity": true
+    },
+    "is_active": true,
+    "show_in_public": true,
+    "public_sort_order": 103,
+    "public_label": "PSV motorcycle third-party 6 months"
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "8da7297d-5b17-4969-9b1b-e78bb6d5d40f",
+  "fields": {
+    "date_created": "2025-09-28T22:50:23.599Z",
+    "date_updated": "2025-10-16T09:11:47.963Z",
+    "category": "02a099fd-e88b-4b61-8f64-0e3eb7ee173f",
+    "subcategory_code": "TUKTUK_COMMERCIAL_TP",
+    "subcategory_name": "TUKTUK_COMMERCIAL_TP",
+    "product_type": "THIRD_PARTY",
+    "pricing_model": "FIXED",
+    "is_complex": false,
+    "additional_fields": [],
+    "pricing_requirements": {},
+    "is_active": false,
+    "show_in_public": false,
+    "public_sort_order": 0,
+    "public_label": null
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "8e119d96-cd85-4281-b2e3-ed25887c0651",
+  "fields": {
+    "date_created": "2025-09-29T00:12:30.223Z",
+    "date_updated": "2025-09-29T00:12:30.223Z",
+    "category": "63206394-bcc9-4ca4-9a2f-faf4cbadddb0",
+    "subcategory_code": "SPECIAL_AGRICULTURAL_COMP",
+    "subcategory_name": "Agricultural Tractor Comprehensive",
+    "product_type": "COMPREHENSIVE",
+    "pricing_model": "TONNAGE",
+    "is_complex": false,
+    "additional_fields": [
+      "tonnage"
+    ],
+    "pricing_requirements": {
+      "max_tonnage": 31,
+      "requires_tonnage": true
+    },
+    "is_active": true,
+    "show_in_public": true,
+    "public_sort_order": 506,
+    "public_label": "Agricultural Tractor Comprehensive"
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "9050b00a-55a0-4bc2-ba54-d3d137514a33",
+  "fields": {
+    "date_created": "2025-09-29T00:12:30.199Z",
+    "date_updated": "2025-09-29T00:12:30.199Z",
+    "category": "83a003d5-9c80-422b-9350-583f92bb9d55",
+    "subcategory_code": "MOTORCYCLE_PRIVATE_COMP",
+    "subcategory_name": "Private Motorcycle comprehensive",
+    "product_type": "COMPREHENSIVE",
+    "pricing_model": "ENGINE_CC",
+    "is_complex": false,
+    "additional_fields": [
+      "engine_capacity"
+    ],
+    "pricing_requirements": {
+      "requires_engine_capacity": true
+    },
+    "is_active": true,
+    "show_in_public": true,
+    "public_sort_order": 504,
+    "public_label": "Private Motorcycle Comprehensive"
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "927c1088-fae4-4db6-b014-9d92428eac50",
+  "fields": {
+    "date_created": "2025-09-29T00:12:30.190Z",
+    "date_updated": "2025-09-29T00:12:30.190Z",
+    "category": "fe27c128-972d-4a08-8893-1ad922d882bd",
+    "subcategory_code": "COMMERCIAL_GENERAL_CARTAGE_COMP",
+    "subcategory_name": "General Cartage Comprehensive",
+    "product_type": "COMPREHENSIVE",
+    "pricing_model": "TONNAGE",
+    "is_complex": false,
+    "additional_fields": [
+      "tonnage"
+    ],
+    "pricing_requirements": {
+      "max_tonnage": 31,
+      "requires_tonnage": true
+    },
+    "is_active": true,
+    "show_in_public": true,
+    "public_sort_order": 508,
+    "public_label": "General Cartage Comprehensive"
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "927d6176-6b77-4650-a542-3874d629ae15",
+  "fields": {
+    "date_created": "2025-09-29T00:12:30.184Z",
+    "date_updated": "2025-09-29T00:12:30.184Z",
+    "category": "fe27c128-972d-4a08-8893-1ad922d882bd",
+    "subcategory_code": "COMMERCIAL_GENERAL_CARTAGE_TP_EXT",
+    "subcategory_name": "General Cartage Third-Party Extendible",
+    "product_type": "THIRD_PARTY_EXT",
+    "pricing_model": "TONNAGE",
+    "is_complex": false,
+    "additional_fields": [
+      "tonnage"
+    ],
+    "pricing_requirements": {
+      "max_tonnage": 31,
+      "requires_tonnage": true
+    },
+    "is_active": true,
+    "show_in_public": true,
+    "public_sort_order": 205,
+    "public_label": "General Cartage Third-Party Extendible"
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "97fccac6-72a3-4263-b7a9-57335e71985e",
+  "fields": {
+    "date_created": "2025-09-29T00:12:30.183Z",
+    "date_updated": "2025-09-29T00:12:30.183Z",
+    "category": "fe27c128-972d-4a08-8893-1ad922d882bd",
+    "subcategory_code": "COMMERCIAL_GENERAL_CARTAGE_TP",
+    "subcategory_name": "General Cartage Third-Party",
+    "product_type": "THIRD_PARTY",
+    "pricing_model": "TONNAGE",
+    "is_complex": false,
+    "additional_fields": [
+      "tonnage"
+    ],
+    "pricing_requirements": {
+      "max_tonnage": 31,
+      "requires_tonnage": true
+    },
+    "is_active": true,
+    "show_in_public": true,
+    "public_sort_order": 104,
+    "public_label": "General Cartage Third-Party"
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "9d10c0e7-f9c9-4589-b9f5-17534b08881c",
+  "fields": {
+    "date_created": "2025-09-29T00:05:54.507Z",
+    "date_updated": "2025-09-29T00:05:54.507Z",
+    "category": "d4ee8d63-363f-40e1-a5fc-41748a26ef42",
+    "subcategory_code": "PSV_TOUR_VAN_COMP",
+    "subcategory_name": "PSV Tour Van Comprehensive",
+    "product_type": "COMPREHENSIVE",
+    "pricing_model": "PASSENGER",
+    "is_complex": false,
+    "additional_fields": [
+      "passenger_count"
+    ],
+    "pricing_requirements": {
+      "requires_passenger_count": true
+    },
+    "is_active": true,
+    "show_in_public": true,
+    "public_sort_order": 512,
+    "public_label": "PSV Tour Van Comprehensive"
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "9dbc9eb0-8694-41a5-adb2-f7ecdfa00530",
+  "fields": {
+    "date_created": "2025-09-28T22:50:23.610Z",
+    "date_updated": "2025-10-16T09:11:47.965Z",
+    "category": "02a099fd-e88b-4b61-8f64-0e3eb7ee173f",
+    "subcategory_code": "TUKTUK_PSV_TP",
+    "subcategory_name": "TUKTUK_PSV_TP",
+    "product_type": "THIRD_PARTY",
+    "pricing_model": "FIXED",
+    "is_complex": false,
+    "additional_fields": [],
+    "pricing_requirements": {},
+    "is_active": false,
+    "show_in_public": false,
+    "public_sort_order": 0,
+    "public_label": null
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "a1b8c919-c5a2-4e10-882d-41e9a2b734b8",
+  "fields": {
+    "date_created": "2025-09-29T00:12:30.213Z",
+    "date_updated": "2025-09-29T00:12:30.213Z",
+    "category": "4f87a0cc-d791-4e20-9b96-39855211270e",
+    "subcategory_code": "TUKTUK_PSV_COMP",
+    "subcategory_name": "PSV Tuk-Tuk Comprehensive",
+    "product_type": "COMPREHENSIVE",
+    "pricing_model": "PASSENGER",
+    "is_complex": false,
+    "additional_fields": [
+      "passenger_count"
+    ],
+    "pricing_requirements": {
+      "requires_passenger_count": true
+    },
+    "is_active": true,
+    "show_in_public": true,
+    "public_sort_order": 506,
+    "public_label": "PSV Tuk-Tuk Comprehensive"
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "a3e56280-79a5-4f31-945f-f15b99f2cb9b",
+  "fields": {
+    "date_created": "2025-09-28T22:50:23.571Z",
+    "date_updated": "2025-10-16T09:11:47.959Z",
+    "category": "02a099fd-e88b-4b61-8f64-0e3eb7ee173f",
+    "subcategory_code": "SPECIAL_INSTITUTIONAL_TP",
+    "subcategory_name": "SPECIAL_INSTITUTIONAL_TP",
+    "product_type": "THIRD_PARTY",
+    "pricing_model": "FIXED",
+    "is_complex": false,
+    "additional_fields": [],
+    "pricing_requirements": {},
+    "is_active": false,
+    "show_in_public": false,
+    "public_sort_order": 0,
+    "public_label": null
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "a5159ed8-4774-4d50-ae56-d49b1d0f86a3",
+  "fields": {
+    "date_created": "2025-09-28T22:50:23.608Z",
+    "date_updated": "2025-10-16T09:12:55.349Z",
+    "category": "02a099fd-e88b-4b61-8f64-0e3eb7ee173f",
+    "subcategory_code": "MOTORCYCLE_PRIVATE_TP",
+    "subcategory_name": "Private Motorcycle Third-Party",
+    "product_type": "THIRD_PARTY",
+    "pricing_model": "FIXED",
+    "is_complex": false,
+    "additional_fields": [],
+    "pricing_requirements": {},
+    "is_active": false,
+    "show_in_public": true,
+    "public_sort_order": 104,
+    "public_label": "Private Motorcycle Third-Party"
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "ac494bc7-5f7c-402e-9a9c-937a131ad25c",
+  "fields": {
+    "date_created": "2025-09-29T00:12:30.228Z",
+    "date_updated": "2025-09-29T00:12:30.228Z",
+    "category": "63206394-bcc9-4ca4-9a2f-faf4cbadddb0",
+    "subcategory_code": "SPECIAL_FUEL_TANKER_COMP",
+    "subcategory_name": "Fuel Tankers Comprehensive",
+    "product_type": "COMPREHENSIVE",
+    "pricing_model": "TONNAGE",
+    "is_complex": false,
+    "additional_fields": [
+      "tonnage"
+    ],
+    "pricing_requirements": {
+      "max_tonnage": 31,
+      "requires_tonnage": true
+    },
+    "is_active": true,
+    "show_in_public": true,
+    "public_sort_order": 509,
+    "public_label": "Fuel Tankers Comprehensive"
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "accb806c-d4ba-4aa0-9ff0-bb7505fd78d2",
+  "fields": {
+    "date_created": "2025-09-23T14:54:13.105Z",
+    "date_updated": "2025-09-23T16:22:12.186Z",
+    "category": "d4ee8d63-363f-40e1-a5fc-41748a26ef42",
+    "subcategory_code": "PSV_TUKTUK_TP",
+    "subcategory_name": "PSV Tuk-Tuk Third-Party",
+    "product_type": "THIRD_PARTY",
+    "pricing_model": "PASSENGER",
+    "is_complex": false,
+    "additional_fields": [],
+    "pricing_requirements": {},
+    "is_active": true,
+    "show_in_public": true,
+    "public_sort_order": 102,
+    "public_label": "PSV Tuk-Tuk Third-Party"
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "ace106ee-e1e8-40c1-9a97-4d073f5b3f33",
+  "fields": {
+    "date_created": "2025-09-29T00:12:30.208Z",
+    "date_updated": "2025-09-29T00:12:30.208Z",
+    "category": "4f87a0cc-d791-4e20-9b96-39855211270e",
+    "subcategory_code": "TUKTUK_COMMERCIAL_TP",
+    "subcategory_name": "Commercial TukTuk Third-Party",
+    "product_type": "THIRD_PARTY",
+    "pricing_model": "FIXED",
+    "is_complex": false,
+    "additional_fields": [],
+    "pricing_requirements": {},
+    "is_active": true,
+    "show_in_public": true,
+    "public_sort_order": 103,
+    "public_label": "Commercial TukTuk Third-Party"
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "acf78ac4-9d88-4200-aae5-03131abce47b",
+  "fields": {
+    "date_created": "2025-09-29T00:05:54.505Z",
+    "date_updated": "2025-09-29T00:05:54.505Z",
+    "category": "d4ee8d63-363f-40e1-a5fc-41748a26ef42",
+    "subcategory_code": "PSV_UBER_COMP",
+    "subcategory_name": "PSV Uber Comprehensive",
+    "product_type": "COMPREHENSIVE",
+    "pricing_model": "PASSENGER",
+    "is_complex": false,
+    "additional_fields": [
+      "passenger_count"
+    ],
+    "pricing_requirements": {
+      "requires_passenger_count": true
+    },
+    "is_active": true,
+    "show_in_public": true,
+    "public_sort_order": 511,
+    "public_label": "PSV UBER COMPREHENSIVE"
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "b7ad403a-321a-4789-8fe4-0efb0dc4f817",
+  "fields": {
+    "date_created": "2025-09-29T00:12:30.180Z",
+    "date_updated": "2025-09-29T00:12:30.180Z",
+    "category": "fe27c128-972d-4a08-8893-1ad922d882bd",
+    "subcategory_code": "COMMERCIAL_OWN_GOODS_TP",
+    "subcategory_name": "Own Goods Third-Party",
+    "product_type": "THIRD_PARTY",
+    "pricing_model": "TONNAGE",
+    "is_complex": false,
+    "additional_fields": [
+      "tonnage"
+    ],
+    "pricing_requirements": {
+      "max_tonnage": 31,
+      "requires_tonnage": true
+    },
+    "is_active": true,
+    "show_in_public": true,
+    "public_sort_order": 102,
+    "public_label": "Own Goods Third-Party"
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "b976507a-d35e-4e84-9ef7-94608abaa1b5",
+  "fields": {
+    "date_created": "2025-09-29T00:12:30.218Z",
+    "date_updated": "2025-09-29T00:12:30.218Z",
+    "category": "63206394-bcc9-4ca4-9a2f-faf4cbadddb0",
+    "subcategory_code": "SPECIAL_INSTITUTIONAL_TP_EXT",
+    "subcategory_name": "Commercial Institutional Third-Party Extendible",
+    "product_type": "THIRD_PARTY_EXT",
+    "pricing_model": "PASSENGER",
+    "is_complex": false,
+    "additional_fields": [
+      "passenger_count",
+      "passenger_type"
+    ],
+    "pricing_requirements": {
+      "requires_passenger_type": true,
+      "requires_passenger_count": true
+    },
+    "is_active": true,
+    "show_in_public": true,
+    "public_sort_order": 203,
+    "public_label": "Commercial Institutional Third-Party Extendible"
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "c3d87a28-c87a-4b21-951f-1b0586a9d908",
+  "fields": {
+    "date_created": "2025-09-23T14:54:13.089Z",
+    "date_updated": "2025-09-23T16:22:12.125Z",
+    "category": "02a099fd-e88b-4b61-8f64-0e3eb7ee173f",
+    "subcategory_code": "PRIVATE_COMPREHENSIVE",
+    "subcategory_name": "Private Comprehensive",
+    "product_type": "comprehensive",
+    "pricing_model": "FIXED",
+    "is_complex": false,
+    "additional_fields": [],
+    "pricing_requirements": {},
+    "is_active": true,
+    "show_in_public": true,
+    "public_sort_order": 505,
+    "public_label": "Private Comprehensive"
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "c5178a09-c508-45ec-8cfa-886b32f3e300",
+  "fields": {
+    "date_created": "2025-09-29T00:12:30.225Z",
+    "date_updated": "2025-09-29T00:12:30.225Z",
+    "category": "63206394-bcc9-4ca4-9a2f-faf4cbadddb0",
+    "subcategory_code": "SPECIAL_INSTITUTIONAL_COMP",
+    "subcategory_name": "Commercial Institutional Comprehensive",
+    "product_type": "COMPREHENSIVE",
+    "pricing_model": "PASSENGER",
+    "is_complex": false,
+    "additional_fields": [
+      "passenger_count",
+      "passenger_type"
+    ],
+    "pricing_requirements": {
+      "requires_passenger_type": true,
+      "requires_passenger_count": true
+    },
+    "is_active": true,
+    "show_in_public": true,
+    "public_sort_order": 507,
+    "public_label": "Commercial Institutional Comprehensive"
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "ce88273c-85b0-4d72-a815-d9e9fef0b66a",
+  "fields": {
+    "date_created": "2025-09-23T14:54:13.115Z",
+    "date_updated": "2025-09-23T16:22:12.212Z",
+    "category": "83a003d5-9c80-422b-9350-583f92bb9d55",
+    "subcategory_code": "MOTORCYCLE_PSV_TP",
+    "subcategory_name": "PSV motorcycle third party",
+    "product_type": "THIRD_PARTY",
+    "pricing_model": "ENGINE_CC",
+    "is_complex": false,
+    "additional_fields": [],
+    "pricing_requirements": {},
+    "is_active": true,
+    "show_in_public": true,
+    "public_sort_order": 102,
+    "public_label": "PSV Motorcycle Third Party"
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "cf100eb6-efb7-4c10-afab-9b628baf3747",
+  "fields": {
+    "date_created": "2025-09-29T00:12:30.211Z",
+    "date_updated": "2025-09-29T00:12:30.211Z",
+    "category": "4f87a0cc-d791-4e20-9b96-39855211270e",
+    "subcategory_code": "TUKTUK_COMMERCIAL_COMP",
+    "subcategory_name": "Commercial TukTuk Comprehensive",
+    "product_type": "COMPREHENSIVE",
+    "pricing_model": "FIXED",
+    "is_complex": false,
+    "additional_fields": [],
+    "pricing_requirements": {},
+    "is_active": true,
+    "show_in_public": true,
+    "public_sort_order": 505,
+    "public_label": "Commercial TukTuk Comprehensive"
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "cf9966b7-4e06-4341-a4ca-992f218926d1",
+  "fields": {
+    "date_created": "2025-09-28T22:50:23.582Z",
+    "date_updated": "2025-10-16T09:11:47.948Z",
+    "category": "02a099fd-e88b-4b61-8f64-0e3eb7ee173f",
+    "subcategory_code": "MOTORCYCLE_PRIVATE_COMP",
+    "subcategory_name": "MOTORCYCLE_PRIVATE_COMP",
+    "product_type": "THIRD_PARTY",
+    "pricing_model": "FIXED",
+    "is_complex": false,
+    "additional_fields": [],
+    "pricing_requirements": {},
+    "is_active": false,
+    "show_in_public": false,
+    "public_sort_order": 0,
+    "public_label": null
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "d234cead-5ffa-4fd7-b75b-fc70002baf39",
+  "fields": {
+    "date_created": "2025-09-29T00:12:30.171Z",
+    "date_updated": "2025-09-29T00:12:30.171Z",
+    "category": "fe27c128-972d-4a08-8893-1ad922d882bd",
+    "subcategory_code": "COMMERCIAL_TOR",
+    "subcategory_name": "TOR For Commercial",
+    "product_type": "TOR",
+    "pricing_model": "TONNAGE",
+    "is_complex": false,
+    "additional_fields": [
+      "tonnage"
+    ],
+    "pricing_requirements": {
+      "max_tonnage": 31,
+      "requires_tonnage": true
+    },
+    "is_active": true,
+    "show_in_public": true,
+    "public_sort_order": 401,
+    "public_label": "TOR For Commercial"
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "d4426841-f3d0-42bf-931e-7662f12405a5",
+  "fields": {
+    "date_created": "2025-09-28T22:50:23.592Z",
+    "date_updated": "2025-10-16T09:11:47.954Z",
+    "category": "02a099fd-e88b-4b61-8f64-0e3eb7ee173f",
+    "subcategory_code": "SPECIAL_AGRICULTURAL_COMP",
+    "subcategory_name": "SPECIAL_AGRICULTURAL_COMP",
+    "product_type": "THIRD_PARTY",
+    "pricing_model": "FIXED",
+    "is_complex": false,
+    "additional_fields": [],
+    "pricing_requirements": {},
+    "is_active": false,
+    "show_in_public": false,
+    "public_sort_order": 0,
+    "public_label": null
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "d5497b86-997f-47cc-822e-9ea23b8929a9",
+  "fields": {
+    "date_created": "2025-09-29T00:12:30.200Z",
+    "date_updated": "2025-09-29T00:12:30.200Z",
+    "category": "83a003d5-9c80-422b-9350-583f92bb9d55",
+    "subcategory_code": "MOTORCYCLE_PSV_COMP",
+    "subcategory_name": "PSV Motorcycle comprehensive",
+    "product_type": "COMPREHENSIVE",
+    "pricing_model": "ENGINE_CC",
+    "is_complex": false,
+    "additional_fields": [
+      "engine_capacity"
+    ],
+    "pricing_requirements": {
+      "requires_engine_capacity": true
+    },
+    "is_active": true,
+    "show_in_public": true,
+    "public_sort_order": 505,
+    "public_label": "PSV Motorcycle comprehensive"
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "d7b4da34-6ad7-4a34-ae35-4cecbdb4b995",
+  "fields": {
+    "date_created": "2025-09-29T00:12:30.181Z",
+    "date_updated": "2025-09-29T00:12:30.181Z",
+    "category": "fe27c128-972d-4a08-8893-1ad922d882bd",
+    "subcategory_code": "COMMERCIAL_OWN_GOODS_TP_EXT",
+    "subcategory_name": "Own Goods Third-Party Extendible",
+    "product_type": "THIRD_PARTY_EXT",
+    "pricing_model": "TONNAGE",
+    "is_complex": false,
+    "additional_fields": [
+      "tonnage"
+    ],
+    "pricing_requirements": {
+      "max_tonnage": 31,
+      "requires_tonnage": true
+    },
+    "is_active": true,
+    "show_in_public": true,
+    "public_sort_order": 203,
+    "public_label": "Own Goods Third-Party Extendible"
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "d7b935c7-d55f-47ca-9e28-5a444243e9b1",
+  "fields": {
+    "date_created": "2025-09-29T00:12:30.206Z",
+    "date_updated": "2025-09-29T00:12:30.206Z",
+    "category": "4f87a0cc-d791-4e20-9b96-39855211270e",
+    "subcategory_code": "TUKTUK_PSV_TP_EXT",
+    "subcategory_name": "PSV Tuk-Tuk Third-Party Extendible",
+    "product_type": "THIRD_PARTY_EXT",
+    "pricing_model": "PASSENGER",
+    "is_complex": false,
+    "additional_fields": [
+      "passenger_count"
+    ],
+    "pricing_requirements": {
+      "requires_passenger_count": true
+    },
+    "is_active": true,
+    "show_in_public": true,
+    "public_sort_order": 202,
+    "public_label": "PSV Tuk-Tuk Third-Party Extendible"
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "d83ac6d4-9151-417f-b11e-4f2a3277ac82",
+  "fields": {
+    "date_created": "2025-09-23T14:54:13.083Z",
+    "date_updated": "2025-09-23T16:22:12.118Z",
+    "category": "02a099fd-e88b-4b61-8f64-0e3eb7ee173f",
+    "subcategory_code": "PRIVATE_TOR",
+    "subcategory_name": "Private Time On Risk",
+    "product_type": "fixed",
+    "pricing_model": "FIXED",
+    "is_complex": false,
+    "additional_fields": [],
+    "pricing_requirements": {},
+    "is_active": true,
+    "show_in_public": true,
+    "public_sort_order": 401,
+    "public_label": "TOR For Private"
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "d850b486-5ea8-40b1-940d-5c29927fb6c6",
+  "fields": {
+    "date_created": "2025-09-28T22:50:23.594Z",
+    "date_updated": "2025-10-16T09:11:47.952Z",
+    "category": "02a099fd-e88b-4b61-8f64-0e3eb7ee173f",
+    "subcategory_code": "PSV_UBER_COMP",
+    "subcategory_name": "PSV_UBER_COMP",
+    "product_type": "THIRD_PARTY",
+    "pricing_model": "FIXED",
+    "is_complex": false,
+    "additional_fields": [],
+    "pricing_requirements": {},
+    "is_active": false,
+    "show_in_public": false,
+    "public_sort_order": 0,
+    "public_label": null
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "d85a3baa-dc18-4773-9dd4-d5556c66f24c",
+  "fields": {
+    "date_created": "2025-09-23T14:54:13.096Z",
+    "date_updated": "2025-10-16T09:11:47.970Z",
+    "category": "4f87a0cc-d791-4e20-9b96-39855211270e",
+    "subcategory_code": "TUKTUK_COMMERCIAL_TP_ALT",
+    "subcategory_name": "Commercial TukTuk Third-Party (Alternative)",
+    "product_type": "third_party",
+    "pricing_model": "FIXED",
+    "is_complex": false,
+    "additional_fields": [],
+    "pricing_requirements": {},
+    "is_active": true,
+    "show_in_public": false,
+    "public_sort_order": 0,
+    "public_label": null
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "dec45528-de0c-4e25-b4d8-4d594237bb1a",
+  "fields": {
+    "date_created": "2025-09-29T00:12:30.221Z",
+    "date_updated": "2025-09-29T00:12:30.221Z",
+    "category": "63206394-bcc9-4ca4-9a2f-faf4cbadddb0",
+    "subcategory_code": "SPECIAL_DRIVING_SCHOOL_TP",
+    "subcategory_name": "Driving School Third-Party",
+    "product_type": "THIRD_PARTY",
+    "pricing_model": "TONNAGE",
+    "is_complex": false,
+    "additional_fields": [
+      "tonnage",
+      "passenger_count"
+    ],
+    "pricing_requirements": {
+      "requires_tonnage": true,
+      "requires_passenger_count": true
+    },
+    "is_active": true,
+    "show_in_public": true,
+    "public_sort_order": 105,
+    "public_label": "Driving School Third-Party"
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "e319fcc3-a380-435c-ba1e-cb1f99e24c41",
+  "fields": {
+    "date_created": "2025-09-29T00:12:30.188Z",
+    "date_updated": "2025-09-29T00:12:30.188Z",
+    "category": "fe27c128-972d-4a08-8893-1ad922d882bd",
+    "subcategory_code": "COMMERCIAL_GENERAL_CARTAGE_TP_EXT_PM",
+    "subcategory_name": "General Cartage Third-Party Extendible Prime Mover",
+    "product_type": "THIRD_PARTY_EXT",
+    "pricing_model": "TONNAGE",
+    "is_complex": false,
+    "additional_fields": [
+      "tonnage"
+    ],
+    "pricing_requirements": {
+      "max_tonnage": 31,
+      "requires_tonnage": true
+    },
+    "is_active": true,
+    "show_in_public": true,
+    "public_sort_order": 207,
+    "public_label": "General Cartage Third-Party Extendible Prime Mover"
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "e5fda96b-fdda-4fe9-a53c-3cd8d5500ada",
+  "fields": {
+    "date_created": "2025-09-28T22:50:23.588Z",
+    "date_updated": "2025-09-28T22:50:23.588Z",
+    "category": "02a099fd-e88b-4b61-8f64-0e3eb7ee173f",
+    "subcategory_code": "PRIVATE_THIRD_PARTY",
+    "subcategory_name": "PRIVATE_THIRD_PARTY",
+    "product_type": "THIRD_PARTY",
+    "pricing_model": "FIXED",
+    "is_complex": false,
+    "additional_fields": [],
+    "pricing_requirements": {},
+    "is_active": true,
+    "show_in_public": true,
+    "public_sort_order": 102,
+    "public_label": "Private Third-Party"
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "ef6f9d94-afa6-4957-a6e1-c722dc3f327f",
+  "fields": {
+    "date_created": "2025-09-29T00:12:30.202Z",
+    "date_updated": "2025-09-29T00:12:30.202Z",
+    "category": "83a003d5-9c80-422b-9350-583f92bb9d55",
+    "subcategory_code": "MOTORCYCLE_PSV_COMP_6M",
+    "subcategory_name": "PSV motorcycle comprehensive 6 months",
+    "product_type": "COMPREHENSIVE",
+    "pricing_model": "ENGINE_CC",
+    "is_complex": false,
+    "additional_fields": [
+      "engine_capacity"
+    ],
+    "pricing_requirements": {
+      "requires_engine_capacity": true
+    },
+    "is_active": true,
+    "show_in_public": true,
+    "public_sort_order": 506,
+    "public_label": "PSV motorcycle comprehensive 6 months"
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "f1b4d2b9-5654-4146-a799-5a66e44fd01e",
+  "fields": {
+    "date_created": "2025-09-28T22:50:23.576Z",
+    "date_updated": "2025-10-16T09:11:47.937Z",
+    "category": "02a099fd-e88b-4b61-8f64-0e3eb7ee173f",
+    "subcategory_code": "COMMERCIAL_GENERAL_CARTAGE_TP",
+    "subcategory_name": "COMMERCIAL_GENERAL_CARTAGE_TP",
+    "product_type": "THIRD_PARTY",
+    "pricing_model": "FIXED",
+    "is_complex": false,
+    "additional_fields": [],
+    "pricing_requirements": {},
+    "is_active": false,
+    "show_in_public": false,
+    "public_sort_order": 0,
+    "public_label": null
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "f2e4c804-1bc3-4411-99ab-c91f1f08606c",
+  "fields": {
+    "date_created": "2025-09-29T00:12:30.186Z",
+    "date_updated": "2025-09-29T00:12:30.186Z",
+    "category": "fe27c128-972d-4a08-8893-1ad922d882bd",
+    "subcategory_code": "COMMERCIAL_GENERAL_CARTAGE_TP_PM",
+    "subcategory_name": "General Cartage Third-Party Prime Mover",
+    "product_type": "THIRD_PARTY",
+    "pricing_model": "TONNAGE",
+    "is_complex": false,
+    "additional_fields": [
+      "tonnage"
+    ],
+    "pricing_requirements": {
+      "max_tonnage": 31,
+      "requires_tonnage": true
+    },
+    "is_active": true,
+    "show_in_public": true,
+    "public_sort_order": 106,
+    "public_label": "General Cartage Third-Party Prime Mover"
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "f74414bf-1e4f-4965-a953-dc4f46c3e265",
+  "fields": {
+    "date_created": "2025-09-28T22:50:23.601Z",
+    "date_updated": "2025-09-28T22:50:23.601Z",
+    "category": "02a099fd-e88b-4b61-8f64-0e3eb7ee173f",
+    "subcategory_code": "PRIVATE_THIRD_PARTY_EXT",
+    "subcategory_name": "PRIVATE_THIRD_PARTY_EXT",
+    "product_type": "THIRD_PARTY",
+    "pricing_model": "FIXED",
+    "is_complex": false,
+    "additional_fields": [],
+    "pricing_requirements": {},
+    "is_active": true,
+    "show_in_public": true,
+    "public_sort_order": 203,
+    "public_label": "Private Third-Party Extendible"
+  }
+},
+{
+  "model": "app.motorsubcategory",
+  "pk": "fb7e17be-9bfd-4fc3-93e8-6fa13346eebe",
+  "fields": {
+    "date_created": "2025-09-29T00:12:30.209Z",
+    "date_updated": "2025-09-29T00:12:30.209Z",
+    "category": "4f87a0cc-d791-4e20-9b96-39855211270e",
+    "subcategory_code": "TUKTUK_COMMERCIAL_TP_EXT",
+    "subcategory_name": "Commercial TukTuk Third-Party Extendible",
+    "product_type": "THIRD_PARTY_EXT",
+    "pricing_model": "FIXED",
+    "is_complex": false,
+    "additional_fields": [],
+    "pricing_requirements": {},
+    "is_active": true,
+    "show_in_public": true,
+    "public_sort_order": 204,
+    "public_label": "Commercial TukTuk Third-Party Extendible"
+  }
+}
+]

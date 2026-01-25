@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { InteractionManager } from 'react-native';
 import djangoAPI from '../services/DjangoAPIService';
+import motor3QuotationService from '../services/Motor3QuotationService';
 import { usersAPI } from '../services/users';
 import commissionsAPI from '../services/commissions';
 import { useAuth } from './AuthContext';
@@ -9,6 +10,7 @@ import { useAuth } from './AuthContext';
 const TTL = {
   user: 5 * 60 * 1000, // 5 min
   quotes: 2 * 60 * 1000, // 2 min
+  motor3Quotes: 2 * 60 * 1000,
   manualQuotes: 2 * 60 * 1000,
   motorPolicies: 2 * 60 * 1000,
   renewals: 3 * 60 * 1000,
@@ -32,6 +34,7 @@ export const AppDataProvider = ({ children }) => {
   // Data state
   const [user, setUser] = useState(null);
   const [legacyQuotes, setLegacyQuotes] = useState([]);
+  const [motor3Quotations, setMotor3Quotations] = useState([]);
   const [motorPolicies, setMotorPolicies] = useState([]);
   const [manualQuotes, setManualQuotes] = useState([]);
   const [renewals, setRenewals] = useState([]);
@@ -87,6 +90,23 @@ export const AppDataProvider = ({ children }) => {
       return [];
     }
   }, [isFresh, markFresh, legacyQuotes.length]);
+
+  const fetchMotor3Quotations = useCallback(async (force = false) => {
+    if (!force && isFresh('motor3Quotes') && motor3Quotations.length) return motor3Quotations;
+    try {
+      const res = await motor3QuotationService.listQuotations();
+      const items = Array.isArray(res) ? res : (res?.results || []);
+
+      // Tag source so mapping reliably classifies it as MOTOR
+      const tagged = (items || []).map((q) => ({ ...q, __source: 'motor3' }));
+      setMotor3Quotations(tagged);
+      markFresh('motor3Quotes');
+      return tagged;
+    } catch (e) {
+      setErrors((prev) => ({ ...prev, motor3Quotes: e }));
+      return [];
+    }
+  }, [isFresh, markFresh, motor3Quotations.length]);
 
   const fetchMotorPolicies = useCallback(async (force = false) => {
     if (!force && isFresh('motorPolicies') && motorPolicies.length) return motorPolicies;
@@ -288,6 +308,7 @@ export const AppDataProvider = ({ children }) => {
       const results = await Promise.allSettled([
         fetchUser(force),
         fetchLegacyQuotes(force),
+        fetchMotor3Quotations(force),
         fetchMotorPolicies(force),
         fetchManualQuotes(force),
         fetchRenewals(force),
@@ -356,6 +377,7 @@ export const AppDataProvider = ({ children }) => {
         console.log('[AppDataContext] Running deferred data fetch...');
         // fire-and-forget; individual fetchers handle errors and freshness
         fetchLegacyQuotes(false);
+        fetchMotor3Quotations(false);
         fetchMotorPolicies(false);
         fetchManualQuotes(false);
         fetchRenewals(false);
@@ -376,6 +398,7 @@ export const AppDataProvider = ({ children }) => {
     // state
     user,
     legacyQuotes,
+    motor3Quotations,
     motorPolicies,
     manualQuotes,
     renewals,
@@ -389,13 +412,14 @@ export const AppDataProvider = ({ children }) => {
     fetchAll,
     fetchUser,
     fetchLegacyQuotes,
+    fetchMotor3Quotations,
     fetchMotorPolicies,
     fetchManualQuotes,
     fetchRenewals,
     fetchExtensions,
     fetchClaims,
     fetchCommissions,
-  }), [user, legacyQuotes, motorPolicies, manualQuotes, renewals, extensions, claims, commissionSummary, commissionList, loading, errors, fetchAll, fetchUser, fetchLegacyQuotes, fetchMotorPolicies, fetchManualQuotes, fetchRenewals, fetchExtensions, fetchClaims, fetchCommissions]);
+  }), [user, legacyQuotes, motor3Quotations, motorPolicies, manualQuotes, renewals, extensions, claims, commissionSummary, commissionList, loading, errors, fetchAll, fetchUser, fetchLegacyQuotes, fetchMotor3Quotations, fetchMotorPolicies, fetchManualQuotes, fetchRenewals, fetchExtensions, fetchClaims, fetchCommissions]);
 
   return (
     <AppDataContext.Provider value={value}>

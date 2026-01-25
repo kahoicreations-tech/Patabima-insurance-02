@@ -1,0 +1,16 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block content %}
+  <div class="module">
+    <h2>{% blocktrans %}Generate commissions for ALL ACTIVE policies{% endblocktrans %}</h2>
+    <p>This will create Agent Commission records for all Motor policies that are ACTIVE and do not yet have a commission. Continue?</p>
+    <form method="post" action="{{ confirm_url }}">
+      {% csrf_token %}
+      <div class="submit-row">
+        <input type="submit" class="default" value="Yes, generate now" />
+        <a class="button" href="{% url 'admin:app_motorpolicy_changelist' %}">Cancel</a>
+      </div>
+    </form>
+  </div>
+{% endblock %}

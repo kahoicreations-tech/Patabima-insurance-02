@@ -568,7 +568,7 @@ export default function LoginScreen() {
                     <Text style={styles.termsLink}>Terms and Policies</Text>
                   </TouchableOpacity>
                 </View>
-                <Text style={styles.versionText} onPress={handleDevTap}>PataBima - Ver 1.0.0</Text>
+                <Text style={styles.versionText} onPress={handleDevTap}>PataBima - Ver 1.0.2</Text>
               </View>
             </View>
           </ScrollView>

@@ -1,0 +1,749 @@
+import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
+import { View, Text, TextInput, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { VEHICLE_MAKES, getModelsForMake } from '../../../../../constants/vehicleCatalog';
+import StableTextInput from '../../../components/StableTextInput';
+import { FONT_SIZES, FONT_WEIGHTS } from '../../../../../theme/typography';
+
+const DEBUG = false; // Toggle verbose console logs for this form
+
+// Validation helper functions
+const validateEmail = (email) => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+};
+
+const validatePhone = (phone) => {
+  // Kenyan phone format: 07XXXXXXXX, 01XXXXXXXX, +2547XXXXXXXX, or 2547XXXXXXXX
+  const phoneRegex = /^(\+254|254|0)?[17]\d{8}$/;
+  return phoneRegex.test(phone.replace(/[\s\-]/g, ''));
+};
+
+const validateKraPin = (kraPin) => {
+  // Format: A000000000X (letter + 9 digits + letter)
+  const kraPinRegex = /^[A-Z]\d{9}[A-Z]$/;
+  return kraPinRegex.test(kraPin.replace(/[\s\-]/g, ''));
+};
+
+const validateIdNumber = (idNumber) => {
+  // Minimum 7 digits, maximum 8 digits
+  return /^\d{7,8}$/.test(idNumber);
+};
+
+export default function EnhancedClientForm({ 
+  values = {}, 
+  onChange, 
+  errors = {}, 
+  extractedData = {},
+  onValidationChange,
+  selectedProduct,
+  vehicleData
+}) {
+  const [fieldErrors, setFieldErrors] = useState({});
+  const { actions } = useMotorInsurance();
+  
+  // ✅ Use refs to store latest values without causing re-renders
+  const valuesRef = useRef(values);
+  const fieldErrorsRef = useRef(fieldErrors);
+  const onChangeRef = useRef(onChange);
+  
+  // Keep refs in sync
+  valuesRef.current = values;
+  fieldErrorsRef.current = fieldErrors;
+  onChangeRef.current = onChange;
+  
+  // Track if fields were manually edited (to clear DMVIC cache)
+  const manuallyEditedRef = useRef(new Set());
+  
+  // ✅ Make update function stable with useCallback
+  const update = useCallback((k, v) => {
+    if (DEBUG) {
+      try { console.log('EnhancedClientForm update called:', k, '=', v); } catch {}
+    }
+    // Avoid emitting changes when value hasn't changed
+    const prev = valuesRef.current ? valuesRef.current[k] : undefined;
+    if (prev === v) return;
+    
+    // Special handling for registration number (PRIMARY KEY)
+    // If user edits registration, clear DMVIC cache AND all manual edit flags
+    // so that DMVIC can fetch fresh data and populate ALL fields
+    if (k === 'vehicle_registration') {
+      console.log('[EnhancedClientForm] Registration changed - Clearing DMVIC cache and reset manual edits');
+      actions.clearDMVICCache?.();
+      manuallyEditedRef.current.clear(); // Reset all manual edit flags
+    }
+    // For other vehicle fields (chassis, make, model, year), mark as manually edited
+    else if (['chassis_number', 'vehicle_make', 'vehicle_model', 'vehicle_year'].includes(k)) {
+      manuallyEditedRef.current.add(k);
+      console.log('[EnhancedClientForm] Vehicle field manually edited:', k);
+      // Don't clear cache - let registration drive the DMVIC fetch
+    }
+    
+    // Clear field error when user starts typing
+    if (fieldErrorsRef.current[k]) {
+      setFieldErrors(prev => ({ ...prev, [k]: null }));
+    }
+    
+    const newValues = { ...(valuesRef.current || {}), [k]: v };
+    onChangeRef.current?.(newValues);
+  }, [actions]); // Only depend on actions, not values/fieldErrors/onChange
+  
+  // ✅ Memoize field handlers to prevent TextInput re-renders
+  const fieldHandlers = useMemo(() => ({
+    first_name: (v) => update('first_name', v),
+    last_name: (v) => update('last_name', v),
+    kra_pin: (v) => update('kra_pin', (v || '').toUpperCase()),
+    id_number: (v) => update('id_number', v),
+    email: (v) => update('email', v),
+    phone: (v) => update('phone', v),
+    vehicle_registration: (v) => update('vehicle_registration', (v || '').toUpperCase()),
+    chassis_number: (v) => update('chassis_number', (v || '').toUpperCase()),
+    vehicle_make: (v) => update('vehicle_make', v),
+    vehicle_model: (v) => update('vehicle_model', v),
+    vehicle_year: (v) => update('vehicle_year', v),
+  }), [update]);
+  
+  const validateField = useCallback((key, value) => {
+    const val = (value || '').toString().trim();
+    
+    switch (key) {
+      case 'email':
+        if (!val) return 'Email is required';
+        if (!validateEmail(val)) return 'Enter valid email address';
+        return null;
+      
+      case 'phone':
+        if (!val) return 'Phone number is required';
+        if (!validatePhone(val)) return 'Enter valid Kenyan phone (e.g., 0712345678)';
+        return null;
+      
+      case 'kra_pin':
+        if (val && !validateKraPin(val)) return 'Enter valid KRA PIN (e.g., A000000000X)';
+        return null;
+      
+      case 'id_number':
+        if (val && !validateIdNumber(val)) return 'Enter valid ID number (7-8 digits)';
+        return null;
+      
+      case 'first_name':
+      case 'last_name':
+        if (!val) return `${key === 'first_name' ? 'First' : 'Last'} name is required`;
+        if (val.length < 2) return 'Name too short (minimum 2 characters)';
+        return null;
+      
+      default:
+        return null;
+    }
+  }, []);
+  
+  const handleBlur = useCallback((key) => {
+    const error = validateField(key, valuesRef.current[key]);
+    if (error) {
+      setFieldErrors(prev => ({ ...prev, [key]: error }));
+    }
+  }, [validateField]);
+  
+  const hasAppliedExtractedData = useRef(false);
+
+  // Prefer values from Vehicle Details step when present (keeps UX consistent)
+  // DMVIC data is the source of truth - REGISTRATION NUMBER is the primary key
+  // If vehicleData has registration, ALL other fields must match DMVIC (unless manually edited)
+  useEffect(() => {
+    if (!vehicleData) return;
+    const patch = {};
+    
+    // Registration Number - ALWAYS update (primary key from DMVIC)
+    const reg = vehicleData.registrationNumber || vehicleData.registration_number || vehicleData.Registration_Number;
+    if (reg && String(reg).toUpperCase() !== values.vehicle_registration) {
+      patch.vehicle_registration = String(reg).toUpperCase();
+      // When registration changes, clear manual edit flags so DMVIC data populates all fields
+      manuallyEditedRef.current.clear();
+    }
+    
+    // Chassis Number - update if different AND not manually edited (unless registration just changed)
+    if (!manuallyEditedRef.current.has('chassis_number')) {
+      const ch = vehicleData.chassisNumber || vehicleData.chassis_number;
+      if (ch && String(ch).toUpperCase() !== values.chassis_number) {
+        patch.chassis_number = String(ch).toUpperCase();
+      }
+    }
+    
+    // Make - update if different AND not manually edited
+    if (!manuallyEditedRef.current.has('vehicle_make')) {
+      if (vehicleData.make && vehicleData.make !== values.vehicle_make) {
+        patch.vehicle_make = vehicleData.make;
+      }
+    }
+    
+    // Model - update if different AND not manually edited
+    if (!manuallyEditedRef.current.has('vehicle_model')) {
+      if (vehicleData.model && vehicleData.model !== values.vehicle_model) {
+        patch.vehicle_model = vehicleData.model;
+      }
+    }
+    
+    // Year - update if different AND not manually edited
+    if (!manuallyEditedRef.current.has('vehicle_year')) {
+      if (vehicleData.year && vehicleData.year !== values.vehicle_year) {
+        patch.vehicle_year = vehicleData.year;
+      }
+    }
+    
+    if (Object.keys(patch).length) onChange?.({ ...(values || {}), ...patch });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    vehicleData?.registrationNumber, 
+    vehicleData?.registration_number, 
+    vehicleData?.Registration_Number,
+    vehicleData?.chassisNumber,
+    vehicleData?.chassis_number,
+    vehicleData?.make, 
+    vehicleData?.model,
+    vehicleData?.year
+  ]);
+  
+  // Validate required fields and document extraction completeness
+  const validateFields = () => {
+    const requiredFields = [
+      { key: 'first_name', label: 'First Name', fromDoc: 'owner_name', validator: null },
+      { key: 'last_name', label: 'Last Name', fromDoc: 'owner_name', validator: null },
+      { key: 'kra_pin', label: 'KRA PIN', fromDoc: 'kra_pin', validator: validateKraPin },
+      { key: 'id_number', label: 'ID Number', fromDoc: 'id_number', validator: validateIdNumber },
+      { key: 'email', label: 'Email', fromDoc: 'email', validator: validateEmail },
+      { key: 'phone', label: 'Phone', fromDoc: 'phone', validator: validatePhone },
+      { key: 'vehicle_registration', label: 'Vehicle Registration', fromDoc: 'registration_number', validator: null },
+      { key: 'chassis_number', label: 'Chassis Number', fromDoc: 'chassis_number', validator: null },
+      { key: 'vehicle_make', label: 'Vehicle Make', fromDoc: 'make', validator: null },
+      { key: 'vehicle_model', label: 'Vehicle Model', fromDoc: 'model', validator: null }
+    ];
+
+    const missingFields = [];
+    const invalidFields = [];
+    const extractionIssues = [];
+
+    requiredFields.forEach(field => {
+      const currentValue = (values[field.key] || '').toString().trim();
+      const extractedValue = (extractedData[field.fromDoc] || '').toString().trim();
+      
+      // Check if field is empty
+      if (!currentValue) {
+        missingFields.push(field.label);
+        
+        // Check if extraction failed for this field
+        if (!extractedValue) {
+          extractionIssues.push(`${field.label} could not be extracted from documents`);
+        }
+      } else if (field.validator && !field.validator(currentValue)) {
+        // Check format validation if validator exists
+        invalidFields.push(field.label);
+      }
+    });
+
+    const isValid = missingFields.length === 0 && invalidFields.length === 0;
+    const validationResult = {
+      isValid,
+      missingFields,
+      invalidFields,
+      extractionIssues,
+      message: isValid 
+        ? 'All required fields completed'
+        : (invalidFields.length > 0 
+          ? `Invalid format: ${invalidFields.join(', ')}`
+          : `Missing: ${missingFields.join(', ')}`)
+    };
+
+    onValidationChange?.(validationResult);
+    return validationResult;
+  };
+
+  // Apply extracted data on mount or when extractedData changes
+  useEffect(() => {
+    if (!extractedData || Object.keys(extractedData).length === 0 || hasAppliedExtractedData.current) {
+      return; // No data or already applied
+    }
+
+    const newValues = { ...values };
+    let hasChanges = false;
+
+    const mapping = {
+      owner_name: ['first_name', 'last_name'],
+      kra_pin: 'kra_pin',
+      id_number: 'id_number',
+      email: 'email',
+      phone: 'phone',
+      registration_number: 'vehicle_registration',
+      chassis_number: 'chassis_number',
+      make: 'vehicle_make',
+      model: 'vehicle_model'
+    };
+
+    for (const [extractedKey, formKey] of Object.entries(mapping)) {
+      if (extractedData[extractedKey]) {
+        if (Array.isArray(formKey)) {
+          const nameParts = extractedData[extractedKey].trim().split(/\s+/);
+          const first = nameParts[0] || '';
+          const last = nameParts.slice(1).join(' ') || '';
+          if (first && newValues[formKey[0]] !== first) {
+            newValues[formKey[0]] = first;
+            hasChanges = true;
+          }
+          if (last && newValues[formKey[1]] !== last) {
+            newValues[formKey[1]] = last;
+            hasChanges = true;
+          }
+        } else {
+          const newValue = extractedData[extractedKey].toString().trim();
+          if (newValues[formKey] !== newValue) {
+            newValues[formKey] = newValue;
+            hasChanges = true;
+          }
+        }
+      }
+    }
+
+    if (hasChanges) {
+      onChange?.(newValues);
+      hasAppliedExtractedData.current = true; // Prevent re-applying
+      if (DEBUG) {
+        try { console.log('✅ Client form auto-filled from extracted data'); } catch {}
+      }
+    }
+  }, [extractedData, values, onChange]);
+
+  // Validate on form changes
+  useEffect(() => {
+    validateFields();
+  }, [values, extractedData]);
+
+  // Helper to determine if field has extraction issues
+  const getFieldStatus = (fieldKey, docKey) => {
+    const currentValue = (values[fieldKey] || '').toString().trim();
+    const extractedValue = (extractedData[docKey] || '').toString().trim();
+    
+    if (!currentValue && !extractedValue) return 'missing-both';
+    if (!currentValue && extractedValue) return 'missing-current';
+    if (currentValue && !extractedValue) return 'manual-entry';
+    return 'complete';
+  };
+
+  return (
+    <ScrollView 
+      contentContainerStyle={{ gap: 12, paddingBottom: 120 }}
+      keyboardShouldPersistTaps="always"
+      keyboardDismissMode="none"
+    >
+      {/* Document Extraction Status Notice */}
+      {Object.keys(extractedData).length === 0 && (
+        <View style={styles.warningNotice}>
+          <Text style={styles.warningText}>⚠️ No document data extracted</Text>
+          <Text style={styles.warningSubtext}>Please ensure documents are clear and uploaded correctly for auto-fill</Text>
+        </View>
+      )}
+
+      {/* Personal Details */}
+      <Field 
+        label="First Name" 
+        value={values.first_name} 
+        onChangeText={fieldHandlers.first_name}
+        onBlur={() => handleBlur('first_name')}
+        placeholder="Auto-filled from documents"
+        status={getFieldStatus('first_name', 'owner_name')}
+        error={fieldErrors.first_name}
+      />
+      <Field 
+        label="Last Name" 
+        value={values.last_name} 
+        onChangeText={fieldHandlers.last_name}
+        onBlur={() => handleBlur('last_name')}
+        placeholder="Auto-filled from documents"
+        status={getFieldStatus('last_name', 'owner_name')}
+        error={fieldErrors.last_name}
+      />
+      <Field 
+        label="KRA PIN" 
+        value={values.kra_pin} 
+        onChangeText={fieldHandlers.kra_pin}
+        onBlur={() => handleBlur('kra_pin')}
+        autoCapitalize="characters" 
+        placeholder="Auto-filled from KRA PIN doc"
+        status={getFieldStatus('kra_pin', 'kra_pin')}
+        error={fieldErrors.kra_pin}
+      />
+      <Field 
+        label="ID Number" 
+        value={values.id_number} 
+        onChangeText={fieldHandlers.id_number}
+        onBlur={() => handleBlur('id_number')}
+        placeholder="Auto-filled from ID document" 
+        keyboardType="numeric"
+        status={getFieldStatus('id_number', 'id_number')}
+        error={fieldErrors.id_number}
+      />
+
+      {/* Contact Details */}
+      <Field 
+        label="Email" 
+        value={values.email} 
+        onChangeText={fieldHandlers.email}
+        onBlur={() => handleBlur('email')}
+        placeholder="Enter client email"
+        keyboardType="email-address"
+        autoCapitalize="none"
+        status={getFieldStatus('email', 'email')}
+        error={fieldErrors.email}
+      />
+      <Field 
+        label="Phone" 
+        value={values.phone} 
+        onChangeText={fieldHandlers.phone}
+        onBlur={() => handleBlur('phone')}
+        placeholder="Enter client phone"
+        keyboardType="phone-pad"
+        status={getFieldStatus('phone', 'phone')}
+        error={fieldErrors.phone}
+      />
+
+      {/* Vehicle Fields */}
+      <Field 
+        label="Car Registration Number" 
+        value={values.vehicle_registration} 
+        onChangeText={fieldHandlers.vehicle_registration} 
+        autoCapitalize="characters" 
+        placeholder="Auto-filled from logbook"
+        status={getFieldStatus('vehicle_registration', 'registration_number')}
+      />
+      <Field 
+        label="Chassis No" 
+        value={values.chassis_number} 
+        onChangeText={fieldHandlers.chassis_number} 
+        autoCapitalize="characters" 
+        placeholder="Auto-filled from logbook"
+        status={getFieldStatus('chassis_number', 'chassis_number')}
+      />
+      
+      {/* Vehicle Make - Simple Text Field to avoid dropdown keyboard issues */}
+      <Field
+        label="Make"
+        value={values.vehicle_make}
+        onChangeText={fieldHandlers.vehicle_make}
+        placeholder="Auto-filled from logbook/DMVIC"
+        status={getFieldStatus('vehicle_make', 'make')}
+        autoCapitalize="characters"
+      />
+      
+      {/* Vehicle Model - Simple Text Field to avoid dropdown keyboard issues */}
+      <Field
+        label="Model"
+        value={values.vehicle_model}
+        onChangeText={fieldHandlers.vehicle_model}
+        placeholder="Auto-filled from logbook/DMVIC"
+        status={getFieldStatus('vehicle_model', 'model')}
+        autoCapitalize="characters"
+      />
+      
+      {errors.form ? <Text style={styles.error}>{errors.form}</Text> : null}
+    </ScrollView>
+  );
+}
+
+function SelectField({ label, error, status, value, options, onValueChange, placeholder, disabled }) {
+  const [isOpen, setIsOpen] = useState(false);
+  
+  const getStatusStyle = () => {
+    switch (status) {
+      case 'missing-both': return { borderColor: '#ff6b6b', backgroundColor: '#fff5f5' };
+      case 'missing-current': return { borderColor: '#ffa500', backgroundColor: '#fff8f0' };
+      case 'manual-entry': return { borderColor: '#4dabf7', backgroundColor: '#f0f8ff' };
+      case 'complete': return { borderColor: '#51cf66', backgroundColor: '#f0fff4' };
+      default: return {};
+    }
+  };
+
+  const getStatusMessage = () => {
+    switch (status) {
+      case 'missing-both': return '⚠️ Required field - document extraction failed';
+      case 'missing-current': return '⚠️ Please fill this required field';
+      case 'manual-entry': return 'ℹ️ Manually entered (document not extracted)';
+      case 'complete': return '✓ Auto-filled from document';
+      default: return null;
+    }
+  };
+
+  const displayValue = value || placeholder;
+  const hasValue = !!value;
+
+  return (
+    <View style={{ gap: 6 }}>
+      <Text style={styles.label}>{label}</Text>
+      
+      {/* Dropdown Toggle Button */}
+      <TouchableOpacity
+        style={[
+          styles.dropdownButton,
+          getStatusStyle(),
+          disabled && styles.disabledSelect
+        ]}
+        onPress={() => {
+          console.log('SelectField pressed:', label, 'disabled:', disabled, 'options:', options?.length);
+          if (!disabled) {
+            setIsOpen(!isOpen);
+          }
+        }}
+        disabled={disabled}
+        activeOpacity={0.7}
+      >
+        <Text style={[
+          styles.dropdownButtonText,
+          !hasValue && styles.placeholderText
+        ]}>
+          {displayValue}
+        </Text>
+        <Text style={styles.dropdownArrow}>{isOpen ? '▲' : '▼'}</Text>
+      </TouchableOpacity>
+      {/* Inline dropdown (same UX as Vehicle Details) */}
+      {isOpen && !disabled && options && options.length > 0 && (
+        <View style={styles.dropdownList}>
+          <ScrollView 
+            style={styles.dropdownScrollView}
+            nestedScrollEnabled={true}
+            keyboardShouldPersistTaps="always"
+            showsVerticalScrollIndicator={true}
+          >
+            {options.map((option, index) => {
+              const optionText = typeof option === 'string' ? option : (option.label ?? String(option.value ?? option));
+              const optionValue = typeof option === 'string' ? option : (option.value ?? option.label ?? String(option));
+              const selected = value === optionValue;
+              return (
+                <TouchableOpacity
+                  key={`${label}-${index}`}
+                  style={[
+                    styles.dropdownOption,
+                    selected && styles.selectedDropdownOption
+                  ]}
+                  onPress={() => {
+                    onValueChange(optionValue);
+                    setIsOpen(false);
+                  }}
+                >
+                  <Text style={[
+                    styles.dropdownOptionText,
+                    selected && styles.selectedDropdownOptionText
+                  ]}>
+                    {optionText}
+                  </Text>
+                  {selected && (
+                    <Text style={styles.checkmark}>✓</Text>
+                  )}
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+        </View>
+      )}
+
+      {status && status !== 'complete' && (
+        <Text style={[
+          styles.statusText,
+          status === 'missing-both' ? styles.errorStatus : 
+          status === 'missing-current' ? styles.warningStatus : styles.infoStatus
+        ]}>
+          {getStatusMessage()}
+        </Text>
+      )}
+      {error ? <Text style={styles.error}>{error}</Text> : null}
+    </View>
+  );
+}
+
+function Field({ label, error, style, status, ...inputProps }) {
+  const getStatusStyle = () => {
+    // Error takes priority over status
+    if (error) {
+      return { borderColor: '#ff6b6b', backgroundColor: '#fff5f5', borderWidth: 2 };
+    }
+    
+    switch (status) {
+      case 'missing-both': return { borderColor: '#ff6b6b', backgroundColor: '#fff5f5' };
+      case 'missing-current': return { borderColor: '#ffa500', backgroundColor: '#fff8f0' };
+      case 'manual-entry': return { borderColor: '#4dabf7', backgroundColor: '#f0f8ff' };
+      case 'complete': return { borderColor: '#51cf66', backgroundColor: '#f0fff4' };
+      default: return {};
+    }
+  };
+
+  const getStatusMessage = () => {
+    switch (status) {
+      case 'missing-both': return '⚠️ Required field - document extraction failed';
+      case 'missing-current': return '⚠️ Please fill this required field';
+      case 'manual-entry': return 'ℹ️ Manually entered (document not extracted)';
+      case 'complete': return '✓ Auto-filled from document';
+      default: return null;
+    }
+  };
+
+  return (
+    <View style={{ gap: 6 }}>
+      <Text style={styles.label}>{label}</Text>
+      <StableTextInput 
+        style={[styles.input, getStatusStyle(), style]} 
+        {...inputProps} 
+        blurOnSubmit={false}
+        returnKeyType="next"
+        debounceMs={300}
+      />
+      {/* Show error first, then status message */}
+      {error ? (
+        <Text style={styles.error}>{error}</Text>
+      ) : status && status !== 'complete' ? (
+        <Text style={[
+          styles.statusText,
+          status === 'missing-both' ? styles.errorStatus : 
+          status === 'missing-current' ? styles.warningStatus : styles.infoStatus
+        ]}>
+          {getStatusMessage()}
+        </Text>
+      ) : null}
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  label: { fontWeight: FONT_WEIGHTS.semibold, color: '#495057', fontSize: FONT_SIZES.label },
+  input: { borderWidth: 1, borderColor: '#ced4da', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10, backgroundColor: '#fff', fontSize: FONT_SIZES.input },
+  error: { color: '#d90429', fontSize: FONT_SIZES.bodySmall, marginTop: 4 },
+  
+  // Status styling
+  statusText: { fontSize: FONT_SIZES.bodySmall, marginTop: 4, fontWeight: FONT_WEIGHTS.medium },
+  errorStatus: { color: '#ff6b6b' },
+  warningStatus: { color: '#ffa500' },
+  infoStatus: { color: '#4dabf7' },
+  
+  // Warning notice
+  warningNotice: { 
+    backgroundColor: '#fff3cd', 
+    borderColor: '#ffeaa7', 
+    borderWidth: 1, 
+    borderRadius: 8, 
+    padding: 12, 
+    marginBottom: 8 
+  },
+  warningText: { color: '#856404', fontWeight: FONT_WEIGHTS.semibold, fontSize: FONT_SIZES.bodyLarge },
+  warningSubtext: { color: '#856404', fontSize: FONT_SIZES.bodySmall, marginTop: 4 },
+  
+  // Select dropdown styles
+  selectContainer: {
+    borderWidth: 1,
+    borderColor: '#ced4da',
+    borderRadius: 8,
+    backgroundColor: '#fff',
+    maxHeight: 200,
+    overflow: 'hidden'
+  },
+  selectScrollView: {
+    maxHeight: 200
+  },
+  selectOption: {
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e9ecef'
+  },
+  selectedOption: {
+    backgroundColor: '#e7f5ff',
+    borderLeftWidth: 3,
+    borderLeftColor: '#1c7ed6'
+  },
+  selectText: {
+    fontSize: FONT_SIZES.input,
+    color: '#495057'
+  },
+  selectedText: {
+    fontWeight: FONT_WEIGHTS.semibold,
+    color: '#1c7ed6'
+  },
+  selectPlaceholderContainer: {
+    paddingHorizontal: 12,
+    paddingVertical: 10
+  },
+  selectPlaceholder: {
+    fontSize: FONT_SIZES.input,
+    color: '#adb5bd',
+    fontStyle: 'italic'
+  },
+  disabledSelect: {
+    backgroundColor: '#f1f3f5',
+    opacity: 0.6
+  },
+  
+  // Dropdown button styles
+  dropdownButton: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#ced4da',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    backgroundColor: '#fff',
+    minHeight: 44
+  },
+  dropdownButtonText: {
+    fontSize: FONT_SIZES.input,
+    color: '#495057',
+    flex: 1
+  },
+  placeholderText: {
+    color: '#adb5bd',
+    fontStyle: 'italic'
+  },
+  dropdownArrow: {
+    fontSize: FONT_SIZES.bodySmall,
+    color: '#6c757d',
+    marginLeft: 8
+  },
+  
+  // Dropdown list styles
+  dropdownList: {
+    borderWidth: 1,
+    borderColor: '#ced4da',
+    borderRadius: 8,
+    backgroundColor: '#fff',
+    maxHeight: 200,
+    marginTop: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3
+  },
+  dropdownScrollView: {
+    maxHeight: 200
+  },
+  dropdownOption: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e9ecef'
+  },
+  selectedDropdownOption: {
+    backgroundColor: '#e7f5ff'
+  },
+  dropdownOptionText: {
+    fontSize: 14,
+    color: '#495057',
+    flex: 1
+  },
+  selectedDropdownOptionText: {
+    fontWeight: '600',
+    color: '#1c7ed6'
+  },
+  checkmark: {
+    fontSize: 16,
+    color: '#1c7ed6',
+    fontWeight: 'bold',
+    marginLeft: 8
+  }
+});

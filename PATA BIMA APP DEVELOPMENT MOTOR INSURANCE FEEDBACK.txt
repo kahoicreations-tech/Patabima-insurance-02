@@ -1,0 +1,2976 @@
+﻿PATA BIMA APP DEVELOPMENT MOTOR INSURANCE FEEDBACK
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	Optional Ad ons
+	
+
+	
+
+	
+
+	
+
+	
+
+	Additional
+	Additional
+	S/No.
+	Motor subclass
+	Financial Interest
+	Vehicle Registration
+	Valuation
+	Year of Manufacture
+	Make
+	Model
+	Windscreen Value
+	Radio casette Value
+	Excess Protector
+	PVT
+	Loss of use
+	Tonnage <=31 tons
+	No.of Passengers
+	Type of Passengers
+	Windscreen Premium
+	Radio casette prem.
+	1
+	Private TOR
+	YES/NO
+	YES
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	2
+	Private TPO
+	YES/NO
+	YES
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	3
+	Private TPO Extendible
+	YES/NO
+	YES
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	4
+	Private Motor Cyle TPO
+	YES/NO
+	YES
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	5
+	Private Comprehensive
+	YES/NO
+	YES
+	YES>=500K
+	Mandatory
+	Mandatory
+	Mandatory
+	Mandatory
+	Mandatory
+	Optional
+	Optional
+	optional
+	N/A
+	Mandatory
+	N/A
+	W/scn value<=30,0000
+	R/C Value>=30,000
+	
+
+	NB Rare models may attract higher premiums and claims restricted to Cash in lieu only
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	The model drop down list should be exhaustive enough to capture this underwriting requirement e.g sienta,wish,Probox,succeed,Ractis,Noah, VOXY,Honda,Suzuki etc-user declaration form by insured is a requirement
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	Private comprehensive initial cover to be strictly 30 days pending valuation to allow for sum insured adjustment after valuation/during final extension
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	Where financial interest is YES, cover to be jointly issued to both parties due to dual ownership
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	Premium instalment configuration to be in the ratios of 3 equal instalments-40%,30%,30% or 25%,25%,25%,25% as per underwriter guidelines/binders
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	Rare models such as pure electrical vehicles,jaguar,Chevrolet,Ford,Cherry,Bentley and Audis may attract higher premiums.
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	PSV Motor insurance category
+	Financial Interest
+	Vehicle Registration
+	Valuation
+	Year of Manufacture
+	Make
+	Model
+	Windscreen Value
+	Radio casette Value
+	Excess Protector
+	PVT
+	Loss of use
+	Tonnage<=31 tons
+	No.of Passengers
+	Type of Passengers
+	Windscreen Premium
+	Radio casette prem.
+	
+
+	PSV uber TOR
+	YES/NO
+	YES
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	Mandatory
+	N/A
+	N/A
+	N/A
+	
+
+	PSV Uber TPO
+	YES/NO
+	YES
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	Mandatory
+	N/A
+	N/A
+	N/A
+	
+
+	PSV Uber TPO Extendible
+	YES/NO
+	YES
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	Mandatory
+	N/A
+	N/A
+	N/A
+	
+
+	PSV Tuk Tuk TPO
+	YES/NO
+	YES
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	Mandatory
+	N/A
+	N/A
+	N/A
+	
+
+	PSV Tuk Tuk TPO Extendible
+	YES/NO
+	YES
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	Mandatory
+	N/A
+	N/A
+	N/A
+	
+
+	PSV Matatu TPO 1 month
+	YES/NO
+	YES
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	Mandatory
+	N/A
+	N/A
+	N/A
+	
+
+	PSV Matatu TPO 2 Weeks
+	YES/NO
+	YES
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	Mandatory
+	N/A
+	N/A
+	N/A
+	
+
+	PSV Plain TPO
+	YES/NO
+	YES
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	Mandatory
+	N/A
+	N/A
+	N/A
+	
+
+	PSV Tour Van TPO
+	YES/NO
+	YES
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	Mandatory
+	N/A
+	N/A
+	N/A
+	
+
+	PSV Tour Van TPO Extendible
+	YES/NO
+	YES
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	Mandatory
+	N/A
+	N/A
+	N/A
+	
+
+	PSV UBER COMPREHENSIVE
+	YES/NO
+	YES
+	YES>=500K
+	Mandatory
+	Mandatory
+	Mandatory
+	Mandatory
+	Mandatory
+	Optional
+	Optional
+	optional
+	N/A
+	Mandatory
+	N/A
+	W/scn value<=30,0000
+	R/C Value>=30,000
+	
+
+	PSV TOUR VAN COMPREHENSIVE
+	YES/NO
+	YES
+	YES>=500K
+	Mandatory
+	Mandatory
+	Mandatory
+	Mandatory
+	Mandatory
+	Optional
+	Optional
+	optional
+	N/A
+	Mandatory
+	N/A
+	W/scn value<=30,0000
+	R/C Value>=30,000
+	
+
+	MOTOR COMMERCIAL TPO
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	Motor Commercial TOR
+	YES/NO
+	YES
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	Mandatory
+	N/A
+	N/A
+	N/A
+	N/A
+	
+
+	Motor Commercial Own goods TPO
+	YES/NO
+	YES
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	Mandatory
+	N/A
+	N/A
+	N/A
+	N/A
+	
+
+	Motor Commercial Own goods TPO extendible
+	YES/NO
+	YES
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	Mandatory
+	N/A
+	N/A
+	N/A
+	N/A
+	
+
+	Motor Commercial General Cartage TPO
+	YES/NO
+	YES
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	Mandatory
+	N/A
+	N/A
+	N/A
+	N/A
+	
+
+	Motor Commercial General Cartage TPO extendible
+	YES/NO
+	YES
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	Mandatory
+	N/A
+	N/A
+	N/A
+	N/A
+	
+
+	Motor Commercial Tuk Tuk TPO
+	YES/NO
+	YES
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	Mandatory
+	N/A
+	N/A
+	N/A
+	N/A
+	
+
+	Motor Commercial Tuk TUK TPO Extendible
+	YES/NO
+	YES
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	Mandatory
+	N/A
+	N/A
+	N/A
+	N/A
+	
+
+	Motor Commercial General Cartage TPO Prime Mover
+	YES/NO
+	YES
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	Mandatory
+	N/A
+	N/A
+	N/A
+	N/A
+	
+
+	Motor Commercial General Cartage TPO Prime Mover Extendible
+	YES/NO
+	YES
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	Mandatory
+	N/A
+	N/A
+	N/A
+	N/A
+	
+
+	MOTOR COMMERCIAL COMPREHENSIVE
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	Commercial Tuk TUK Comprehensive
+	YES/NO
+	YES
+	YES>=500K
+	Mandatory
+	Mandatory
+	Mandatory
+	Mandatory
+	Mandatory
+	Optional
+	Optional
+	optional
+	Mandatory
+	N/A
+	N/A
+	W/scn value<=30,0000
+	R/C Value>=30,000
+	
+
+	General Cartage Comprehensive
+	YES/NO
+	YES
+	YES>=500K
+	Mandatory
+	Mandatory
+	Mandatory
+	Mandatory
+	Mandatory
+	Optional
+	Optional
+	optional
+	Mandatory
+	N/A
+	N/A
+	W/scn value<=30,0000
+	R/C Value>=30,000
+	
+
+	Own Goods Comprehensive
+	YES/NO
+	YES
+	YES>=500K
+	Mandatory
+	Mandatory
+	Mandatory
+	Mandatory
+	Mandatory
+	Optional
+	Optional
+	optional
+	Mandatory
+	N/A
+	N/A
+	W/scn value<=30,0000
+	R/C Value>=30,000
+	
+
+	MOTOR SPECIAL CLASSES-Replace logo with Tanker/Ambulance/Tractor
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	Agricultural Tractor TPO
+	YES/NO
+	YES
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	Mandatory
+	N/A
+	N/A
+	N/A
+	N/A
+	
+
+	Commercial institutional TPO
+	YES/NO
+	YES
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	Mandatory
+	Student/Adult
+	N/A
+	N/A
+	
+
+	Commercial Institutional TPO Extendible
+	YES/NO
+	YES
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	Mandatory
+	Mandatory
+	Student/Adult
+	N/A
+	N/A
+	
+
+	KG Plate TPO
+	YES/NO
+	YES
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	
+
+	Driving School TPO
+	YES/NO
+	YES
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	Mandatory
+	Mandatory
+	N/A
+	N/A
+	N/A
+	
+
+	COMPREHENSIVE MOTOR SPECIAL CLASSES
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	Agricultural Tractor Comprehensive
+	YES/NO
+	YES
+	YES>=500K
+	Mandatory
+	Mandatory
+	Mandatory
+	Mandatory
+	Mandatory
+	Optional
+	Optional
+	optional
+	Mandatory
+	N/A
+	N/A
+	W/scn value<=30,0000
+	R/C Value>=30,000
+	
+
+	Commercial Institutional Comprehensive
+	YES/NO
+	YES
+	YES>=500K
+	Mandatory
+	Mandatory
+	Mandatory
+	Mandatory
+	Mandatory
+	Optional
+	Optional
+	optional
+	Mandatory
+	N/A
+	N/A
+	W/scn value<=30,0000
+	R/C Value>=30,000
+	
+
+	Driving School Comprehensive
+	YES/NO
+	YES
+	YES>=500K
+	Mandatory
+	Mandatory
+	Mandatory
+	Mandatory
+	Mandatory
+	Optional
+	Optional
+	optional
+	Mandatory
+	Mandatory
+	N/A
+	W/scn value<=30,0000
+	R/C Value>=30,000
+	
+
+	Fuel Tanker Comprehensive
+	YES/NO
+	YES
+	YES>=500K
+	Mandatory
+	Mandatory
+	Mandatory
+	Mandatory
+	Mandatory
+	Optional
+	Optional
+	optional
+	Mandatory
+	N/A
+	N/A
+	W/scn value<=30,0000
+	R/C Value>=30,000
+	
+
+	Commercial Ambulance Comprehensive
+	YES/NO
+	YES
+	YES>=500K
+	Mandatory
+	Mandatory
+	Mandatory
+	Mandatory
+	Mandatory
+	Optional
+	Optional
+	optional
+	N/A
+	N/A
+	N/A
+	W/scn value<=30,0000
+	R/C Value>=30,000
+	
+
+	TUK TUK
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	PSV Tuk Tuk TPO
+	YES/NO
+	YES
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	Optional
+	Optional
+	optional
+	N/A
+	Mandatory
+	N/A
+	N/A
+	N/A
+	
+
+	PSV Tuk Tuk TPO Extendible
+	YES/NO
+	YES
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	Optional
+	Optional
+	optional
+	N/A
+	Mandatory
+	N/A
+	N/A
+	N/A
+	
+
+	Commercial Tuk TUK TPO
+	YES/NO
+	YES
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	Optional
+	Optional
+	optional
+	Mandatory
+	N/A
+	N/A
+	N/A
+	N/A
+	
+
+	Commercial Tuk Tuk TPO Extendible
+	YES/NO
+	YES
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	Optional
+	Optional
+	optional
+	Mandatory
+	N/A
+	N/A
+	N/A
+	N/A
+	
+
+	Commercial Tuk TUK Comprehensive
+	YES/NO
+	YES
+	YES>=500K
+	Mandatory
+	Mandatory
+	Mandatory
+	Mandatory
+	Mandatory
+	Optional
+	Optional
+	optional
+	Mandatory
+	N/A
+	N/A
+	W/scn value<=30,0000
+	R/C Value>=30,000
+	
+
+	PSV Tuk Tuk Comprehensive
+	YES/NO
+	YES
+	YES>=500K
+	Mandatory
+	Mandatory
+	Mandatory
+	Mandatory
+	Mandatory
+	Optional
+	Optional
+	optional
+	N/A
+	Mandatory
+	N/A
+	W/scn value<=30,0000
+	R/C Value>=30,000
+	
+
+	MOTOR CYCLE INSURANCE
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	Private Motor Cyle TPO
+	YES/NO
+	YES
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	Optional
+	Optional
+	optional
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	
+
+	PSV Motor cycle TPO(annual)
+	YES/NO
+	YES
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	Optional
+	Optional
+	optional
+	N/A
+	Mandatory
+	N/A
+	N/A
+	N/A
+	
+
+	PSV Motor cycle TPO(6 months)
+	YES/NO
+	YES
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	Optional
+	Optional
+	optional
+	N/A
+	Mandatory
+	N/A
+	N/A
+	N/A
+	
+
+	MOTOR CYCLE COMPREHENSIVE
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	Private Motor Cycle Comprehensive
+	YES/NO
+	YES
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	Optional
+	Optional
+	optional
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	
+
+	PSV Motor Cycle Comprehensive
+	YES/NO
+	YES
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	Optional
+	Optional
+	optional
+	N/A
+	Mandatory
+	N/A
+	N/A
+	N/A
+	
+
+	PSV Motor Cycle (6 Months)
+	YES/NO
+	YES
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	Optional
+	Optional
+	optional
+	N/A
+	Mandatory
+	N/A
+	N/A
+	N/A
+	
+
+
+
+	PATA BIMA APP DEVELOPMENT MOTOR INSURANCE FEEDBACK
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	Optional Ad ons
+	
+
+	
+
+	
+
+	
+
+	
+
+	Additional
+	Additional
+	S/No.
+	Motor subclass
+	Financial Interest
+	Vehicle Registration
+	Valuation
+	Year of Manufacture
+	Make
+	Model
+	Windscreen Value
+	Radio casette Value
+	Excess Protector
+	PVT
+	Loss of use
+	Tonnage <=31 tons
+	No.of Passengers
+	Type of Passengers
+	Windscreen Premium
+	Radio casette prem.
+	1
+	Private TOR
+	YES/NO
+	YES
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	2
+	Private TPO
+	YES/NO
+	YES
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	3
+	Private TPO Extendible
+	YES/NO
+	YES
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	4
+	Private Motor Cyle TPO
+	YES/NO
+	YES
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	5
+	Private Comprehensive
+	YES/NO
+	YES
+	YES>=500K
+	Mandatory
+	Mandatory
+	Mandatory
+	Mandatory
+	Mandatory
+	Optional
+	Optional
+	optional
+	N/A
+	Mandatory
+	N/A
+	W/scn value<=30,0000
+	R/C Value>=30,000
+	
+
+	NB Rare models may attract higher premiums and claims restricted to Cash in lieu only
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	The model drop down list should be exhaustive enough to capture this underwriting requirement e.g sienta,wish,Probox,succeed,Ractis,Noah, VOXY,Honda,Suzuki etc-user declaration form by insured is a requirement
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	Private comprehensive initial cover to be strictly 30 days pending valuation to allow for sum insured adjustment after valuation/during final extension
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	Where financial interest is YES, cover to be jointly issued to both parties due to dual ownership
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	Premium instalment configuration to be in the ratios of 3 equal instalments-40%,30%,30% or 25%,25%,25%,25% as per underwriter guidelines/binders
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	Rare models such as pure electrical vehicles,jaguar,Chevrolet,Ford,Cherry,Bentley and Audis may attract higher premiums.
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	PSV Motor insurance category
+	Financial Interest
+	Vehicle Registration
+	Valuation
+	Year of Manufacture
+	Make
+	Model
+	Windscreen Value
+	Radio casette Value
+	Excess Protector
+	PVT
+	Loss of use
+	Tonnage<=31 tons
+	No.of Passengers
+	Type of Passengers
+	Windscreen Premium
+	Radio casette prem.
+	
+
+	PSV uber TOR
+	YES/NO
+	YES
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	Mandatory
+	N/A
+	N/A
+	N/A
+	
+
+	PSV Uber TPO
+	YES/NO
+	YES
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	Mandatory
+	N/A
+	N/A
+	N/A
+	
+
+	PSV Uber TPO Extendible
+	YES/NO
+	YES
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	Mandatory
+	N/A
+	N/A
+	N/A
+	
+
+	PSV Tuk Tuk TPO
+	YES/NO
+	YES
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	Mandatory
+	N/A
+	N/A
+	N/A
+	
+
+	PSV Tuk Tuk TPO Extendible
+	YES/NO
+	YES
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	Mandatory
+	N/A
+	N/A
+	N/A
+	
+
+	PSV Matatu TPO 1 month
+	YES/NO
+	YES
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	Mandatory
+	N/A
+	N/A
+	N/A
+	
+
+	PSV Matatu TPO 2 Weeks
+	YES/NO
+	YES
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	Mandatory
+	N/A
+	N/A
+	N/A
+	
+
+	PSV Plain TPO
+	YES/NO
+	YES
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	Mandatory
+	N/A
+	N/A
+	N/A
+	
+
+	PSV Tour Van TPO
+	YES/NO
+	YES
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	Mandatory
+	N/A
+	N/A
+	N/A
+	
+
+	PSV Tour Van TPO Extendible
+	YES/NO
+	YES
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	Mandatory
+	N/A
+	N/A
+	N/A
+	
+
+	PSV UBER COMPREHENSIVE
+	YES/NO
+	YES
+	YES>=500K
+	Mandatory
+	Mandatory
+	Mandatory
+	Mandatory
+	Mandatory
+	Optional
+	Optional
+	optional
+	N/A
+	Mandatory
+	N/A
+	W/scn value<=30,0000
+	R/C Value>=30,000
+	
+
+	PSV TOUR VAN COMPREHENSIVE
+	YES/NO
+	YES
+	YES>=500K
+	Mandatory
+	Mandatory
+	Mandatory
+	Mandatory
+	Mandatory
+	Optional
+	Optional
+	optional
+	N/A
+	Mandatory
+	N/A
+	W/scn value<=30,0000
+	R/C Value>=30,000
+	
+
+	MOTOR COMMERCIAL TPO
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	Motor Commercial TOR
+	YES/NO
+	YES
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	Mandatory
+	N/A
+	N/A
+	N/A
+	N/A
+	
+
+	Motor Commercial Own goods TPO
+	YES/NO
+	YES
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	Mandatory
+	N/A
+	N/A
+	N/A
+	N/A
+	
+
+	Motor Commercial Own goods TPO extendible
+	YES/NO
+	YES
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	Mandatory
+	N/A
+	N/A
+	N/A
+	N/A
+	
+
+	Motor Commercial General Cartage TPO
+	YES/NO
+	YES
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	Mandatory
+	N/A
+	N/A
+	N/A
+	N/A
+	
+
+	Motor Commercial General Cartage TPO extendible
+	YES/NO
+	YES
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	Mandatory
+	N/A
+	N/A
+	N/A
+	N/A
+	
+
+	Motor Commercial Tuk Tuk TPO
+	YES/NO
+	YES
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	Mandatory
+	N/A
+	N/A
+	N/A
+	N/A
+	
+
+	Motor Commercial Tuk TUK TPO Extendible
+	YES/NO
+	YES
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	Mandatory
+	N/A
+	N/A
+	N/A
+	N/A
+	
+
+	Motor Commercial General Cartage TPO Prime Mover
+	YES/NO
+	YES
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	Mandatory
+	N/A
+	N/A
+	N/A
+	N/A
+	
+
+	Motor Commercial General Cartage TPO Prime Mover Extendible
+	YES/NO
+	YES
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	Mandatory
+	N/A
+	N/A
+	N/A
+	N/A
+	
+
+	MOTOR COMMERCIAL COMPREHENSIVE
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	Commercial Tuk TUK Comprehensive
+	YES/NO
+	YES
+	YES>=500K
+	Mandatory
+	Mandatory
+	Mandatory
+	Mandatory
+	Mandatory
+	Optional
+	Optional
+	optional
+	Mandatory
+	N/A
+	N/A
+	W/scn value<=30,0000
+	R/C Value>=30,000
+	
+
+	General Cartage Comprehensive
+	YES/NO
+	YES
+	YES>=500K
+	Mandatory
+	Mandatory
+	Mandatory
+	Mandatory
+	Mandatory
+	Optional
+	Optional
+	optional
+	Mandatory
+	N/A
+	N/A
+	W/scn value<=30,0000
+	R/C Value>=30,000
+	
+
+	Own Goods Comprehensive
+	YES/NO
+	YES
+	YES>=500K
+	Mandatory
+	Mandatory
+	Mandatory
+	Mandatory
+	Mandatory
+	Optional
+	Optional
+	optional
+	Mandatory
+	N/A
+	N/A
+	W/scn value<=30,0000
+	R/C Value>=30,000
+	
+
+	MOTOR SPECIAL CLASSES-Replace logo with Tanker/Ambulance/Tractor
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	Agricultural Tractor TPO
+	YES/NO
+	YES
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	Mandatory
+	N/A
+	N/A
+	N/A
+	N/A
+	
+
+	Commercial institutional TPO
+	YES/NO
+	YES
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	Mandatory
+	Student/Adult
+	N/A
+	N/A
+	
+
+	Commercial Institutional TPO Extendible
+	YES/NO
+	YES
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	Mandatory
+	Mandatory
+	Student/Adult
+	N/A
+	N/A
+	
+
+	KG Plate TPO
+	YES/NO
+	YES
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	
+
+	Driving School TPO
+	YES/NO
+	YES
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	Mandatory
+	Mandatory
+	N/A
+	N/A
+	N/A
+	
+
+	COMPREHENSIVE MOTOR SPECIAL CLASSES
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	Agricultural Tractor Comprehensive
+	YES/NO
+	YES
+	YES>=500K
+	Mandatory
+	Mandatory
+	Mandatory
+	Mandatory
+	Mandatory
+	Optional
+	Optional
+	optional
+	Mandatory
+	N/A
+	N/A
+	W/scn value<=30,0000
+	R/C Value>=30,000
+	
+
+	Commercial Institutional Comprehensive
+	YES/NO
+	YES
+	YES>=500K
+	Mandatory
+	Mandatory
+	Mandatory
+	Mandatory
+	Mandatory
+	Optional
+	Optional
+	optional
+	Mandatory
+	N/A
+	N/A
+	W/scn value<=30,0000
+	R/C Value>=30,000
+	
+
+	Driving School Comprehensive
+	YES/NO
+	YES
+	YES>=500K
+	Mandatory
+	Mandatory
+	Mandatory
+	Mandatory
+	Mandatory
+	Optional
+	Optional
+	optional
+	Mandatory
+	Mandatory
+	N/A
+	W/scn value<=30,0000
+	R/C Value>=30,000
+	
+
+	Fuel Tanker Comprehensive
+	YES/NO
+	YES
+	YES>=500K
+	Mandatory
+	Mandatory
+	Mandatory
+	Mandatory
+	Mandatory
+	Optional
+	Optional
+	optional
+	Mandatory
+	N/A
+	N/A
+	W/scn value<=30,0000
+	R/C Value>=30,000
+	
+
+	Commercial Ambulance Comprehensive
+	YES/NO
+	YES
+	YES>=500K
+	Mandatory
+	Mandatory
+	Mandatory
+	Mandatory
+	Mandatory
+	Optional
+	Optional
+	optional
+	N/A
+	N/A
+	N/A
+	W/scn value<=30,0000
+	R/C Value>=30,000
+	
+
+	TUK TUK
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	PSV Tuk Tuk TPO
+	YES/NO
+	YES
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	Optional
+	Optional
+	optional
+	N/A
+	Mandatory
+	N/A
+	N/A
+	N/A
+	
+
+	PSV Tuk Tuk TPO Extendible
+	YES/NO
+	YES
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	Optional
+	Optional
+	optional
+	N/A
+	Mandatory
+	N/A
+	N/A
+	N/A
+	
+
+	Commercial Tuk TUK TPO
+	YES/NO
+	YES
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	Optional
+	Optional
+	optional
+	Mandatory
+	N/A
+	N/A
+	N/A
+	N/A
+	
+
+	Commercial Tuk Tuk TPO Extendible
+	YES/NO
+	YES
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	Optional
+	Optional
+	optional
+	Mandatory
+	N/A
+	N/A
+	N/A
+	N/A
+	
+
+	Commercial Tuk TUK Comprehensive
+	YES/NO
+	YES
+	YES>=500K
+	Mandatory
+	Mandatory
+	Mandatory
+	Mandatory
+	Mandatory
+	Optional
+	Optional
+	optional
+	Mandatory
+	N/A
+	N/A
+	W/scn value<=30,0000
+	R/C Value>=30,000
+	
+
+	PSV Tuk Tuk Comprehensive
+	YES/NO
+	YES
+	YES>=500K
+	Mandatory
+	Mandatory
+	Mandatory
+	Mandatory
+	Mandatory
+	Optional
+	Optional
+	optional
+	N/A
+	Mandatory
+	N/A
+	W/scn value<=30,0000
+	R/C Value>=30,000
+	
+
+	MOTOR CYCLE INSURANCE
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	Private Motor Cyle TPO
+	YES/NO
+	YES
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	Optional
+	Optional
+	optional
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	
+
+	PSV Motor cycle TPO(annual)
+	YES/NO
+	YES
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	Optional
+	Optional
+	optional
+	N/A
+	Mandatory
+	N/A
+	N/A
+	N/A
+	
+
+	PSV Motor cycle TPO(6 months)
+	YES/NO
+	YES
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	Optional
+	Optional
+	optional
+	N/A
+	Mandatory
+	N/A
+	N/A
+	N/A
+	
+
+	MOTOR CYCLE COMPREHENSIVE
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	
+
+	Private Motor Cycle Comprehensive
+	YES/NO
+	YES
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	Optional
+	Optional
+	optional
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	
+
+	PSV Motor Cycle Comprehensive
+	YES/NO
+	YES
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	Optional
+	Optional
+	optional
+	N/A
+	Mandatory
+	N/A
+	N/A
+	N/A
+	
+
+	PSV Motor Cycle (6 Months)
+	YES/NO
+	YES
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	N/A
+	Optional
+	Optional
+	optional
+	N/A
+	Mandatory
+	N/A
+	N/A
+	N/A

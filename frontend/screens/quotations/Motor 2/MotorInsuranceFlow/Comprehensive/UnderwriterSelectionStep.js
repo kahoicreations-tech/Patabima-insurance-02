@@ -81,8 +81,17 @@ export default function UnderwriterSelectionStep({
 
       console.log('📤 Sending to backend - API Payload:', JSON.stringify(inputs, null, 2));
 
-      // Use the working compare endpoint via service
-      const comparisons = await motorPricingService.compareUnderwritersByCoverType(category, coverType, inputs);
+      // FIXED: Use compareUnderwritersBySubcategory like Third Party does (it works!)
+      const subcategoryCode = selectedProduct?.subcategory_code || selectedProduct?.code;
+      console.log('🔍 Using subcategory_code:', subcategoryCode);
+      
+      const comparisons = await motorPricingService.compareUnderwritersBySubcategory(
+        subcategoryCode,
+        inputs,
+        { forceRefresh: true }
+      );
+
+      console.log('✅ Comparisons received:', comparisons?.length || 0, 'underwriters');
 
       // Map to UI card shape
       const underwriterList = comparisons.map((uw, idx) => {

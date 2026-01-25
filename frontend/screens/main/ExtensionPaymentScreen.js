@@ -1,333 +1,350 @@
-import React, { useState } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  ScrollView, 
-  TouchableOpacity, 
+import React, { useMemo, useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
   Alert,
-  ActivityIndicator 
+  ActivityIndicator,
+  TextInput,
 } from 'react-native';
+import { StatusBar } from 'expo-status-bar';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import DjangoAPIService from '../../services/DjangoAPIService';
+import { Colors, Spacing, Typography } from '../../constants';
+import { SafeScreen, EnhancedCard, CompactCurvedHeader } from '../../components';
+
+const METHODS = {
+  STK: 'STK',
+  PAYBILL: 'PAYBILL',
+  MANUAL: 'MANUAL',
+};
 
 export default function ExtensionPaymentScreen({ route, navigation }) {
-  const { 
-    policyId, 
-    policyNumber, 
-    balanceAmount, 
-    lateFeePercentage = 0, 
+  const insets = useSafeAreaInsets();
+
+  const {
+    policyId,
+    policyNumber,
+    balanceAmount = 0,
+    lateFeePercentage = 0,
     totalAmount,
     vehicleReg,
     productName,
     extensionDays,
-    coverEndDate
+    coverEndDate,
+    financialInterest,
   } = route.params || {};
-  
-  const [loading, setLoading] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState('mpesa');
-  
-  const lateFee = balanceAmount * (lateFeePercentage / 100);
-  const finalAmount = totalAmount || (balanceAmount + lateFee);
-  
-  const handlePayment = async () => {
-    setLoading(true);
-    
+
+  const months = useMemo(() => {
+    const m = Math.ceil(Number(extensionDays || 0) / 30);
+    return Math.max(1, Number.isFinite(m) ? m : 1);
+  }, [extensionDays]);
+
+  const lateFee = useMemo(() => {
+    const b = Number(balanceAmount || 0);
+    const pct = Number(lateFeePercentage || 0);
+    return b * (pct / 100);
+  }, [balanceAmount, lateFeePercentage]);
+
+  const amountDue = useMemo(() => {
+    const t = Number(totalAmount);
+    if (Number.isFinite(t) && t > 0) return t;
+    const b = Number(balanceAmount || 0);
+    const v = b + Number(lateFee || 0);
+    return Math.round(v * 100) / 100;
+  }, [balanceAmount, lateFee, totalAmount]);
+
+  const [submitting, setSubmitting] = useState(false);
+  const [selectedMethod, setSelectedMethod] = useState(METHODS.STK);
+  const [phone, setPhone] = useState('');
+  const [transactionCode, setTransactionCode] = useState('');
+
+  const canSubmit = useMemo(() => {
+    if (!policyNumber) return false;
+    if (!amountDue || amountDue <= 0) return false;
+    if (selectedMethod === METHODS.STK) return phone.trim().length > 0;
+    return transactionCode.trim().length > 0;
+  }, [amountDue, phone, policyNumber, selectedMethod, transactionCode]);
+
+  const handleConfirmPayment = async () => {
+    if (!policyNumber) {
+      Alert.alert('Missing policy', 'Policy number was not provided.');
+      return;
+    }
+    if (!amountDue || amountDue <= 0) {
+      Alert.alert('Invalid amount', 'Unable to process payment for this extension.');
+      return;
+    }
+
+    if (selectedMethod === METHODS.STK && !phone.trim()) {
+      Alert.alert('Phone required', 'Enter the M-PESA phone number to receive the STK prompt.');
+      return;
+    }
+
+    if (selectedMethod !== METHODS.STK && !transactionCode.trim()) {
+      Alert.alert('Reference required', 'Enter the M-PESA transaction code/reference to verify.');
+      return;
+    }
+
+    setSubmitting(true);
     try {
-      console.log('[ExtensionPayment] Initiating payment for policy:', policyNumber);
-      console.log('[ExtensionPayment] Payment method:', paymentMethod);
-      console.log('[ExtensionPayment] Amount:', finalAmount);
-      
-      // Call backend API to extend policy and process payment
+      const paymentMethod =
+        selectedMethod === METHODS.STK
+          ? 'MPESA_STK'
+          : selectedMethod === METHODS.PAYBILL
+            ? 'MPESA_PAYBILL'
+            : 'MANUAL';
+
+      const transactionId =
+        selectedMethod === METHODS.STK
+          ? `SIM-STK-${Date.now()}`
+          : transactionCode.trim();
+
       const extensionResponse = await DjangoAPIService.extendMotorPolicy(policyNumber, {
-        months: Math.ceil(extensionDays / 30) || 11,
+        policy_id: policyId,
+        months,
+        financial_interest: financialInterest,
         paymentDetails: {
           method: paymentMethod,
-          amount: finalAmount,
-          transactionId: `SIM-${Date.now()}`, // Simulated transaction ID
+          amount: amountDue,
+          phone: selectedMethod === METHODS.STK ? phone.trim() : undefined,
+          transaction_id: transactionId,
+          transactionId,
           status: 'CONFIRMED',
-          timestamp: new Date().toISOString()
-        }
+          timestamp: new Date().toISOString(),
+        },
       });
-      
-      console.log('[ExtensionPayment] Extension response:', extensionResponse);
-      
-      if (extensionResponse.success) {
-        // Show success message
-        Alert.alert(
-          'Extension Payment Successful',
-          `Policy ${policyNumber} has been extended!\n\n` +
-          `Payment Method: ${paymentMethod.toUpperCase()}\n` +
-          `Amount Paid: KSh ${finalAmount.toLocaleString()}\n` +
-          `New Expiry: ${extensionResponse.newExpiryDate || 'Updated'}\n\n` +
-          `Note: Payment simulated. Real gateway integration pending.`,
-          [
-            {
-              text: 'Back to Home',
-              onPress: () => navigation.navigate('MainTabs', { 
-                screen: 'Home',
-                params: { refresh: true }
-              })
-            }
-          ]
-        );
-      } else {
-        Alert.alert(
-          'Extension Failed', 
-          extensionResponse.error || extensionResponse.message || 'Unable to process extension payment'
-        );
+
+      if (extensionResponse?.success) {
+        const newExpiry = extensionResponse?.newExpiryDate || extensionResponse?.new_expiry_date;
+        const message = newExpiry
+          ? `Policy ${policyNumber} extended until ${new Date(newExpiry).toLocaleDateString()}.`
+          : `Policy ${policyNumber} has been extended.`;
+
+        Alert.alert('Payment Successful', message, [
+          {
+            text: 'Go to Upcoming',
+            onPress: () => navigation.navigate('MainTabs', { screen: 'Upcoming', params: { refresh: true } }),
+          },
+        ]);
+        return;
       }
-    } catch (error) {
-      console.error('[ExtensionPayment] Error:', error);
-      Alert.alert(
-        'Payment Error', 
-        error.message || 'An error occurred during payment processing. Please try again.'
-      );
+
+      const err = extensionResponse?.error || extensionResponse?.message || 'Failed to extend policy';
+      Alert.alert('Extension Failed', err);
+    } catch (e) {
+      const payload = e?.payload;
+      const message = payload?.user_message || payload?.message || payload?.error || e?.message || 'Payment failed';
+      Alert.alert('Payment Error', message);
     } finally {
-      setLoading(false);
+      setSubmitting(false);
     }
   };
-  
+
   return (
-    <View style={styles.screen}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Ionicons name="chevron-back" size={28} color="#fff" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Extend Policy Coverage</Text>
-        <View style={{ width: 40 }} />
-      </View>
-      
-      <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-        {/* Policy Information Card */}
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Policy Details</Text>
-          <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Policy Number</Text>
-            <Text style={styles.detailValue}>{policyNumber || 'N/A'}</Text>
+    <SafeScreen>
+      <StatusBar style="light" />
+      <CompactCurvedHeader
+        title={`Extend Policy - ${vehicleReg || 'Policy'}`}
+        subtitle=""
+        showBackButton
+        onBackPress={() => navigation.goBack()}
+      />
+
+      <View style={[styles.body, { paddingBottom: insets.bottom + 16 }]}>
+        <View style={styles.stepHeader}>
+          <View style={styles.stepLine} />
+          <View style={styles.stepCircle}>
+            <Text style={styles.stepCircleText}>2</Text>
           </View>
-          <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Vehicle</Text>
-            <Text style={styles.detailValue}>{vehicleReg || 'N/A'}</Text>
-          </View>
-          <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Product</Text>
-            <Text style={styles.detailValue}>{productName || 'N/A'}</Text>
-          </View>
-          <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Extension Period</Text>
-            <Text style={styles.detailValue}>{extensionDays || 335} days</Text>
-          </View>
+          <View style={styles.stepLine} />
         </View>
-        
-        {/* Payment Breakdown Card */}
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Payment Breakdown</Text>
-          
-          <View style={styles.breakdownRow}>
-            <Text style={styles.breakdownLabel}>Balance Amount</Text>
-            <Text style={styles.breakdownValue}>
-              KSh {(balanceAmount || 0).toLocaleString()}
-            </Text>
-          </View>
-          
-          {lateFeePercentage > 0 && (
-            <>
-              <View style={styles.breakdownRow}>
-                <Text style={styles.breakdownLabel}>
-                  Late Payment Fee ({lateFeePercentage}%)
-                </Text>
-                <Text style={[styles.breakdownValue, styles.errorText]}>
-                  + KSh {lateFee.toLocaleString()}
-                </Text>
+        <Text style={styles.stepLabel}>Payment</Text>
+
+        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+          <EnhancedCard style={styles.card}>
+            <Text style={styles.cardTitle}>Policy Details</Text>
+            <View style={styles.row}><Text style={styles.label}>Policy Number</Text><Text style={styles.value}>{policyNumber || '—'}</Text></View>
+            <View style={styles.row}><Text style={styles.label}>Vehicle Registration</Text><Text style={styles.value}>{vehicleReg || '—'}</Text></View>
+            <View style={styles.row}><Text style={styles.label}>Product</Text><Text style={styles.value}>{productName || '—'}</Text></View>
+            <View style={styles.row}><Text style={styles.label}>Duration</Text><Text style={styles.value}>{months} month(s)</Text></View>
+            {coverEndDate ? (
+              <View style={styles.row}><Text style={styles.label}>Previous Expiry</Text><Text style={styles.value}>{new Date(coverEndDate).toLocaleDateString()}</Text></View>
+            ) : null}
+          </EnhancedCard>
+
+          <EnhancedCard style={styles.card}>
+            <Text style={styles.cardTitle}>Amount Due</Text>
+            <View style={styles.row}><Text style={styles.label}>Balance</Text><Text style={styles.value}>KES {Number(balanceAmount || 0).toLocaleString()}</Text></View>
+            <View style={styles.row}><Text style={styles.label}>Late Fee</Text><Text style={styles.value}>KES {Number(lateFee || 0).toLocaleString()}</Text></View>
+            <View style={styles.divider} />
+            <View style={styles.totalRow}><Text style={styles.totalLabel}>Pay Now</Text><Text style={styles.totalValue}>KES {Number(amountDue || 0).toLocaleString()}</Text></View>
+          </EnhancedCard>
+
+          <EnhancedCard style={styles.card}>
+            <Text style={styles.cardTitle}>Payment Method</Text>
+
+            <TouchableOpacity
+              style={[styles.methodOption, selectedMethod === METHODS.STK && styles.methodSelected]}
+              onPress={() => setSelectedMethod(METHODS.STK)}
+              activeOpacity={0.8}
+            >
+              <View style={styles.methodLeft}>
+                <Ionicons name="phone-portrait-outline" size={20} color={Colors.primary} />
+                <View style={styles.methodTextWrap}>
+                  <Text style={styles.methodTitle}>Mpesa STK Push</Text>
+                  <Text style={styles.methodDesc}>Initiate STK push to customer</Text>
+                </View>
               </View>
-              
-              <View style={styles.lateFeNote}>
-                <Text style={styles.noteIcon}>ℹ️</Text>
-                <Text style={styles.noteText}>
-                  Late payment fees are applied based on days past deadline
-                </Text>
+              {selectedMethod === METHODS.STK ? <Ionicons name="checkmark-circle" size={20} color={Colors.primary} /> : null}
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.methodOption, selectedMethod === METHODS.PAYBILL && styles.methodSelected]}
+              onPress={() => setSelectedMethod(METHODS.PAYBILL)}
+              activeOpacity={0.8}
+            >
+              <View style={styles.methodLeft}>
+                <Ionicons name="cash-outline" size={20} color={Colors.primary} />
+                <View style={styles.methodTextWrap}>
+                  <Text style={styles.methodTitle}>Mpesa Paybill</Text>
+                  <Text style={styles.methodDesc}>Paybill Number: 4114079 • Account: {vehicleReg || 'Vehicle Registration'}</Text>
+                </View>
               </View>
-            </>
-          )}
-          
-          <View style={styles.divider} />
-          
-          <View style={styles.totalRow}>
-            <Text style={styles.totalLabel}>Total Amount</Text>
-            <Text style={styles.totalAmount}>
-              KSh {finalAmount.toLocaleString()}
-            </Text>
-          </View>
-        </View>
-        
-        {/* Payment Method Selection */}
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Payment Method</Text>
-          
-          <TouchableOpacity 
-            style={[
-              styles.methodOption,
-              paymentMethod === 'mpesa' && styles.selectedMethod
-            ]}
-            onPress={() => setPaymentMethod('mpesa')}
-            activeOpacity={0.7}
-          >
-            <View style={styles.methodIconContainer}>
-              <Ionicons name="phone-portrait-outline" size={24} color="#25D366" />
-            </View>
-            <View style={styles.methodInfo}>
-              <Text style={styles.methodName}>M-PESA</Text>
-              <Text style={styles.methodDesc}>Pay via M-PESA STK Push</Text>
-            </View>
-            {paymentMethod === 'mpesa' && (
-              <Ionicons name="checkmark-circle" size={24} color="#D5222B" />
+              {selectedMethod === METHODS.PAYBILL ? <Ionicons name="checkmark-circle" size={20} color={Colors.primary} /> : null}
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.methodOption, selectedMethod === METHODS.MANUAL && styles.methodSelected]}
+              onPress={() => setSelectedMethod(METHODS.MANUAL)}
+              activeOpacity={0.8}
+            >
+              <View style={styles.methodLeft}>
+                <Ionicons name="shield-checkmark-outline" size={20} color={Colors.primary} />
+                <View style={styles.methodTextWrap}>
+                  <Text style={styles.methodTitle}>Manual Payment Verification</Text>
+                  <Text style={styles.methodDesc}>Submit for manual verification</Text>
+                </View>
+              </View>
+              {selectedMethod === METHODS.MANUAL ? <Ionicons name="checkmark-circle" size={20} color={Colors.primary} /> : null}
+            </TouchableOpacity>
+
+            {selectedMethod === METHODS.STK ? (
+              <View style={styles.methodForm}>
+                <Text style={styles.inputLabel}>Customer Phone Number</Text>
+                <TextInput
+                  value={phone}
+                  onChangeText={setPhone}
+                  placeholder="e.g. 0712345678"
+                  keyboardType="phone-pad"
+                  style={styles.input}
+                  editable={!submitting}
+                />
+              </View>
+            ) : (
+              <View style={styles.methodForm}>
+                <Text style={styles.inputLabel}>Transaction Code</Text>
+                <TextInput
+                  value={transactionCode}
+                  onChangeText={setTransactionCode}
+                  placeholder="e.g. QWE12RTY"
+                  autoCapitalize="characters"
+                  style={styles.input}
+                  editable={!submitting}
+                />
+              </View>
             )}
-          </TouchableOpacity>
-          
-          <TouchableOpacity 
-            style={[
-              styles.methodOption,
-              paymentMethod === 'dpo' && styles.selectedMethod
-            ]}
-            onPress={() => setPaymentMethod('dpo')}
-            activeOpacity={0.7}
-          >
-            <View style={styles.methodIconContainer}>
-              <Ionicons name="card-outline" size={24} color="#0066cc" />
-            </View>
-            <View style={styles.methodInfo}>
-              <Text style={styles.methodName}>DPO Pay</Text>
-              <Text style={styles.methodDesc}>Card payment via DPO</Text>
-            </View>
-            {paymentMethod === 'dpo' && (
-              <Ionicons name="checkmark-circle" size={24} color="#D5222B" />
-            )}
-          </TouchableOpacity>
-        </View>
-        
-        {/* Action Button */}
+          </EnhancedCard>
+        </ScrollView>
+
         <TouchableOpacity
-          style={[styles.payButton, loading && styles.payButtonDisabled]}
-          onPress={handlePayment}
-          disabled={loading}
-          activeOpacity={0.8}
+          style={[styles.cta, (!canSubmit || submitting) && styles.ctaDisabled]}
+          disabled={!canSubmit || submitting}
+          activeOpacity={0.85}
+          onPress={handleConfirmPayment}
         >
-          {loading ? (
-            <ActivityIndicator color="#fff" size="small" />
-          ) : (
-            <Text style={styles.payButtonText}>
-              Pay KSh {finalAmount.toLocaleString()}
-            </Text>
-          )}
+          {submitting ? <ActivityIndicator color={Colors.white} /> : <Text style={styles.ctaText}>Confirm Payment</Text>}
         </TouchableOpacity>
-      </ScrollView>
-    </View>
+      </View>
+    </SafeScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: {
+  body: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
+    paddingHorizontal: Spacing.md,
+    paddingTop: Spacing.sm,
   },
-  header: {
+  stepHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#D5222B',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    paddingTop: 48,
+    justifyContent: 'center',
+    marginTop: Spacing.sm,
   },
-  backButton: {
-    padding: 8,
-  },
-  headerTitle: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: '600',
+  stepLine: {
     flex: 1,
+    height: 2,
+    backgroundColor: Colors.divider,
+  },
+  stepCircle: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: Colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginHorizontal: Spacing.sm,
+  },
+  stepCircleText: {
+    color: Colors.white,
+    fontFamily: Typography.fontFamily.semiBold,
+  },
+  stepLabel: {
     textAlign: 'center',
+    marginTop: Spacing.sm,
+    marginBottom: Spacing.sm,
+    fontSize: Typography.fontSize.md,
+    color: Colors.textPrimary,
+    fontFamily: Typography.fontFamily.semiBold,
   },
-  container: {
-    flex: 1,
-    padding: 16,
+  scrollContent: {
+    paddingBottom: Spacing.lg,
   },
   card: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
-    marginHorizontal: 4,
-    borderWidth: 1,
-    borderColor: '#e9ecef',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 2,
+    padding: Spacing.md,
+    marginBottom: Spacing.md,
   },
   cardTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#2c3e50',
-    marginBottom: 16,
+    fontSize: Typography.fontSize.md,
+    fontFamily: Typography.fontFamily.semiBold,
+    color: Colors.textPrimary,
+    marginBottom: Spacing.sm,
   },
-  detailRow: {
+  row: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 12,
+    paddingVertical: 6,
   },
-  detailLabel: {
-    fontSize: 14,
-    color: '#6c757d',
+  label: {
+    color: Colors.textSecondary,
+    fontSize: Typography.fontSize.sm,
+    fontFamily: Typography.fontFamily.regular,
   },
-  detailValue: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#2c3e50',
-  },
-  breakdownRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 12,
-  },
-  breakdownLabel: {
-    fontSize: 14,
-    color: '#6c757d',
-  },
-  breakdownValue: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#2c3e50',
-  },
-  errorText: {
-    color: '#dc3545',
-  },
-  lateFeNote: {
-    flexDirection: 'row',
-    backgroundColor: '#fff4e6',
-    padding: 12,
-    borderRadius: 8,
-    marginTop: 4,
-    marginBottom: 12,
-    gap: 8,
-  },
-  noteIcon: {
-    fontSize: 16,
-  },
-  noteText: {
-    flex: 1,
-    fontSize: 13,
-    color: '#856404',
-    lineHeight: 18,
+  value: {
+    color: Colors.textPrimary,
+    fontSize: Typography.fontSize.sm,
+    fontFamily: Typography.fontFamily.medium,
+    maxWidth: '55%',
+    textAlign: 'right',
   },
   divider: {
     height: 1,
-    backgroundColor: '#e9ecef',
-    marginVertical: 12,
+    backgroundColor: Colors.divider,
+    marginVertical: Spacing.sm,
   },
   totalRow: {
     flexDirection: 'row',
@@ -335,72 +352,85 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   totalLabel: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#2c3e50',
+    color: Colors.textPrimary,
+    fontFamily: Typography.fontFamily.semiBold,
+    fontSize: Typography.fontSize.md,
   },
-  totalAmount: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#D5222B',
+  totalValue: {
+    color: Colors.primary,
+    fontFamily: Typography.fontFamily.bold,
+    fontSize: Typography.fontSize.md,
   },
   methodOption: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 14,
-    borderWidth: 1.5,
-    borderColor: '#e9ecef',
-    borderRadius: 10,
-    marginBottom: 10,
-    backgroundColor: '#f8f9fa',
-  },
-  selectedMethod: {
-    borderColor: '#D5222B',
-    backgroundColor: '#fff5f5',
-  },
-  methodIconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 8,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
+    justifyContent: 'space-between',
+    paddingVertical: 12,
     borderWidth: 1,
-    borderColor: '#e9ecef',
+    borderColor: Colors.border,
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    marginBottom: 10,
+    backgroundColor: Colors.background,
   },
-  methodInfo: {
+  methodSelected: {
+    borderColor: Colors.primary,
+  },
+  methodLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    flex: 1,
+    paddingRight: 10,
+  },
+  methodTextWrap: {
     flex: 1,
   },
-  methodName: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#2c3e50',
-    marginBottom: 2,
+  methodTitle: {
+    color: Colors.textPrimary,
+    fontFamily: Typography.fontFamily.semiBold,
   },
   methodDesc: {
-    fontSize: 13,
-    color: '#6c757d',
+    color: Colors.textSecondary,
+    marginTop: 2,
+    fontSize: Typography.fontSize.xs,
+    fontFamily: Typography.fontFamily.regular,
   },
-  payButton: {
-    backgroundColor: '#D5222B',
+  methodForm: {
+    marginTop: Spacing.sm,
+  },
+  inputLabel: {
+    color: Colors.textSecondary,
+    marginBottom: 6,
+    fontSize: Typography.fontSize.sm,
+    fontFamily: Typography.fontFamily.semiBold,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: Colors.border,
     borderRadius: 12,
-    paddingVertical: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    color: Colors.textPrimary,
+    backgroundColor: Colors.background,
+    fontFamily: Typography.fontFamily.regular,
+  },
+  cta: {
+    marginTop: Spacing.sm,
+    backgroundColor: Colors.primary,
+    borderRadius: 14,
     alignItems: 'center',
-    marginBottom: 24,
-    shadowColor: '#D5222B',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 3,
+    justifyContent: 'center',
+    paddingVertical: 14,
   },
-  payButtonDisabled: {
-    backgroundColor: '#ced4da',
-    shadowOpacity: 0,
+  ctaDisabled: {
+    opacity: 0.6,
   },
-  payButtonText: {
-    color: '#fff',
-    fontWeight: '700',
-    fontSize: 18,
+  ctaText: {
+    color: Colors.white,
+    fontFamily: Typography.fontFamily.semiBold,
+    fontSize: Typography.fontSize.md,
   },
 });
+
+

@@ -26,6 +26,7 @@ export default function SignupScreen() {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [iraNumber, setIraNumber] = useState(''); // IRA registration number for agents
   const [selectedRole, setSelectedRole] = useState('AGENT'); // AGENT or CUSTOMER
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -168,6 +169,11 @@ export default function SignupScreen() {
       return;
     }
 
+    if (selectedRole === 'AGENT' && !iraNumber.trim()) {
+      Alert.alert('Error', 'IRA number is required for agent accounts');
+      return;
+    }
+
     setIsLoading(true);
     try {
       const signupData = {
@@ -177,6 +183,7 @@ export default function SignupScreen() {
         user_role: selectedRole,
         email: email.trim(), // Email is now required
         full_names: fullName.trim(),
+        ira_number: selectedRole === 'AGENT' ? iraNumber.trim() : undefined,
       };
 
       console.log('📤 Signup Data Being Sent:', JSON.stringify(signupData, null, 2));
@@ -392,36 +399,55 @@ export default function SignupScreen() {
             </View>
           </View>
 
-          {/* Account Type Selection with Checkboxes */}
+          {/* Account Type Selection with IRA Field Inline */}
           <View style={styles.inputContainer}>
             <Text style={styles.accountTypeLabel}>Account Type</Text>
-            <View style={styles.accountTypeContainer}>
+            <View style={styles.accountTypeRow}>
+              {/* Agent Checkbox */}
               <TouchableOpacity 
-                style={styles.checkboxOption}
+                style={styles.accountTypeBox}
                 onPress={() => setSelectedRole('AGENT')}
                 activeOpacity={0.7}
               >
-                <Ionicons 
-                  name={selectedRole === 'AGENT' ? "checkbox" : "square-outline"} 
-                  size={22} 
-                  color={selectedRole === 'AGENT' ? Colors.primary : '#999'}
-                />
-                <Text style={[styles.checkboxLabel, selectedRole === 'AGENT' && styles.checkboxLabelActive]}>Agent</Text>
+                <View style={styles.checkboxOptionRow}>
+                  <Ionicons 
+                    name={selectedRole === 'AGENT' ? "checkbox" : "square-outline"} 
+                    size={22} 
+                    color={selectedRole === 'AGENT' ? Colors.primary : '#999'}
+                  />
+                  <Text style={[styles.checkboxLabel, selectedRole === 'AGENT' && styles.checkboxLabelActive]}>Agent</Text>
+                </View>
               </TouchableOpacity>
 
+              {/* Customer Checkbox */}
               <TouchableOpacity 
-                style={styles.checkboxOption}
+                style={styles.accountTypeBox}
                 onPress={() => setSelectedRole('CUSTOMER')}
                 activeOpacity={0.7}
               >
-                <Ionicons 
-                  name={selectedRole === 'CUSTOMER' ? "checkbox" : "square-outline"} 
-                  size={22} 
-                  color={selectedRole === 'CUSTOMER' ? Colors.primary : '#999'}
-                />
-                <Text style={[styles.checkboxLabel, selectedRole === 'CUSTOMER' && styles.checkboxLabelActive]}>Customer</Text>
+                <View style={styles.checkboxOptionRow}>
+                  <Ionicons 
+                    name={selectedRole === 'CUSTOMER' ? "checkbox" : "square-outline"} 
+                    size={22} 
+                    color={selectedRole === 'CUSTOMER' ? Colors.primary : '#999'}
+                  />
+                  <Text style={[styles.checkboxLabel, selectedRole === 'CUSTOMER' && styles.checkboxLabelActive]}>Customer</Text>
+                </View>
               </TouchableOpacity>
             </View>
+
+            {selectedRole === 'AGENT' && (
+              <View style={styles.iraInlineContainer}>
+                <TextInput
+                  style={styles.iraInlineInput}
+                  placeholder="IRA Number"
+                  value={iraNumber}
+                  onChangeText={setIraNumber}
+                  autoCapitalize="characters"
+                  placeholderTextColor={Colors.textLight}
+                />
+              </View>
+            )}
           </View>
 
           <TouchableOpacity 
@@ -549,18 +575,18 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   inputContainer: {
-    marginBottom: 16,
+    marginBottom: 12,
   },
   input: {
     backgroundColor: '#F8F8F8',
     paddingHorizontal: 18,
-    paddingVertical: Platform.OS === 'ios' ? 16 : 14,
+    paddingVertical: Platform.OS === 'ios' ? 14 : 12,
     borderRadius: 14,
     fontSize: 16,
     fontFamily: Typography.fontFamily.regular,
     color: Colors.textPrimary,
     borderWidth: 0,
-    height: 56,
+    height: 52,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -576,7 +602,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#F8F8F8',
     borderRadius: 14,
     borderWidth: 0,
-    height: 56,
+    height: 52,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -589,14 +615,14 @@ const styles = StyleSheet.create({
   passwordInput: {
     flex: 1,
     paddingHorizontal: 18,
-    paddingVertical: Platform.OS === 'ios' ? 16 : 14,
+    paddingVertical: Platform.OS === 'ios' ? 14 : 12,
     fontSize: 16,
     fontFamily: Typography.fontFamily.regular,
     color: Colors.textPrimary,
   },
   eyeIcon: {
     paddingHorizontal: 16,
-    height: 56,
+    height: 52,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -651,19 +677,26 @@ const styles = StyleSheet.create({
     fontSize: Typography.fontSize.sm,
     fontFamily: Typography.fontFamily.medium,
     color: Colors.textSecondary,
-    marginBottom: 8,
+    marginBottom: 6,
   },
-  accountTypeContainer: {
+  accountTypeRow: {
     flexDirection: 'row',
-    justifyContent: 'flex-start',
-    gap: 24,
-    paddingHorizontal: 4,
+    justifyContent: 'space-between',
+    gap: Spacing.sm,
   },
-  checkboxOption: {
+  accountTypeBox: {
+    flex: 1,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    backgroundColor: '#FAFAFA',
+  },
+  checkboxOptionRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 8,
-    paddingHorizontal: 12,
+    justifyContent: 'center',
   },
   checkboxLabel: {
     fontSize: Typography.fontSize.md,
@@ -674,6 +707,32 @@ const styles = StyleSheet.create({
   checkboxLabelActive: {
     color: Colors.primary,
     fontFamily: Typography.fontFamily.semiBold,
+  },
+  iraInlineContainer: {
+    marginTop: 10,
+    backgroundColor: '#F8F8F8',
+    borderRadius: 14,
+    height: 52,
+    justifyContent: 'center',
+    paddingHorizontal: 18,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  iraInlineInput: {
+    width: '100%',
+    height: 52,
+    borderWidth: 0,
+    paddingHorizontal: 0,
+    fontSize: 16,
+    fontFamily: Typography.fontFamily.regular,
+    backgroundColor: 'transparent',
+    color: Colors.textPrimary,
   },
   // Gender selection styles
   genderContainer: {

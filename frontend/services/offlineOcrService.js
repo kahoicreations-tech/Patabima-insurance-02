@@ -2,17 +2,18 @@
 // TODO: Integrate real OCR pipeline if required
 
 export async function processDocumentOffline(imageData, docType) {
-  // Simulate processing and return mocked fields based on docType
   return {
-    success: true,
-    data: {
-      docType,
-      extractedText: '[stubbed OCR result]',
-    },
+    success: false,
+    error: 'Offline OCR is not available. Please upload the document for server-side processing.',
+    data: null,
   };
 }
 
 export function validateOfflineData(extractedData, formData, docType) {
-  // Return empty mismatches for now
-  return [];
+  return [
+    {
+      field: 'document',
+      message: 'Offline OCR validation is not available. Use server-side document processing.',
+    },
+  ];
 }

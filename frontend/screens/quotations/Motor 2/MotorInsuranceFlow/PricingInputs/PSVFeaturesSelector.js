@@ -1,12 +1,19 @@
 import React from 'react';
 import { View, Text, TextInput, StyleSheet, TouchableOpacity } from 'react-native';
+import StableTextInput from '../../../../../components/common/StableTextInput';
 
 export default function PSVFeaturesSelector({ passengers, onChangePassengers, pll = 250, onChangePLL, route = 'URBAN', onChangeRoute }) {
   return (
     <View style={{ gap: 12 }}>
       <View style={{ gap: 6 }}>
         <Text style={styles.label}>Passengers</Text>
-        <TextInput style={styles.input} keyboardType="numeric" value={String(passengers || '')} onChangeText={(v) => onChangePassengers?.(v.replace(/\D/g, ''))} />
+        <StableTextInput 
+          style={styles.input} 
+          keyboardType="numeric" 
+          value={String(passengers || '')} 
+          onChangeText={(v) => onChangePassengers?.(v.replace(/\D/g, ''))} 
+          debounceMs={300}
+        />
       </View>
       <View style={{ flexDirection: 'row', gap: 8 }}>
         {[250, 500].map((v) => (

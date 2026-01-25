@@ -96,7 +96,8 @@ export default function PolicySuccess({ route }) {
                 '/api/insurance/dmvic/issue-certificate/',
                 {
                   method: 'POST',
-                  body: JSON.stringify({ policy_id: policyId })
+                  body: JSON.stringify({ policy_id: policyId }),
+                  timeoutMs: 60000, // 60 seconds for DMVIC external API call
                 }
               );
 

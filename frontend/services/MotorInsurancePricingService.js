@@ -171,6 +171,68 @@ class MotorInsurancePricingService {
         const cached = await SimpleCache.get(cacheKey);
         if (cached) {
           if (__DEV__) console.log(`[CACHE] compareUnderwritersBySubcategory hit → ${cacheKey}`);
+          // Defensive: older cached entries may be missing base/levies breakdown.
+          // Re-hydrate breakdown so UI doesn't show zeros.
+          if (Array.isArray(cached)) {
+            const levyRate = 0.0025; // 0.25% ITL, 0.25% PCF
+            const round2 = (n) => Math.round((Number(n) + Number.EPSILON) * 100) / 100;
+            const toNum = (v) => {
+              const n = Number(v);
+              return Number.isFinite(n) ? n : undefined;
+            };
+            const firstNum = (...vals) => {
+              for (const v of vals) {
+                const n = toNum(v);
+                if (n !== undefined) return n;
+              }
+              return undefined;
+            };
+
+            const rehydrated = cached.map((u) => {
+              const breakdown = u?.breakdown || {};
+              const total = firstNum(u.total_premium, u.premium, u.totalPremium) ?? 0;
+              const stamp = firstNum(
+                breakdown.stamp_duty,
+                breakdown.stampDuty,
+                u.stamp_duty,
+                u.stampDuty,
+                40
+              ) ?? 40;
+              const baseFrom = firstNum(u.base_premium, u.basePremium, breakdown.base_premium) ?? 0;
+              const itlFrom = firstNum(breakdown.itl, breakdown.training_levy, breakdown.trainingLevy) ?? 0;
+              const pcfFrom = firstNum(breakdown.pcf, breakdown.pcf_levy, breakdown.pcfLevy) ?? 0;
+
+              let base = baseFrom;
+              if (!(base > 0) && total > 0 && total > stamp) {
+                const hasLevies = itlFrom > 0 || pcfFrom > 0;
+                base = hasLevies ? (total - stamp - itlFrom - pcfFrom) : (total - stamp) / (1 + 2 * levyRate);
+              }
+              base = base > 0 ? round2(base) : 0;
+
+              const itl = itlFrom > 0 ? round2(itlFrom) : round2(base * levyRate);
+              const pcf = pcfFrom > 0 ? round2(pcfFrom) : round2(base * levyRate);
+
+              return {
+                ...u,
+                base_premium: u.base_premium || u.basePremium ? u.base_premium : base,
+                basePremium: u.basePremium || u.base_premium ? u.basePremium : base,
+                breakdown: {
+                  ...breakdown,
+                  base_premium: breakdown.base_premium || base,
+                  itl: breakdown.itl || itl,
+                  pcf: breakdown.pcf || pcf,
+                  training_levy: breakdown.training_levy || itl,
+                  pcf_levy: breakdown.pcf_levy || pcf,
+                  stamp_duty: breakdown.stamp_duty || stamp,
+                },
+              };
+            });
+
+            // Refresh cache with enriched breakdown (keeps TTL in SimpleCache entry)
+            await SimpleCache.set(cacheKey, rehydrated, options.ttlMs || (12 * 60 * 60 * 1000));
+            return rehydrated;
+          }
+
           return cached;
         }
       }
@@ -196,6 +258,73 @@ class MotorInsurancePricingService {
         const finalPremium = Number.isFinite(backendTotal) ? backendTotal : (pricing.totalPremium || pricing.premium || 0);
         console.log(`Pricing for ${underwriterData.underwriter_name}: KSh ${finalPremium}`);
 
+        // If backend only returns a total premium, derive base/levies so UI + downstream logic can show breakdown.
+        const levyRate = 0.0025; // 0.25% ITL, 0.25% PCF
+        const toNum = (v) => {
+          const n = Number(v);
+          return Number.isFinite(n) ? n : undefined;
+        };
+        const firstNum = (...vals) => {
+          for (const v of vals) {
+            const n = toNum(v);
+            if (n !== undefined) return n;
+          }
+          return undefined;
+        };
+        const round2 = (n) => Math.round((Number(n) + Number.EPSILON) * 100) / 100;
+
+        const stampDuty = firstNum(
+          pricing.stamp_duty,
+          underwriterData.stamp_duty,
+          underwriterData.stampDuty,
+          underwriterData?.breakdown?.stamp_duty,
+          underwriterData?.premium_breakdown?.stamp_duty,
+          40
+        ) ?? 40;
+
+        const itlFromBackend = firstNum(
+          pricing.training_levy,
+          underwriterData.training_levy,
+          underwriterData.itl,
+          underwriterData?.breakdown?.itl,
+          underwriterData?.breakdown?.training_levy,
+          underwriterData?.premium_breakdown?.itl,
+          underwriterData?.premium_breakdown?.training_levy
+        );
+
+        const pcfFromBackend = firstNum(
+          pricing.pcf_levy,
+          underwriterData.pcf_levy,
+          underwriterData.pcf,
+          underwriterData?.breakdown?.pcf,
+          underwriterData?.breakdown?.pcf_levy,
+          underwriterData?.premium_breakdown?.pcf,
+          underwriterData?.premium_breakdown?.pcf_levy
+        );
+
+        const baseFromBackend = firstNum(
+          pricing.base_premium,
+          underwriterData.base_premium,
+          underwriterData.basePremium,
+          underwriterData?.breakdown?.base_premium,
+          underwriterData?.premium_breakdown?.base_premium
+        );
+
+        let derivedBasePremium = baseFromBackend;
+        if (!(derivedBasePremium > 0) && finalPremium > 0) {
+          const hasLevies = (itlFromBackend ?? 0) > 0 || (pcfFromBackend ?? 0) > 0;
+          if (hasLevies) {
+            derivedBasePremium = finalPremium - stampDuty - (itlFromBackend || 0) - (pcfFromBackend || 0);
+          } else {
+            // total = base*(1 + 2*rate) + stamp
+            derivedBasePremium = (finalPremium - stampDuty) / (1 + 2 * levyRate);
+          }
+        }
+        derivedBasePremium = derivedBasePremium > 0 ? round2(derivedBasePremium) : 0;
+
+        const derivedItl = (itlFromBackend ?? 0) > 0 ? round2(itlFromBackend) : round2(derivedBasePremium * levyRate);
+        const derivedPcf = (pcfFromBackend ?? 0) > 0 ? round2(pcfFromBackend) : round2(derivedBasePremium * levyRate);
+
         // Prefer extendible_config exactly as provided by backend
         const extendibleCfg = underwriterData.extendible_config ?? comp.extendible_config ?? pricing.extendible_config;
         const isExtendible = Boolean(
@@ -208,8 +337,8 @@ class MotorInsurancePricingService {
           id: underwriterData.underwriter_id || comp.underwriter_id || `underwriter_${index}`,
           underwriter_id: underwriterData.underwriter_id || comp.underwriter_id,
           underwriter_code: underwriterData.underwriter_code || comp.underwriter_code,
-          name: underwriterData.underwriter_name || comp.underwriter_name || `Underwriter ${underwriterData.underwriter_code}`,
-          company: underwriterData.underwriter_name || comp.underwriter_name,
+          name: underwriterData.name || underwriterData.underwriter_name || comp.underwriter_name || `Underwriter ${underwriterData.underwriter_code}`,
+          company: underwriterData.name || underwriterData.underwriter_name || comp.underwriter_name,
           
           // Market positioning from backend
           market_position: comp.market_position,
@@ -219,9 +348,20 @@ class MotorInsurancePricingService {
           premium: finalPremium,
           total_premium: finalPremium,
           totalPremium: finalPremium,
+          base_premium: derivedBasePremium,
+          basePremium: derivedBasePremium,
           
-          // Breakdown details
-          breakdown: pricing.breakdown || underwriterData.premium_breakdown || {},
+          // Breakdown details - include base_premium in breakdown
+          breakdown: {
+            base_premium: derivedBasePremium,
+            itl: derivedItl,
+            pcf: derivedPcf,
+            // Also expose backend-style keys to keep compatibility with any other consumers
+            training_levy: derivedItl,
+            pcf_levy: derivedPcf,
+            stamp_duty: stampDuty,
+            ...(pricing.breakdown || underwriterData.premium_breakdown || {})
+          },
           // Extendible details (preserve from backend exactly)
           ...(extendibleCfg ? { extendible_config: extendibleCfg } : {}),
           ...(isExtendible ? { is_extendible: true } : {}),

@@ -433,7 +433,6 @@ export default function ClaimsSubmissionScreen({ navigation, route }) {
       const uploadUrl = presign?.url || presign?.uploadURL || presign?.uploadUrl || presign?.upload_url || presign?.signedUrl || presign?.signed_url;
       const formFields = presign?.fields || presign?.form || presign?.formData || presign?.form_fields;
       const objectKey = presign?.key || formFields?.key || presign?.objectKey || presign?.object_key;
-      const isMock = presign?.mock === true;
 
       if (!uploadUrl) {
         console.error('[ClaimsSubmission] No upload URL in presign response:', presign);
@@ -442,16 +441,11 @@ export default function ClaimsSubmissionScreen({ navigation, route }) {
 
       console.log('[ClaimsSubmission] Upload URL:', uploadUrl.substring(0, 100) + '...');
       console.log('[ClaimsSubmission] Form fields:', formFields ? Object.keys(formFields) : 'none');
-      console.log('[ClaimsSubmission] Is mock mode:', isMock);
 
       // Upload file using React Native fetch with FormData
       let uploadSuccess = false;
       
-      // If mock mode, skip actual upload
-      if (isMock) {
-        console.log('[ClaimsSubmission] MOCK MODE: Skipping actual upload');
-        uploadSuccess = true;
-      } else if (formFields && Object.keys(formFields).length > 0) {
+      if (formFields && Object.keys(formFields).length > 0) {
         // S3 presigned POST with form fields
         console.log('[ClaimsSubmission] Using multipart POST upload...');
         const formData = new FormData();

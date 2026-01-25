@@ -426,6 +426,12 @@ const EnhancedIndividualMedicalQuotation = () => {
 
   const renderPolicyDetails = () => (
     <View style={styles.stepContainer}>
+      {/* Section: Policy Details */}
+      <View style={styles.sectionHeader}>
+        <View style={styles.sectionCircle}><Body1 style={styles.sectionCircleText}>1</Body1></View>
+        <Subtitle2 style={styles.sectionTitle}>Policy Details</Subtitle2>
+      </View>
+
       <View style={styles.inputContainer}>
         <Text style={styles.label}>
           Inpatient Limit <Text style={styles.required}>*</Text>
@@ -471,16 +477,19 @@ const EnhancedIndividualMedicalQuotation = () => {
         <Text style={styles.label}>
           Principal Member Age <Text style={styles.required}>*</Text>
         </Text>
-        <TextInput
-          value={formData.age}
-          onChangeText={(text) => updateFormData('age', text.replace(/\D/g, ''))}
-          placeholder="Enter age"
-          keyboardType="number-pad"
-          inputMode="numeric"
-          returnKeyType="next"
-          maxLength={3}
-          style={[styles.input, fieldErrors.age && styles.inputError]}
-        />
+        <View style={styles.cardInputContainer}>
+          <TextInput
+            value={formData.age}
+            onChangeText={(text) => updateFormData('age', text.replace(/\D/g, ''))}
+            placeholder="Enter age"
+            keyboardType="number-pad"
+            inputMode="numeric"
+            returnKeyType="next"
+            maxLength={3}
+            style={[styles.input, fieldErrors.age && styles.inputError]}
+            placeholderTextColor={UI.textPlaceholder}
+          />
+        </View>
         {fieldErrors.age && (
           <View style={styles.errorContainer}>
             <Ionicons name="alert-circle" size={14} color={Colors.error || '#dc3545'} />
@@ -491,16 +500,19 @@ const EnhancedIndividualMedicalQuotation = () => {
       
       <View style={styles.inputContainer}>
         <Text style={styles.label}>Spouse Age</Text>
-        <TextInput
-          value={formData.spouseAge}
-          onChangeText={(text) => updateFormData('spouseAge', text.replace(/\D/g, ''))}
-          placeholder="Enter spouse age"
-          keyboardType="number-pad"
-          inputMode="numeric"
-          returnKeyType="next"
-          maxLength={3}
-          style={[styles.input, fieldErrors.spouseAge && styles.inputError]}
-        />
+        <View style={styles.cardInputContainer}>
+          <TextInput
+            value={formData.spouseAge}
+            onChangeText={(text) => updateFormData('spouseAge', text.replace(/\D/g, ''))}
+            placeholder="Enter spouse age"
+            keyboardType="number-pad"
+            inputMode="numeric"
+            returnKeyType="next"
+            maxLength={3}
+            style={[styles.input, fieldErrors.spouseAge && styles.inputError]}
+            placeholderTextColor={UI.textPlaceholder}
+          />
+        </View>
         {fieldErrors.spouseAge && (
           <View style={styles.errorContainer}>
             <Ionicons name="alert-circle" size={14} color={Colors.error || '#dc3545'} />
@@ -511,23 +523,28 @@ const EnhancedIndividualMedicalQuotation = () => {
       
       <View style={styles.inputContainer}>
         <Text style={styles.label}>Number of Children</Text>
-        <TextInput
-          value={formData.numberOfChildren}
-          onChangeText={(text) => updateFormData('numberOfChildren', text.replace(/\D/g, ''))}
-          placeholder="Enter number of children"
-          keyboardType="number-pad"
-          inputMode="numeric"
-          returnKeyType="next"
-          maxLength={2}
-          style={[styles.input, fieldErrors.numberOfChildren && styles.inputError]}
-        />
+        <View style={styles.cardInputContainer}>
+          <TextInput
+            value={formData.numberOfChildren}
+            onChangeText={(text) => updateFormData('numberOfChildren', text.replace(/\D/g, ''))}
+            placeholder="Enter number of children"
+            keyboardType="number-pad"
+            inputMode="numeric"
+            returnKeyType="next"
+            maxLength={2}
+            style={[styles.input, fieldErrors.numberOfChildren && styles.inputError]}
+            placeholderTextColor={UI.textPlaceholder}
+          />
+        </View>
         {fieldErrors.numberOfChildren && (
           <View style={styles.errorContainer}>
             <Ionicons name="alert-circle" size={14} color={Colors.error || '#dc3545'} />
             <Caption style={styles.errorText}>{fieldErrors.numberOfChildren}</Caption>
           </View>
         )}
-      </View>      <View style={styles.inputContainer}>
+      </View>
+      
+      <View style={styles.inputContainer}>
         <Text style={styles.label}>
           Preferred Underwriters <Text style={styles.required}>*</Text>
         </Text>
@@ -578,20 +595,29 @@ const EnhancedIndividualMedicalQuotation = () => {
 
   const renderClientDetails = () => (
     <View style={styles.stepContainer}>
+      {/* Section: Client Details */}
+      <View style={styles.sectionHeader}>
+        <View style={styles.sectionCircle}><Body1 style={styles.sectionCircleText}>2</Body1></View>
+        <Subtitle2 style={styles.sectionTitle}>Client Details</Subtitle2>
+      </View>
+
       {/* Full Name */}
       <View style={styles.inputContainer}>
         <Text style={styles.label}>
           Full Name <Text style={styles.required}>*</Text>
         </Text>
-        <TextInput
-          value={formData.fullName}
-          onChangeText={(text) => updateFormData('fullName', text)}
-          placeholder="Enter full name"
-          style={[styles.input, fieldErrors.fullName && styles.inputError]}
-          autoCapitalize="words"
-          returnKeyType="next"
-          textContentType="name"
-        />
+        <View style={styles.cardInputContainer}>
+          <TextInput
+            value={formData.fullName}
+            onChangeText={(text) => updateFormData('fullName', text)}
+            placeholder="Enter full name"
+            style={[styles.input, fieldErrors.fullName && styles.inputError]}
+            autoCapitalize="words"
+            returnKeyType="next"
+            textContentType="name"
+            placeholderTextColor={UI.textPlaceholder}
+          />
+        </View>
         {fieldErrors.fullName && (
           <View style={styles.errorContainer}>
             <Ionicons name="alert-circle" size={14} color={Colors.error || '#dc3545'} />
@@ -605,17 +631,20 @@ const EnhancedIndividualMedicalQuotation = () => {
         <Text style={styles.label}>
           ID Number <Text style={styles.required}>*</Text>
         </Text>
-        <TextInput
-          value={formData.idNumber}
-          onChangeText={(text) => updateFormData('idNumber', text.replace(/\D/g, ''))}
-          placeholder="Enter ID number"
-          style={[styles.input, fieldErrors.idNumber && styles.inputError]}
-          keyboardType="number-pad"
-          inputMode="numeric"
-          maxLength={12}
-          returnKeyType="next"
-          textContentType="none"
-        />
+        <View style={styles.cardInputContainer}>
+          <TextInput
+            value={formData.idNumber}
+            onChangeText={(text) => updateFormData('idNumber', text.replace(/\D/g, ''))}
+            placeholder="Enter ID number"
+            style={[styles.input, fieldErrors.idNumber && styles.inputError]}
+            keyboardType="number-pad"
+            inputMode="numeric"
+            maxLength={12}
+            returnKeyType="next"
+            textContentType="none"
+            placeholderTextColor={UI.textPlaceholder}
+          />
+        </View>
         {fieldErrors.idNumber && (
           <View style={styles.errorContainer}>
             <Ionicons name="alert-circle" size={14} color={Colors.error || '#dc3545'} />
@@ -629,17 +658,20 @@ const EnhancedIndividualMedicalQuotation = () => {
         <Text style={styles.label}>
           Phone Number <Text style={styles.required}>*</Text>
         </Text>
-        <TextInput
-          value={formData.phoneNumber}
-          onChangeText={(text) => updateFormData('phoneNumber', text.replace(/\D/g, ''))}
-          placeholder="Enter phone number"
-          style={[styles.input, fieldErrors.phoneNumber && styles.inputError]}
-          keyboardType="phone-pad"
-          inputMode="tel"
-          maxLength={12}
-          returnKeyType="next"
-          textContentType="telephoneNumber"
-        />
+        <View style={styles.cardInputContainer}>
+          <TextInput
+            value={formData.phoneNumber}
+            onChangeText={(text) => updateFormData('phoneNumber', text.replace(/\D/g, ''))}
+            placeholder="Enter phone number"
+            style={[styles.input, fieldErrors.phoneNumber && styles.inputError]}
+            keyboardType="phone-pad"
+            inputMode="tel"
+            maxLength={12}
+            returnKeyType="next"
+            textContentType="telephoneNumber"
+            placeholderTextColor={UI.textPlaceholder}
+          />
+        </View>
         {fieldErrors.phoneNumber && (
           <View style={styles.errorContainer}>
             <Ionicons name="alert-circle" size={14} color={Colors.error || '#dc3545'} />
@@ -651,17 +683,20 @@ const EnhancedIndividualMedicalQuotation = () => {
       {/* Email Address */}
       <View style={styles.inputContainer}>
         <Text style={styles.label}>Email Address</Text>
-        <TextInput
-          value={formData.emailAddress}
-          onChangeText={(text) => updateFormData('emailAddress', text)}
-          placeholder="Enter email address"
-          style={[styles.input, fieldErrors.emailAddress && styles.inputError]}
-          keyboardType="email-address"
-          autoCapitalize="none"
-          returnKeyType="done"
-          textContentType="emailAddress"
-          autoCorrect={false}
-        />
+        <View style={styles.cardInputContainer}>
+          <TextInput
+            value={formData.emailAddress}
+            onChangeText={(text) => updateFormData('emailAddress', text)}
+            placeholder="Enter email address"
+            style={[styles.input, fieldErrors.emailAddress && styles.inputError]}
+            keyboardType="email-address"
+            autoCapitalize="none"
+            returnKeyType="done"
+            textContentType="emailAddress"
+            autoCorrect={false}
+            placeholderTextColor={UI.textPlaceholder}
+          />
+        </View>
         {fieldErrors.emailAddress && (
           <View style={styles.errorContainer}>
             <Ionicons name="alert-circle" size={14} color={Colors.error || '#dc3545'} />
@@ -697,24 +732,6 @@ const EnhancedIndividualMedicalQuotation = () => {
         </TouchableOpacity>
         <Heading4 style={styles.headerTitle}>Individual Medical Insurance</Heading4>
         <View style={{ width: 40 }} />
-      </View>
-
-      {/* Form Completion Progress */}
-      <View style={styles.progressContainer}>
-        <View style={styles.progressHeader}>
-          <Caption style={styles.progressLabel}>Form Completion</Caption>
-          <Caption style={styles.progressValue}>
-            {getFormCompletion().filled}/{getFormCompletion().total} Required Fields
-          </Caption>
-        </View>
-        <View style={styles.progressTrack}>
-          <View 
-            style={[
-              styles.progressFill, 
-              { width: `${getFormCompletion().percentage}%` }
-            ]} 
-          />
-        </View>
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 100 }]}>
@@ -808,6 +825,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   stepContainer: { paddingTop: 20 },
+  sectionHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: SPACING.lg, marginTop: SPACING.sm },
+  sectionCircle: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: BRAND.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: SPACING.md
+  },
+  sectionCircleText: { color: '#fff', fontWeight: '600' },
+  sectionTitle: { color: BRAND.primary, fontWeight: '600', fontSize: 16 },
   stepTitle: {
     fontSize: 20,
     fontWeight: '700',
@@ -825,16 +854,27 @@ const styles = StyleSheet.create({
   label: {
     color: '#000',
     marginBottom: 8,
+    fontWeight: '500',
   },
   required: {
     color: '#D5222B',
   },
+  cardInputContainer: {
+    backgroundColor: '#fff',
+    borderRadius: BORDER_RADIUS.lg,
+    paddingHorizontal: SPACING.lg,
+    paddingVertical: SPACING.sm,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
   input: {
     width: '100%',
-    borderRadius: BORDER_RADIUS.md,
-    backgroundColor: UI.backgroundGray,
-    paddingHorizontal: SPACING.lg,
-    paddingVertical: SPACING.md,
+    backgroundColor: 'transparent',
+    paddingHorizontal: 0,
+    paddingVertical: 8,
     fontSize: FONT_SIZES.input,
     color: UI.textPrimary,
   },

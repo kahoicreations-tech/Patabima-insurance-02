@@ -1,0 +1,762 @@
+[
+{
+  "model": "app.insuranceprovider",
+  "pk": "14900c1c-4327-4366-a1e9-585699b1a495",
+  "fields": {
+    "date_created": "2025-09-23T14:54:11.598Z",
+    "date_updated": "2025-09-26T21:18:17.658Z",
+    "is_active": true,
+    "name": "Jubilee Insurance",
+    "code": "JUBILEE",
+    "contact_email": "info@jubileekenya.com",
+    "contact_phone": null,
+    "address": null,
+    "supported_categories": [
+      "PRIVATE",
+      "COMMERCIAL",
+      "PSV",
+      "TUKTUK"
+    ],
+    "supported_payment_methods": [
+      "mpesa"
+    ],
+    "features": {
+      "dmvic": true,
+      "pricing": {
+        "PRIVATE_TOR": {
+          "base_premium": 1320.0,
+          "pricing_type": "fixed"
+        },
+        "PSV_UBER_TP": {
+          "base_premium": 4675.0,
+          "pricing_type": "fixed"
+        },
+        "PSV_UBER_COMP": {
+          "rate": 0.03496,
+          "min_premium": 13800.0,
+          "pricing_type": "percentage"
+        },
+        "TUKTUK_PSV_TP": {
+          "base_premium": 3500.0,
+          "pricing_type": "fixed"
+        },
+        "COMMERCIAL_TOR": {
+          "base_premium": 1760.0,
+          "pricing_type": "fixed"
+        },
+        "PSV_MATATU_1M_TP": {
+          "base_premium": 3500.0,
+          "pricing_type": "fixed"
+        },
+        "PRIVATE_THIRD_PARTY": {
+          "base_premium": 2975.0,
+          "pricing_type": "fixed"
+        },
+        "TUKTUK_COMMERCIAL_TP": {
+          "base_premium": 3500.0,
+          "pricing_type": "fixed"
+        },
+        "PRIVATE_COMPREHENSIVE": {
+          "rate": 0.0276,
+          "min_premium": 13800.0,
+          "pricing_type": "percentage"
+        },
+        "PRIVATE_MOTORCYCLE_TP": {
+          "base_premium": 2380.0,
+          "pricing_type": "fixed"
+        },
+        "TUKTUK_COMMERCIAL_COMP": {
+          "rate": 0.03,
+          "min_premium": 13800.0,
+          "pricing_type": "percentage"
+        },
+        "COMMERCIAL_OWN_GOODS_TP": {
+          "base_premium": 3825.0,
+          "pricing_type": "fixed"
+        },
+        "PRIVATE_THIRD_PARTY_EXT": {
+          "base_premium": 4500.0,
+          "pricing_type": "fixed"
+        },
+        "COMMERCIAL_OWN_GOODS_COMP": {
+          "rate": 0.0322,
+          "min_premium": 13800.0,
+          "pricing_type": "percentage"
+        },
+        "COMMERCIAL_GENERAL_CARTAGE_TP": {
+          "base_premium": 4420.0,
+          "pricing_type": "fixed"
+        }
+      },
+      "market_position": "budget"
+    },
+    "display_mode": "GROSS"
+  }
+},
+{
+  "model": "app.insuranceprovider",
+  "pk": "155e4474-a112-4231-b2b4-29e7f0a675e4",
+  "fields": {
+    "date_created": "2025-09-23T19:14:48.891Z",
+    "date_updated": "2025-09-30T10:43:56.412Z",
+    "is_active": true,
+    "name": "MONARCH",
+    "code": "MNK",
+    "contact_email": null,
+    "contact_phone": null,
+    "address": null,
+    "supported_categories": [],
+    "supported_payment_methods": [],
+    "features": {},
+    "display_mode": "GROSS"
+  }
+},
+{
+  "model": "app.insuranceprovider",
+  "pk": "2ccc38e1-d8c1-42e1-acca-19bbc0dd3c28",
+  "fields": {
+    "date_created": "2025-09-26T21:17:45.166Z",
+    "date_updated": "2025-10-27T11:49:00.973Z",
+    "is_active": true,
+    "name": "Britam Insurance",
+    "code": "BRITAM",
+    "contact_email": "info@britam.com",
+    "contact_phone": null,
+    "address": null,
+    "supported_categories": [
+      "PRIVATE",
+      "COMMERCIAL",
+      "PSV",
+      "MOTORCYCLE"
+    ],
+    "supported_payment_methods": [],
+    "features": {
+      "pricing": {
+        "PRIVATE_TOR": {
+          "base_premium": 1725,
+          "pricing_type": "fixed"
+        },
+        "PSV_UBER_TP": {
+          "base_premium": 6160,
+          "pricing_type": "fixed"
+        },
+        "PSV_UBER_COMP": {
+          "rate": 0.040999999999999995,
+          "min_premium": 16200.000000000002,
+          "pricing_type": "percentage"
+        },
+        "COMMERCIAL_TOR": {
+          "base_premium": 2300,
+          "pricing_type": "fixed"
+        },
+        "PSV_MATATU_1M_TP": {
+          "base_premium": 3500,
+          "pricing_type": "fixed"
+        },
+        "MOTORCYCLE_PSV_TP": {
+          "base_premium": 3500,
+          "pricing_type": "fixed"
+        },
+        "PRIVATE_THIRD_PARTY": {
+          "base_premium": 3920,
+          "pricing_type": "fixed"
+        },
+        "MOTORCYCLE_PRIVATE_TP": {
+          "base_premium": 3500,
+          "pricing_type": "fixed"
+        },
+        "PRIVATE_COMPREHENSIVE": {
+          "rate": 0.032400000000000005,
+          "min_premium": 16200.000000000002,
+          "pricing_type": "percentage"
+        },
+        "PRIVATE_MOTORCYCLE_TP": {
+          "base_premium": 3136,
+          "pricing_type": "fixed"
+        },
+        "COMMERCIAL_OWN_GOODS_TP": {
+          "base_premium": 5040,
+          "pricing_type": "fixed"
+        },
+        "MOTORCYCLE_PRIVATE_COMP": {
+          "rate": 0.03,
+          "min_premium": 16200.000000000002,
+          "pricing_type": "percentage"
+        },
+        "PRIVATE_THIRD_PARTY_EXT": {
+          "base_premium": 6000,
+          "pricing_type": "fixed",
+          "extendible_config": {
+            "balance_amount": 2400,
+            "initial_amount": 3600,
+            "grace_period_days": 7,
+            "initial_period_days": 30,
+            "total_annual_premium": 6000,
+            "allow_partial_extension": false,
+            "extension_deadline_days": 40,
+            "penalty_for_late_extension": 0
+          }
+        },
+        "COMMERCIAL_OWN_GOODS_COMP": {
+          "rate": 0.0378,
+          "min_premium": 16200.000000000002,
+          "pricing_type": "percentage"
+        },
+        "COMMERCIAL_GENERAL_CARTAGE_TP": {
+          "base_premium": 5824,
+          "pricing_type": "fixed"
+        }
+      },
+      "addon_overrides": {},
+      "market_position": "premium"
+    },
+    "display_mode": "GROSS"
+  }
+},
+{
+  "model": "app.insuranceprovider",
+  "pk": "39667f07-51d1-483b-a430-3fc2b52b05b9",
+  "fields": {
+    "date_created": "2025-09-26T21:17:24.521Z",
+    "date_updated": "2025-09-26T21:18:17.653Z",
+    "is_active": true,
+    "name": "CIC Insurance Group",
+    "code": "CIC",
+    "contact_email": "info@cic.co.ke",
+    "contact_phone": null,
+    "address": null,
+    "supported_categories": [
+      "PRIVATE",
+      "COMMERCIAL",
+      "PSV",
+      "MOTORCYCLE",
+      "TUKTUK"
+    ],
+    "supported_payment_methods": [],
+    "features": {
+      "pricing": {
+        "PRIVATE_TOR": {
+          "base_premium": 1725.0,
+          "pricing_type": "fixed"
+        },
+        "PSV_UBER_TP": {
+          "base_premium": 6160.0,
+          "pricing_type": "fixed"
+        },
+        "PSV_UBER_COMP": {
+          "rate": 0.04104,
+          "min_premium": 16200.000000000002,
+          "pricing_type": "percentage"
+        },
+        "TUKTUK_PSV_TP": {
+          "base_premium": 3500.0,
+          "pricing_type": "fixed"
+        },
+        "COMMERCIAL_TOR": {
+          "base_premium": 2300.0,
+          "pricing_type": "fixed"
+        },
+        "PSV_MATATU_1M_TP": {
+          "base_premium": 3500.0,
+          "pricing_type": "fixed"
+        },
+        "MOTORCYCLE_PSV_TP": {
+          "base_premium": 3500.0,
+          "pricing_type": "fixed"
+        },
+        "PRIVATE_THIRD_PARTY": {
+          "base_premium": 3920.0,
+          "pricing_type": "fixed"
+        },
+        "TUKTUK_COMMERCIAL_TP": {
+          "base_premium": 3500.0,
+          "pricing_type": "fixed"
+        },
+        "MOTORCYCLE_PRIVATE_TP": {
+          "base_premium": 3500.0,
+          "pricing_type": "fixed"
+        },
+        "PRIVATE_COMPREHENSIVE": {
+          "rate": 0.0324,
+          "min_premium": 16200.000000000002,
+          "pricing_type": "percentage"
+        },
+        "PRIVATE_MOTORCYCLE_TP": {
+          "base_premium": 3136.0,
+          "pricing_type": "fixed"
+        },
+        "TUKTUK_COMMERCIAL_COMP": {
+          "rate": 0.03,
+          "min_premium": 16200.000000000002,
+          "pricing_type": "percentage"
+        },
+        "COMMERCIAL_OWN_GOODS_TP": {
+          "base_premium": 5040.0,
+          "pricing_type": "fixed"
+        },
+        "MOTORCYCLE_PRIVATE_COMP": {
+          "rate": 0.03,
+          "min_premium": 16200.000000000002,
+          "pricing_type": "percentage"
+        },
+        "PRIVATE_THIRD_PARTY_EXT": {
+          "base_premium": 4500.0,
+          "pricing_type": "fixed"
+        },
+        "COMMERCIAL_OWN_GOODS_COMP": {
+          "rate": 0.0378,
+          "min_premium": 16200.000000000002,
+          "pricing_type": "percentage"
+        },
+        "COMMERCIAL_GENERAL_CARTAGE_TP": {
+          "base_premium": 5824.0,
+          "pricing_type": "fixed"
+        }
+      },
+      "market_position": "premium"
+    },
+    "display_mode": "GROSS"
+  }
+},
+{
+  "model": "app.insuranceprovider",
+  "pk": "771c566f-292a-49f1-97a9-19c2b967335e",
+  "fields": {
+    "date_created": "2025-09-24T08:29:37.723Z",
+    "date_updated": "2025-10-28T07:14:05.202Z",
+    "is_active": true,
+    "name": "PATABIMA INC",
+    "code": "PTA",
+    "contact_email": null,
+    "contact_phone": null,
+    "address": null,
+    "supported_categories": [
+      "PRIVATE",
+      "COMMERCIAL",
+      "MOTORCYCLE",
+      "TUKTUK"
+    ],
+    "supported_payment_methods": [
+      "MPESA",
+      "CARD",
+      "BANK_TRANSFER",
+      "CASH"
+    ],
+    "features": {
+      "pricing": {
+        "PRIVATE_TP": {
+          "base_premium": 2200,
+          "pricing_type": "fixed"
+        },
+        "PRIVATE_TOR": {
+          "base_premium": 300,
+          "pricing_type": "fixed"
+        },
+        "MOTORCYCLE_TP": {
+          "base_premium": 2500,
+          "pricing_type": "fixed"
+        },
+        "TUKTUK_PSV_TP": {
+          "base_premium": 3500,
+          "pricing_type": "fixed"
+        },
+        "COMMERCIAL_TOR": {
+          "base_premium": 1760,
+          "pricing_type": "fixed"
+        },
+        "MOTORCYCLE_TOR": {
+          "base_premium": 800,
+          "pricing_type": "fixed"
+        },
+        "MOTORCYCLE_PSV_TP": {
+          "base_premium": 3500,
+          "pricing_type": "fixed"
+        },
+        "PRIVATE_THIRD_PARTY": {
+          "base_premium": 2975,
+          "pricing_type": "fixed"
+        },
+        "TUKTUK_COMMERCIAL_TP": {
+          "base_premium": 3500,
+          "pricing_type": "fixed"
+        },
+        "MOTORCYCLE_PRIVATE_TP": {
+          "base_premium": 3500,
+          "pricing_type": "fixed"
+        },
+        "PRIVATE_COMPREHENSIVE": {
+          "rate": 0.03,
+          "min_premium": 15000,
+          "pricing_type": "percentage"
+        },
+        "PRIVATE_MOTORCYCLE_TP": {
+          "base_premium": 2380,
+          "pricing_type": "fixed"
+        },
+        "TUKTUK_COMMERCIAL_COMP": {
+          "rate": 0.03,
+          "min_premium": 13800,
+          "pricing_type": "percentage"
+        },
+        "COMMERCIAL_OWN_GOODS_TP": {
+          "base_premium": 3825,
+          "pricing_type": "fixed"
+        },
+        "MOTORCYCLE_PRIVATE_COMP": {
+          "rate": 0.03,
+          "min_premium": 13800,
+          "pricing_type": "percentage"
+        },
+        "PRIVATE_THIRD_PARTY_EXT": {
+          "base_premium": 2000,
+          "pricing_type": "fixed",
+          "extendible_config": {
+            "balance_amount": 0,
+            "initial_amount": 1,
+            "grace_period_days": 7,
+            "initial_period_days": 30,
+            "total_annual_premium": 2000,
+            "allow_partial_extension": false,
+            "extension_deadline_days": 30,
+            "penalty_for_late_extension": 0
+          }
+        },
+        "MOTORCYCLE_COMPREHENSIVE": {
+          "rate": 0.025,
+          "min_premium": 8000,
+          "pricing_type": "percentage"
+        },
+        "COMMERCIAL_OWN_GOODS_COMP": {
+          "rate": 0.0322,
+          "min_premium": 13800,
+          "pricing_type": "percentage"
+        },
+        "COMMERCIAL_GENERAL_CARTAGE_TP": {
+          "base_premium": 4420,
+          "pricing_type": "fixed"
+        }
+      },
+      "addon_overrides": {},
+      "market_position": "budget"
+    },
+    "display_mode": "GROSS"
+  }
+},
+{
+  "model": "app.insuranceprovider",
+  "pk": "aa85d49e-06a2-40ec-9a22-e09b453f8066",
+  "fields": {
+    "date_created": "2025-09-26T21:18:17.626Z",
+    "date_updated": "2025-10-27T11:44:05.934Z",
+    "is_active": true,
+    "name": "Madison Insurance",
+    "code": "MADISON",
+    "contact_email": "info@madison.co.ke",
+    "contact_phone": null,
+    "address": null,
+    "supported_categories": [
+      "PRIVATE",
+      "COMMERCIAL",
+      "MOTORCYCLE",
+      "TUKTUK"
+    ],
+    "supported_payment_methods": [],
+    "features": {
+      "pricing": {
+        "PRIVATE_TP": {
+          "base_premium": 2200,
+          "pricing_type": "fixed"
+        },
+        "PRIVATE_TOR": {
+          "base_premium": 600,
+          "pricing_type": "fixed"
+        },
+        "MOTORCYCLE_TP": {
+          "base_premium": 2000,
+          "pricing_type": "fixed"
+        },
+        "TUKTUK_PSV_TP": {
+          "base_premium": 3500,
+          "pricing_type": "fixed"
+        },
+        "COMMERCIAL_TOR": {
+          "base_premium": 1760,
+          "pricing_type": "fixed"
+        },
+        "MOTORCYCLE_TOR": {
+          "base_premium": 800,
+          "pricing_type": "fixed"
+        },
+        "MOTORCYCLE_PSV_TP": {
+          "base_premium": 3500,
+          "pricing_type": "fixed"
+        },
+        "PRIVATE_THIRD_PARTY": {
+          "base_premium": 2975,
+          "pricing_type": "fixed"
+        },
+        "TUKTUK_COMMERCIAL_TP": {
+          "base_premium": 3500,
+          "pricing_type": "fixed"
+        },
+        "MOTORCYCLE_PRIVATE_TP": {
+          "base_premium": 3500,
+          "pricing_type": "fixed"
+        },
+        "PRIVATE_COMPREHENSIVE": {
+          "rate": 0.03,
+          "min_premium": 15000,
+          "pricing_type": "percentage"
+        },
+        "PRIVATE_MOTORCYCLE_TP": {
+          "base_premium": 2380,
+          "pricing_type": "fixed"
+        },
+        "TUKTUK_COMMERCIAL_COMP": {
+          "rate": 0.03,
+          "min_premium": 13800,
+          "pricing_type": "percentage"
+        },
+        "COMMERCIAL_OWN_GOODS_TP": {
+          "base_premium": 3825,
+          "pricing_type": "fixed"
+        },
+        "MOTORCYCLE_PRIVATE_COMP": {
+          "rate": 0.03,
+          "min_premium": 13800,
+          "pricing_type": "percentage"
+        },
+        "PRIVATE_THIRD_PARTY_EXT": {
+          "base_premium": 7000,
+          "pricing_type": "fixed",
+          "extendible_config": {
+            "balance_amount": 2800,
+            "initial_amount": 4200,
+            "grace_period_days": 7,
+            "initial_period_days": 30,
+            "total_annual_premium": 7000,
+            "allow_partial_extension": false,
+            "extension_deadline_days": 30,
+            "penalty_for_late_extension": 0
+          }
+        },
+        "MOTORCYCLE_COMPREHENSIVE": {
+          "rate": 0.025,
+          "min_premium": 8000,
+          "pricing_type": "percentage"
+        },
+        "COMMERCIAL_OWN_GOODS_COMP": {
+          "rate": 0.0322,
+          "min_premium": 13800,
+          "pricing_type": "percentage"
+        },
+        "COMMERCIAL_GENERAL_CARTAGE_TP": {
+          "base_premium": 4420,
+          "pricing_type": "fixed"
+        }
+      },
+      "addon_overrides": {},
+      "market_position": "budget"
+    },
+    "display_mode": "GROSS"
+  }
+},
+{
+  "model": "app.insuranceprovider",
+  "pk": "acff5e40-a95b-4dd1-bc06-8e210e1e95bc",
+  "fields": {
+    "date_created": "2025-09-23T14:54:11.595Z",
+    "date_updated": "2025-09-26T21:18:17.655Z",
+    "is_active": true,
+    "name": "APA Insurance",
+    "code": "APA",
+    "contact_email": "info@apainsurance.org",
+    "contact_phone": null,
+    "address": null,
+    "supported_categories": [
+      "PRIVATE",
+      "COMMERCIAL",
+      "PSV",
+      "MOTORCYCLE",
+      "TUKTUK"
+    ],
+    "supported_payment_methods": [
+      "mpesa",
+      "dpo"
+    ],
+    "features": {
+      "dmvic": true,
+      "pricing": {
+        "PRIVATE_TOR": {
+          "base_premium": 1500.0,
+          "pricing_type": "fixed"
+        },
+        "PSV_UBER_TP": {
+          "base_premium": 5500.0,
+          "pricing_type": "fixed"
+        },
+        "PSV_UBER_COMP": {
+          "rate": 0.038,
+          "min_premium": 15000.0,
+          "pricing_type": "percentage"
+        },
+        "TUKTUK_PSV_TP": {
+          "base_premium": 3500.0,
+          "pricing_type": "fixed"
+        },
+        "COMMERCIAL_TOR": {
+          "base_premium": 2000.0,
+          "pricing_type": "fixed"
+        },
+        "PSV_MATATU_1M_TP": {
+          "base_premium": 3500.0,
+          "pricing_type": "fixed"
+        },
+        "MOTORCYCLE_PSV_TP": {
+          "base_premium": 3500.0,
+          "pricing_type": "fixed"
+        },
+        "PRIVATE_THIRD_PARTY": {
+          "base_premium": 3500.0,
+          "pricing_type": "fixed"
+        },
+        "TUKTUK_COMMERCIAL_TP": {
+          "base_premium": 3500.0,
+          "pricing_type": "fixed"
+        },
+        "MOTORCYCLE_PRIVATE_TP": {
+          "base_premium": 3500.0,
+          "pricing_type": "fixed"
+        },
+        "PRIVATE_COMPREHENSIVE": {
+          "rate": 0.03,
+          "min_premium": 15000.0,
+          "pricing_type": "percentage"
+        },
+        "PRIVATE_MOTORCYCLE_TP": {
+          "base_premium": 2800.0,
+          "pricing_type": "fixed"
+        },
+        "TUKTUK_COMMERCIAL_COMP": {
+          "rate": 0.03,
+          "min_premium": 15000.0,
+          "pricing_type": "percentage"
+        },
+        "COMMERCIAL_OWN_GOODS_TP": {
+          "base_premium": 4500.0,
+          "pricing_type": "fixed"
+        },
+        "MOTORCYCLE_PRIVATE_COMP": {
+          "rate": 0.03,
+          "min_premium": 15000.0,
+          "pricing_type": "percentage"
+        },
+        "PRIVATE_THIRD_PARTY_EXT": {
+          "base_premium": 4500.0,
+          "pricing_type": "fixed"
+        },
+        "COMMERCIAL_OWN_GOODS_COMP": {
+          "rate": 0.035,
+          "min_premium": 15000.0,
+          "pricing_type": "percentage"
+        },
+        "COMMERCIAL_GENERAL_CARTAGE_TP": {
+          "base_premium": 5200.0,
+          "pricing_type": "fixed"
+        }
+      },
+      "market_position": "competitive"
+    },
+    "display_mode": "GROSS"
+  }
+},
+{
+  "model": "app.insuranceprovider",
+  "pk": "cb192689-b1f2-4afd-b08a-c2bc2e6cc864",
+  "fields": {
+    "date_created": "2025-09-26T21:18:17.624Z",
+    "date_updated": "2025-10-27T11:46:45.929Z",
+    "is_active": true,
+    "name": "UAP Insurance",
+    "code": "UAP",
+    "contact_email": "info@uap.co.ke",
+    "contact_phone": null,
+    "address": null,
+    "supported_categories": [
+      "PRIVATE",
+      "COMMERCIAL",
+      "PSV",
+      "SPECIAL CLASS"
+    ],
+    "supported_payment_methods": [],
+    "features": {
+      "pricing": {
+        "PRIVATE_TOR": {
+          "base_premium": 1500,
+          "pricing_type": "fixed"
+        },
+        "PSV_UBER_TP": {
+          "base_premium": 5500,
+          "pricing_type": "fixed"
+        },
+        "PSV_UBER_COMP": {
+          "rate": 0.038,
+          "min_premium": 15000,
+          "pricing_type": "percentage"
+        },
+        "COMMERCIAL_TOR": {
+          "base_premium": 2000,
+          "pricing_type": "fixed"
+        },
+        "PSV_MATATU_1M_TP": {
+          "base_premium": 3500,
+          "pricing_type": "fixed"
+        },
+        "PRIVATE_THIRD_PARTY": {
+          "base_premium": 3500,
+          "pricing_type": "fixed"
+        },
+        "PRIVATE_COMPREHENSIVE": {
+          "rate": 0.03,
+          "min_premium": 15000,
+          "pricing_type": "percentage"
+        },
+        "PRIVATE_MOTORCYCLE_TP": {
+          "base_premium": 2800,
+          "pricing_type": "fixed"
+        },
+        "COMMERCIAL_OWN_GOODS_TP": {
+          "base_premium": 4500,
+          "pricing_type": "fixed"
+        },
+        "PRIVATE_THIRD_PARTY_EXT": {
+          "base_premium": 4500,
+          "pricing_type": "fixed",
+          "extendible_config": {
+            "balance_amount": 1800,
+            "initial_amount": 2700,
+            "grace_period_days": 7,
+            "initial_period_days": 30,
+            "total_annual_premium": 4500,
+            "allow_partial_extension": false,
+            "extension_deadline_days": 30,
+            "penalty_for_late_extension": 0
+          }
+        },
+        "COMMERCIAL_OWN_GOODS_COMP": {
+          "rate": 0.035,
+          "min_premium": 15000,
+          "pricing_type": "percentage"
+        },
+        "COMMERCIAL_GENERAL_CARTAGE_TP": {
+          "base_premium": 5200,
+          "pricing_type": "fixed"
+        }
+      },
+      "addon_overrides": {},
+      "market_position": "standard"
+    },
+    "display_mode": "GROSS"
+  }
+}
+]

@@ -32,6 +32,7 @@ import RenewalScreen from '../screens/main/RenewalScreen';
 import ExtensionScreen from '../screens/main/ExtensionScreen';
 import ExtensionPaymentScreen from '../screens/main/ExtensionPaymentScreen';
 import ClaimsSubmissionScreen from '../screens/main/ClaimsSubmissionScreen';
+import NotificationsScreen from '../screens/main/NotificationsScreen';
 
 // Import Admin screens
 import { AdminManualQuotePricingScreen } from '../screens/admin';
@@ -41,8 +42,10 @@ import DjangoTestScreen from '../screens/testing/DjangoTestScreen';
 
 import DiagnosticsScreen from '../screens/testing/DiagnosticsScreen';
 import MotorInsuranceContainer from '../screens/quotations/Motor 2/MotorInsuranceFlow/MotorInsuranceContainer';
+import Motor3Container from '../screens/quotations/Motor3/Motor3Container';
 import PolicySuccess from '../screens/quotations/Motor 2/MotorInsuranceFlow/Success/PolicySuccess';
 import QuoteSuccessScreen from '../screens/quotations/Motor 2/QuoteSuccessScreen';
+import QuotationActionsScreen from '../screens/quotations/QuotationActionsScreen';
 
 
 
@@ -100,8 +103,13 @@ const AppNavigator = () => {
             
             {/* Motor 2 Insurance Flow - NEW (use container; legacy screen disabled) */}
             <Stack.Screen name="Motor2Flow" component={MotorInsuranceContainer} />
+            
+            {/* Motor 3 Insurance Flow - BETA (performance optimized) */}
+            <Stack.Screen name="Motor3Container" component={Motor3Container} options={{ animation: 'slide_from_right' }} />
+            
             <Stack.Screen name="PolicySuccess" component={PolicySuccess} />
             <Stack.Screen name="QuoteSuccess" component={QuoteSuccessScreen} />
+            <Stack.Screen name="QuotationActions" component={QuotationActionsScreen} options={{ animation: 'slide_from_right' }} />
             
             <Stack.Screen name="InsuranceReceipt" component={InsuranceReceipt} options={{ animation: 'slide_from_right' }} />
             
@@ -129,6 +137,8 @@ const AppNavigator = () => {
             <Stack.Screen name="ExtensionPayment" component={ExtensionPaymentScreen} />
             
             <Stack.Screen name="ClaimsSubmission" component={ClaimsSubmissionScreen} />
+
+            <Stack.Screen name="Notifications" component={NotificationsScreen} options={{ animation: 'slide_from_right' }} />
             
             <Stack.Screen name="AdminManualQuotePricing" component={AdminManualQuotePricingScreen} />
             

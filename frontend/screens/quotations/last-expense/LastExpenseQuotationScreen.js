@@ -193,21 +193,24 @@ export default function LastExpenseQuotationScreen({ navigation }) {
       <ScrollView contentContainerStyle={[styles.scroll, { paddingBottom: insets.bottom + 100 }]} showsVerticalScrollIndicator={false}>
 
         {/* Section: Coverage Details */}
-        <View style={styles.sectionHeader}>
-          <Subtitle2 style={styles.sectionTitle}>Coverage Details</Subtitle2>
+        <View style={styles.stepHeader}>
+          <View style={styles.stepCircle}><Body1 style={styles.stepCircleText}>1</Body1></View>
+          <Subtitle2 style={styles.stepTitle}>Coverage Details</Subtitle2>
         </View>
 
         {/* Age */}
         <View style={styles.fieldBlock}>
           <Subtitle2 style={styles.label}>Client Age *</Subtitle2>
-          <TextInput
-            value={age}
-            onChangeText={setAge}
-            placeholder="Enter age (18-85)"
-            keyboardType="number-pad"
-            style={styles.input}
-            placeholderTextColor={UI.textSecondary}
-          />
+          <View style={styles.cardInputContainer}>
+            <TextInput
+              value={age}
+              onChangeText={setAge}
+              placeholder="Enter age (18-85)"
+              keyboardType="number-pad"
+              style={styles.input}
+              placeholderTextColor={UI.textSecondary}
+            />
+          </View>
         </View>
 
   {/* Cover Limit */}
@@ -229,77 +232,89 @@ export default function LastExpenseQuotationScreen({ navigation }) {
         {/* Number of Dependents */}
         <View style={styles.fieldBlock}>
           <Subtitle2 style={styles.label}>Number of Dependents *</Subtitle2>
-          <TextInput
-            value={numberOfDependents}
-            onChangeText={setNumberOfDependents}
-            placeholder="Enter number of dependents"
-            keyboardType="number-pad"
-            style={styles.input}
-            placeholderTextColor={UI.textSecondary}
-          />
+          <View style={styles.cardInputContainer}>
+            <TextInput
+              value={numberOfDependents}
+              onChangeText={setNumberOfDependents}
+              placeholder="Enter number of dependents"
+              keyboardType="number-pad"
+              style={styles.input}
+              placeholderTextColor={UI.textSecondary}
+            />
+          </View>
           <Body2 style={styles.helperText}>Number of people covered under this policy</Body2>
         </View>
 
         {/* Section: Client Information */}
-        <View style={styles.sectionHeader}>
-          <Subtitle2 style={styles.sectionTitle}>Client Information</Subtitle2>
+        <View style={styles.stepHeader}>
+          <View style={styles.stepCircle}><Body1 style={styles.stepCircleText}>2</Body1></View>
+          <Subtitle2 style={styles.stepTitle}>Client Information</Subtitle2>
         </View>
 
         {/* Full Name */}
         <View style={styles.fieldBlock}>
           <Subtitle2 style={styles.label}>Full Name *</Subtitle2>
-          <TextInput
-            value={fullName}
-            onChangeText={setFullName}
-            placeholder="Enter full name as per ID"
-            style={styles.input}
-            placeholderTextColor={UI.textSecondary}
-            autoCapitalize="words"
-          />
+          <View style={styles.cardInputContainer}>
+            <TextInput
+              value={fullName}
+              onChangeText={setFullName}
+              placeholder="Enter full name as per ID"
+              style={styles.input}
+              placeholderTextColor={UI.textSecondary}
+              autoCapitalize="words"
+            />
+          </View>
         </View>
 
         {/* ID/Passport Number */}
         <View style={styles.fieldBlock}>
           <Subtitle2 style={styles.label}>ID/Passport Number *</Subtitle2>
-          <TextInput
-            value={idNumber}
-            onChangeText={setIdNumber}
-            placeholder="Enter ID or passport number"
-            style={styles.input}
-            placeholderTextColor={UI.textSecondary}
-          />
+          <View style={styles.cardInputContainer}>
+            <TextInput
+              value={idNumber}
+              onChangeText={setIdNumber}
+              placeholder="Enter ID or passport number"
+              style={styles.input}
+              placeholderTextColor={UI.textSecondary}
+            />
+          </View>
         </View>
 
         {/* Phone Number */}
         <View style={styles.fieldBlock}>
           <Subtitle2 style={styles.label}>Phone Number *</Subtitle2>
-          <TextInput
-            value={phoneNumber}
-            onChangeText={setPhoneNumber}
-            placeholder="e.g., 0712345678"
-            keyboardType="phone-pad"
-            style={styles.input}
-            placeholderTextColor={UI.textSecondary}
-          />
+          <View style={styles.cardInputContainer}>
+            <TextInput
+              value={phoneNumber}
+              onChangeText={setPhoneNumber}
+              placeholder="e.g., 0712345678"
+              keyboardType="phone-pad"
+              style={styles.input}
+              placeholderTextColor={UI.textSecondary}
+            />
+          </View>
         </View>
 
         {/* Email Address */}
         <View style={styles.fieldBlock}>
           <Subtitle2 style={styles.label}>Email Address (Optional)</Subtitle2>
-          <TextInput
-            value={emailAddress}
-            onChangeText={setEmailAddress}
-            placeholder="Enter email address"
-            keyboardType="email-address"
-            autoCapitalize="none"
-            style={styles.input}
-            placeholderTextColor={UI.textSecondary}
-          />
+          <View style={styles.cardInputContainer}>
+            <TextInput
+              value={emailAddress}
+              onChangeText={setEmailAddress}
+              placeholder="Enter email address"
+              keyboardType="email-address"
+              autoCapitalize="none"
+              style={styles.input}
+              placeholderTextColor={UI.textSecondary}
+            />
+          </View>
         </View>
 
         {/* Section: Insurance Preferences */}
-        <View style={styles.sectionHeader}>
-          <Subtitle2 style={styles.sectionTitle}>Insurance Preferences</Subtitle2>
+        <View style={styles.stepHeader}>
+          <View style={styles.stepCircle}><Body1 style={styles.stepCircleText}>3</Body1></View>
+          <Subtitle2 style={styles.stepTitle}>Insurance Preferences</Subtitle2>
         </View>
 
         {/* Preferred Underwriters */}
@@ -361,30 +376,40 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   scroll: { padding: SPACING.lg },
-  sectionHeader: {
-    marginTop: SPACING.md,
-    marginBottom: SPACING.lg,
-    paddingBottom: SPACING.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: UI.border,
+  stepHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: SPACING.lg, marginTop: SPACING.xl },
+  stepCircle: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: BRAND.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: SPACING.md
   },
-  sectionTitle: {
-    fontSize: FONT_SIZES.h4,
-    fontWeight: '600',
-    color: BRAND.primary,
-  },
+  stepCircleText: { color: '#fff', fontWeight: '600' },
+  stepTitle: { color: BRAND.primary, fontWeight: '600' },
   fieldBlock: { marginBottom: SPACING.xxl },
-  label: { marginBottom: SPACING.sm },
+  label: { marginBottom: SPACING.sm, fontWeight: '500' },
   helperText: {
     marginTop: SPACING.xs,
     color: UI.textSecondary,
     fontSize: FONT_SIZES.caption,
   },
-  input: {
-    borderRadius: BORDER_RADIUS.md,
-    backgroundColor: UI.backgroundGray,
+  cardInputContainer: {
+    backgroundColor: '#fff',
+    borderRadius: BORDER_RADIUS.lg,
     paddingHorizontal: SPACING.lg,
-    paddingVertical: SPACING.md,
+    paddingVertical: SPACING.sm,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  input: {
+    backgroundColor: 'transparent',
+    paddingHorizontal: 0,
+    paddingVertical: 8,
     fontSize: FONT_SIZES.input,
     color: UI.textPrimary,
   },

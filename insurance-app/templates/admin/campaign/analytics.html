@@ -1,0 +1,17 @@
+{% extends "admin/base_site.html" %}
+{% block content %}
+<h1>Campaign Analytics</h1>
+{% if campaign %}
+<h3>{{ campaign.name }} — {{ campaign.status }}</h3>
+{% endif %}
+{% if totals %}
+<h4>Interactions</h4>
+<ul>
+	{% for row in totals %}
+		<li>{{ row.interaction_type }}: {{ row.total }}</li>
+	{% empty %}
+		<li>No interactions.</li>
+	{% endfor %}
+</ul>
+{% endif %}
+{% endblock %}

@@ -5,6 +5,39 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import motorPricingService from '../../../../../services/MotorInsurancePricingService';
 import { VEHICLE_MAKES, getModelsForMake } from '../../../../../constants/vehicleCatalog';
 import djangoAPI from '../../../../../services/DjangoAPIService';
+import StableTextInput from '../../../../../components/common/StableTextInput';
+
+// ✅ Phase 2: Field classification for data isolation
+// Shared fields persist across ALL subcategories (universal vehicle data)
+const SHARED_FIELDS = new Set([
+  'registrationNumber',
+  'identificationType',
+  'cover_start_date',
+  'financialInterest',
+  'logbookNumber',
+  'chassisNumber',
+  'engineNumber',
+  'make',
+  'make_other',
+  'model',
+  'model_other',
+  'year',
+  'color',
+  'bodyType',
+  'purpose',
+]);
+
+// Pricing fields are isolated per subcategory (model-specific)
+const PRICING_FIELDS = new Set([
+  'sum_insured',           // BRACKET model (Comprehensive)
+  'tonnage',              // TONNAGE model (Commercial)
+  'is_prime_mover',       // TONNAGE model
+  'is_over_limit',        // TONNAGE model
+  'capacity',             // PASSENGER model (PSV/TukTuk)
+  'passengerCapacity',    // Alias for capacity
+  'is_commercial_institutional', // PASSENGER model
+  'passenger_type',       // PASSENGER model
+]);
 
 // Module-level cache to preserve underwriter comparisons across remounts
 // This eliminates re-fetches and prevents keyboard blinks when the form rerenders
@@ -18,43 +51,14 @@ export const clearUnderwriterCache = () => {
   UnderwriterLocalCache.clear();
 };
 
-// Memoized TextInput component to prevent re-creation and focus loss
-const MemoizedTextInput = memo(({ 
-  fieldKey, 
-  value, 
-  onChangeText, 
-  placeholder, 
-  keyboardType, 
-  autoCapitalize, 
-  style,
-  hasError 
-}) => {
-  return (
-    <TextInput
-      style={[style, hasError && styles.inputError]}
-      value={value}
-      onChangeText={onChangeText}
-      placeholder={placeholder}
-      keyboardType={keyboardType}
-      autoCapitalize={autoCapitalize}
-      blurOnSubmit={false}
-      returnKeyType="next"
-    />
-  );
-}, (prevProps, nextProps) => {
-  // Custom comparison - only re-render if relevant props change
-  // Return TRUE to skip re-render (props are equal)
-  // IMPORTANT: We deliberately exclude onChangeText from comparison because
-  // it's recreated on every render, but the TextInput doesn't need to remount for that
-  return (
-    prevProps.value === nextProps.value &&
-    prevProps.hasError === nextProps.hasError &&
-    prevProps.placeholder === nextProps.placeholder &&
-    prevProps.fieldKey === nextProps.fieldKey &&
-    prevProps.keyboardType === nextProps.keyboardType &&
-    prevProps.autoCapitalize === nextProps.autoCapitalize
-  );
-});
+// ✅ Phase 2: Helper to classify field type for routing to correct handler
+function classifyField(fieldKey) {
+  if (SHARED_FIELDS.has(fieldKey)) return 'shared';
+  if (PRICING_FIELDS.has(fieldKey)) return 'pricing';
+  if (fieldKey === 'underwriter') return 'underwriter';
+  if (fieldKey.endsWith('_isAutoFilled') || fieldKey.endsWith('_autoFillSource')) return 'metadata';
+  return 'other'; // Fallback for unknown fields (treated as shared)
+}
 
 const DynamicPolicyForm = ({ 
   selectedProduct, 
@@ -72,6 +76,13 @@ const DynamicPolicyForm = ({
   dmvicError,
   existingCoverData,
 }) => {
+  console.log('🔄 [COMPONENT RENDER] DynamicPolicyForm render triggered');
+  console.log('📦 [PROPS CHECK] initialData identity:', initialData === window.__lastInitialData);
+  console.log('📦 [PROPS CHECK] onDataChange identity:', onDataChange === window.__lastOnDataChange);
+  console.log('📦 [PROPS CHECK] selectedProduct.id:', selectedProduct?.id);
+  window.__lastInitialData = initialData;
+  window.__lastOnDataChange = onDataChange;
+  
   const [formData, setFormData] = useState(initialData || values || {});
   const [validationErrors, setValidationErrors] = useState(errors);
   const [underwriterComparisons, setUnderwriterComparisons] = useState([]);
@@ -104,6 +115,7 @@ const DynamicPolicyForm = ({
 
   // Update refs when values change (without triggering re-renders)
   useEffect(() => {
+    console.log('🔵 [EFFECT] latestFormRef sync - formData updated');
     latestFormRef.current = formData;
     // ❌ REMOVED: Do NOT update underwriterSelectedRef here - it's managed in handleInputChange
     // This was causing race condition: useEffect runs after state updates, but onPress
@@ -635,20 +647,20 @@ const DynamicPolicyForm = ({
     // to avoid re-running on each render due to changing function identities.
   ]);
 
-
-
   const handleInputChange = useCallback((key, value) => {
     // ✅ CRITICAL GUARD: Prevent duplicate value updates (especially for radio buttons)
     // If the value is already set to the same value, skip all processing
     // This prevents re-render loops when clicking the same radio button repeatedly
     const currentValue = latestFormRef.current[key];
     if (currentValue === value) {
-      console.log(`[INPUT CHANGE SKIP] Field: ${key} already has value: ${value}`);
+      console.log(`⏭️  [INPUT CHANGE SKIP] Field: ${key} already has value: ${value}`);
       return; // Early exit - no changes needed
     }
     
     // ✅ DEBUG: Log all input changes to trace radio button clicks
-    console.log(`[INPUT CHANGE] Field: ${key}, Value: ${value}`);
+    console.log(`✏️  [INPUT CHANGE] Field: ${key}, Value: ${value}`);
+    console.log(`📊 [STATE CHECK] formData identity before update:`, formData === window.__lastFormData);
+    window.__lastFormData = formData;
     
     // Format currency inputs
     if (getFormFields.find(f => f.key === key)?.type === 'currency') {
@@ -750,20 +762,10 @@ const DynamicPolicyForm = ({
     // but DEBOUNCE state updates to prevent keyboard dismissal
     latestFormRef.current = newFormData;
     
-    // For registration field, debounce state update to prevent keyboard dismissal
-    if (key === 'registrationNumber') {
-      // Clear existing state update timeout
-      if (formDataUpdateTimeoutRef.current) {
-        clearTimeout(formDataUpdateTimeoutRef.current);
-      }
-      // Schedule state update after user stops typing (400ms)
-      formDataUpdateTimeoutRef.current = setTimeout(() => {
-        setFormData(newFormData);
-      }, 400);
-    } else {
-      // For non-registration fields, update state immediately
-      setFormData(newFormData);
-    }
+    // ✅ FIX: Update state immediately for ALL fields (including registration)
+    // This keeps keyboard visible while typing
+    // MemoizedTextInput prevents unnecessary re-renders via custom comparison
+    setFormData(newFormData);
 
     // Real-time validation
     const error = validateField(key, value);
@@ -774,14 +776,20 @@ const DynamicPolicyForm = ({
 
     // ✅ REMOVED: DMVIC triggers on registration/date change - now handled by Next button only
 
-    // Notify parent component with a small debounce to prevent focus loss
+    // ✅ Phase 2: Notify parent with field classification logging
+    // Debounce parent notification to reduce Context updates (400ms for text, 100ms for radio/select)
     if (notifyTimeoutRef.current) {
       clearTimeout(notifyTimeoutRef.current);
     }
     if (onDataChange) {
+      // Longer debounce for text inputs (400ms), shorter for selections (100ms)
+      const debounceMs = (key === 'registrationNumber' || key.includes('Number') || key === 'make_other' || key === 'model_other') ? 400 : 100;
       notifyTimeoutRef.current = setTimeout(() => {
+        const fieldType = classifyField(key);
+        console.log(`📤 [PARENT NOTIFY] Field: ${key}, Type: ${fieldType}, sending complete data`);
+        // Send complete form data (Context compatibility layer merges into separated structure)
         onDataChange(latestFormRef.current);
-      }, 250);
+      }, debounceMs);
     }
     if (onChange) {
       onChange(newFormData);
@@ -869,6 +877,21 @@ const DynamicPolicyForm = ({
 
     return null;
   }, [getFormFields]); // Only depend on getFormFields which is already memoized
+
+  // Memoized map of field handlers to prevent recreation on every render
+  // This keeps the TextInput from losing focus
+  const fieldHandlers = useMemo(() => {
+    const handlers = {};
+    getFormFields.forEach(field => {
+      handlers[field.key] = (value) => {
+        const isFormattedNumber = field.type === 'formatted_number';
+        const cleanValue = isFormattedNumber ? value.replace(/\s/g, '') : value;
+        handleInputChange(field.key, cleanValue);
+      };
+    });
+    return handlers;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [getFormFields]); // Intentionally exclude handleInputChange to keep handlers stable
 
   const renderField = (field) => {
     // Check if this field should be locked
@@ -1279,22 +1302,19 @@ const DynamicPolicyForm = ({
             </Text>
             {/* Phase 1.2: Registration field with inline DMVIC indicators */}
             <View style={field.key === 'registrationNumber' ? styles.registrationFieldContainer : null}>
-              <MemoizedTextInput
+              <StableTextInput
                 key={field.key}
-                fieldKey={field.key}
                 value={displayValue}
-                onChangeText={(value) => {
-                  const cleanValue = isFormattedNumber ? value.replace(/\s/g, '') : value;
-                  handleInputChange(field.key, cleanValue);
-                }}
+                onChangeText={fieldHandlers[field.key]}
                 placeholder={dynamicPlaceholder}
                 keyboardType={field.type === 'number' || field.type === 'currency' || field.type === 'formatted_number' ? 'numeric' : 'default'}
-                autoCapitalize={field.key === 'registrationNumber' ? 'characters' : 'words'}
+                autoCapitalize={field.key === 'registrationNumber' ? "characters" : "words"}
                 style={[
                   styles.input,
-                  field.key === 'registrationNumber' && styles.registrationInput
+                  field.key === 'registrationNumber' && styles.registrationInput,
+                  validationErrors[field.key] && styles.inputError
                 ]}
-                hasError={!!validationErrors[field.key]}
+                debounceMs={400}
               />
               {/* Phase 1.2: Inline loading indicator for registration */}
               {field.key === 'registrationNumber' && dmvicLoading && (
@@ -2038,15 +2058,34 @@ const styles = StyleSheet.create({
 // React.memo's comparison function returns TRUE to SKIP re-render (props are equal)
 // and FALSE to RE-RENDER (props changed)
 export default React.memo(DynamicPolicyForm, (prevProps, nextProps) => {
-  // Only re-render if these critical props change
+  // Only re-render if these critical DATA props change
+  // Intentionally EXCLUDE function props (onDataChange, onUnderwriterSelection, onUnderwriterComparison)
+  // because function identity changes don't require component re-render
   // Return TRUE if all are equal (skip re-render) - this prevents keyboard dismissal
-  return (
+  
+  const propsEqual = (
     prevProps.selectedProduct?.id === nextProps.selectedProduct?.id &&
     prevProps.selectedProduct?.subcategory_code === nextProps.selectedProduct?.subcategory_code &&
     prevProps.productType === nextProps.productType &&
     prevProps.initialData === nextProps.initialData &&
     prevProps.minCoverStartDate === nextProps.minCoverStartDate &&
     prevProps.dmvicLoading === nextProps.dmvicLoading &&
-    prevProps.onDataChange === nextProps.onDataChange
+    prevProps.dmvicError === nextProps.dmvicError &&
+    prevProps.existingCoverData === nextProps.existingCoverData
+    // ✅ CRITICAL: Exclude function props from comparison:
+    // - onDataChange
+    // - onUnderwriterSelection
+    // - onUnderwriterComparison
   );
+  
+  console.log('🔍 [REACT.MEMO] Comparison result:', propsEqual ? '✅ SKIP re-render' : '❌ ALLOW re-render');
+  if (!propsEqual) {
+    console.log('🔍 [REACT.MEMO] Props changed:');
+    console.log('  - selectedProduct.id:', prevProps.selectedProduct?.id, '→', nextProps.selectedProduct?.id);
+    console.log('  - initialData:', prevProps.initialData === nextProps.initialData ? '✅ same' : '❌ CHANGED');
+    console.log('  - dmvicLoading:', prevProps.dmvicLoading, '→', nextProps.dmvicLoading);
+    console.log('  - dmvicError:', prevProps.dmvicError, '→', nextProps.dmvicError);
+  }
+  
+  return propsEqual;
 });

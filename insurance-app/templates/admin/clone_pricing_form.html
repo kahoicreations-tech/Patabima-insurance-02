@@ -1,0 +1,17 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+{% block content %}
+<h1>Clone Pricing to Underwriter</h1>
+<form method="post">{% csrf_token %}
+  <div>
+    <label for="id_target_underwriter">Target Insurance Provider</label>
+    {{ form.target_underwriter }}
+  </div>
+  <div>
+    <label for="id_adjustment_percentage">Adjustment %</label>
+    {{ form.adjustment_percentage }}
+  </div>
+  <input type="hidden" name="apply" value="1" />
+  <button type="submit" class="default">Clone</button>
+</form>
+{% endblock %}

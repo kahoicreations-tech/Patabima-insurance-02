@@ -1,0 +1,2163 @@
+ API Specifications
+4.2  Search - Member Company
+
+4.2.1 Vehicle Search - Member Company
+Version 1.8.1
+URL :   https://uat-api.dmvic.com/api/v6/Integration/VehicleSearch
+Method : POST
+Note: Please note that X509 client certificate should be installed in your server and to be attached to the header during every request of API
+4.2.2  Request Body
+4.2.2.1 Body
+ParameterMandatory (Y/N)DataTypeData FormatValidation MessageVehicleRegistrationNumberYesKDC324FThe vehicle Registration Number's maximum length is 15 Example Body Content
+{
+  "VehicleRegistrationNumber": "KDC324F"
+}
+ 
+Please find below the sample vehicle registration numbers from the UAT environment that exist in the NTSA records.
+4.2.2.2 Headers
+Parameter nameMandatory (Yes/No)DataTypeData FormatAuthorizationYesstringBearer << Token received from Login API on Successful login >>ClientIDYesstring<< Will be provided in a separate Email >>4.2.3 Response Elements
+ElementsDescriptionExampleInputsContains the input parameters specified by the querySuccessBit value true/false to differentiate if the request is succeeded or not.true/falsecallbackObjIf the request is succeeded, then the Json Object of the following parameters will be returnedPolicyHistory VehicleErrorER001 - Input json format is Incorrect
+ER002 - Unknown Error
+ER003 - Mandatory field is missingAPIRequestNumberO-AA00014.2.4 Response JSON (Example)
+4.2.4.1 Sample Success Response (If the provided vehicle registration number is available in NTSA)
+{
+  "Vehicle": {
+    "RegistrationNumber": "KDC324F",
+    "ChassisNumber": "NSP130-2135932",
+    "RegistrationYear": "2013",
+    "EngineNumber": "1NR-0632177",
+    "Make": "TOYOTA",
+    "Model": "VITZ",
+    "BodyType": "S.WAGON"
+  },
+  "PolicyHistory": [
+    {
+      "PolicyNumber": "Business Confidential",
+      "TypeOfCover": "Business Confidential",
+      "CoverStartDate": "Business Confidential",
+      "CoverEndDate": "15/10/2026",
+      "MemberCompany": "Business Confidential"
+    }
+  ],
+  "APIRequestNumber": "UAT-OIV9636",
+  "success": true
+}
+4.2.4.2 Sample Response (If the provided vehicle registration number is not available in NTSA)
+{
+  "Inputs": {
+    "VehicleRegistrationNumber": "ABC98475"
+  },
+  "callbackObj": {
+    "Vehicle": {
+      "VehicleRegistrationNumber": null,
+      "ChassisNumber": null,
+      "VehicleRegistrationYear": null,
+      "EngineNumber": null,
+      "VehicleMake": null,
+      "VehicleModel": null,
+      "BodyType": null
+    },
+    "PolicyHistory": []
+  },
+  "success": true,
+  "Error": [],
+  "APIRequestNumber": "UAT-OIV9474",
+  "DMVICRefNo": null
+}
+
+
+
+API Specifications
+4.4  Issue Certificate - Member Company
+There are 5 different types of certificates that can be issued as part of any insurance company. So, each type has an API for the issuance. This will help insurance companies to understand different types of parameters as API inputs for every certificate Type.
+
+4.4.1 For Type A certificates - Member Company
+Version 1.8.1
+ Purpose:To Issue Type A DMVIC certificate from the insurance companies’ core-system via DMVIC API
+URL :   https://uat-api.dmvic.com/api/v6/Integration/IssuanceTypeACertificate
+Method : POST
+Note: Please note that X509 client certificate should be installed in your server and to be attached to the header during every request of API
+4.4.1.1  Request Body
+4.4.1.1.1 Body
+ParameterMandatory (Y/N)DataTypeData FormatValidation MessageTypeOfCertificateYesint1PSV Unmarked6Type A Bus7Type A Matatu8Type A TaxiType of certificate is wrongIntermediaryIRANumberNostringExample: IRA/06/357/2019TypeofcoverYesint1Comprehensive (COMP)2Third-party (TPO)3Third-party, Theft & Fire (TPTF)Type of Cover is not validPolicyholderYesstringpolicynumberYesstringCommencingdateYesstringDD/MM/YYYY1Commencing Date is invalid2For the below types certificate cannot be issued with future dates Type-A Matatu, Type-A Bus. You cannot issue Future date.Kindly change datesExpiringdateYesstringDD/MM/YYYYRegistrationnumberNostringChassisnumberYesstringThe chassis number minimum length is 4 and maximum length is 20. Only accepts alphanumeric characters and does not support any special charactersPhonenumberYesstring999999999Please enter a valid Kenyan numberBodytypeYesstringLicensedtocarryYesintVehiclemakeNostringVehiclemodelNostringYearofregistrationYesintYYYYEnginenumberNostringEmailYesstring<<Email id to which the Certificate pdf will be sent on successful Issuance>>Email is not validSumInsuredYes (when Comprehensive (COMP) & Third-party, Theft & Fire (TPTF))intNew InsuredPINNew YesNew stringInsured PIN number maximum length is 11New YearofmanufactureNew NoNew intNew YYYYNew HudumaNumberNew NoNew stringNew 123456789012 Example Body Content
+{
+  "IntermediaryIRANumber": "IRA/XX/XXX/2025",
+  "TypeOfCertificate": 7,
+  "Typeofcover": 100,
+  "Policyholder": "SA",
+  "policynumber": "SAPOL123",
+  "Commencingdate": "01/11/2025",
+  "Expiringdate": "02/11/2025",
+  "Registrationnumber": "KCW708R",
+  "Chassisnumber": "{{ChassisNumber}}",
+  "Phonenumber": "789789789",
+  "Bodytype": "{{BodyType}}",
+  "Licensedtocarry": 9,
+  "Vehiclemake": "{{VehicleMake}}",
+  "Vehiclemodel": "{{VehicleModel}}",
+  "Enginenumber": "{{EngineNumber}}",
+  "Email": "chandrakala@swiftant.com",
+  "SumInsured": 100000,
+  "InsuredPIN": "A123456789A",
+  "Yearofmanufacture": 2019,
+  "HudumaNumber": "123456789012"
+}
+4.4.1.1.2 Headers
+Parameter nameMandatory (Y/N)DataTypeData FormatAuthorizationYesstringBearer <<Token received from Login API on Successful login>>ClientIDYesstring<<Will be provided in a separate Email>>4.4.1.2 Response Elements
+ElementsDescriptionExampleInputsContains the input parameters specified by the querySuccessBit value true/false to differentiate if the request is succeeded or nottrue/falsecallbackObjIf the request is succeeded, then the Json Object of the following parameters will be returnedTransactionNo
+actualCNo
+Email- CertificatePDFErrorER001 - Input json format is Incorrect
+ER002 - Unknown Error
+ER003 - Mandatory field is missing
+ER004 - Input not valid
+ER005 - Double Insurance
+ER006 - No sufficient Inventory
+ER007 - Data Validation ErrorAPIRequestNumberO-AA00014.4.1.3 Response JSON (Example)
+4.4.1.3.1 Success Response
+{
+  "Inputs": {
+    "TypeOfCertificate": 7,
+    "TypeOfCover": 100,
+    "Policyholder": "SA",
+    "PolicyNumber": "SAPOL123",
+    "CommencingDate": "27/10/2025",
+    "ExpiringDate": "28/10/2025",
+    "RegistrationNumber": "KCW708R",
+    "ChassisNumber": "74710-99432",
+    "PhoneNumber": "789789789",
+    "BodyType": "BT",
+    "LicensedToCarry": 9,
+    "VehicleMake": "AUDI",
+    "VehicleModel": "AUDI",
+    "EngineNumber": "QR25-508979B",
+    "Email": "chandrakala@swiftant.com",
+    "SumInsured": 100000,
+    "InsuredPIN": "A123456789A",
+    "YearOfManufacture": 2019,
+    "HudumaNumber": "123456789012"
+  },
+  "Transaction": {
+    "TransactionNo": "UAT-QAA7145",
+    "CertificateNo": "A12318651"
+  },
+  "Email": "chandrakala@swiftant.com",
+  "APIRequestNumber": "UAT-OJC7110",
+  "success": true
+}
+4.4.1.3.2 Error Response - ER001
+{
+  "Inputs": {
+    "IntermediaryIRANumber": "IRA/XX/XXX/2025",
+    "TypeOfCertificate": 7,
+    "Typeofcover": 100,
+    "Policyholder": "SA",
+    "policynumber": "SAPOL123",
+    "Commencingdate": "27/10/2025",
+    "Expiringdate": "28/10/2025",
+    "Registrationnumber": "KCW708R",
+    "Chassisnumber": "74710-99203",
+    "Phonenumber": "789789789",
+    "Bodytype": "BT",
+    "Licensedtocarry": 6,
+    "VehicleMake": "AUDI",
+    "Vehiclemodel": "AUDI",
+    "Enginenumber": "ENG123",
+    "Email": "xxxxx@dmvic.info",
+    "SumInsured": 100000,
+    "InsuredPIN": "A123456789A",
+    "Yearofmanufacture": 2019,
+    "HudumaNumber": "123456789012"
+  },
+  "callbackObj": {},
+  "success": false,
+  "Error": [
+    {
+      "errorCode": "ER001",
+      "errorText": "Input json format is incorrect."
+    }
+  ],
+  "APIRequestNumber": "O-AA0025"
+}
+4.4.1.3.3 Error Response - ER003 & ER004
+{
+  "Inputs": {
+    "IntermediaryIRANumber": "IRA/XX/XXX/2025",
+    "TypeOfCertificate": 7,
+    "TypeOfCover": 100,
+    "Policyholder": "SA",
+    "CommencingDate": "27/10/2025",
+    "ExpiringDate": "28/10/2025",
+    "RegistrationNumber": "KCW708R",
+    "ChassisNumber": "70718-00943",
+    "PhoneNumber": "789789789",
+    "BodyType": "BT",
+    "LicensedToCarry": 6,
+    "VehicleMake": "AUDI",
+    "VehicleModel": "AUDI",
+    "EngineNumber": "ENG123",
+    "Email": "xxxxx@dmvic.info",
+    "SumInsured": 100000,
+    "InsuredPIN": "A123456789A",
+    "YearOfManufacture": 2019,
+    "HudumaNumber": "123456789012"
+  },
+  "Errors": [
+    {
+      "code": "ER003",
+      "message": "Policy Number is required"
+    },
+    {
+      "code": "ER004",
+      "message": "Matatu certificates are issued for passengers ranging from 7 to a maximum of 35"
+    },
+    {
+      "code": "",
+      "message": "You cannot issue Future date.Kindly change dates"
+    }
+  ],
+  "APIRequestNumber": "O-AA0027",
+  "success": false
+}
+4.4.1.3.4 Error Response - ER005
+{
+  "Inputs": {
+    "IntermediaryIRANumber": "IRA/XX/XXX/2025",
+    "TypeOfCertificate": 7,
+    "TypeOfCover": 100,
+    "Policyholder": "SA",
+    "PolicyNumber": "SAPOL123",
+    "CommencingDate": "27/10/2025",
+    "ExpiringDate": "28/10/2025",
+    "RegistrationNumber": "KCW708R",
+    "ChassisNumber": "74710-99432",
+    "PhoneNumber": "789789789",
+    "BodyType": "BT",
+    "LicensedToCarry": 9,
+    "VehicleMake": "AUDI",
+    "VehicleModel": "AUDI",
+    "EngineNumber": "ENG123",
+    "Email": "xxxxx@dmvic.info",
+    "SumInsured": 100000,
+    "InsuredPIN": "A123456789A",
+    "YearOfManufacture": 2019,
+    "HudumaNumber": "123456789012"
+  },
+  "Errors": [
+    {
+      "code": "ER005",
+      "message": "This vehicle is already covered under an active policy. To obtain a new quote, set the cover start date after the current policy’s expiry\r\n"
+    }
+  ],
+  "APIRequestNumber": "O-AA0023",
+  "success": false
+}
+4.4.1.3.5 Error Response - ER006
+{
+  "Inputs": {
+    "IntermediaryIRANumber": "IRA/XX/XXX/2025",
+    "TypeOfCertificate": 7,
+    "TypeOfCover": 100,
+    "Policyholder": "SA",
+    "PolicyNumber": "SAPOL123",
+    "CommencingDate": "27/10/2025",
+    "ExpiringDate": "28/10/2025",
+    "RegistrationNumber": "KCW708R",
+    "ChassisNumber": "74710-99432",
+    "PhoneNumber": "789789789",
+    "BodyType": "BT",
+    "LicensedToCarry": 9,
+    "VehicleMake": "AUDI",
+    "VehicleModel": "AUDI",
+    "EngineNumber": "ENG123",
+    "Email": "xxxxx@dmvic.info",
+    "SumInsured": 100000,
+    "InsuredPIN": "A123456789A",
+    "YearOfManufacture": 2019,
+    "HudumaNumber": "123456789012"
+  },
+  "Errors": [
+    {
+      "code": "ER006",
+      "message": "No sufficient Inventory"
+    }
+  ],
+  "APIRequestNumber": "O-AA0023",
+  "success": false
+}
+4.4.1.3.6 Error Response - NTSA Response (If the Vehicle Number or Chassis Number does not exist in the NTSA records.)
+{
+  "Inputs": {
+    "typeofcover": 100,
+    "policyholder": "SA",
+    "policynumber": "SAPOL123",
+    "commencingdate": "17/12/2025",
+    "expiringdate": "19/12/2025",
+    "registrationnumber": "qwertyu",
+    "chassisnumber": "",
+    "phonenumber": "789789789",
+    "bodytype": "",
+    "vehiclemake": "",
+    "vehiclemodel": "",
+    "enginenumber": "",
+    "email": "chandrakala@swiftant.com",
+    "suminsured": 100000,
+    "insuredpin": "A123456789X",
+    "yearofmanufacture": null,
+    "hudumanumber": "123456789012"
+  },
+  "callbackObj": {},
+  "success": false,
+  "Error": [
+    {
+      "errorCode": "ER003",
+      "errorText": "Chassis Number is required"
+    },
+    {
+      "errorCode": "ER003",
+      "errorText": "Body Type is required"
+    }
+  ],
+  "APIRequestNumber": "UAT-OJC6921",
+  "DMVICRefNo": null
+}
+4.4.1.3.6 Policy Alert
+{
+  "Inputs": {
+    "typeofcover": 100,
+    "policyholder": "SA",
+    "policynumber": "SAPOL123",
+    "commencingdate": "27/10/2025",
+    "expiringdate": "28/10/2025",
+    "registrationnumber": "KCW708R",
+    "chassisnumber": "NZE164-7031532",
+    "phonenumber": "789789789",
+    "bodytype": "S.WAGON",
+    "vehiclemake": "TOYOTA",
+    "vehiclemodel": "FIELDER",
+    "enginenumber": "1NZ-E755455",
+    "email": "chandrakala@swiftant.com",
+    "suminsured": 100000,
+    "insuredpin": "A123456789X",
+    "hudumanumber": "123456789012"
+  },
+  "Issuance": {
+    "RequestID": "UAT-AAB7873",
+    "Message": "If you would like to continue the issuance process with further validation, please contact your technical support. For issuance without any change, use https://uat-api.dmvic.com/api/V5/Integration/ConfirmCertificateIssuance"
+  },
+  "Errors": [
+    {
+      "code": "ER007",
+      "message": "Registration number (KDA945Z) and chassis number (NZE1647031532) combination have been changed from the previously issued policy"
+    },
+    {
+      "code": "ER007",
+      "message": "Engine number have been changed from the previously issued certificate"
+    },
+    {
+      "code": "ER007",
+      "message": "Vehicle Model have been changed from the previously issued certificate"
+    },
+    {
+      "code": "ER007",
+      "message": "There is a 203 days gap between the previous insurance and the proposed one"
+    }
+  ],
+  "APIRequestNumber": "UAT-OJC6934",
+  "success": false
+}
+
+API Specifications
+4.4  Issue Certificate - Member Company
+
+4.4.2 For Type B certificates - Member Company
+Version 1.8.1
+ Purpose:To Issue Type B DMVIC certificate from the insurance companies’ core-system via DMVIC API
+URL :   https://uat-api.dmvic.com/api/v6/Integration/IssuanceTypeBCertificate
+Method : POST
+Note: Please note that X509 client certificate should be installed in your server and to be attached to the header during every request of API
+4.4.2.1  Request Body
+4.4.2.1.1 Body
+ParameterMandatory (Y/N)DataTypeFormatValidation MessageIntermediaryIRANumberNostringExample: IRA/06/357/2019TypeofcoverYesint100Comprehensive (COMP)200Third-party (TPO)300Third-party, Theft & Fire (TPTF)Type of Cover is not validVehicleTypeYesint1MOTOR COMMERCIAL OWN GOODS2MOTOR COMMERCIAL GENERAL CARTAGE3MOTOR INSTITUTIONAL VEHICLE4MOTOR SPECIAL VEHICLES5TANKERS (LIQUID CARRYING)6MOTOR TRADE (ROAD RISK)PolicyholderYesstringpolicynumberYesstringCommencingdateYesstringDD/MM/YYYYCommencing Date is invalidExpiringdateYesstringDD/MM/YYYYRegistrationnumberNostringChassisnumberYesstringThe chassis number minimum length is 4 and maximum length is 20. Only accepts alphanumeric characters and does not support any special charactersPhonenumberYesstring999999999Please enter a valid Kenyan numberBodytypeYesstringTonnageCarryingCapacityYesintVehiclemakeNostringVehiclemodelNostringYearofregistrationYesintYYYYEnginenumberNostringEmailYesstring<<Email id to which the Certificate pdf will be sent on successful Issuance>>Email is not validSumInsuredYes (when Comprehensive (COMP) & Third-party, Theft & Fire (TPTF))intInsuredPINYesstringInsured PIN number maximum length is 11YearofmanufactureNointYYYYHudumaNumberNostring123456789012New TonnageNew YesNew intNew 10New LicensedtocarryNew Yes(when MOTOR INSTITUTIONAL VEHICLE)New intNew 10 Example Body Content
+{
+  "IntermediaryIRANumber": "IRA/XX/XXX/2025",
+  "vehicletype": 1,
+  "typeofcover": 100,
+  "policyholder": "SA",
+  "policynumber": "SAPOL123",
+  "commencingdate": "28/11/2025",
+  "expiringdate": "29/11/2025",
+  "registrationnumber": "KCW708R",
+  "chassisnumber": "{{ChassisNumber}}",
+  "phonenumber": "789789789",
+  "bodytype": "{{BodyType}}",
+  "tonnage": 1,
+  "vehiclemake": "{{VehicleMake}}",
+  "vehiclemodel": "{{VehicleModel}}",
+  "enginenumber": "1NZ-D259850",
+  "email": "chandrakala@swiftant.com",
+  "suminsured": 100000,
+  "insuredpin": "A123456789A",
+  "yearofmanufacture": 2019,
+  "hudumanumber": "123456789012",
+  "licensedtocarry": 10
+}
+4.4.2.1.2 Headers
+Parameter nameMandatory (Y/N)DataTypeData FormatAuthorizationYesstringBearer <<Token received from Login API on Successful login>>ClientIDYesstring<<Will be provided in a separate Email>>4.4.2.2 Response Elements
+ElementsDescriptionExampleInputsContains the input parameters specified by the querySuccessBit value true/false to differentiate if the request is succeeded or nottrue/falsecallbackObjIf the request is succeeded, then the Json Object of the following parameters will be returnedTransactionNo
+actualCNo
+Email- CertificatePDFErrorER001 - Input json format is Incorrect
+ER002 - Unknown Error
+ER003 - Mandatory field is missing
+ER004 - Input not valid
+ER005 - Double Insurance
+ER006 - No sufficient Inventory
+ER007 - Data Validation ErrorAPIRequestNumberO-AA00014.4.2.2 Response JSON (Example)
+4.4.2.3.1 Success Response
+{
+  "Inputs": {
+    "vehicletype": 1,
+    "typeofcover": 100,
+    "policyholder": "SA",
+    "policynumber": "SAPOL123",
+    "commencingdate": "28/10/2025",
+    "expiringdate": "29/10/2025",
+    "registrationnumber": "KCC379E",
+    "chassisnumber": "NCP51-0207370",
+    "phonenumber": "789789789",
+    "bodytype": "S.WAGON",
+    "tonnage": 1,
+    "vehiclemake": "TOYOTA",
+    "vehiclemodel": "CBE-NCP51V",
+    "enginenumber": "1NZ-D259850",
+    "email": "chandrakala@swiftant.com",
+    "suminsured": 100000,
+    "insuredpin": "A123456789A",
+    "yearofmanufacture": 2019,
+    "hudumanumber": "123456789012",
+    "licensedtocarry": 10
+  },
+  "callbackObj": {
+    "issueCertificate": {
+      "TransactionNo": "UAT-QAA7179",
+      "actualCNo": "B13003566",
+      "Email": "chandrakala@swiftant.com"
+    }
+  },
+  "success": true,
+  "Error": [],
+  "APIRequestNumber": "UAT-OJD0813",
+  "DMVICRefNo": null
+}
+4.4.2.4 Policy Alert
+{
+  "Inputs": {
+    "vehicletype": 1,
+    "typeofcover": 100,
+    "policyholder": "SA",
+    "policynumber": "SAPOL123",
+    "commencingdate": "28/11/2025",
+    "expiringdate": "29/11/2025",
+    "registrationnumber": "KCC379E",
+    "chassisnumber": "NCP51-0207370",
+    "phonenumber": "789789789",
+    "bodytype": "S.WAGON",
+    "tonnage": 1,
+    "vehiclemake": "TOYOTA",
+    "vehiclemodel": "CBE-NCP51V",
+    "enginenumber": "1NZ-D259850",
+    "email": "chandrakala@swiftant.com",
+    "suminsured": 100000,
+    "insuredpin": "A123456789A",
+    "yearofmanufacture": 2019,
+    "hudumanumber": "123456789012",
+    "licensedtocarry": 10
+  },
+  "callbackObj": {
+    "IssuanceRequestID": "UAT-AAB7941",
+    "IssuanceMessage": "If you would like to continue the issuance process with further validation, please contact your technical support.  For the issuance of the certificate without any change in the information, please utilize the endpoint https://uat-api.dmvic.com/api/V5/Integration/ConfirmCertificateIssuance"
+  },
+  "success": false,
+  "Error": [
+    {
+      "errorCode": "ER007",
+      "errorText": "Registration number (KPL343W) and chassis number (JI123DFREW12123) combination have been changed from the previously issued policy"
+    },
+    {
+      "errorCode": "ER007",
+      "errorText": "Engine number have been changed from the previously issued certificate"
+    },
+    {
+      "errorCode": "ER007",
+      "errorText": "Vehicle Make have been changed from the previously issued certificate"
+    },
+    {
+      "errorCode": "ER007",
+      "errorText": "Vehicle Model have been changed from the previously issued certificate"
+    },
+    {
+      "errorCode": "ER007",
+      "errorText": "There is a 2 days gap between the previous insurance and the proposed one"
+    }
+  ],
+  "APIRequestNumber": "UAT-OJD0853",
+  "DMVICRefNo": null
+}
+4.4.2.4.4 Double Insurance
+{
+  "Inputs": {
+    "vehicletype": 1,
+    "typeofcover": 100,
+    "policyholder": "SA",
+    "policynumber": "SAPOL123",
+    "commencingdate": "28/11/2025",
+    "expiringdate": "29/11/2025",
+    "registrationnumber": "KCC379E",
+    "chassisnumber": "NCP51-0207370",
+    "phonenumber": "789789789",
+    "bodytype": "S.WAGON",
+    "tonnage": 1,
+    "vehiclemake": "TOYOTA",
+    "vehiclemodel": "CBE-NCP51V",
+    "enginenumber": "1NZ-D259850",
+    "email": "chandrakala@swiftant.com",
+    "suminsured": 100000,
+    "insuredpin": "A123456789A",
+    "yearofmanufacture": 2019,
+    "hudumanumber": "123456789012",
+    "licensedtocarry": 10
+  },
+  "callbackObj": {},
+  "success": false,
+  "Error": [
+    {
+      "errorCode": "ER005",
+      "errorText": "This vehicle is already covered under an active policy. To obtain a new quote, set the cover start date after the current policy’s expiry"
+    }
+  ],
+  "APIRequestNumber": "UAT-OJD1673",
+  "DMVICRefNo": null
+}
+4.4.2.4.5 Error Response - NTSA Response (If the Vehicle Number or Chassis Number does not exist in the NTSA records.)
+{
+  "Inputs": {
+    "typeofcover": 100,
+    "policyholder": "SA",
+    "policynumber": "SAPOL123",
+    "commencingdate": "17/12/2025",
+    "expiringdate": "19/12/2025",
+    "registrationnumber": "qwertyu",
+    "chassisnumber": "",
+    "phonenumber": "789789789",
+    "bodytype": "",
+    "vehiclemake": "",
+    "vehiclemodel": "",
+    "enginenumber": "",
+    "email": "chandrakala@swiftant.com",
+    "suminsured": 100000,
+    "insuredpin": "A123456789X",
+    "yearofmanufacture": null,
+    "hudumanumber": "123456789012"
+  },
+  "callbackObj": {},
+  "success": false,
+  "Error": [
+    {
+      "errorCode": "ER003",
+      "errorText": "Chassis Number is required"
+    },
+    {
+      "errorCode": "ER003",
+      "errorText": "Body Type is required"
+    }
+  ],
+  "APIRequestNumber": "UAT-OJC6921",
+  "DMVICRefNo": null
+}
+
+
+4  API Specifications
+4.4  Issue Certificate - Member Company
+
+4.4.9 Preview Type A certificates - Member Company
+Version 1.8.1
+ Purpose:To Issue Type A DMVIC certificate from the insurance companies’ core-system via DMVIC API
+URL :   https://uat-api.dmvic.com/api/v6/Integration/PreviewTypeACertificate
+Method : POST
+Note: Please note that X509 client certificate should be installed in your server and to be attached to the header during every request of API
+4.4.9.1  Request Body
+4.4.9.1.2 Headers
+Parameter NameMandatory (Y/N)DataTypeData FormatAuthorizationYesstringBearer <<Token received from Login API on Successful login>>ClientIDYesstring<<Will be provided in a separate Email>>4.4.9.1.1 HTTP Request Body
+Parameter NameMandatory (Y/N)DataTypeData Format / ValidationTypeOfCertificateYesint1Class A - PSV Unmarked6Type A Bus7Type A Matatu8Type A TaxiIntermediaryIRANumberNostringExample: IRA/06/357/2019TypeofcoverYesint100Comprehensive (COMP)200Third-party (TPO)300Third-party, Theft & Fire (TPTF)PolicyholderYesstringpolicynumberYesstringCommencingdateYesstringDD/MM/YYYYCommencing Date is invalidType-A Matatu, Type-A BusCertificate cannot be issued with future dates. You cannot issue Future date. Kindly change datesExpiringdateYesstringDD/MM/YYYYRegistrationnumberNostringChassisnumberYesstringThe chassis number minimum length is 4 and maximum length is 20. Only accepts alphanumeric characters and does not support any special charactersPhonenumberYesstring999999999 | Please enter a valid Kenyan numberBodytypeYesstringLicensedtocarryYesintVehiclemakeNostringVehiclemodelNostringYearofregistrationYesintYYYYEnginenumberNostringEmailYesstringEmail is not validSumInsuredYes (when Comprehensive (COMP) & Third-party, Theft & Fire (TPTF))intNew InsuredPINNew YesNew stringNew Insured PIN number maximum length is 11New YearofmanufactureNew NoNew intNew YYYYNew HudumaNumberNew NoNew stringNew 123456789012 Example Body Content
+{
+  "TypeOfCertificate": 7,
+  "Typeofcover": 100,
+  "Policyholder": "SA",
+  "policynumber": "SAPOL123",
+  "Commencingdate": "01/11/2025",
+  "Expiringdate": "08/11/2025",
+  "Registrationnumber": "KPL343W",
+  "Chassisnumber": "{{ChassisNumber}}",
+  "Phonenumber": "789789789",
+  "Bodytype": "{{BodyType}}",
+  "Licensedtocarry": 9,
+  "Vehiclemake": "{{VehicleMake}}",
+  "Vehiclemodel": "{{VehicleModel}}",
+  "Enginenumber": "ENG123",
+  "Email": "xxxxx@dmvic.info",
+  "SumInsured": 100000,
+  "InsuredPIN": "A123456789A",
+  "Yearofmanufacture": 2019,
+  "HudumaNumber": "123456789012",
+  "IntermediaryIRANumber": "IRA/XX/XXX/2024"
+}
+4.4.9.2 Response Elements
+ElementsDescriptionExampleInputsContains the input parameters specified by the querySuccessBit value true/false to differentiate if the request is succeeded or nottrue/falsecallbackObjIf the request is succeeded, then the Json Object of the following parameters will be returnedpreviewCertificateURLErrorER001 - Input json format is Incorrect
+ER002 - Unknown Error
+ER003 - Mandatory field is missing
+ER004 - Input not valid
+ER005 - Double Insurance
+ER006 - No sufficient Inventory
+ER007 - Data Validation ErrorAPIRequestNumberO-AA00014.4.9.3 Response JSON (Example)
+4.4.9.3.1 Sample Success Response
+{
+  "Inputs": {
+    "typeofcertificate": 7,
+    "typeofcover": 100,
+    "policyholder": "SA",
+    "policynumber": "SAPOL123",
+    "commencingdate": "01/11/2025",
+    "expiringdate": "08/11/2025",
+    "registrationnumber": "KPL343W",
+    "chassisnumber": "NCP51-0207370",
+    "phonenumber": "789789789",
+    "bodytype": "S.WAGON",
+    "licensedtocarry": 9,
+    "vehiclemake": "TOYOTA",
+    "vehiclemodel": "CBE-NCP51V",
+    "enginenumber": "ENG123",
+    "email": "xxxxx@dmvic.info",
+    "suminsured": 100000,
+    "insuredpin": "A123456789A",
+    "yearofmanufacture": 2019,
+    "hudumanumber": "123456789012"
+  },
+  "callbackObj": {
+    "previewCertificateURL": "https://insurancedevelopment.blob.core.windows.net/immutable-preview-cert/cb75c54f-4a62-470b-85ea-8…"
+  },
+  "success": true,
+  "Error": [],
+  "APIRequestNumber": "UAT-OJD1377",
+  "DMVICRefNo": null
+}
+4.4.9.3.2 Sample Error Response “ER001 - Input json format is Incorrect”
+{
+  "Inputs": {
+    "IntermediaryIRANumber": "IRA/06/051/2019",
+    "TypeOfCertificate": 7,
+    "Typeofcover": 100,
+    "Policyholder": "SA",
+    "policynumber": "SAPOL123",
+    "Commencingdate": "01/01/2019",
+    "Expiringdate": "08/08/2019",
+    "Registrationnumber": "KPL343W",
+    "Chassisnumber": "NCP51-0207370",
+    "Phonenumber": "789789789",
+    "Bodytype": "S.WAGON",
+    "Licensedtocarry": 6,
+    "VehicleMake": "TOYOTA",
+    "Vehiclemodel": "TOYOTA",
+    "Enginenumber": "ENG123”",
+    "Email": "xxxxx@dmvic.info",
+    "SumInsured": 100000,
+    "InsuredPIN": "A123456789A",
+    "Yearofmanufacture": 2019,
+    "HudumaNumber": "123456789012"
+  },
+  "callbackObj": {},
+  "success": false,
+  "Error": [
+    {
+      "errorCode": "ER001",
+      "errorText": "Input json format is incorrect."
+    }
+  ],
+  "APIRequestNumber": "O-AA0025"
+}
+4.4.9.3.3 Sample Error Response - ER003 & ER004
+{
+  "Inputs": {
+    "IntermediaryIRANumber": "IRA/06/051/2019",
+    "TypeOfCertificate": 7,
+    "Typeofcover": 100,
+    "Policyholder": "SA",
+    "policynumber": "",
+    "Commencingdate": "01/01/2019",
+    "Expiringdate": "08/08/2019",
+    "Registrationnumber": "KPL343W",
+    "Chassisnumber": "NCP51-0207370",
+    "Phonenumber": "789789789",
+    "Bodytype": "S.WAGON",
+    "Licensedtocarry": 6,
+    "VehicleMake": "TOYOTA",
+    "Vehiclemodel": "TOYOTA",
+    "Enginenumber": "ENG123”",
+    "Email": "xxxxx@dmvic.info",
+    "SumInsured": 100000,
+    "InsuredPIN": "A123456789A",
+    "Yearofmanufacture": 2019,
+    "HudumaNumber": "123456789012"
+  },
+  "callbackObj": {},
+  "success": false,
+  "Error": [
+    {
+      "errorCode": "ER003",
+      "errorText": "Policy Number is required"
+    },
+    {
+      "errorCode": "ER004",
+      "errorText": "Matatu certificates are issued for passangers ranging from 7 to a maximum of 35"
+    }
+  ],
+  "APIRequestNumber": "O-AA0027"
+}
+4.4.9.3.4 Error Response - NTSA Response (If the Vehicle Number or Chassis Number does not exist in the NTSA records.)
+{
+  "Inputs": {
+    "typeofcover": 100,
+    "policyholder": "SA",
+    "policynumber": "SAPOL123",
+    "commencingdate": "17/12/2025",
+    "expiringdate": "19/12/2025",
+    "registrationnumber": "qwertyu",
+    "chassisnumber": "",
+    "phonenumber": "789789789",
+    "bodytype": "",
+    "vehiclemake": "",
+    "vehiclemodel": "",
+    "enginenumber": "",
+    "email": "chandrakala@swiftant.com",
+    "suminsured": 100000,
+    "insuredpin": "A123456789X",
+    "yearofmanufacture": null,
+    "hudumanumber": "123456789012"
+  },
+  "callbackObj": {},
+  "success": false,
+  "Error": [
+    {
+      "errorCode": "ER003",
+      "errorText": "Chassis Number is required"
+    },
+    {
+      "errorCode": "ER003",
+      "errorText": "Body Type is required"
+    }
+  ],
+  "APIRequestNumber": "UAT-OJC6921",
+  "DMVICRefNo": null
+}
+4.4.9.3.5 Sample Error Response “ER005 - Double Insurance”
+{
+  "Inputs": {
+    "IntermediaryIRANumber": "IRA/06/051/2019",
+    "TypeOfCertificate": 7,
+    "Typeofcover": 100,
+    "Policyholder": "SA",
+    "policynumber": "SAPOL123",
+    "Commencingdate": "02/02/2019",
+    "Expiringdate": "07/07/2019",
+    "Registrationnumber": "KPL343W",
+    "Chassisnumber": "NCP51-0207370",
+    "Phonenumber": "789789789",
+    "Bodytype": "S.WAGON",
+    "Licensedtocarry": 6,
+    "VehicleMake": "TOYOTA",
+    "Vehiclemodel": "TOYOTA",
+    "Enginenumber": "ENG123",
+    "Email": "xxxxx@dmvic.info",
+    "SumInsured": 100000,
+    "InsuredPIN": "A123456789A",
+    "Yearofmanufacture": 2019,
+    "HudumaNumber": "123456789012"
+  },
+  "callbackObj": {},
+  "success": false,
+  "Error": [
+    {
+      "errorCode": "ER003",
+      "errorText": "Policy Number is required"
+    },
+    {
+      "errorCode": "ER005",
+      "errorText": "This vehicle is already covered under an active policy. To obtain a new quote, set the cover start date after the current policy’s expiry\r\n"
+    }
+  ],
+  "APIRequestNumber": "O-AA0023"
+}
+4.4.9.3.6 Sample Error Response “ER006 -No enough Inventory”
+{
+  "Inputs": {
+    "IntermediaryIRANumber": "IRA/06/051/2019",
+    "TypeOfCertificate": 7,
+    "Typeofcover": 100,
+    "Policyholder": "SA",
+    "policynumber": "SAPOL123",
+    "Commencingdate": "01/01/2019",
+    "Expiringdate": "08/08/2019",
+    "Registrationnumber": "KPL343W",
+    "Chassisnumber": "NCP51-0207370",
+    "Phonenumber": "789789789",
+    "Bodytype": "S.WAGON",
+    "Licensedtocarry": 9,
+    "VehicleMake": "TOYOTA",
+    "Vehiclemodel": "TOYOTA",
+    "Enginenumber": "ENG123”",
+    "Email": "xxxxx@dmvic.info",
+    "SumInsured": 100000,
+    "InsuredPIN": "A123456789A",
+    "Yearofmanufacture": 2019,
+    "HudumaNumber": "123456789012"
+  },
+  "callbackObj": {},
+  "success": false,
+  "Error": [
+    {
+      "errorCode": "ER006",
+      "errorText": "No Sufficient Inventory"
+    }
+  ],
+  "APIRequestNumber": "O-AA0018"
+}
+
+ API Specifications
+4.4  Issue Certificate - Member Company
+
+4.4.10 Preview Type B certificates - Member Company
+Version 1.8.1
+ Purpose:To Issue Type B DMVIC certificate from the insurance companies’ core-system via DMVIC API
+URL :   https://uat-api.dmvic.com/api/v6/Integration/PreviewTypeBCertificate
+Method : POST
+Note: Please note that X509 client certificate should be installed in your server and to be attached to the header during every request of API
+4.4.10.1  Request Body
+4.4.10.1.1 Body
+ParameterMandatory (Y/N)DataTypeFormatValidation MessageIntermediaryIRANumberNostringExample: IRA/06/357/2019TypeofcoverYesint100Comprehensive (COMP)200Third-party (TPO)300Third-party, Theft & Fire (TPTF)Type of Cover is not validVehicleTypeYesint1MOTOR COMMERCIAL OWN GOODS2MOTOR COMMERCIAL GENERAL CARTAGE3MOTOR INSTITUTIONAL VEHICLE4MOTOR SPECIAL VEHICLES5MOTOR TANKERS (LIQUID CARRYING)6MOTOR TRADE (ROAD RISK)PolicyholderYesstringpolicynumberYesstringCommencingdateYesstringDD/MM/YYYYCommencing Date is invalidExpiringdateYesstringDD/MM/YYYYRegistrationnumberNostringChassisnumberYesstringThe chassis number minimum length is 4 and maximum length is 20. Only accepts alphanumeric characters and does not support any special charactersPhonenumberYesstring999999999Please enter a valid Kenyan numberBodytypeYesstringTonnageCarryingCapacityYesintVehiclemakeNostringVehiclemodelNostringYearofregistrationYesintYYYYEnginenumberNostringEmailYesstringEmail is not validSumInsuredYes (when Comprehensive (COMP) & Third-party, Theft & Fire (TPTF))intInsuredPINYesstringInsured PIN number maximum length is 11YearofmanufactureNointYYYYHudumaNumberNostring123456789012New TonnageNew YesNew intNew 5New LicensedtocarryNew Yes(when MOTOR INSTITUTIONAL VEHICLE)New intNew 104.4.10.1.2 Headers
+Parameter nameMandatory (Y/N)DataTypeData FormatAuthorizationYesstringBearer <<Token received from Login API on Successful login>>ClientIDYesstring<<Will be provided in a separate Email>> Example Body Content
+{
+  "VehicleType": 1,
+  "Typeofcover": 100,
+  "Policyholder": "SA",
+  "policynumber": "SAPOL123",
+  "Commencingdate": "28/10/2025",
+  "Expiringdate": "29/10/2025",
+  "Registrationnumber": "KCC379E",
+  "Chassisnumber": "{{ChassisNumber}}",
+  "Phonenumber": "789789789",
+  "Bodytype": "{{BodyType}}",
+  "Tonnage": 1,
+  "Vehiclemake": "{{VehicleMake}}",
+  "Vehiclemodel": "{{VehicleModel}}",
+  "Enginenumber": "{{EngineNumber}}",
+  "Email": "chandrakala@swiftant.com",
+  "SumInsured": 100000,
+  "InsuredPIN": "A123456789A",
+  "Yearofmanufacture": 2019,
+  "HudumaNumber": "123456789012",
+  "Licensedtocarry": 10,
+  "IntermediaryIRANumber": "IRA/XX/XXX/2024"
+}
+4.4.10.2 Response Elements
+ElementsDescriptionExampleInputsContains the input parameters specified by the querySuccessBit value true/false to differentiate if the request is succeeded or nottrue/falsecallbackObjIf the request is succeeded, then the Json Object of the following parameters will be returnedpreviewCertificateURLErrorER001 - Input json format is Incorrect
+ER002 - Unknown Error
+ER003 - Mandatory field is missing
+ER004 - Input not valid
+ER005 - Double Insurance
+ER006 - No sufficient Inventory
+ER007 - Data Validation ErrorAPIRequestNumberO-AA00014.4.10.3 Response JSON (Example)
+4.4.10.3.1 Success Response
+{
+  "Inputs": {
+    "vehicletype": 1,
+    "typeofcover": 100,
+    "policyholder": "SA",
+    "policynumber": "SAPOL123",
+    "commencingdate": "28/10/2025",
+    "expiringdate": "29/10/2025",
+    "registrationnumber": "KCC379E",
+    "chassisnumber": "NCP51-0207370",
+    "phonenumber": "789789789",
+    "bodytype": "S.WAGON",
+    "tonnage": 1,
+    "vehiclemake": "TOYOTA",
+    "vehiclemodel": "CBE-NCP51V",
+    "enginenumber": "1NZ-D259850",
+    "email": "chandrakala@swiftant.com",
+    "suminsured": 100000,
+    "insuredpin": "A123456789A",
+    "yearofmanufacture": 2019,
+    "hudumanumber": "123456789012",
+    "licensedtocarry": 10
+  },
+  "callbackObj": {
+    "previewCertificateURL": "https://insurancedevelopment.blob.core.windows.net/immutable-preview-cert/3a4907e3-1c2d-4cb4-8505-b76e375fda5c.pdf"
+  },
+  "success": true,
+  "Error": [],
+  "APIRequestNumber": "UAT-OJD1163",
+  "DMVICRe": null
+}
+4.4.10.3.2 Error Response - NTSA Response (If the Vehicle Number or Chassis Number does not exist in the NTSA records.)
+{
+  "Inputs": {
+    "vehicletype": 1,
+    "typeofcover": 100,
+    "policyholder": "SA",
+    "policynumber": "SAPOL123",
+    "commencingdate": "28/10/2025",
+    "expiringdate": "29/10/2025",
+    "registrationnumber": "KCC379E",
+    "chassisnumber": "NCP51-0207370",
+    "phonenumber": "789789789",
+    "bodytype": "S.WAGON",
+    "tonnage": 1,
+    "vehiclemake": "TOYOTA",
+    "vehiclemodel": "CBE-NCP51V",
+    "enginenumber": "1NZ-D259850",
+    "email": "chandrakala@swiftant.com",
+    "suminsured": 100000,
+    "insuredpin": "A123456789A",
+    "yearofmanufacture": 2019,
+    "hudumanumber": "123456789012",
+    "licensedtocarry": 10
+  },
+  "callbackObj": {},
+  "success": false,
+  "Error": [
+    {
+      "errorCode": "ER003",
+      "errorText": "Chassis Number is required"
+    },
+    {
+      "errorCode": "ER003",
+      "errorText": "Body Type is required"
+    }
+  ],
+  "APIRequestNumber": "UAT-OJC6921",
+  "DMVICRefNo": null
+}
+4.4.10.3.3 Double Insurance
+{
+  "Inputs": {
+    "vehicletype": 1,
+    "typeofcover": 100,
+    "policyholder": "SA",
+    "policynumber": "SAPOL123",
+    "commencingdate": "28/10/2025",
+    "expiringdate": "29/10/2025",
+    "registrationnumber": "KCC379E",
+    "chassisnumber": "NCP51-0207370",
+    "phonenumber": "789789789",
+    "bodytype": "S.WAGON",
+    "tonnage": 1,
+    "vehiclemake": "TOYOTA",
+    "vehiclemodel": "CBE-NCP51V",
+    "enginenumber": "1NZ-D259850",
+    "email": "chandrakala@swiftant.com",
+    "suminsured": 100000,
+    "insuredpin": "A123456789A",
+    "yearofmanufacture": 2019,
+    "hudumanumber": "123456789012",
+    "licensedtocarry": 10
+  },
+  "callbackObj": {},
+  "success": false,
+  "Error": [
+    {
+      "errorCode": "ER005",
+      "errorText": "This vehicle is already covered under an active policy. To obtain a new quote, set the cover start date after the current policy’s expiry\r\n"
+    }
+  ],
+  "APIRequestNumber": "UAT-OJD1935",
+  "DMVICRefNo": null
+}
+4.4.10.3.4 Policy Alert
+{
+  "Inputs": {
+    "vehicletype": 1,
+    "typeofcover": 100,
+    "policyholder": "SA",
+    "policynumber": "SAPOL123",
+    "commencingdate": "28/10/2025",
+    "expiringdate": "29/10/2025",
+    "registrationnumber": "KCC379E",
+    "chassisnumber": "NCP51-0207370",
+    "phonenumber": "789789789",
+    "bodytype": "S.WAGON",
+    "tonnage": 1,
+    "vehiclemake": "TOYOTA",
+    "vehiclemodel": "CBE-NCP51V",
+    "enginenumber": "1NZ-D259850",
+    "email": "chandrakala@swiftant.com",
+    "suminsured": 100000,
+    "insuredpin": "A123456789A",
+    "yearofmanufacture": 2019,
+    "hudumanumber": "123456789012",
+    "licensedtocarry": 10
+  },
+  "Issuance": {
+    "RequestID": "UAT-AAB7873",
+    "Message": "If you would like to continue the issuance process with further validation, please contact your technical support. For issuance without any change, use https://uat-api.dmvic.com/api/V5/Integration/ConfirmCertificateIssuance"
+  },
+  "Errors": [
+    {
+      "code": "ER007",
+      "message": "Registration number (KDA945Z) and chassis number (NZE1647031532) combination have been changed from the previously issued policy"
+    },
+    {
+      "code": "ER007",
+      "message": "Engine number have been changed from the previously issued certificate"
+    },
+    {
+      "code": "ER007",
+      "message": "Vehicle Model have been changed from the previously issued certificate"
+    },
+    {
+      "code": "ER007",
+      "message": "There is a 203 days gap between the previous insurance and the proposed one"
+    }
+  ],
+  "APIRequestNumber": "UAT-OJC6934",
+  "success": false
+}
+
+
+4  API Specifications
+
+4.5 Get Certificate PDF
+Version 1.8.1
+URL :   https://uat-api.dmvic.com/api/v6/Integration/GetCertificate
+Method : POST
+Note: Please note that X509 client certificate should be installed in your server and to be attached to the header during every request of API
+4.5.1  Request Body
+4.5.1.1 Body
+ParameterMandatory (Y/N)DataTypeFormatValidation MessageCertificateNumberYesstringA1020701Please enter a valid certificate number Example Body Content
+{
+  "CertificateNumber": "A1020701"
+}
+4.5.1.2 Headers
+Parameter nameMandatory (Y/N)DataTypeData FormatAuthorizationYesstringBearer <<Token received from Login API on Successful login>>ClientIDYesstring<<Will be provided in a separate Email>>4.5.2 Response Elements
+ElementDescriptionExampleInputsContains the input parameters specified by the query{HTTP Post Body}SuccessBit value true/false to differentiate if the request is succeeded or not.true/falsecallbackObjIf the request is succeeded, then the Json Object of the following parameters will be returnedURLErrorER001 - Input json format is Incorrect
+ER002 - Unknown Error
+ER003 - Mandatory field is missing
+ER008 - InvalidCertificateNoAPIRequestNumberO-AA00014.5.2 Response JSON (Example)
+4.5.2.1 Success Response
+{
+  "Inputs": {
+    "CertificateNumber": "A1020701"
+  },
+  "callbackObj": {
+    "URL": "https://devdmviccert.blob.core.windows.net/immutable-dmvic-cert/403_E426CCCB8159B6CF314EB4687F158AE08BDED70F.pdf?sv=2018-03-28&sr=b&sig=x2ROe1BSy9wqcy8hwhHovcUqhlkA4x%2BZnMbahlBY2Hc%3D&st=2019-03-10T02%3A19%3A22Z&se=2019-03-10T03%3A20%3A22Z&sp=r"
+  },
+  "success": true,
+  "Error": [],
+  "APIRequestNumber": "O-AA0057"
+}
+
+
+4  API Specifications
+4.12  Issue Certificate - Intermediary
+
+4.12.1 For Type A certificates - Intermediary
+Version 1.8.1
+URL :   https://uat-api.dmvic.com/api/v6/IntermediaryIntegration/IssuanceTypeACertificate
+Method : POST
+Note: Please note that X509 client certificate should be installed in your server and to be attached to the header during every request of API
+4.12.1.1  Request Body
+4.12.1.1.1 Body
+Note: The parameters in the Request Elements are not case sensitive.
+ParameterMandatory (Yes / No)DatatypeData FormatValidation MessageTypeOfCertificateYesint1Class A - PSV Unmarked8Type A TaxiType of certificate is wrongMemberCompanyIDYesintExample: 11 MemberCompanyIDTypeofcoverYesint100Comprehensive (COMP)200Third-party (TPO)300Third-party, Theft & Fire (TPTF)Type of Cover is not validPolicyholderYesstringpolicynumberYesstringCommencingdateYesstringDD/MM/YYYY1Commencing Date is invalid2For the below types certificate cannot be issued with future dates Type-A Matatu, Type-A Bus. You cannot issue Future date.Kindly change datesExpiringdateYesstringDD/MM/YYYYRegistrationnumberNostringChassisnumberYesstringThe chassis number minimum length is 4 and maximum length is 20. Only accepts alphanumeric characters and does not support any special charactersPhonenumberYesstring999999999Please enter a valid Kenyan numberBodytypeYesstringLicensedtocarryYesintVehiclemakeNostringVehiclemodelNostringYearofregistrationYesintYYYYEnginenumberNostringEmailYesstring<<Email id to which the Certificate pdf will be sent on successful Issuance>>Email is not validSumInsuredYes (when Comprehensive (COMP) & Third-party, Theft & Fire (TPTF))intInsuredPINYesstringInsured PIN number maximum length is 11YearofmanufactureNointYYYYHudumaNumberNostring123456789012 Example Body content
+{
+  "Membercompanyid": 43,
+  "TypeOfCertificate": 1,
+  "Typeofcover": 100,
+  "Policyholder": "SA",
+  "policynumber": "SAPOL123",
+  "Commencingdate": "01/11/2025",
+  "Expiringdate": "08/11/2025",
+  "Registrationnumber": "KCC379E",
+  "Chassisnumber": "{{ChassisNumber}}",
+  "Phonenumber": "789789789",
+  "Bodytype": "{{BodyType}}",
+  "Licensedtocarry": 9,
+  "Vehiclemake": "{{VehicleMake}}",
+  "Vehiclemodel": "{{VehicleModel}}",
+  "Enginenumber": "{{EngineNumber}}",
+  "Email": "xxxxxxx@dmvic.info",
+  "SumInsured": 100000,
+  "InsuredPIN": "A123456789A",
+  "Yearofmanufacture": 2019,
+  "HudumaNumber": "123456789012"
+}
+4.12.1.1.2 Headers
+Parameter nameMandatory (Yes / No)DatatypeData FormatAuthorizationYesstringBearer <<Token received from Login API on Successful login>>ClientIDYesstring<<Will be provided in a separate Email>>4.12.1.2 Response Elements
+ElementsDescriptionExampleInputsContains the input parameters specified by the querySuccessBit value true/false to differentiate if the request is succeeded or not.true/falsecallbackObjIf the request is succeeded, then the Json Object of the following parameters will be returned TransactionNo, actualCNo, Email- CertificatePDFErrorER001 - Input json format is Incorrect,
+ER002 - Unknown Error,
+ER003 - Mandatory field is missing,
+ER004 - Input not valid,
+ER005 - Double Insurance,
+ER006 - No sufficient Inventory,
+ER007 - Data Validation ErrorAPIRequestNumberO-AA00014.12.1.3 Response JSON (example)
+4.12.1.3.1 Sample Success Response
+{
+  "Inputs": {
+    "membercompanyid": 43,
+    "typeofcertificate": 1,
+    "typeofcover": 100,
+    "policyholder": "SA",
+    "policynumber": "SAPOL123",
+    "commencingdate": "01/11/2025",
+    "expiringdate": "08/11/2025",
+    "registrationnumber": "KDP994T",
+    "chassisnumber": "KF2P-106151",
+    "phonenumber": "789789789",
+    "bodytype": "S.WAGON",
+    "licensedtocarry": 9,
+    "vehiclemake": "MAZDA",
+    "vehiclemodel": "CX-5",
+    "enginenumber": "SH-30738380",
+    "email": "xxxxxxx@dmvic.info",
+    "suminsured": 100000,
+    "insuredpin": "A123456789A",
+    "yearofmanufacture": 2019,
+    "hudumanumber": "123456789012"
+  },
+  "callbackObj": {
+    "issueCertificate": {
+      "TransactionNo": "UAT-TAB2543",
+      "actualCNo": "A12501894",
+      "Email": "xxxxxxx@dmvic.info"
+    }
+  },
+  "success": true,
+  "Error": [],
+  "APIRequestNumber": "UAT-OJD1488",
+  "DMVICRefNo": null
+}
+4.12.1.3.2 Sample Error Response “ER001 - Input json format is Incorrect”
+{
+  "Inputs": {
+    "Membercompanyid": 11,
+    "TypeOfCertificate": 1,
+    "Typeofcover": 100,
+    "Policyholder": "SA",
+    "policynumber": "SAPOL123",
+    "Commencingdate": "01/01/2019",
+    "Expiringdate": "08/08/2019",
+    "Registrationnumber": "KPL343W",
+    "Chassisnumber": "JIT123DFREW12123",
+    "Phonenumber": "789789789",
+    "Bodytype": "BT",
+    "Licensedtocarry": 6,
+    "VehicleMake": "AUDI",
+    "Vehiclemodel": "AUDI",
+    "Enginenumber": "ENG123",
+    "Email": "xxxxx@dmvic.info",
+    "SumInsured": 100000,
+    "InsuredPIN": "A123456789A",
+    "Yearofmanufacture": 2019,
+    "HudumaNumber": "123456789012"
+  },
+  "callbackObj": {},
+  "success": false,
+  "Error": [
+    {
+      "errorCode": "ER001",
+      "errorText": "Input json format is incorrect."
+    }
+  ],
+  "APIRequestNumber": "O-AA0025"
+}
+4.12.1.3.3 Sample Error Response – ER003 & ER004
+{
+  "Inputs": {
+    "Membercompanyid": 11,
+    "TypeOfCertificate": 1,
+    "Typeofcover": 100,
+    "Policyholder": "SA",
+    "policynumber": "",
+    "Commencingdate": "01/01/2019",
+    "Expiringdate": "08/08/2019",
+    "Registrationnumber": "KPL343W",
+    "Chassisnumber": "JIT123DFREW12123",
+    "Phonenumber": "789789789",
+    "Bodytype": "BT",
+    "Licensedtocarry": 6,
+    "VehicleMake": "AUDI",
+    "Vehiclemodel": "AUDI",
+    "Enginenumber": "ENG123",
+    "Email": "xxxxx@dmvic.info",
+    "SumInsured": 100000,
+    "InsuredPIN": 123456789,
+    "Yearofmanufacture": 2019,
+    "HudumaNumber": "123456789012"
+  },
+  "callbackObj": {},
+  "success": false,
+  "Error": [
+    {
+      "errorCode": "ER003",
+      "errorText": "Policy Number is required"
+    },
+    {
+      "errorCode": "ER004",
+      "errorText": "Matatu certificates are issued for passangers ranging from 7 to a maximum of 35"
+    }
+  ],
+  "APIRequestNumber": "O-AA0027"
+}
+4.12.1.3.4 Sample Error Response “ER005 - Double Insurance”
+{
+  "Inputs": {
+    "membercompanyid": 43,
+    "typeofcertificate": 1,
+    "typeofcover": 100,
+    "policyholder": "SA",
+    "policynumber": "SAPOL123",
+    "commencingdate": "01/11/2025",
+    "expiringdate": "08/11/2025",
+    "registrationnumber": "KDP994T",
+    "chassisnumber": "KF2P-106151",
+    "phonenumber": "789789789",
+    "bodytype": "S.WAGON",
+    "licensedtocarry": 9,
+    "vehiclemake": "MAZDA",
+    "vehiclemodel": "CX-5",
+    "enginenumber": "SH-30738380",
+    "email": "xxxxxxx@dmvic.info",
+    "suminsured": 100000,
+    "insuredpin": "A123456789A",
+    "yearofmanufacture": 2019,
+    "hudumanumber": "123456789012"
+  },
+  "callbackObj": {},
+  "success": false,
+  "Error": [
+    {
+      "errorCode": "ER005",
+      "errorText": "This vehicle is already covered under an active policy. To obtain a new quote, set the cover start date after the current policy’s expiry\r\n"
+    }
+  ],
+  "APIRequestNumber": "UAT-OJD1491",
+  "DMVICRefNo": null
+}
+4.12.1.3.5 Sample Error Response “ER006 - No sufficient Inventory”
+{
+  "Inputs": {
+    "Membercompanyid": 11,
+    "TypeOfCertificate": 1,
+    "Typeofcover": 100,
+    "Policyholder": "SA",
+    "policynumber": "SAPOL123",
+    "Commencingdate": "02/02/2019",
+    "Expiringdate": "07/07/2019",
+    "Registrationnumber": "KPL343W",
+    "Chassisnumber": "JIT123DFREW12123",
+    "Phonenumber": "789789789",
+    "Bodytype": "BT",
+    "Licensedtocarry": 9,
+    "VehicleMake": "AUDI",
+    "Vehiclemodel": "AUDI",
+    "Enginenumber": "ENG123",
+    "Email": "xxxxx@dmvic.info",
+    "SumInsured": 100000,
+    "InsuredPIN": "A123456789A",
+    "Yearofmanufacture": 2019,
+    "HudumaNumber": "123456789012"
+  },
+  "callbackObj": {},
+  "success": false,
+  "Error": [
+    {
+      "errorCode": "ER005",
+      "errorText": "Double Insurance"
+    }
+  ],
+  "APIRequestNumber": "O-AA0023"
+}
+4.12.4 Policy Alert
+{
+  "Inputs": {
+    "membercompanyid": 43,
+    "typeofcertificate": 1,
+    "typeofcover": 100,
+    "policyholder": "SA",
+    "policynumber": "SAPOL123",
+    "commencingdate": "01/11/2025",
+    "expiringdate": "08/11/2025",
+    "registrationnumber": "KCC379E",
+    "chassisnumber": "NCP51-0207370",
+    "phonenumber": "789789789",
+    "bodytype": "S.WAGON",
+    "licensedtocarry": 9,
+    "vehiclemake": "TOYOTA",
+    "vehiclemodel": "CBE-NCP51V",
+    "enginenumber": "1NZ-D259850",
+    "email": "xxxxxxx@dmvic.info",
+    "suminsured": 100000,
+    "insuredpin": "A123456789A",
+    "yearofmanufacture": 2019,
+    "hudumanumber": "123456789012"
+  },
+  "callbackObj": {
+    "IssuanceRequestID": "UAT-AAB7968",
+    "IssuanceMessage": "If you would like to continue the issuance process with further validation, please contact your technical support. For the issuance of the certificate without any change in the information, please utilize the endpoint https://uat-api.dmvic.com/api/V5/Integration/ConfirmCertificateIssuance"
+  },
+  "success": false,
+  "Error": [
+    {
+      "errorCode": "ER007",
+      "errorText": "There is a 3 days gap between the previous insurance and the proposed one"
+    }
+  ],
+  "APIRequestNumber": "UAT-OJD1479",
+  "DMVICRefNo": null
+}
+
+4  API Specifications
+4.12  Issue Certificate - Intermediary
+
+4.12.2 For Type B certificates - Intermediary
+Version 1.8.1
+URL :   https://uat-api.dmvic.com/api/v6/IntermediaryIntegration/IssuanceTypeBCertificate
+Method : POST
+Note: Please note that X509 client certificate should be installed in your server and to be attached to the header during every request of API
+4.12.2.1  Request Body
+4.12.2.1.1 Body
+Note: The parameters in the Request Elements are not case sensitive.
+ParameterMandatory (Yes / No)DatatypeData FormatValidation MessageMemberCompanyIDYesintExample: 11 MemberCompanyIDTypeofcoverYesint100Comprehensive (COMP)200Third-party (TPO)300Third-party, Theft & Fire (TPTF)Type of Cover is not validVehicleTypeYesint1MOTOR COMMERCIAL OWN GOODS2MOTOR COMMERCIAL GENERAL CARTAGE3MOTOR INSTITUTIONAL VEHICLE4MOTOR SPECIAL VEHICLES5TANKERS (LIQUID CARRYING)6MOTOR TRADE (ROAD RISK)PolicyholderYesstringpolicynumberYesstringCommencingdateYesstringDD/MM/YYYYCommencing Date is invalidExpiringdateYesstringDD/MM/YYYYRegistrationnumberNostringChassisnumberYesstringThe chassis number minimum length is 4 and maximum length is 20. Only accepts alphanumeric characters and does not support any special charactersPhonenumberYesstring999999999Please enter a valid Kenyan numberBodytypeYesstringTonnageCarryingCapacityYesintVehiclemakeNostringVehiclemodelNostringYearofregistrationMandatoryintYYYYEnginenumberNostringEmailYesstring<<Email id to which the Certificate pdf will be sent on successful Issuance>>Email is not validSumInsuredYes (when Comprehensive (COMP) & Third-party, Theft & Fire (TPTF))intInsuredPINYesstringInsured PIN number maximum length is 11YearofmanufactureNointYYYYHudumaNumberNostring123456789012New TonnageNew YesNew intNew LicensedtocarryNew YesNew intMembercompanyidYesint4.12.2.1.1 Response JSON (example)
+{
+  "Membercompanyid": 43,
+  "VehicleType": 1,
+  "Typeofcover": 100,
+  "Policyholder": "SA",
+  "policynumber": "SAPOL123",
+  "Commencingdate": "15/12/2025",
+  "Expiringdate": "18/12/2025",
+  "Registrationnumber": "KDP994Q",
+  "Chassisnumber": "{{ChassisNumber}}",
+  "Phonenumber": "789789789",
+  "Bodytype": "{{BodyType}}",
+  "Licensedtocarry": 9,
+  "Vehiclemake": "{{VehicleMake}}",
+  "Vehiclemodel": "{{VehicleModel}}",
+  "Enginenumber": "{{EngineNumber}}",
+  "Email": "xxxxxxx@dmvic.info",
+  "SumInsured": 100000,
+  "InsuredPIN": "A123456789A",
+  "Yearofmanufacture": 2019,
+  "HudumaNumber": "123456789012",
+  "Tonnage": 1
+}
+4.12.2.1.2 Headers
+Parameter nameMandatory (Yes / No)DatatypeData FormatAuthorizationYesstringBearer <<Token received from Login API on Successful login>>ClientIDYesstring<<Will be provided in a separate Email>>4.12.2.2 Response Elements
+ElementsDescriptionExampleInputsContains the input parameters specified by the query{HTTP Post Body}SuccessBit value true/false to differentiate if the request is succeeded or not.true/falsecallbackObjIf the request is succeeded, then the Json Object of the following parameters will be returned: TransactionNo, actualCNo, Email- CertificatePDFErrorER001 - Input json format is Incorrect,
+ER002 - Unknown Error,
+ER003 - Mandatory field is missing,
+ER004 - Input not valid,
+ER005 - Double Insurance,
+ER006 - No sufficient Inventory,
+ER007 - Data Validation ErrorAPIRequestNumberO-AA00014.12.2.3 Response JSON (example)
+4.12.2.3.1 Sample Success Response
+{
+  "Inputs": {
+    "membercompanyid": 43,
+    "vehicletype": 1,
+    "typeofcover": 100,
+    "policyholder": "SA",
+    "policynumber": "SAPOL123",
+    "commencingdate": "15/12/2025",
+    "expiringdate": "18/12/2025",
+    "registrationnumber": "KDA945Z",
+    "chassisnumber": "NZE164-7031532",
+    "phonenumber": "789789789",
+    "bodytype": "S.WAGON",
+    "licensedtocarry": 9,
+    "vehiclemake": "TOYOTA",
+    "vehiclemodel": "FIELDER",
+    "enginenumber": "1NZ-E755455",
+    "email": "xxxxxxx@dmvic.info",
+    "suminsured": 100000,
+    "insuredpin": "A123456789A",
+    "yearofmanufacture": 2019,
+    "hudumanumber": "123456789012",
+    "tonnage": 1
+  },
+  "callbackObj": {
+    "issueCertificate": {
+      "TransactionNo": "UAT-TAB254",
+      "actualCNo": "B12501894",
+      "Email": "xxxxxxx@dmvic.info"
+    }
+  },
+  "success": true,
+  "Error": [],
+  "APIRequestNumber": "UAT-OJD1489",
+  "DMVICRefNo": null
+}
+4.12.2.3.2 Sample Error Response - NTSA Response
+{
+  "Inputs": {
+    "membercompanyid": 43,
+    "vehicletype": 1,
+    "typeofcover": 100,
+    "policyholder": "SA",
+    "policynumber": "SAPOL123",
+    "commencingdate": "15/12/2025",
+    "expiringdate": "18/12/2025",
+    "registrationnumber": "KDA945Z",
+    "chassisnumber": "NZE164-7031532",
+    "phonenumber": "789789789",
+    "bodytype": "S.WAGON",
+    "licensedtocarry": 9,
+    "vehiclemake": "TOYOTA",
+    "vehiclemodel": "FIELDER",
+    "enginenumber": "1NZ-E755455",
+    "email": "xxxxxxx@dmvic.info",
+    "suminsured": 100000,
+    "insuredpin": "A123456789A",
+    "yearofmanufacture": 2019,
+    "hudumanumber": "123456789012",
+    "tonnage": 1
+  },
+  "callbackObj": {
+    "IssuanceRequestID": "UAT-AAB7973",
+    "IssuanceMessage": "If you would like to continue the issuance process with further validation, please contact your technical support.  For the issuance of the certificate without any change in the information, please utilize the endpoint https://uat-api.dmvic.com/api/V5/Integration/ConfirmCertificateIssuance"
+  },
+  "success": false,
+  "Error": [
+    {
+      "errorCode": "ER007",
+      "errorText": "Registration number (KDA945Z) and chassis number (NZE1647031532) combination have been changed from the previously issued policy"
+    },
+    {
+      "errorCode": "ER007",
+      "errorText": "Engine number have been changed from the previously issued certificate"
+    },
+    {
+      "errorCode": "ER007",
+      "errorText": "Vehicle Model have been changed from the previously issued certificate"
+    },
+    {
+      "errorCode": "ER007",
+      "errorText": "There is a 201 days gap between the previous insurance and the proposed one"
+    }
+  ],
+  "APIRequestNumber": "UAT-OJD1582",
+  "DMVICRefNo": null
+}
+4.12.2.3.3 Policy Alert
+{
+  "Inputs": {
+    "membercompanyid": 43,
+    "vehicletype": 1,
+    "typeofcover": 100,
+    "policyholder": "SA",
+    "policynumber": "SAPOL123",
+    "commencingdate": "15/12/2025",
+    "expiringdate": "18/12/2025",
+    "registrationnumber": "KDP994Q",
+    "chassisnumber": "LZZPCLSB4PJ302675",
+    "phonenumber": "789789789",
+    "bodytype": "PRIME MOVER",
+    "licensedtocarry": 9,
+    "vehiclemake": "SINOTRUK",
+    "vehiclemodel": "ZZ4257V344JB1R",
+    "enginenumber": "1623S026803",
+    "email": "xxxxxxx@dmvic.info",
+    "suminsured": 100000,
+    "insuredpin": "A123456789A",
+    "yearofmanufacture": 2019,
+    "hudumanumber": "123456789012",
+    "tonnage": 1
+  },
+  "callbackObj": {},
+  "success": false,
+  "Error": [
+    {
+      "errorCode": "ER005",
+      "errorText": "This vehicle is already covered under an active policy. To obtain a new quote, set the cover start date after the current policy’s expiry\r\n"
+    }
+  ],
+  "APIRequestNumber": "UAT-OJD1571",
+  "DMVICRefNo": null
+}
+
+4  API Specifications
+4.12  Issue Certificate - Intermediary
+
+4.12.9 Preview Type A certificates - Intermediary
+Version 1.8.1
+URL :   https://uat-api.dmvic.com/api/v6/IntermediaryIntegration/PreviewTypeACertificate
+Method : POST
+Note: Please note that X509 client certificate should be installed in your server and to be attached to the header during every request of API.
+4.12.9.1  Request Body
+4.12.9.1.1 Body
+Note: The parameters in the Request Elements are not case sensitive.
+ParameterMandatory (Yes / No)DatatypeData FormatValidation MessageTypeOfCertificateYesint1Class A - PSV Unmarked8Type A TaxiType of certificate is wrongMemberCompanyIDYesintExample: 11 MemberCompanyIDTypeofcoverYesint100Comprehensive (COMP)200Third-party (TPO)300Third-party, Theft & Fire (TPTF)Type of Cover is not validPolicyholderYesstringpolicynumberYesstringCommencingdateYesstringDD/MM/YYYY1Commencing Date is invalid2For the below types certificate cannot be issued with future dates Type-A Matatu, Type-A Bus. You cannot issue Future date.Kindly change datesExpiringdateYesstringDD/MM/YYYYRegistrationnumberNostringChassisnumberYesstringThe chassis number minimum length is 4 and maximum length is 20. Only accepts alphanumeric characters and does not support any special charactersPhonenumberYesstring999999999Please enter a valid Kenyan numberBodytypeYesstringLicensedtocarryYesintVehiclemakeNostringVehiclemodelNostringYearofregistrationYesintYYYYEnginenumberNostringEmailYesstringEmail is not validSumInsuredYes (when Comprehensive (COMP) & Third-party, Theft & Fire (TPTF))intNew InsuredPINNew YesNew stringNew Insured PIN number maximum length is 11New YearofmanufactureNew NoNew intNew YYYYNew HudumaNumberNew NoNew stringNew 123456789012 Example Body content
+{
+  "Membercompanyid": 43,
+  "TypeOfCertificate": 1,
+  "Typeofcover": 100,
+  "Policyholder": "SA",
+  "policynumber": "SAPOL123",
+  "Commencingdate": "01/11/2025",
+  "Expiringdate": "08/11/2025",
+  "Registrationnumber": "KCC379E",
+  "Chassisnumber": "{{ChassisNumber}}",
+  "Phonenumber": "789789789",
+  "Bodytype": "{{BodyType}}",
+  "Licensedtocarry": 9,
+  "Vehiclemake": "{{VehicleMake}}",
+  "Vehiclemodel": "{{VehicleModel}}",
+  "Enginenumber": "{{EngineNumber}}",
+  "Email": "xxxxxxx@dmvic.info",
+  "SumInsured": 100000,
+  "InsuredPIN": "A123456789A",
+  "Yearofmanufacture": 2019,
+  "HudumaNumber": "123456789012"
+}
+4.12.9.1.2 Headers
+Parameter nameMandatory (Yes / No)DatatypeData FormatAuthorizationYesstringBearer <<Token received from Login API on Successful login>>ClientIDYesstring<<Will be provided in a separate Email>>4.12.9.2 Response Elements
+ElementsDescriptionExampleInputsContains the input parameters specified by the querySuccessBit value true/false to differentiate if the request is succeeded or not.true/falsecallbackObjIf the request is succeeded, then the Json Object of the following parameter will be returned: previewCertificateURLErrorER001 - Input json format is Incorrect,
+ER002 - Unknown Error,
+ER003 - Mandatory field is missing,
+ER004 - Input not valid,
+ER005 - Double Insurance,
+ER006 - No sufficient Inventory,
+ER007 - Data Validation ErrorAPIRequestNumberO-AA00014.12.9.3 Response JSON (example)
+4.12.9.3.1 Sample Success Response
+{
+  "Inputs": {
+    "membercompanyid": 43,
+    "typeofcertificate": 1,
+    "typeofcover": 100,
+    "policyholder": "SA",
+    "policynumber": "SAPOL123",
+    "commencingdate": "28/12/2025",
+    "expiringdate": "08/09/2026",
+    "registrationnumber": "KDA945W",
+    "chassisnumber": "NCP51-0207370",
+    "phonenumber": "789789789",
+    "bodytype": "S.WAGON",
+    "licensedtocarry": 9,
+    "vehiclemake": "TOYOTA",
+    "vehiclemodel": "CBE-NCP51V",
+    "enginenumber": "1NZ-D259850",
+    "email": "xxxxxxx@dmvic.info",
+    "suminsured": 100000,
+    "insuredpin": "A123456789A",
+    "yearofmanufacture": 2019,
+    "hudumanumber": "123456789012"
+  },
+  "callbackObj": {
+    "Message": "Validation Passed"
+  },
+  "success": true,
+  "Error": [],
+  "APIRequestNumber": "UAT-OJD1698",
+  "DMVICRefNo": null
+}
+4.12.9.3.2 Sample Error Response “ER001 - Input json format is Incorrect”
+{
+  "Inputs": {
+    "IntermediaryIRANumber": "IRA/06/051/2019",
+    "TypeOfCertificate": 1,
+    "Typeofcover": 100,
+    "Policyholder": "SA",
+    "policynumber": "SAPOL123",
+    "Commencingdate": "01/01/2019",
+    "Expiringdate": "08/08/2019",
+    "Registrationnumber": "KPL343W",
+    "Chassisnumber": "JIT123DFREW12123",
+    "Phonenumber": "789789789",
+    "Bodytype": "BT",
+    "Licensedtocarry": 6,
+    "VehicleMake": "AUDI",
+    "Vehiclemodel": "AUDI",
+    "Enginenumber": "ENG123",
+    "Email": "xxxxx@dmvic.info",
+    "SumInsured": 100000,
+    "InsuredPIN": "A123456789A",
+    "Yearofmanufacture": 2019,
+    "HudumaNumber": "123456789012"
+  },
+  "callbackObj": {},
+  "success": false,
+  "Error": [
+    {
+      "errorCode": "ER001",
+      "errorText": "Input json format is incorrect."
+    }
+  ],
+  "APIRequestNumber": "O-AA0025"
+}
+4.12.9.3.3 Sample Error Response - ER003 & ER004
+{
+  "Inputs": {
+    "IntermediaryIRANumber": "IRA/06/051/2019",
+    "TypeOfCertificate": 1,
+    "Typeofcover": 100,
+    "Policyholder": "SA",
+    "policynumber": "",
+    "Commencingdate": "01/01/2019",
+    "Expiringdate": "08/08/2019",
+    "Registrationnumber": "KPL343W",
+    "Chassisnumber": "JIT123DFREW12123",
+    "Phonenumber": "789789789",
+    "Bodytype": "BT",
+    "Licensedtocarry": 6,
+    "VehicleMake": "AUDI",
+    "Vehiclemodel": "AUDI",
+    "Enginenumber": "ENG123",
+    "Email": "xxxxx@dmvic.info",
+    "SumInsured": 100000,
+    "InsuredPIN": "A123456789A",
+    "Yearofmanufacture": 2019,
+    "HudumaNumber": "123456789012"
+  },
+  "callbackObj": {},
+  "success": false,
+  "Error": [
+    {
+      "errorCode": "ER003",
+      "errorText": "Policy Number is required"
+    },
+    {
+      "errorCode": "ER004",
+      "errorText": "Matatu certificates are issued for passangers ranging from 7 to a maximum of 35"
+    }
+  ],
+  "APIRequestNumber": "O-AA0027"
+}
+4.12.9.3.4 Double Insurance
+{
+  "Inputs": {
+    "membercompanyid": 43,
+    "typeofcertificate": 1,
+    "typeofcover": 100,
+    "policyholder": "SA",
+    "policynumber": "SAPOL123",
+    "commencingdate": "28/10/2025",
+    "expiringdate": "08/09/2026",
+    "registrationnumber": "KCC379E",
+    "chassisnumber": "NCP51-0207370",
+    "phonenumber": "789789789",
+    "bodytype": "S.WAGON",
+    "licensedtocarry": 9,
+    "vehiclemake": "TOYOTA",
+    "vehiclemodel": "CBE-NCP51V",
+    "enginenumber": "1NZ-D259850",
+    "email": "xxxxxxx@dmvic.info",
+    "suminsured": 100000,
+    "insuredpin": "A123456789A",
+    "yearofmanufacture": 2019,
+    "hudumanumber": "123456789012"
+  },
+  "callbackObj": {},
+  "success": false,
+  "Error": [
+    {
+      "errorCode": "ER005",
+      "errorText": "This vehicle is already covered under an active policy. To obtain a new quote, set the cover start date after the current policy’s expiry"
+    }
+  ],
+  "APIRequestNumber": "UAT-OJD1692",
+  "DMVICRefNo": null
+}
+4.12.9.3.4 Policy Alert
+{
+  "Inputs": {
+    "membercompanyid": 43,
+    "typeofcertificate": 1,
+    "typeofcover": 100,
+    "policyholder": "SA",
+    "policynumber": "SAPOL123",
+    "commencingdate": "01/11/2025",
+    "expiringdate": "08/11/2025",
+    "registrationnumber": "KCC379E",
+    "chassisnumber": "NCP51-0207370",
+    "phonenumber": "789789789",
+    "bodytype": "S.WAGON",
+    "licensedtocarry": 9,
+    "vehiclemake": "TOYOTA",
+    "vehiclemodel": "CBE-NCP51V",
+    "enginenumber": "1NZ-D259850",
+    "email": "xxxxxxx@dmvic.info",
+    "suminsured": 100000,
+    "insuredpin": "A123456789A",
+    "yearofmanufacture": 2019,
+    "hudumanumber": "123456789012"
+  },
+  "callbackObj": {},
+  "success": false,
+  "Error": [
+    {
+      "errorCode": "ER007",
+      "errorText": "There is a 3 days gap between the previous insurance and the proposed one"
+    }
+  ],
+  "APIRequestNumber": "UAT-OJD1687",
+  "DMVICRefNo": null
+}
+
+4  API Specifications
+4.12  Issue Certificate - Intermediary
+
+4.12.10 Preview Type B certificates - Intermediary
+Version 1.8.1
+URL :   https://uat-api.dmvic.com/api/v6/IntermediaryIntegration/PreviewTypeBCertificate
+Method : POST
+Note: Please note that X509 client certificate should be installed in your server and to be attached to the header during every request of API.
+4.12.10.1  Request Body
+4.12.10.1.1 Body
+Note: The parameters in the Request Elements are not case sensitive.
+ParameterMandatory (Yes / No)DatatypeData FormatValidation MessageMembercompanyidYesintExample: 11 MemberCompanyIDTypeofcoverYesint100Comprehensive (COMP)200Third-party (TPO)300Third-party, Theft & Fire (TPTF)Type of Cover is not validVehicleTypeYesint1MOTOR COMMERCIAL OWN GOODS2MOTOR COMMERCIAL GENERAL CARTAGE3MOTOR INSTITUTIONAL VEHICLE4MOTOR SPECIAL VEHICLES5MOTOR TANKERS (LIQUID CARRYING)6MOTOR TRADE (ROAD RISK)PolicyholderYesstringpolicynumberYesstringCommencingdateYesstringDD/MM/YYYYCommencing Date is invalidExpiringdateYesstringDD/MM/YYYYRegistrationnumberNostringChassisnumberYesstringThe chassis number minimum length is 4 and maximum length is 20. Only accepts alphanumeric characters and does not support any special charactersPhonenumberYesstring999999999Please enter a valid Kenyan numberBodytypeYesstringTonnageCarryingCapacityYesintVehiclemakeNostringVehiclemodelNostringYearofregistrationYesintYYYYEnginenumberNostringEmailYesstringEmail is not validSumInsuredYes (when Comprehensive (COMP) & Third-party, Theft & Fire (TPTF))intInsuredPINYesstringInsured PIN number maximum length is 11YearofmanufactureNointYYYYHudumaNumberNostring123456789012New TonnageNew YesNew intNew LicensedtocarryNew YesNew int Example Body content
+{
+  "Membercompanyid": 43,
+  "VehicleType": 1,
+  "Typeofcover": 100,
+  "Policyholder": "SA",
+  "policynumber": "SAPOL123",
+  "Commencingdate": "28/10/2025",
+  "Expiringdate": "18/12/2025",
+  "Registrationnumber": "KCC379E",
+  "Chassisnumber": "{{ChassisNumber}}",
+  "Phonenumber": "789789789",
+  "Bodytype": "{{BodyType}}",
+  "Licensedtocarry": 9,
+  "Vehiclemake": "{{VehicleMake}}",
+  "Vehiclemodel": "{{VehicleModel}}",
+  "Enginenumber": "{{EngineNumber}}",
+  "Email": "xxxxxxx@dmvic.info",
+  "SumInsured": 100000,
+  "InsuredPIN": "A123456789A",
+  "Yearofmanufacture": 2019,
+  "HudumaNumber": "123456789012",
+  "Tonnage": 1
+}
+4.12.10.1.2 Headers
+Parameter nameMandatory (Yes / No)DatatypeData FormatAuthorizationYesstringBearer <<Token received from Login API on Successful login>>ClientIDYesstring<<Will be provided in a separate Email>>4.12.10.2 Response Elements
+ElementsDescriptionExampleInputsContains the input parameters specified by the querySuccessBit value true/false to differentiate if the request is succeeded or not.true/falsecallbackObjIf the request is succeeded, then the Json Object of the following parameter will be returned: previewCertificateURLErrorER001 - Input json format is Incorrect,
+ER002 - Unknown Error,
+ER003 - Mandatory field is missing,
+ER004 - Input not valid,
+ER005 - Double Insurance,
+ER006 - No sufficient Inventory,
+ER007 - Data Validation ErrorAPIRequestNumberO-AA00014.12.10.3 Response JSON (example)
+4.12.10.3.1 Sample Success Response
+{
+  "Inputs": {
+    "membercompanyid": 43,
+    "vehicletype": 1,
+    "typeofcover": 100,
+    "policyholder": "SA",
+    "policynumber": "SAPOL123",
+    "commencingdate": "28/12/2025",
+    "expiringdate": "18/12/2026",
+    "registrationnumber": "KDA945W",
+    "chassisnumber": "NCP51-0207370",
+    "phonenumber": "789789789",
+    "bodytype": "S.WAGON",
+    "licensedtocarry": 9,
+    "vehiclemake": "TOYOTA",
+    "vehiclemodel": "CBE-NCP51V",
+    "enginenumber": "1NZ-D259850",
+    "email": "xxxxxxx@dmvic.info",
+    "suminsured": 100000,
+    "insuredpin": "A123456789A",
+    "yearofmanufacture": 2019,
+    "hudumanumber": "123456789012",
+    "tonnage": 1
+  },
+  "callbackObj": {
+    "Message": "Validation Passed"
+  },
+  "success": true,
+  "Error": [],
+  "APIRequestNumber": "UAT-OJD1681",
+  "DMVICRefNo": null
+}
+4.12.10.3.1 Double Insurance
+{
+  "Inputs": {
+    "membercompanyid": 43,
+    "vehicletype": 1,
+    "typeofcover": 100,
+    "policyholder": "SA",
+    "policynumber": "SAPOL123",
+    "commencingdate": "28/10/2025",
+    "expiringdate": "18/12/2025",
+    "registrationnumber": "KCC379E",
+    "chassisnumber": "NCP51-0207370",
+    "phonenumber": "789789789",
+    "bodytype": "S.WAGON",
+    "licensedtocarry": 9,
+    "vehiclemake": "TOYOTA",
+    "vehiclemodel": "CBE-NCP51V",
+    "enginenumber": "1NZ-D259850",
+    "email": "xxxxxxx@dmvic.info",
+    "suminsured": 100000,
+    "insuredpin": "A123456789A",
+    "yearofmanufacture": 2019,
+    "hudumanumber": "123456789012",
+    "tonnage": 1
+  },
+  "callbackObj": {},
+  "success": false,
+  "Error": [
+    {
+      "errorCode": "ER005",
+      "errorText": "This vehicle is already covered under an active policy. To obtain a new quote, set the cover start date after the current policy’s expiry"
+    }
+  ],
+  "APIRequestNumber": "UAT-OJD1673",
+  "DMVICRefNo": null
+}
+4.12.10.3.1 Policy Alert
+{
+  "Inputs": {
+    "membercompanyid": 43,
+    "vehicletype": 1,
+    "typeofcover": 100,
+    "policyholder": "SA",
+    "policynumber": "SAPOL123",
+    "commencingdate": "28/12/2025",
+    "expiringdate": "18/12/2026",
+    "registrationnumber": "KCC379E",
+    "chassisnumber": "NCP51-0207370",
+    "phonenumber": "789789789",
+    "bodytype": "S.WAGON",
+    "licensedtocarry": 9,
+    "vehiclemake": "TOYOTA",
+    "vehiclemodel": "CBE-NCP51V",
+    "enginenumber": "1NZ-D259850",
+    "email": "xxxxxxx@dmvic.info",
+    "suminsured": 100000,
+    "insuredpin": "A123456789A",
+    "yearofmanufacture": 2019,
+    "hudumanumber": "123456789012",
+    "tonnage": 1
+  },
+  "callbackObj": {},
+  "success": false,
+  "Error": [
+    {
+      "errorCode": "ER007",
+      "errorText": "There is a 60 days gap between the previous insurance and the proposed one"
+    }
+  ],
+  "APIRequestNumber": "UAT-OJD1676",
+  "DMVICRefNo": null
+}
+
+4  API Specifications
+4.13  Validate Certificate - Intermediary
+
+4.13.1 Validate Type A certificates - Intermediary
+Version 1.8.1
+URL :   https://uat-api.dmvic.com/api/v6/IntermediaryIntegration/ValidateTypeACertificate
+Method : POST
+Note: Please note that X509 client certificate should be installed in your server and to be attached to the header during every request of API
+4.13.1.1  Request Body
+4.13.1.1.1 Body
+Note: The parameters in the Request Elements are not case sensitive.
+ParameterMandatory (Yes / No)DatatypeData FormatValidation MessageTypeOfCertificateYesint1Class A - PSV Unmarked6Type A Bus7Type A Matatu8Type A TaxiType of certificate is wrongMemberCompanyIDYesintExample: 11 MemberCompanyIDTypeofcoverYesint100Comprehensive (COMP)200Third-party (TPO)300Third-party, Theft & Fire (TPTF)PolicyholderYesstringpolicynumberYesstringCommencingdateYesstringDD/MM/YYYY1Commencing Date is invalid2For the below types certificate cannot be issued with future dates Type-A Matatu, Type-A Bus. You cannot issue Future date.Kindly change datesExpiringdateYesstringDD/MM/YYYYRegistrationnumberNostringChassisnumberYesstringThe chassis number minimum length is 4 and maximum length is 20. Only accepts alphanumeric characters and does not support any special charactersPhonenumberYesstring999999999Please enter a valid Kenyan numberBodytypeYesstringLicensedtocarryYesintVehiclemakeNostringVehiclemodelNostringYearofregistrationYesintYYYYEnginenumberNostringEmailYesstring<<Email id to which the Certificate pdf will be sent on successful Issuance>>Email is not validSumInsuredYes (when Comprehensive (COMP) & Third-party, Theft & Fire (TPTF))intNew InsuredPINNew YesNew stringNew Insured PIN number maximum length is 11New YearofmanufactureNew NoNew intNew YYYYNew HudumaNumberNew NoNew stringNew 123456789012 Example Body content
+{
+  "Membercompanyid": 11,
+  "TypeOfCertificate": 8,
+  "Typeofcover": 100,
+  "Policyholder": "SA",
+  "policynumber": "SAPOL123",
+  "Commencingdate": "16/10/2019",
+  "Expiringdate": "16/12/2019",
+  "Registrationnumber": "KPL343W",
+  "Chassisnumber": "JIT123DFREW12123",
+  "Phonenumber": "789789789",
+  "Bodytype": "BT",
+  "Licensedtocarry": 9,
+  "Vehiclemake": "AUDI",
+  "Vehiclemodel": "AUDI",
+  "Enginenumber": "ENG123",
+  "Email": "xxxxxxx@dmvic.info",
+  "SumInsured": 100000,
+  "InsuredPIN": "A123456789A",
+  "Yearofmanufacture": 2019,
+  "HudumaNumber": "123456789012"
+}
+4.13.1.1.2 Headers
+Parameter nameMandatory (Yes / No)DatatypeData FormatAuthorizationYesstringBearer <<Token received from Login API on Successful login>>ClientIDYesstring<<Will be provided in a separate Email>>4.13.1.2 Response Elements
+ElementsDescriptionExampleInputsContains the input parameters specified by the querySuccessBit value true/false to differentiate if the request is succeeded or not.true/falsecallbackObjIf the request is succeeded, then the Json Object of the following parameters will be returned Validation PassedErrorER001 - Input json format is Incorrect,
+ER002 - Unknown Error,
+ER003 - Mandatory field is missing,
+ER004 - Input not valid,
+ER005 - Double Insurance,
+ER006 - No sufficient Inventory,
+ER0015 - Blacklisted/Stolen,
+ER007 - Data Validation ErrorAPIRequestNumberO-AA00014.13.1.3 Response JSON (example)
+4.13.1.3.1 Sample Success Response
+{
+  "Inputs": {
+    "Membercompanyid": 11,
+    "TypeOfCertificate": 8,
+    "Typeofcover": 100,
+    "Policyholder": "SA",
+    "policynumber": "SAPOL123",
+    "Commencingdate": "16/10/2019",
+    "Expiringdate": "16/12/2019",
+    "Registrationnumber": "KPL343W",
+    "Chassisnumber": "JIT123DFREW12123",
+    "Phonenumber": "789789789",
+    "Bodytype": "BT",
+    "Licensedtocarry": 9,
+    "VehicleMake": "AUDI",
+    "Vehiclemodel": "AUDI",
+    "Enginenumber": "ENG123",
+    "Email": "xxxxx@dmvic.info",
+    "SumInsured": 100000,
+    "InsuredPIN": 123456789,
+    "Yearofmanufacture": 2019,
+    "HudumaNumber": "123456789012"
+  },
+  "callbackObj": {
+    "Message": "Validation Passed"
+  },
+  "success": true,
+  "Error": [],
+  "APIRequestNumber": "O-AA0873"
+}
+4.13.1.3.2 Error Response - NTSA Response (If the Vehicle Number or Chassis Number does not exist in the NTSA records.)
+{
+  "Inputs": {
+    "IntermediaryIRANumber": "IRA/XX/XXX/2025",
+    "TypeOfCertificate": 8,
+    "Typeofcover": 100,
+    "Policyholder": "SA",
+    "policynumber": "SAPOL123",
+    "Commencingdate": "27/10/2025",
+    "Expiringdate": "28/10/2025",
+    "Registrationnumber": "KPL343W",
+    "Chassisnumber": "74710-99432",
+    "Phonenumber": "789789789",
+    "Bodytype": "BT",
+    "Licensedtocarry": 9,
+    "Vehiclemake": "AUDI",
+    "Vehiclemodel": "AUDI",
+    "Enginenumber": "ENG123",
+    "Email": "xxxxxxx@dmvic.info",
+    "SumInsured": 100000,
+    "InsuredPIN": "A123456789A",
+    "Yearofmanufacture": 2019,
+    "HudumaNumber": "123456789012"
+  },
+  "callbackObj": {},
+  "success": false,
+  "Error": [
+    {
+      "errorCode": "ER003",
+      "errorText": "Chassis Number is required"
+    },
+    {
+      "errorCode": "ER003",
+      "errorText": "Body Type is required"
+    }
+  ],
+  "APIRequestNumber": "UAT-OJC6921",
+  "DMVICRefNo": null
+}
+4.13.1.3.3 Policy Alert
+{
+  "Inputs": {
+    "IntermediaryIRANumber": "IRA/XX/XXX/2025",
+    "TypeOfCertificate": 8,
+    "Typeofcover": 100,
+    "Policyholder": "SA",
+    "policynumber": "SAPOL123",
+    "Commencingdate": "27/10/2025",
+    "Expiringdate": "28/10/2025",
+    "Registrationnumber": "KPL343W",
+    "Chassisnumber": "74710-99432",
+    "Phonenumber": "789789789",
+    "Bodytype": "BT",
+    "Licensedtocarry": 9,
+    "Vehiclemake": "AUDI",
+    "Vehiclemodel": "AUDI",
+    "Enginenumber": "ENG123",
+    "Email": "xxxxxxx@dmvic.info",
+    "SumInsured": 100000,
+    "InsuredPIN": "A123456789A",
+    "Yearofmanufacture": 2019,
+    "HudumaNumber": "123456789012"
+  },
+  "Issuance": {
+    "RequestID": "UAT-AAB7873",
+    "Message": "If you would like to continue the issuance process with further validation, please contact your technical support. For issuance without any change, use https://uat-api.dmvic.com/api/V5/Integration/ConfirmCertificateIssuance"
+  },
+  "Errors": [
+    {
+      "code": "ER007",
+      "message": "Registration number (KDA945Z) and chassis number (NZE1647031532) combination have been changed from the previously issued policy"
+    },
+    {
+      "code": "ER007",
+      "message": "Engine number have been changed from the previously issued certificate"
+    },
+    {
+      "code": "ER007",
+      "message": "Vehicle Model have been changed from the previously issued certificate"
+    },
+    {
+      "code": "ER007",
+      "message": "There is a 203 days gap between the previous insurance and the proposed one"
+    }
+  ],
+  "APIRequestNumber": "UAT-OJC6934",
+  "success": false
+}
+4.13.1.3.4 Double Insurance
+{
+  "Inputs": {
+    "IntermediaryIRANumber": "IRA/XX/XXX/2025",
+    "TypeOfCertificate": 8,
+    "Typeofcover": 100,
+    "Policyholder": "SA",
+    "policynumber": "SAPOL123",
+    "Commencingdate": "27/10/2025",
+    "Expiringdate": "28/10/2025",
+    "Registrationnumber": "KPL343W",
+    "Chassisnumber": "74710-99432",
+    "Phonenumber": "789789789",
+    "Bodytype": "BT",
+    "Licensedtocarry": 9,
+    "Vehiclemake": "AUDI",
+    "Vehiclemodel": "AUDI",
+    "Enginenumber": "ENG123",
+    "Email": "xxxxxxx@dmvic.info",
+    "SumInsured": 100000,
+    "InsuredPIN": "A123456789A",
+    "Yearofmanufacture": 2019,
+    "HudumaNumber": "123456789012"
+  },
+  "callbackObj": {},
+  "success": false,
+  "Error": [
+    {
+      "errorCode": "ER005",
+      "errorText": "This vehicle is already covered under an active policy. To obtain a new quote, set the cover start date after the current policy’s expiry\r\n"
+    }
+  ],
+  "APIRequestNumber": "UAT-OJD1935",
+  "DMVICRefNo": null
+}
+4.13.1.3.5 Sample Error Response - ER001 - Input json format is Incorrect
+{
+  "Inputs": {
+    "Membercompanyid": 11,
+    "TypeOfCertificate": 8,
+    "Typeofcover": 100,
+    "Policyholder": "SA",
+    "policynumber": "",
+    "Commencingdate": "16/10/2019",
+    "Expiringdate": "16/10/2019",
+    "Registrationnumber": "GB4219K",
+    "Chassisnumber": "CDM576",
+    "Phonenumber": "789789789",
+    "Bodytype": "BT",
+    "Licensedtocarry": 6,
+    "VehicleMake": "AUDI",
+    "Vehiclemodel": "AUDI",
+    "Enginenumber": "ENG123",
+    "Email": "xxxxx@dmvic.info",
+    "SumInsured": 100000,
+    "InsuredPIN": 123456789,
+    "Yearofmanufacture": 2019,
+    "HudumaNumber": "123456789012"
+  },
+  "callbackObj": {},
+  "success": false,
+  "Error": [
+    {
+      "errorCode": "ER001",
+      "errorText": "Input json format is incorrect"
+    }
+  ],
+  "APIRequestNumber": "O-AA0888"
+}
+4.13.1.3.6 Sample Error Response "ER003"
+{
+  "Inputs": {
+    "Membercompanyid": 11,
+    "TypeOfCertificate": 8,
+    "Policyholder": "SA",
+    "policynumber": "SAPOL123",
+    "Commencingdate": "16/10/2019",
+    "Expiringdate": "16/10/2019",
+    "Registrationnumber": "GB4219K",
+    "Chassisnumber": "CDM576",
+    "Phonenumber": "789789789",
+    "Bodytype": "BT",
+    "Licensedtocarry": 9,
+    "VehicleMake": "AUDI",
+    "Vehiclemodel": "AUDI",
+    "Enginenumber": "ENG123",
+    "Email": "xxxxx@dmvic.info",
+    "SumInsured": 100000,
+    "InsuredPIN": "A123456789A",
+    "Yearofmanufacture": 2019,
+    "HudumaNumber": "123456789012"
+  },
+  "callbackObj": {},
+  "success": false,
+  "Error": [
+    {
+      "errorCode": "ER003",
+      "errorText": "Type of Cover is required"
+    }
+  ],
+  "APIRequestNumber": "O-AA0889"
+}
+4.13.1.3.7 Sample Error Response "ER0015"
+{
+  "Inputs": {
+    "Membercompanyid": 11,
+    "TypeOfCertificate": 8,
+    "Typeofcover": 100,
+    "Policyholder": "SA",
+    "policynumber": "SAPOL123",
+    "Commencingdate": "16/10/2019",
+    "Expiringdate": "16/12/2019",
+    "Registrationnumber": "ABC123D",
+    "Chassisnumber": "JIT123DFREW12123",
+    "Phonenumber": "789789789",
+    "Bodytype": "BT",
+    "Licensedtocarry": 9,
+    "VehicleMake": "AUDI",
+    "Vehiclemodel": "AUDI",
+    "Enginenumber": "ENG123",
+    "Email": "xxxxx@dmvic.info",
+    "SumInsured": 100000,
+    "InsuredPIN": 123456789,
+    "Yearofmanufacture": 2019,
+    "HudumaNumber": "123456789012"
+  },
+  "callbackObj": {},
+  "success": false,
+  "Error": [
+    {
+      "errorCode": "ER0015",
+      "errorText": "Vehicle Registration Number has been listed in the Blacklisted By KRA. Please contact D-MVIC support through support ticket, if you need to know additional information about this vehicle."
+    }
+  ],
+  "APIRequestNumber": "O-AA0953"
+}
+DMVIC © 2020 Association of Kenya Insurers (AKI) Version : 2.0.
+

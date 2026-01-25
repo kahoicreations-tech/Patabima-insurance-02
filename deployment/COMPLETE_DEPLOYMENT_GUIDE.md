@@ -1,6 +1,6 @@
 # Complete Deployment Guide - PataBima Insurance Backend
 
-**Last Updated:** November 17, 2025  
+**Last Updated:** November 23, 2025  
 **EC2 Instance:** i-0d0f116005d812275  
 **Public IP:** 44.200.182.180  
 **Environment:** Production (AWS us-east-1)
@@ -10,21 +10,25 @@
 ## Table of Contents
 
 1. [Quick Deployment (5 minutes)](#quick-deployment-5-minutes)
-2. [Environment Configuration](#environment-configuration)
-3. [DMVIC Integration Setup](#dmvic-integration-setup)
-4. [Database Management](#database-management)
-5. [Service Management](#service-management)
-6. [Troubleshooting](#troubleshooting)
-7. [Rollback Procedures](#rollback-procedures)
+2. [Standard Deployment Reference](#standard-deployment-reference)
+3. [Environment Configuration](#environment-configuration)
+4. [DMVIC Integration Setup](#dmvic-integration-setup)
+5. [Database Management](#database-management)
+6. [Service Management](#service-management)
+7. [Troubleshooting](#troubleshooting)
+8. [Rollback Procedures](#rollback-procedures)
+9. [Appendix: Deprecated Instance IDs](#appendix-deprecated-instance-ids)
 
 ---
 
 ## Quick Deployment (5 Minutes)
 
 ### When to Use
+
 Use this when you've made code changes and need to deploy updates to production.
 
 ### Prerequisites
+
 - [ ] Code changes committed to Git
 - [ ] Local testing completed
 - [ ] New migrations created (if models changed)
@@ -131,6 +135,26 @@ sudo tail -f /var/www/patabima/logs/error.log
 
 ---
 
+## Standard Deployment Reference
+
+Canonical, always-up-to-date procedure lives in `deployment/BACKEND_DEPLOYMENT_STANDARD.md`.
+
+If any divergence exists between this guide and that file, defer to the Standard.
+
+Summary Flow:
+
+```
+1. Build timestamped ZIP (exclude venv, __pycache__, staticfiles, .git).
+2. Upload to s3://patabima-media-prod/deployment/
+3. Run SSM deploy script (recreate venv, pip install, migrate, collectstatic, restart services).
+4. Verification checklist (health, categories, migrations, logs, static assets).
+5. Rollback via backup folders or rollback script if failure.
+```
+
+Decision Matrix (see Standard) selects Quick vs Full vs Rollback vs Rebuild routes.
+
+---
+
 ## Environment Configuration
 
 ### Current Production .env Configuration
@@ -202,6 +226,7 @@ sudo systemctl show patabima --property=Environment
 ## DMVIC Integration Setup
 
 ### Prerequisites
+
 - PFX certificate file: `PatabimaAgencyUAT.pfx`
 - DMVIC credentials (username, password, client ID)
 - Certificate passphrase
@@ -560,6 +585,7 @@ pg_restore -h patabima-production-db.ca5qmyoi41xu.us-east-1.rds.amazonaws.com \
 ## Deployment Checklist
 
 ### Pre-Deployment
+
 - [ ] Code changes tested locally
 - [ ] Database migrations created and tested
 - [ ] requirements.txt updated
@@ -567,6 +593,7 @@ pg_restore -h patabima-production-db.ca5qmyoi41xu.us-east-1.rds.amazonaws.com \
 - [ ] Backup created
 
 ### Deployment
+
 - [ ] Services stopped
 - [ ] Code deployed
 - [ ] Dependencies installed
@@ -575,6 +602,7 @@ pg_restore -h patabima-production-db.ca5qmyoi41xu.us-east-1.rds.amazonaws.com \
 - [ ] Services restarted
 
 ### Post-Deployment
+
 - [ ] Health check passed
 - [ ] Motor endpoints tested
 - [ ] DMVIC integration verified
@@ -635,3 +663,9 @@ echo "=== Health Check ===" && curl http://localhost/api/v1/health/
 **DMVIC Status:** ✅ Working  
 **Motor API Status:** ✅ Working  
 **Database Status:** ✅ Connected
+
+---
+
+## Appendix: Deprecated Instance IDs
+
+Legacy instance `i-07a424fd876416ad0` appears in older docs. Current production instance is `i-0d0f116005d812275`. Do NOT deploy to the deprecated instance; update any automation still referencing it.

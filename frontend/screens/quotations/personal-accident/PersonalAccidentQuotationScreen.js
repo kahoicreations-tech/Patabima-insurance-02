@@ -164,17 +164,25 @@ export default function PersonalAccidentQuotationScreen({ navigation }) {
       </View>
 
       <ScrollView contentContainerStyle={[styles.scroll, { paddingBottom: insets.bottom + 100 }]} showsVerticalScrollIndicator={false}>
+        {/* Section: Policy Details */}
+        <View style={styles.stepHeader}>
+          <View style={styles.stepCircle}><Body1 style={styles.stepCircleText}>1</Body1></View>
+          <Subtitle2 style={styles.stepTitle}>Policy Details</Subtitle2>
+        </View>
+
         {/* Age */}
         <View style={styles.fieldBlock}>
           <Subtitle2 style={styles.label}>Age</Subtitle2>
-          <TextInput
-            value={age}
-            onChangeText={setAge}
-            placeholder="Enter age"
-            keyboardType="number-pad"
-            style={styles.input}
-            placeholderTextColor={UI.textSecondary}
-          />
+          <View style={styles.cardInputContainer}>
+            <TextInput
+              value={age}
+              onChangeText={setAge}
+              placeholder="Enter age"
+              keyboardType="number-pad"
+              style={styles.input}
+              placeholderTextColor={UI.textSecondary}
+            />
+          </View>
         </View>
 
         {/* Client Type */}
@@ -207,6 +215,12 @@ export default function PersonalAccidentQuotationScreen({ navigation }) {
               </TouchableOpacity>
             ))}
           </View>
+        </View>
+
+        {/* Section: Preferred Underwriters */}
+        <View style={styles.stepHeader}>
+          <View style={styles.stepCircle}><Body1 style={styles.stepCircleText}>2</Body1></View>
+          <Subtitle2 style={styles.stepTitle}>Preferred Underwriters</Subtitle2>
         </View>
 
         {/* Preferred Underwriters */}
@@ -268,13 +282,36 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   scroll: { padding: SPACING.lg },
+  stepHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: SPACING.lg, marginTop: SPACING.xl },
+  stepCircle: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: BRAND.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: SPACING.md
+  },
+  stepCircleText: { color: '#fff', fontWeight: '600' },
+  stepTitle: { color: BRAND.primary, fontWeight: '600' },
   fieldBlock: { marginBottom: SPACING.xxl },
-  label: { marginBottom: SPACING.sm },
-  input: {
-    borderRadius: BORDER_RADIUS.md,
-    backgroundColor: UI.backgroundGray,
+  label: { marginBottom: SPACING.sm, fontWeight: '500' },
+  cardInputContainer: {
+    backgroundColor: '#fff',
+    borderRadius: BORDER_RADIUS.lg,
     paddingHorizontal: SPACING.lg,
-    paddingVertical: SPACING.md,
+    paddingVertical: SPACING.sm,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  input: {
+    width: '100%',
+    backgroundColor: 'transparent',
+    paddingHorizontal: 0,
+    paddingVertical: 8,
     fontSize: FONT_SIZES.input,
     color: UI.textPrimary,
   },

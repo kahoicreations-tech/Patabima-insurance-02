@@ -1,0 +1,51 @@
+{% extends "admin/base_site.html" %}
+{% load i18n static %}
+
+{% block content %}
+  <h1>{% trans 'Site administration' %}</h1>
+
+  {% block extrastyle %}
+    {{ block.super }}
+    <link rel="stylesheet" href="{% static "admin/css/dashboard.css" %}">
+    <style>
+      .pb-welcome { color: #cfd8dc; margin: 8px 0 16px; }
+      .pb-panel { background:#11171a; border:1px solid #263238; border-radius:6px; padding:12px 16px; margin:0 0 16px; }
+      .pb-panel h3 { margin:0 0 8px; font-size:14px; color:#e0e0e0; }
+      .pb-panel p, .pb-panel a { font-size:13px; color:#b0bec5; }
+    </style>
+  {% endblock %}
+
+  <p class="pb-welcome">Use the left sidebar to navigate. Related models are grouped under: User Management, Motor Insurance, Non‑Motor Insurance, Insurance Providers, Documents & Logs, and Campaigns.</p>
+
+  <div class="pb-panel">
+    <h3>Quick filters</h3>
+    <p>
+      <a href="{% url 'admin:app_manualquote_changelist' %}?status__exact=PENDING_ADMIN_REVIEW">Pending manual quotes</a>
+      · <a href="{% url 'admin:app_manualquote_changelist' %}?status__exact=IN_PROGRESS">In progress</a>
+      · <a href="{% url 'admin:app_manualquote_changelist' %}?status__exact=COMPLETED">Completed</a>
+    </p>
+  </div>
+
+  <div class="module" id="recent-actions-module">
+    <h2>{% trans 'Recent actions' %}</h2>
+    {% load log %}
+    {% get_admin_log 10 as admin_log for_user user %}
+    {% if not admin_log %}
+      <p>{% trans 'None available' %}</p>
+    {% else %}
+      <ul class="actionlist">
+        {% for entry in admin_log %}
+          <li class="{% if entry.is_addition %}addlink{% endif %}{% if entry.is_change %} changelink{% endif %}{% if entry.is_deletion %} deletelink{% endif %}">
+            {% if entry.is_deletion or not entry.get_admin_url %}
+              {{ entry.object_repr }}
+            {% else %}
+              <a href="{{ entry.get_admin_url }}">{{ entry.object_repr }}</a>
+            {% endif %}
+            <br/>
+            <span class="mini quiet">{{ entry.content_type }} | {{ entry.action_time }}</span>
+          </li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+  </div>
+{% endblock %}

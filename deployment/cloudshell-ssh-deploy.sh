@@ -5,10 +5,10 @@
 set -e
 
 # Configuration
-EC2_IP="44.200.182.180"
+EC2_IP="44.210.245.82"
 S3_BUCKET="patabima-media-prod"
-ZIP_FILE="patabima-backend-20251116-210558.zip"
-SSH_KEY="~/.ssh/patabima-key.pem"
+ZIP_FILE="patabima-backend.zip"
+SSH_KEY="~/.ssh/aws-eb"
 
 echo ""
 echo "🚀 PataBima Backend SSH Deployment"
@@ -48,6 +48,21 @@ ZIP_FILE="$1"
 echo ""
 echo "🚀 Deploying PataBima Backend"
 echo "============================="
+
+# Set environment variables
+export DEBUG=False
+export SECRET_KEY="JqBr7F59HcizXuTdh4s5rMYRUxtPegb3l_UQ1EvL3C5MwUz_oqin1Tjs9QV8LwHwd5vmmNBKOpR4QYz3KfIbwg"
+export ALLOWED_HOSTS="44.210.245.82,api.patabima.co.ke"
+export RDS_HOSTNAME="patabima-production-db.ca5qwoi4lxw.us-east-1.rds.amazonaws.com"
+export RDS_PORT="5432"
+export RDS_DB_NAME="patabimadb"
+export RDS_USERNAME="patabimaadmin"
+export RDS_PASSWORD="PataB1ma2025Secure"
+export USE_S3_MEDIA="1"
+export AWS_STORAGE_BUCKET_NAME="patabima-media-prod"
+export AWS_S3_REGION_NAME="us-east-1"
+export DMVIC_BASE_URL="https://uat-api.dmvic.com"
+export DMVIC_MEMBER_CODE="PATABIMA"
 
 # Stop services
 echo ""
@@ -130,7 +145,7 @@ rm -f "/tmp/$ZIP_FILE"
 echo ""
 echo "🎉 Deployment complete!"
 echo ""
-echo "🌐 API URL: http://44.200.182.180/api/v1/"
+echo "🌐 API URL: http://44.210.245.82/api/v1/"
 echo ""
 DEPLOY_SCRIPT
 

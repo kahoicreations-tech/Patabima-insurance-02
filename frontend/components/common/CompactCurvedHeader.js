@@ -9,6 +9,7 @@ const CompactCurvedHeader = ({
   title, 
   subtitle, 
   rightComponent,
+  notificationComponent,
   backgroundColor = BRAND.primary,
   height, // optional explicit pixel height; otherwise computed from ratio
   heightRatio = 0.22, // default: 22% of screen width
@@ -95,6 +96,13 @@ const CompactCurvedHeader = ({
             </>
           )}
         </View>
+
+        {/* Notification icon - absolute positioned on right */}
+        {notificationComponent && (
+          <View style={[styles.notificationAbsolute, { top: controlTopAbsolute }]}>
+            {notificationComponent}
+          </View>
+        )}
 
         {/* Right Component (e.g., logout button) */}
         {(rightComponent !== undefined && rightComponent !== null) && (
@@ -183,6 +191,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  notificationAbsolute: {
+    position: 'absolute',
+    right: SPACING.md,
+    top: SPACING.md,
+    zIndex: 2,
   },
   logoBg: {
     backgroundColor: UI.surface,

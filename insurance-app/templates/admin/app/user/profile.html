@@ -1,0 +1,89 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block content %}
+  <h1>{{ title }}</h1>
+
+  <div class="module" style="margin-bottom:16px;">
+    <h2>Quick summary</h2>
+    <p>
+      <strong>Motor quotes:</strong> {{ stats.total_motor_quotes }} ·
+      <strong>Manual quotes:</strong> {{ stats.total_manual_quotes }} ·
+      <strong>Active policies:</strong> {{ stats.active_policies }} ·
+      <strong>Total commission:</strong> KSh {{ stats.total_commission|floatformat:2 }}
+    </p>
+    <p>
+      <a class="button" href="{{ links.back_to_user }}">Back to User</a>
+      · <a href="{{ links.motor_quotes }}">All motor quotes</a>
+      · <a href="{{ links.manual_quotes }}">All manual quotes</a>
+      · <a href="{{ links.policies }}">All policies</a>
+      · <a href="{{ links.commissions }}">All commissions</a>
+      · <a href="{{ links.bonuses }}">All monthly bonuses</a>
+    </p>
+  </div>
+
+  <div class="module">
+    <h2>Recent motor quotes</h2>
+    {% if recent_motor_quotes %}
+      <ul>
+        {% for q in recent_motor_quotes %}
+          <li><a href="{% url 'admin:app_insurancequotation_change' q.pk %}">{{ q.quotation_number }} — {{ q.status }}</a></li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p>No recent motor quotes.</p>
+    {% endif %}
+  </div>
+
+  <div class="module">
+    <h2>Recent manual quotes</h2>
+    {% if recent_manual_quotes %}
+      <ul>
+        {% for q in recent_manual_quotes %}
+          <li><a href="{% url 'admin:app_manualquote_change' q.pk %}">{{ q.reference }} — {{ q.line_key }} — {{ q.status }}</a></li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p>No recent manual quotes.</p>
+    {% endif %}
+  </div>
+
+  <div class="module">
+    <h2>Recent policies</h2>
+    {% if recent_policies %}
+      <ul>
+        {% for p in recent_policies %}
+          <li><a href="{% url 'admin:app_motorpolicy_change' p.pk %}">{{ p.policy_number }} — {{ p.status }}</a></li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p>No recent policies.</p>
+    {% endif %}
+  </div>
+
+  <div class="module">
+    <h2>Recent commissions</h2>
+    {% if recent_commissions %}
+      <ul>
+        {% for c in recent_commissions %}
+          <li><a href="{% url 'admin:app_agentcommission_change' c.pk %}">KSh {{ c.commission_amount|floatformat:2 }} — {{ c.payment_status }}</a></li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p>No recent commissions.</p>
+    {% endif %}
+  </div>
+
+  <div class="module">
+    <h2>Recent monthly bonuses</h2>
+    {% if recent_bonuses %}
+      <ul>
+        {% for b in recent_bonuses %}
+          <li><a href="{% url 'admin:app_monthlyagentbonus_change' b.pk %}">{{ b.period }} — KSh {{ b.bonus_amount|floatformat:2 }} — {{ b.payment_status }}</a></li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p>No recent bonuses.</p>
+    {% endif %}
+  </div>
+{% endblock %}

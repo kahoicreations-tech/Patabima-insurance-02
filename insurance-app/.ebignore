@@ -1,0 +1,83 @@
+# Elastic Beanstalk Deployment Exclusions
+# Files and directories listed here will NOT be deployed to AWS
+
+# Virtual environments
+venv/
+.venv/
+env/
+.env/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Git
+.git/
+.gitignore
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+test_*.py
+*_test.py
+
+# Local environment files
+.env.local
+.env.development
+
+# Temporary files
+tmp/
+temp/
+*.log
+*.bak
+
+# Static files (collected during deployment)
+staticfiles/
+static_exports/
+
+# Media files (use S3)
+media/
+
+# Documentation
+docs/
+*.md
+README.md
+
+# Expo (if mistakenly in backend)
+.expo/
+node_modules/
+package.json
+package-lock.json
+
+# Backups
+backups/
+*.sql
+*.dump
+
+# DMVIC credentials (sensitive - will be provided via env vars)
+dmvic_credentials/
+*.pfx
+
+# Test files
+test_*.py
+*_test.py
+tests/
+
+# Scripts
+scripts/
+run_*.ps1
+run_*.sh
+cleanup_*.py
+check_*.py
+list_users.py

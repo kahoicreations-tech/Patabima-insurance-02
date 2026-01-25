@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Share, RefreshControl } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Share, RefreshControl, Modal, TextInput, ActivityIndicator } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Toast from 'react-native-toast-message';
 import { Colors, Spacing, Typography } from '../../constants';
 import { useAuth } from '../../contexts/AuthContext';
 import { usersAPI } from '../../services/users';
 import { commissionsAPI } from '../../services/commissions';
-import { QuoteStorageService } from '../../shared/services';
+import djangoAPI from '../../services/DjangoAPIService';
 import { SafeScreen, EnhancedCard, StatCard, ActionButton, StatusBadge, CompactCurvedHeader, LoadingSpinner } from '../../components';
 
 export default function MyAccountScreen() {
@@ -24,6 +25,10 @@ export default function MyAccountScreen() {
   const [commissionSummary, setCommissionSummary] = useState(null);
   const [commissionList, setCommissionList] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
+  const [showVerificationModal, setShowVerificationModal] = useState(false);
+  const [verificationCode, setVerificationCode] = useState('');
+  const [sendingCode, setSendingCode] = useState(false);
+  const [verifying, setVerifying] = useState(false);
 
   // Load user profile from Django
   useEffect(() => {
@@ -34,82 +39,71 @@ export default function MyAccountScreen() {
     try {
       if (!opts.silent) setLoading(true);
       
-      console.log('[MyAccountScreen] Loading user profile...');
       const profile = await usersAPI.getCurrentUser();
-      console.log('[MyAccountScreen] Profile loaded:', profile?.agent_code);
       setUserProfile(profile);
       
       // Load commissions summary + history
       try {
-        // Pass optional filters: e.g., period current month and limit for list
         const summary = await commissionsAPI.getSummary({});
         setCommissionSummary(summary);
         const list = await commissionsAPI.getList({ limit: 20 });
         setCommissionList(list);
-        // Map to screen stats: totalEarnings, monthlyEarnings
+        
+        // Load quotations count - use djangoAPI directly to avoid circular imports
+        const quotationsResponse = await djangoAPI.makeRequest('/api/motor3/quotations/', { 
+          method: 'GET' 
+        });
+        const totalQuotations = quotationsResponse?.count || 0;
+        
+        // Count paid quotations (status = PAID or CONVERTED)
+        const paidQuotationsResponse = await djangoAPI.makeRequest('/api/motor3/quotations/?status=PAID', { 
+          method: 'GET' 
+        });
+        const convertedQuotationsResponse = await djangoAPI.makeRequest('/api/motor3/quotations/?status=CONVERTED', { 
+          method: 'GET' 
+        });
+        const paidQuotations = (paidQuotationsResponse?.count || 0) + (convertedQuotationsResponse?.count || 0);
+        
+        // Calculate production from quotation premiums (immediate feedback)
+        const allQuotations = quotationsResponse?.results || [];
+        const totalProduction = allQuotations.reduce((sum, q) => {
+          const status = (q.status || '').toUpperCase();
+          if (status === 'CONVERTED' || status === 'PAID') {
+            // Try multiple paths to find premium amount
+            const payload = q.normalized_payload || q.payload || {};
+            const premiumBreakdown = payload.premium_breakdown || payload.premiumBreakdown || {};
+            const premium = premiumBreakdown.total_premium || premiumBreakdown.totalPremium || 
+                           premiumBreakdown.total || premiumBreakdown.totalPayable || 0;
+            return sum + Number(premium || 0);
+          }
+          return sum;
+        }, 0);
+        
         setStats((s) => {
-          const totalEarnings = Number(summary?.total_commission || 0);
+          const totalEarnings = totalProduction; // Show production from quotations
           const monthlyEarnings = Number(summary?.month_total || 0);
-          const paidCount = Number(summary?.paid_count || 0);
-          const unpaidCount = Number(summary?.unpaid_count || 0);
-          const totalPolicies = paidCount + unpaidCount;
-          const conversionRate = totalPolicies > 0 ? (paidCount / totalPolicies) * 100 : 0;
+          const conversionRate = totalQuotations > 0 ? (paidQuotations / totalQuotations) * 100 : 0;
           return {
             ...s,
             totalEarnings,
             monthlyEarnings,
-            totalQuotes: totalPolicies,
-            paidQuotes: paidCount,
+            totalQuotes: totalQuotations,
+            paidQuotes: paidQuotations,
             conversionRate,
           };
         });
       } catch (e) {
-        console.log('[MyAccountScreen] Commission endpoints unavailable:', e?.message || e);
+        // Silent catch for commission stats if unavailable
       }
     } catch (error) {
-      console.error('[MyAccountScreen] Error loading user profile:', error.message);
-      
-      // Check error type
-      const isAuthError = error?.message?.includes('Session expired') || 
-                         error?.message?.includes('401') ||
-                         error?.message?.includes('Unauthorized');
-      
-      const isNetworkError = error?.message?.includes('Network') ||
-                            error?.message?.includes('timeout') ||
-                            error?.message?.includes('connection');
-      
-      // Only show alert if not in silent mode
       if (!opts.silent) {
-        if (isAuthError) {
-          Alert.alert(
-            'Session Expired',
-            'Please log in again to continue.',
-            [{ text: 'OK' }]
-          );
-        } else if (isNetworkError) {
-          Alert.alert(
-            'Connection Issue', 
-            'Unable to connect to server. Check your internet connection.',
-            [
-              { text: 'Retry', onPress: () => loadUserProfile(opts) },
-              { text: 'Cancel', style: 'cancel' }
-            ]
-          );
-        } else {
-          Alert.alert(
-            'Error', 
-            'Failed to load profile data. Please try again.',
-            [
-              { text: 'Retry', onPress: () => loadUserProfile(opts) },
-              { text: 'Cancel', style: 'cancel' }
-            ]
-          );
-        }
+         // Error handling simplified
       }
     } finally {
       if (!opts.silent) setLoading(false);
     }
   };
+  
   const onRefresh = async () => {
     setRefreshing(true);
     try {
@@ -118,26 +112,14 @@ export default function MyAccountScreen() {
       setRefreshing(false);
     }
   };
+
   const handleLogout = () => {
     Alert.alert(
       'Logout',
       'Are you sure you want to logout?',
       [
-        {
-          text: 'Cancel',
-          style: 'cancel'
-        },
-        {
-          text: 'Logout',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await logout();
-            } catch (error) {
-              Alert.alert('Error', 'Failed to logout. Please try again.');
-            }
-          }
-        }
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Logout', style: 'destructive', onPress: async () => await logout() }
       ]
     );
   };
@@ -153,31 +135,8 @@ export default function MyAccountScreen() {
         title: 'PataBima Agent Performance'
       });
     } catch (error) {
-      console.error('Error sharing:', error);
+     // Ignore
     }
-  };
-
-  const handleExportData = async () => {
-    try {
-      const exportData = await QuoteStorageService.exportQuotes();
-      Alert.alert(
-        'Export Data',
-        `Successfully exported ${exportData.quotes.length} quotes and ${Object.keys(exportData.drafts).length} drafts.`,
-        [
-          { text: 'OK' }
-        ]
-      );
-    } catch (error) {
-      Alert.alert('Error', 'Failed to export data');
-    }
-  };
-
-  // Get time-based greeting
-  const getGreeting = () => {
-    const hour = new Date().getHours();
-    if (hour < 12) return 'Good Morning';
-    if (hour < 17) return 'Good Afternoon';  
-    return 'Good Evening';
   };
 
   // Get first name from full name
@@ -188,14 +147,85 @@ export default function MyAccountScreen() {
 
   // Last login formatted display
   const getLastLoginDisplay = () => {
-    const raw = userProfile?.last_login || userProfile?.lastLogin || userProfile?.last_login_at || userProfile?.lastLoginAt;
+    const raw = userProfile?.last_login || userProfile?.lastLogin;
     if (!raw) return null;
     try {
-      const d = new Date(raw);
-      if (isNaN(d)) return null;
-      return d.toLocaleString();
+      return new Date(raw).toLocaleString();
     } catch {
       return null;
+    }
+  };
+
+  const getDisplayIraNumber = () => {
+    const raw = userProfile?.ira_number;
+    if (!raw) return null;
+    const v = String(raw).trim();
+    if (!v || v.toUpperCase().startsWith('PENDING-')) return null;
+    return v;
+  };
+
+  const isAgentAccount = () => {
+    if (userProfile?.role) return userProfile.role === 'AGENT';
+    return Boolean(userProfile?.agent_code);
+  };
+
+  const handleSendVerificationCode = async () => {
+    try {
+      setSendingCode(true);
+      const response = await djangoAPI.makeRequest('/api/insurance/auth/email/send-verification/', {
+        method: 'POST',
+        body: JSON.stringify({}),
+      });
+      
+      if (response.success) {
+        setShowVerificationModal(true);
+        Toast.show({
+          type: 'success',
+          text1: 'Verification Code Sent',
+          text2: `Check your email: ${user?.email}`,
+          position: 'top',
+        });
+      } else {
+        Alert.alert('Error', response.error || 'Failed to send verification code');
+      }
+    } catch (error) {
+      Alert.alert('Error', error.message || 'Failed to send verification code');
+    } finally {
+      setSendingCode(false);
+    }
+  };
+
+  const handleVerifyCode = async () => {
+    if (!verificationCode || verificationCode.length !== 6) {
+      Alert.alert('Invalid Code', 'Please enter a valid 6-digit verification code');
+      return;
+    }
+    
+    try {
+      setVerifying(true);
+      const response = await djangoAPI.makeRequest('/api/insurance/auth/email/verify-code/', {
+        method: 'POST',
+        body: JSON.stringify({ code: verificationCode }),
+      });
+      
+      if (response.success) {
+        setShowVerificationModal(false);
+        setVerificationCode('');
+        Toast.show({
+          type: 'success',
+          text1: '✓ Email Verified',
+          text2: 'Your email has been successfully verified',
+          position: 'top',
+        });
+        // Reload profile to reflect verified status
+        await loadUserProfile({ silent: true });
+      } else {
+        Alert.alert('Verification Failed', response.error || 'Invalid or expired code');
+      }
+    } catch (error) {
+      Alert.alert('Error', error.message || 'Failed to verify code');
+    } finally {
+      setVerifying(false);
     }
   };
 
@@ -259,6 +289,60 @@ export default function MyAccountScreen() {
               </View>
             </View>
           </View>
+          
+          {/* IRA Number and Email Verification Section */}
+          <View style={styles.verificationSection}>
+            {/* IRA Number */}
+            {isAgentAccount() && (
+              <View style={styles.verificationRow}>
+                <Text style={styles.verificationLabel}>IRA Number</Text>
+                <View style={styles.verificationValueRow}>
+                  {getDisplayIraNumber() ? (
+                    <Text style={styles.verificationValue}>{getDisplayIraNumber()}</Text>
+                  ) : (
+                    <Text style={styles.verificationValue}>Not provided</Text>
+                  )}
+                  {getDisplayIraNumber() && userProfile.ira_verified ? (
+                    <View style={styles.verifiedBadge}>
+                      <Text style={styles.verifiedBadgeText}>✓ Verified</Text>
+                    </View>
+                  ) : (
+                    <View style={styles.pendingBadge}>
+                      <Text style={styles.pendingBadgeText}>⚠ Pending</Text>
+                    </View>
+                  )}
+                </View>
+              </View>
+            )}
+            
+            {/* Email Verification Status */}
+            {userProfile?.email && (
+              <View style={styles.verificationRow}>
+                <Text style={styles.verificationLabel}>Email Address</Text>
+                <View style={styles.verificationValueRow}>
+                  <Text style={styles.verificationValue}>{user?.email}</Text>
+                  {userProfile.is_email_verified ? (
+                    <View style={styles.verifiedBadge}>
+                      <Text style={styles.verifiedBadgeText}>✓ Verified</Text>
+                    </View>
+                  ) : (
+                    <TouchableOpacity 
+                      style={styles.verifyEmailButton}
+                      onPress={handleSendVerificationCode}
+                      disabled={sendingCode}
+                    >
+                      {sendingCode ? (
+                        <ActivityIndicator size="small" color="#fff" />
+                      ) : (
+                        <Text style={styles.verifyEmailText}>Verify Email</Text>
+                      )}
+                    </TouchableOpacity>
+                  )}
+                </View>
+              </View>
+            )}
+          </View>
+          
           {/* Full-width meta row for version and updates */}
           <View style={styles.buildContainer}>
             <Text style={styles.buildText}>App Version 1.0.0</Text>
@@ -425,18 +509,74 @@ export default function MyAccountScreen() {
             <Text style={styles.actionArrow}>›</Text>
           </TouchableOpacity>
           
-          <TouchableOpacity style={styles.actionItem} onPress={handleExportData}>
-            <Text style={styles.actionIcon}>💾</Text>
-            <View style={styles.actionContent}>
-              <Text style={styles.actionTitle}>Export Data</Text>
-              <Text style={styles.actionSubtitle}>Backup quotes and drafts</Text>
-            </View>
-            <Text style={styles.actionArrow}>›</Text>
-          </TouchableOpacity>
+
         </View>
 
       </ScrollView>
       )}
+      
+      {/* Email Verification Modal */}
+      <Modal
+        visible={showVerificationModal}
+        animationType="slide"
+        transparent
+        onRequestClose={() => setShowVerificationModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Verify Your Email</Text>
+            <Text style={styles.modalSubtitle}>
+              We sent a 6-digit code to{' \n'}
+              <Text style={styles.modalEmail}>{user?.email}</Text>
+            </Text>
+            
+            <TextInput
+              style={styles.codeInput}
+              placeholder="Enter 6-digit code"
+              keyboardType="number-pad"
+              maxLength={6}
+              value={verificationCode}
+              onChangeText={setVerificationCode}
+              autoFocus
+            />
+            
+            <View style={styles.modalActions}>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.cancelButton]}
+                onPress={() => {
+                  setShowVerificationModal(false);
+                  setVerificationCode('');
+                }}
+                disabled={verifying}
+              >
+                <Text style={styles.cancelButtonText}>Cancel</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                style={[styles.modalButton, styles.verifyButton]}
+                onPress={handleVerifyCode}
+                disabled={verifying || verificationCode.length !== 6}
+              >
+                {verifying ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <Text style={styles.verifyButtonText}>Verify</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+            
+            <TouchableOpacity
+              style={styles.resendButton}
+              onPress={handleSendVerificationCode}
+              disabled={sendingCode}
+            >
+              <Text style={styles.resendButtonText}>
+                {sendingCode ? 'Sending...' : 'Resend Code'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </SafeScreen>
   );
 }
@@ -828,6 +968,110 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
     textAlign: 'center',
   },
+  // Email verification button and modal styles
+  verifyEmailButton: {
+    backgroundColor: Colors.primary,
+    borderRadius: 6,
+    paddingVertical: Spacing.xs,
+    paddingHorizontal: Spacing.md,
+    minWidth: 100,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  verifyEmailText: {
+    color: '#fff',
+    fontSize: Typography.fontSize.sm,
+    fontFamily: Typography.fontFamily.medium,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: Spacing.lg,
+  },
+  modalContent: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: Spacing.xl,
+    width: '100%',
+    maxWidth: 400,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  modalTitle: {
+    fontSize: Typography.fontSize.xl,
+    fontFamily: Typography.fontFamily.bold,
+    color: Colors.textPrimary,
+    textAlign: 'center',
+    marginBottom: Spacing.sm,
+  },
+  modalSubtitle: {
+    fontSize: Typography.fontSize.md,
+    fontFamily: Typography.fontFamily.regular,
+    color: Colors.textSecondary,
+    textAlign: 'center',
+    marginBottom: Spacing.lg,
+    lineHeight: Typography.lineHeight.md,
+  },
+  modalEmail: {
+    fontFamily: Typography.fontFamily.medium,
+    color: Colors.primary,
+  },
+  codeInput: {
+    backgroundColor: Colors.backgroundSecondary,
+    borderRadius: 8,
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.lg,
+    fontSize: 24,
+    fontFamily: Typography.fontFamily.bold,
+    textAlign: 'center',
+    letterSpacing: 8,
+    marginBottom: Spacing.lg,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  modalActions: {
+    flexDirection: 'row',
+    gap: Spacing.md,
+    marginBottom: Spacing.md,
+  },
+  modalButton: {
+    flex: 1,
+    borderRadius: 8,
+    paddingVertical: Spacing.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cancelButton: {
+    backgroundColor: Colors.backgroundSecondary,
+  },
+  cancelButtonText: {
+    color: Colors.textSecondary,
+    fontSize: Typography.fontSize.md,
+    fontFamily: Typography.fontFamily.medium,
+  },
+  verifyButton: {
+    backgroundColor: Colors.primary,
+  },
+  verifyButtonText: {
+    color: '#fff',
+    fontSize: Typography.fontSize.md,
+    fontFamily: Typography.fontFamily.medium,
+  },
+  resendButton: {
+    alignItems: 'center',
+    paddingVertical: Spacing.sm,
+  },
+  resendButtonText: {
+    color: Colors.primary,
+    fontSize: Typography.fontSize.sm,
+    fontFamily: Typography.fontFamily.medium,
+    textDecorationLine: 'underline',
+  },
   monthlySection: {
     marginBottom: Spacing.lg,
   },
@@ -894,5 +1138,71 @@ const styles = StyleSheet.create({
   actionArrow: {
     fontSize: 20,
     color: Colors.textLight,
+  },
+  // IRA and Email Verification Section Styles
+  verificationSection: {
+    marginTop: Spacing.md,
+    paddingTop: Spacing.md,
+    borderTopWidth: 1,
+    borderTopColor: Colors.border || '#E5E7EB',
+  },
+  verificationRow: {
+    marginBottom: Spacing.sm,
+  },
+  verificationLabel: {
+    fontSize: Typography.fontSize.xs,
+    fontFamily: Typography.fontFamily.medium,
+    color: Colors.textSecondary,
+    marginBottom: Spacing.xs / 2,
+  },
+  verificationValueRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  verificationValue: {
+    fontSize: Typography.fontSize.sm,
+    fontFamily: Typography.fontFamily.regular,
+    color: Colors.textPrimary,
+    flex: 1,
+  },
+  verifiedBadge: {
+    backgroundColor: '#ECFDF5',
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: Spacing.xs / 2,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#10B981',
+  },
+  verifiedBadgeText: {
+    fontSize: Typography.fontSize.xs,
+    fontFamily: Typography.fontFamily.semiBold,
+    color: '#10B981',
+  },
+  pendingBadge: {
+    backgroundColor: '#FEF3C7',
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: Spacing.xs / 2,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#F59E0B',
+  },
+  pendingBadgeText: {
+    fontSize: Typography.fontSize.xs,
+    fontFamily: Typography.fontFamily.semiBold,
+    color: '#D97706',
+  },
+  unverifiedBadge: {
+    backgroundColor: '#F3F4F6',
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: Spacing.xs / 2,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#9CA3AF',
+  },
+  unverifiedBadgeText: {
+    fontSize: Typography.fontSize.xs,
+    fontFamily: Typography.fontFamily.regular,
+    color: '#6B7280',
   },
 });

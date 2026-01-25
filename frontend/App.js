@@ -3,12 +3,16 @@ import { View, StatusBar } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import * as SplashScreen from 'expo-splash-screen';
 import * as Updates from 'expo-updates';
+import Toast from 'react-native-toast-message';
+import { PaperProvider } from 'react-native-paper';
 // Temporarily disable lazy loading for debugging
 import AppNavigator from './navigation';
 import { AWSProviderDev } from './contexts/AWSContextDev';
 import { AuthProvider } from './contexts/AuthContext';
 import { MotorInsuranceProvider } from './contexts/MotorInsuranceContext';
 import { AppDataProvider } from './contexts/AppDataContext';
+import ErrorBoundary from './components/ErrorBoundary';
+import paperTheme from './theme/paperTheme';
 
 // Do not call SplashScreen.preventAutoHideAsync() in development
 
@@ -53,22 +57,27 @@ export default function App() {
   console.log('[App] Rendering main app...');
 
   return (
-    <SafeAreaProvider>
-      <View style={{ flex: 1, backgroundColor: '#D5222B' }}>
-        <StatusBar 
-          barStyle="light-content" 
-          translucent={false}
-        />
-        <AuthProvider>
-          <AWSProviderDev>
-            <MotorInsuranceProvider>
-              <AppDataProvider>
-                <AppNavigator />
-              </AppDataProvider>
-            </MotorInsuranceProvider>
-          </AWSProviderDev>
-        </AuthProvider>
-      </View>
-    </SafeAreaProvider>
+    <ErrorBoundary>
+      <SafeAreaProvider>
+        <PaperProvider theme={paperTheme}>
+          <View style={{ flex: 1, backgroundColor: '#D5222B' }}>
+            <StatusBar 
+              barStyle="light-content" 
+              translucent={false}
+            />
+            <AuthProvider>
+              <AWSProviderDev>
+                <MotorInsuranceProvider>
+                  <AppDataProvider>
+                    <AppNavigator />
+                  </AppDataProvider>
+                </MotorInsuranceProvider>
+              </AWSProviderDev>
+            </AuthProvider>
+          </View>
+          <Toast />
+        </PaperProvider>
+      </SafeAreaProvider>
+    </ErrorBoundary>
   );
 }

@@ -3,17 +3,56 @@ node_modules
 frontend/.expo/
 **/.expo
 
+# Python / Django
+.venv/
+**/__pycache__/
+**/*.py[cod]
+
+# Expo / React Native build outputs
+frontend/dist/
+*.apk
+*.aab
+*.ipa
+
+# Backend artifacts / secrets
+insurance-app/backups/
+insurance-app/staticfiles/
+insurance-app/tmp_conflicts/
+insurance-app/dmvic_credentials/
+insurance-app/dmvic_credentials.zip
+insurance-app/*.zip
+insurance-app/**/*.pfx
+insurance-app/**/*.p12
+insurance-app/**/*.pem
+insurance-app/**/*.key
+insurance-app/**/*.crt
+insurance-app/**/*.cer
+
 # Environment files (keep local configs private)
 .env
+.env.*
+!.env.example
 .env.local
 .env.ec2
 *.env.backup
+frontend/.env*
+!frontend/.env.example
 # Large deployment files
 deployment/*.zip
 deployment/latest-deployment.zip
 deployment/patabima-backend.zip
 deployment/temp-deployment-view/
 patabima-backend*.zip
+
+# Local temp/test artifacts
+_tmp_*
+frontend/_tmp_*
+last_presign*.json
+test-results-*.json
+temp_motor2_subs.json
+
+# Binary archives (usually build/deploy artifacts)
+*.zip
 
 # Large media files
 frontend/assets/*.gif

@@ -341,7 +341,8 @@ export default function CategorySelectionStep({ stepName = 'Category', onNext })
                               method: 'POST',
                               body: JSON.stringify({
                                 registration_number: reg
-                              })
+                              }),
+                              timeoutMs: 60000, // 60 seconds for DMVIC external API call
                             });
                             
                             // Debug logging

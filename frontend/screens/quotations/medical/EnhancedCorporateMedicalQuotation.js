@@ -177,18 +177,27 @@ const EnhancedCorporateMedicalQuotation = () => {
 
   const renderPolicyDetails = () => (
     <View style={styles.stepContainer}>
+      {/* Section: Policy Details */}
+      <View style={styles.stepHeader}>
+        <View style={styles.stepCircle}><Body1 style={styles.stepCircleText}>1</Body1></View>
+        <Subtitle2 style={styles.stepTitle}>Policy Details</Subtitle2>
+      </View>
+
       <View style={styles.inputContainer}>
   <Subtitle2 style={styles.label}>Number of Beneficiaries</Subtitle2>
-        <TextInput 
-          value={formData.numberOfBeneficiaries} 
-          onChangeText={(text) => updateFormData('numberOfBeneficiaries', text.replace(/\D/g, ''))} 
-          placeholder="Enter number of beneficiaries" 
-          keyboardType="number-pad"
-          inputMode="numeric"
-          returnKeyType="next"
-          maxLength={4}
-          style={styles.input} 
-        />
+        <View style={styles.cardInputContainer}>
+          <TextInput 
+            value={formData.numberOfBeneficiaries} 
+            onChangeText={(text) => updateFormData('numberOfBeneficiaries', text.replace(/\D/g, ''))} 
+            placeholder="Enter number of beneficiaries" 
+            keyboardType="number-pad"
+            inputMode="numeric"
+            returnKeyType="next"
+            maxLength={4}
+            style={styles.input}
+            placeholderTextColor={UI.textSecondary}
+          />
+        </View>
       </View>
       
       <View style={styles.inputContainer}>
@@ -210,54 +219,66 @@ const EnhancedCorporateMedicalQuotation = () => {
       
       <View style={styles.inputContainer}>
   <Subtitle2 style={styles.label}>Outpatient Limit</Subtitle2>
-        <TextInput 
-          value={formData.outpatientLimit} 
-          onChangeText={(text) => updateFormData('outpatientLimit', text.replace(/\D/g, ''))} 
-          placeholder="Enter outpatient limit" 
-          keyboardType="number-pad"
-          inputMode="numeric"
-          returnKeyType="next"
-          style={styles.input} 
-        />
+        <View style={styles.cardInputContainer}>
+          <TextInput 
+            value={formData.outpatientLimit} 
+            onChangeText={(text) => updateFormData('outpatientLimit', text.replace(/\D/g, ''))} 
+            placeholder="Enter outpatient limit" 
+            keyboardType="number-pad"
+            inputMode="numeric"
+            returnKeyType="next"
+            style={styles.input}
+            placeholderTextColor={UI.textSecondary}
+          />
+        </View>
       </View>
       
       <View style={styles.inputContainer}>
   <Subtitle2 style={styles.label}>Dental Limit</Subtitle2>
-        <TextInput 
-          value={formData.dentalLimit} 
-          onChangeText={(text) => updateFormData('dentalLimit', text.replace(/\D/g, ''))} 
-          placeholder="Enter dental limit" 
-          keyboardType="number-pad"
-          inputMode="numeric"
-          returnKeyType="next"
-          style={styles.input} 
-        />
+        <View style={styles.cardInputContainer}>
+          <TextInput 
+            value={formData.dentalLimit} 
+            onChangeText={(text) => updateFormData('dentalLimit', text.replace(/\D/g, ''))} 
+            placeholder="Enter dental limit" 
+            keyboardType="number-pad"
+            inputMode="numeric"
+            returnKeyType="next"
+            style={styles.input}
+            placeholderTextColor={UI.textSecondary}
+          />
+        </View>
       </View>
       
       <View style={styles.inputContainer}>
   <Subtitle2 style={styles.label}>Optical Limit</Subtitle2>
-        <TextInput 
-          value={formData.opticalLimit} 
-          onChangeText={(text) => updateFormData('opticalLimit', text.replace(/\D/g, ''))} 
-          placeholder="Enter optical limit" 
-          keyboardType="number-pad"
-          inputMode="numeric"
-          returnKeyType="next"
-          style={styles.input} 
-        />
+        <View style={styles.cardInputContainer}>
+          <TextInput 
+            value={formData.opticalLimit} 
+            onChangeText={(text) => updateFormData('opticalLimit', text.replace(/\D/g, ''))} 
+            placeholder="Enter optical limit" 
+            keyboardType="number-pad"
+            inputMode="numeric"
+            returnKeyType="next"
+            style={styles.input}
+            placeholderTextColor={UI.textSecondary}
+          />
+        </View>
       </View>
       
       <View style={styles.inputContainer}>
   <Subtitle2 style={styles.label}>Maternity Limit</Subtitle2>
-        <TextInput 
-          value={formData.maternityLimit} 
-          onChangeText={(text) => updateFormData('maternityLimit', text.replace(/\D/g, ''))} 
-          placeholder="Enter maternity limit" 
-          keyboardType="number-pad"
-          inputMode="numeric"
-          returnKeyType="next"
-          style={styles.input} 
-        />
+        <View style={styles.cardInputContainer}>
+          <TextInput 
+            value={formData.maternityLimit} 
+            onChangeText={(text) => updateFormData('maternityLimit', text.replace(/\D/g, ''))} 
+            placeholder="Enter maternity limit" 
+            keyboardType="number-pad"
+            inputMode="numeric"
+            returnKeyType="next"
+            style={styles.input}
+            placeholderTextColor={UI.textSecondary}
+          />
+        </View>
       </View>
       
       <View style={styles.inputContainer}>
@@ -296,75 +317,93 @@ const EnhancedCorporateMedicalQuotation = () => {
 
   const renderClientDetails = () => (
     <View style={styles.stepContainer}>
+      {/* Section: Client Details */}
+      <View style={styles.stepHeader}>
+        <View style={styles.stepCircle}><Body1 style={styles.stepCircleText}>2</Body1></View>
+        <Subtitle2 style={styles.stepTitle}>Client Details</Subtitle2>
+      </View>
+
       <View style={styles.inputContainer}>
         <Subtitle2 style={styles.label}>Company Name</Subtitle2>
-        <TextInput
-          value={formData.companyName}
-          onChangeText={(text) => updateFormData('companyName', text)}
-          placeholder="Enter company name"
-          placeholderTextColor={UI.textSecondary}
-          style={styles.input}
-        />
+        <View style={styles.cardInputContainer}>
+          <TextInput
+            value={formData.companyName}
+            onChangeText={(text) => updateFormData('companyName', text)}
+            placeholder="Enter company name"
+            placeholderTextColor={UI.textSecondary}
+            style={styles.input}
+          />
+        </View>
       </View>
       <View style={styles.inputContainer}>
         <Subtitle2 style={styles.label}>Company Registration Number</Subtitle2>
-        <TextInput
-          value={formData.companyRegistrationNumber}
-          onChangeText={(text) => updateFormData('companyRegistrationNumber', text)}
-          placeholder="Enter registration number"
-          placeholderTextColor={UI.textSecondary}
-          style={styles.input}
-        />
+        <View style={styles.cardInputContainer}>
+          <TextInput
+            value={formData.companyRegistrationNumber}
+            onChangeText={(text) => updateFormData('companyRegistrationNumber', text)}
+            placeholder="Enter registration number"
+            placeholderTextColor={UI.textSecondary}
+            style={styles.input}
+          />
+        </View>
       </View>
       <View style={styles.inputContainer}>
         <Subtitle2 style={styles.label}>Contact Person</Subtitle2>
-        <TextInput
-          value={formData.contactPerson}
-          onChangeText={(text) => updateFormData('contactPerson', text)}
-          placeholder="Enter contact person name"
-          placeholderTextColor={UI.textSecondary}
-          style={styles.input}
-        />
+        <View style={styles.cardInputContainer}>
+          <TextInput
+            value={formData.contactPerson}
+            onChangeText={(text) => updateFormData('contactPerson', text)}
+            placeholder="Enter contact person name"
+            placeholderTextColor={UI.textSecondary}
+            style={styles.input}
+          />
+        </View>
       </View>
       <View style={styles.inputContainer}>
         <Subtitle2 style={styles.label}>Phone Number</Subtitle2>
-        <TextInput
-          value={formData.phoneNumber}
-          onChangeText={(text) => updateFormData('phoneNumber', text.replace(/\D/g, ''))}
-          placeholder="Enter phone number"
-          placeholderTextColor={UI.textSecondary}
-          keyboardType="phone-pad"
-          inputMode="tel"
-          maxLength={12}
-          returnKeyType="next"
-          textContentType="telephoneNumber"
-          style={styles.input}
-        />
+        <View style={styles.cardInputContainer}>
+          <TextInput
+            value={formData.phoneNumber}
+            onChangeText={(text) => updateFormData('phoneNumber', text.replace(/\D/g, ''))}
+            placeholder="Enter phone number"
+            placeholderTextColor={UI.textSecondary}
+            keyboardType="phone-pad"
+            inputMode="tel"
+            maxLength={12}
+            returnKeyType="next"
+            textContentType="telephoneNumber"
+            style={styles.input}
+          />
+        </View>
       </View>
       <View style={styles.inputContainer}>
         <Subtitle2 style={styles.label}>Email Address</Subtitle2>
-        <TextInput
-          value={formData.emailAddress}
-          onChangeText={(text) => updateFormData('emailAddress', text)}
-          placeholder="Enter email address"
-          placeholderTextColor={UI.textSecondary}
-          keyboardType="email-address"
-          autoCapitalize="none"
-          returnKeyType="next"
-          textContentType="emailAddress"
-          autoCorrect={false}
-          style={styles.input}
-        />
+        <View style={styles.cardInputContainer}>
+          <TextInput
+            value={formData.emailAddress}
+            onChangeText={(text) => updateFormData('emailAddress', text)}
+            placeholder="Enter email address"
+            placeholderTextColor={UI.textSecondary}
+            keyboardType="email-address"
+            autoCapitalize="none"
+            returnKeyType="next"
+            textContentType="emailAddress"
+            autoCorrect={false}
+            style={styles.input}
+          />
+        </View>
       </View>
       <View style={styles.inputContainer}>
         <Subtitle2 style={styles.label}>Physical Address</Subtitle2>
-        <TextInput
-          value={formData.physicalAddress}
-          onChangeText={(text) => updateFormData('physicalAddress', text)}
-          placeholder="Enter company address"
-          placeholderTextColor={UI.textSecondary}
-          style={styles.input}
-        />
+        <View style={styles.cardInputContainer}>
+          <TextInput
+            value={formData.physicalAddress}
+            onChangeText={(text) => updateFormData('physicalAddress', text)}
+            placeholder="Enter company address"
+            placeholderTextColor={UI.textSecondary}
+            style={styles.input}
+          />
+        </View>
       </View>
       <TouchableOpacity 
         style={styles.declarationContainer} 
@@ -437,13 +476,24 @@ const styles = StyleSheet.create({
   label: {
     color: '#000',
     marginBottom: 8,
+    fontWeight: '500',
+  },
+  cardInputContainer: {
+    backgroundColor: '#fff',
+    borderRadius: BORDER_RADIUS.lg,
+    paddingHorizontal: SPACING.lg,
+    paddingVertical: SPACING.sm,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
   },
   input: {
     width: '100%',
-    borderRadius: BORDER_RADIUS.md,
-    backgroundColor: UI.backgroundGray,
-    paddingHorizontal: SPACING.lg,
-    paddingVertical: SPACING.md,
+    backgroundColor: 'transparent',
+    paddingHorizontal: 0,
+    paddingVertical: 8,
     fontSize: FONT_SIZES.input,
     color: UI.textPrimary,
   },

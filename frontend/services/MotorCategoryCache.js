@@ -163,8 +163,20 @@ class MotorCategoryCache {
         
         // Fetch categories
         console.log('Fetching categories...');
-        const categoriesResponse = await djangoAPI.getCategories();
-        this.categories = categoriesResponse;
+        const categoriesResponse = await djangoAPI.getMotorCategories();
+        
+        // Handle different response formats
+        if (Array.isArray(categoriesResponse)) {
+          this.categories = categoriesResponse;
+        } else if (categoriesResponse && categoriesResponse.categories) {
+          this.categories = categoriesResponse.categories;
+        } else if (categoriesResponse && categoriesResponse.data) {
+          this.categories = categoriesResponse.data;
+        } else {
+          console.warn('Unexpected categories response format:', categoriesResponse);
+          this.categories = [];
+        }
+        
         console.log(`✓ Fetched ${this.categories.length} categories`);
 
         // Fetch all subcategories in parallel
@@ -202,7 +214,7 @@ class MotorCategoryCache {
   async fetchAllSubcategories() {
     try {
       // Ensure we have categories
-      if (!this.categories || this.categories.length === 0) {
+      if (!this.categories || !Array.isArray(this.categories) || this.categories.length === 0) {
         console.warn('No categories available to fetch subcategories');
         return {};
       }

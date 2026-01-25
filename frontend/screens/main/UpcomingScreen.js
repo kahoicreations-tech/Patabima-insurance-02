@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, FlatList, RefreshControl, Alert } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
@@ -14,40 +15,8 @@ export default function UpcomingScreen({ navigation }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [refreshing, setRefreshing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [expandedExtensions, setExpandedExtensions] = useState({}); // Track which extensions are expanded
-  const { renewals, extensions, claims, motorPolicies, fetchRenewals, fetchExtensions, fetchClaims, fetchMotorPolicies } = useAppData();
+  const { renewals, extensions, motorPolicies, fetchRenewals, fetchExtensions, fetchMotorPolicies } = useAppData();
   const insets = useSafeAreaInsets();
-
-  // Normalize claim records from backend to UI shape
-  const mapClaim = useCallback((c) => ({
-    id: c.id,
-    claimNo: c.id,
-    category: c.product || 'MOTOR',
-    policyNo: c.policy_number,
-    vehicleReg: c.vehicle_reg || '',
-    status: c.status || 'SUBMITTED',
-    amount: c.estimated_amount ? `KES ${Number(c.estimated_amount).toLocaleString()}` : undefined,
-    claimDate: c.loss_date,
-    submissionDate: c.date_created,
-    description: c.loss_description,
-    documents: Array.isArray(c.documents) ? c.documents.map(d => d.file_name) : [],
-  }), []);
-
-  // Map claims for UI shape
-  const mapAndSetClaims = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      const list = await fetchClaims();
-      // Claims in context are raw; map locally for UI
-      return (list || []).map(mapClaim);
-    } catch (e) {
-      console.error('Failed to load claims:', e);
-      Alert.alert('Error', 'Failed to load claims. Please try again.');
-      return [];
-    } finally {
-      setIsLoading(false);
-    }
-  }, [fetchClaims, mapClaim]);
 
   // Fetch all data only when screen comes into focus
   useFocusEffect(
@@ -57,10 +26,9 @@ export default function UpcomingScreen({ navigation }) {
         try {
           setIsLoading(true);
           await Promise.all([
-            fetchRenewals(),
-            fetchExtensions(),
-            fetchClaims(),
-            fetchMotorPolicies(),
+            fetchRenewals(true),
+            fetchExtensions(true),
+            fetchMotorPolicies(true),
           ]);
           console.log('[UpcomingScreen] Data loaded - Extensions count:', extensions?.length || 0);
           console.log('[UpcomingScreen] Extensions data:', JSON.stringify(extensions, null, 2));
@@ -79,14 +47,12 @@ export default function UpcomingScreen({ navigation }) {
   const tabs = useMemo(() => ([
     { key: 'Renewals', label: `Renewals (${renewals.length})` },
     { key: 'Extensions', label: `Extensions (${extensions.length})` },
-    { key: 'Claims', label: `Claims (${claims.length})` }
-  ]), [renewals.length, extensions.length, claims.length]);
+  ]), [renewals.length, extensions.length]);
 
   const getCurrentData = () => {
     switch (activeTab) {
       case 'Renewals': return renewals;
       case 'Extensions': return extensions;
-      case 'Claims': return claims;
       default: return [];
     }
   };
@@ -96,26 +62,20 @@ export default function UpcomingScreen({ navigation }) {
     if (searchQuery === '') return true;
     
     const searchLower = searchQuery.toLowerCase();
-    if (activeTab === 'Claims') {
-      return item.category?.toLowerCase().includes(searchLower) ||
-             item.policyNo?.toLowerCase().includes(searchLower);
-    } else {
-      // Renewals and Extensions use normalized backend data
-      return item.policyNo?.toLowerCase().includes(searchLower) ||
-             item.policy_number?.toLowerCase().includes(searchLower) ||
-             item.vehicleReg?.toLowerCase().includes(searchLower) ||
-             item.vehicle_reg?.toLowerCase().includes(searchLower);
-    }
+    // Renewals and Extensions use normalized backend data
+    return item.policyNo?.toLowerCase().includes(searchLower) ||
+           item.policy_number?.toLowerCase().includes(searchLower) ||
+           item.vehicleReg?.toLowerCase().includes(searchLower) ||
+           item.vehicle_reg?.toLowerCase().includes(searchLower);
   });
 
   const onRefresh = async () => {
     setRefreshing(true);
     try {
       await Promise.all([
-        fetchRenewals(),
-        fetchExtensions(),
-        fetchClaims(),
-        fetchMotorPolicies(),
+        fetchRenewals(true),
+        fetchExtensions(true),
+        fetchMotorPolicies(true),
       ]);
     } finally {
       setRefreshing(false);
@@ -141,6 +101,11 @@ export default function UpcomingScreen({ navigation }) {
     if (days <= 7) return '#DC2626'; // red
     if (days <= 30) return '#F59E0B'; // orange
     return '#10B981'; // green
+  };
+
+  const stripExtendibleSuffix = (name) => {
+    if (!name) return name;
+    return String(name).replace(/\s*\(Extendible\)\s*$/i, '');
   };
 
   const computeExtendibleInfo = (policy) => {
@@ -172,54 +137,69 @@ export default function UpcomingScreen({ navigation }) {
     }
   };
 
-  const renderRenewalCard = ({ item }) => (
-    <EnhancedCard style={styles.itemCard}>
-      <View style={styles.cardHeader}>
-        <View style={styles.cardInfo}>
-          <Text style={styles.policyNo}>Policy: {item.policyNo}</Text>
-          <Text style={styles.vehicleReg}>Vehicle: {item.vehicleReg}</Text>
+  const renewalSections = useMemo(() => {
+    if (activeTab !== 'Renewals') {
+      return { expired: [], upcoming: [] };
+    }
+    const expired = [];
+    const upcoming = [];
+    for (const item of filteredData) {
+      // Logic for expired vs upcoming
+      // If daysLeft is negative or item is marked overdue
+      if ((item.daysLeft !== undefined && item.daysLeft < 0) || item.urgency === 'OVERDUE') {
+        expired.push(item);
+      } else {
+        upcoming.push(item);
+      }
+    }
+    return { expired, upcoming };
+  }, [activeTab, filteredData]);
+
+  const renderRenewalCard = ({ item }) => {
+    const daysLeft = item.daysLeft || 0;
+    const pillColor = daysLeft <= 7 ? '#DC2626' : daysLeft <= 30 ? '#F59E0B' : '#10B981';
+
+    return (
+      <EnhancedCard style={styles.itemCard}>
+        {/* Header Section */}
+        <View style={styles.modernCardHeader}>
+          <View style={styles.iconContainer}>
+            <Ionicons name="document-text-outline" size={24} color={Colors.primary} />
+          </View>
+          
+          <View style={styles.headerContent}>
+            <Text style={styles.vehicleTitle}>{item.vehicleReg}</Text>
+            <Text style={styles.policyTypeLabel}>Policy Type: {item.productName || 'Motor Private'}</Text>
+          </View>
+
+          <View style={[styles.daysPill, { backgroundColor: pillColor }]}>
+            <Text style={styles.daysPillText}>{daysLeft} Days</Text>
+          </View>
         </View>
-        <StatusBadge 
-          status={item.status} 
-          color={item.badgeColor || (item.urgency === 'OVERDUE' ? '#DC2626' : item.urgency === 'URGENT' ? '#F59E0B' : '#3B82F6')} 
-        />
-      </View>
-      
-      <View style={styles.cardDetails}>
-        <View style={styles.detailRow}>
-          <View style={styles.detailItem}>
-            <Text style={styles.detailLabel}>Due Date</Text>
-            <Text style={styles.detailValue}>{new Date(item.dueDate).toLocaleDateString()}</Text>
+
+        {/* Divider */}
+        <View style={styles.divider} />
+
+        {/* Details Section */}
+        <View style={styles.dataRows}>
+          <View style={styles.dataRow}>
+            <Text style={styles.dataLabel}>Insurance Provider</Text>
+            <Text style={styles.dataValue}>{item.underwriter || 'N/A'}</Text>
           </View>
-          <View style={styles.detailItem}>
-            <Text style={styles.detailLabel}>Days Left</Text>
-            <Text style={[
-              styles.detailValue,
-              { color: item.daysLeft <= 7 ? '#DC2626' : item.daysLeft <= 30 ? '#F59E0B' : '#10B981' }
-            ]}>
-              {item.daysLeft || 0} days
-            </Text>
+          <View style={styles.dataRow}>
+            <Text style={styles.dataLabel}>Total Premium</Text>
+            <Text style={styles.dataValue}>Ksh. {Number(item.currentPremium || 0).toLocaleString()} (net)</Text>
+          </View>
+          <View style={styles.dataRow}>
+            <Text style={styles.dataLabel}>Expiry Date</Text>
+            <Text style={styles.dataValue}>{new Date(item.dueDate).toLocaleDateString()}</Text>
           </View>
         </View>
-        
-        <View style={styles.detailRow}>
-          <View style={styles.detailItem}>
-            <Text style={styles.detailLabel}>Premium</Text>
-            <Text style={styles.detailValue}>KES {Number(item.currentPremium || 0).toLocaleString()}</Text>
-          </View>
-          <View style={styles.detailItem}>
-            <Text style={styles.detailLabel}>Underwriter</Text>
-            <Text style={styles.detailValue}>{item.underwriter || 'N/A'}</Text>
-          </View>
-        </View>
-        
-        <ActionButton
-          title="Renew Now"
-          icon="🔄"
-          size="small"
-          variant={item.urgency === 'OVERDUE' || item.urgency === 'URGENT' ? 'primary' : 'secondary'}
+
+        {/* Action Button */}
+        <TouchableOpacity 
+          style={styles.renewButtonOutline}
           onPress={() => {
-            // Navigate to Motor 2 flow with renewal data
             Alert.alert(
               'Renew Policy',
               `Start renewal process for policy ${item.policyNo}?`,
@@ -228,7 +208,6 @@ export default function UpcomingScreen({ navigation }) {
                 {
                   text: 'Renew',
                   onPress: () => {
-                    // TODO: Navigate to Motor2Flow with prefilled renewal data
                     navigation.navigate('Motor2', {
                       mode: 'renewal',
                       policyNumber: item.policyNo,
@@ -239,11 +218,12 @@ export default function UpcomingScreen({ navigation }) {
               ]
             );
           }}
-          style={styles.actionButton}
-        />
-      </View>
-    </EnhancedCard>
-  );
+        >
+          <Text style={styles.renewButtonText}>Renew Policy</Text>
+        </TouchableOpacity>
+      </EnhancedCard>
+    );
+  };
 
   // Helper function to calculate late fee based on days since expiry
   const calculateLateFee = (daysSinceExpiry) => {
@@ -254,231 +234,92 @@ export default function UpcomingScreen({ navigation }) {
   };
 
   const renderExtensionCard = ({ item }) => {
-    // For active extendible policies from backend, show extension timeline
-    const today = new Date();
-    const isExpanded = expandedExtensions[item.id] || false;
-    
-    // Backend provides these fields from the extension endpoint
-    const initialEnd = new Date(item.initialPeriodEnd || item.initial_period_end);
-    const balanceDeadline = new Date(item.balanceDeadline || item.balance_deadline);
-    const daysToInitialEnd = item.daysToInitialEnd || Math.ceil((initialEnd - today) / (1000 * 60 * 60 * 24));
-    const daysToBalanceDeadline = item.daysToBalanceDeadline || Math.ceil((balanceDeadline - today) / (1000 * 60 * 60 * 24));
-    const isUrgent = daysToBalanceDeadline <= 7;
-    
-    const initialAmount = item.initialAmount || item.initial_amount || 0;
-    const balanceAmount = item.balanceAmount || item.balance_amount || 0;
-    const totalAnnualPremium = initialAmount + balanceAmount;
-    
-    // Format product name for display
-    const rawProductName = item.productName || item.product_name || 'EXTENDIBLE';
-    const formattedProductName = getProductLabel(rawProductName) || rawProductName.replace(/_/g, ' ');
-    const displayProductName = `${formattedProductName} (Extendible)`;
-    
+    const initialAmount = Number(item.initialAmount || item.initial_amount || 0);
+    const balanceAmount = Number(item.balanceAmount || item.balance_amount || 0);
+    const totalAnnualPremium = Number(item.totalAnnualPremium || (initialAmount + balanceAmount) || 0);
+    const paidAmount = Number(item.paidAmount || item.paid_amount || initialAmount || 0);
+    const certificatesIssued = item.certificatesIssued ?? item.certificates_issued;
+
+    const rawPolicyType = item.coverType || item.productType || item.product_type || item.productName || item.product_name;
+    const policyTypeLabel = stripExtendibleSuffix(getProductLabel(rawPolicyType) || rawPolicyType || '');
+
+    const daysChip = (() => {
+      const d1 = Number(item.daysToInitialEnd ?? item.days_to_initial_end);
+      const d2 = Number(item.daysToBalanceDeadline ?? item.days_to_balance_deadline);
+      if (!Number.isNaN(d1) && d1 > 0) return d1;
+      if (!Number.isNaN(d2) && d2 >= 0) return d2;
+      return 0;
+    })();
+
+    const expiryDate = item.cover_end || item.dueDate || item.expires_at;
+
+    const canExtend = item.canExtend ?? item.can_extend;
+    const ctaLabel = item.ctaLabel || item.cta_label || (canExtend === false ? 'Pending Valuation' : 'Extend Policy');
+
     return (
       <EnhancedCard style={styles.itemCard}>
-        {/* Collapsible Header */}
+        {/* Header Section */}
+        <View style={styles.modernCardHeader}>
+          <View style={styles.iconContainer}>
+            <Ionicons name="documents-outline" size={24} color={Colors.primary} />
+          </View>
+          
+          <View style={styles.headerContent}>
+            <Text style={styles.vehicleTitle}>{item.vehicleReg || item.vehicle_reg || 'N/A'}</Text>
+            <Text style={styles.policyTypeLabel}>{policyTypeLabel || 'Motor Commercial'}</Text>
+          </View>
+
+          <View style={[styles.daysPill, { backgroundColor: '#10B981' }]}>
+            <Text style={styles.daysPillText}>{daysChip} Days</Text>
+          </View>
+        </View>
+
+        {/* Divider */}
+        <View style={styles.divider} />
+
+        {/* Details Section */}
+        <View style={styles.dataRows}>
+          <View style={styles.dataRow}>
+            <Text style={styles.dataLabel}>Insurance Provider</Text>
+            <Text style={styles.dataValue}>{item.underwriterName || item.underwriter_name || 'N/A'}</Text>
+          </View>
+          <View style={styles.dataRow}>
+            <Text style={styles.dataLabel}>Total Premium</Text>
+            <Text style={styles.dataValue}>Ksh. {Math.round(totalAnnualPremium).toLocaleString()} (gross)</Text>
+          </View>
+          <View style={styles.dataRow}>
+            <Text style={styles.dataLabel}>Certificates Issued</Text>
+            <Text style={styles.dataValue}>{certificatesIssued ?? '0'}</Text>
+          </View>
+          <View style={styles.dataRow}>
+            <Text style={styles.dataLabel}>Premium Balance</Text>
+            <Text style={styles.dataValue}>Ksh. {Math.round(balanceAmount).toLocaleString()}</Text>
+          </View>
+          <View style={styles.dataRow}>
+            <Text style={styles.dataLabel}>Total Paid</Text>
+            <Text style={styles.dataValue}>Ksh. {Math.round(paidAmount).toLocaleString()}</Text>
+          </View>
+          <View style={styles.dataRow}>
+            <Text style={styles.dataLabel}>Expiry Date</Text>
+            <Text style={styles.dataValue}>{expiryDate ? new Date(expiryDate).toLocaleDateString() : 'N/A'}</Text>
+          </View>
+        </View>
+
+        {/* Action Button */}
         <TouchableOpacity 
-          onPress={() => setExpandedExtensions(prev => ({ ...prev, [item.id]: !prev[item.id] }))}
-          activeOpacity={0.7}
+          style={styles.renewButtonOutline}
+          disabled={canExtend === false}
+          onPress={() => {
+            navigation.navigate('Extension', { policy: item });
+          }}
         >
-          <View style={styles.cardHeader}>
-            <View style={styles.cardInfo}>
-              <Text style={styles.policyNo}>Policy: {item.policyNo || item.policy_number}</Text>
-              <Text style={styles.vehicleReg}>Vehicle: {item.vehicleReg || item.vehicle_reg}</Text>
-              <Text style={styles.productType}>{displayProductName}</Text>
-              {!isExpanded && (
-                <Text style={[styles.detailSubtext, { color: isUrgent ? Colors.error : Colors.warning, marginTop: 4 }]}>
-                  Balance due in {daysToBalanceDeadline} days • KSh {balanceAmount.toLocaleString()}
-                </Text>
-              )}
-            </View>
-            <View style={{ alignItems: 'flex-end' }}>
-              <StatusBadge 
-                status={item.status} 
-                color={item.badgeColor} 
-              />
-              <Text style={{ fontSize: 20, marginTop: 8 }}>{isExpanded ? '▼' : '▶'}</Text>
-            </View>
-          </View>
+          <Text style={styles.renewButtonText}>{ctaLabel}</Text>
         </TouchableOpacity>
-        
-        {/* Expanded Details */}
-        {isExpanded && (
-          <View style={styles.cardDetails}>
-            {/* Extension Timeline Progress */}
-            <View style={styles.timelineSection}>
-              <Text style={styles.timelineTitle}>Extension Timeline</Text>
-              
-              {/* Progress bar */}
-              <View style={styles.progressBarContainer}>
-                <View style={[styles.progressBarFill, { width: `${Math.max(0, Math.min(100, ((item.initial_period_days || 30) + (item.grace_total_days || 60) - daysToBalanceDeadline) / ((item.initial_period_days || 30) + (item.grace_total_days || 60)) * 100))}%` }]} />
-              </View>
-              
-              {/* Timeline milestones */}
-              <View style={styles.timelineMilestones}>
-                <View style={styles.milestoneItem}>
-                  <Text style={styles.milestoneLabel}>Initial Period</Text>
-                  <Text style={styles.milestoneDate}>{initialEnd.toLocaleDateString()}</Text>
-                  <Text style={[styles.milestoneDays, { color: daysToInitialEnd <= 0 ? Colors.textSecondary : Colors.primary }]}>
-                    {daysToInitialEnd > 0 ? `${daysToInitialEnd} days` : 'Ended'}
-                  </Text>
-                </View>
-                
-                <View style={styles.milestoneDivider} />
-                
-                <View style={styles.milestoneItem}>
-                  <Text style={styles.milestoneLabel}>Balance Deadline</Text>
-                  <Text style={styles.milestoneDate}>{balanceDeadline.toLocaleDateString()}</Text>
-                  <Text style={[styles.milestoneDays, { color: isUrgent ? Colors.error : Colors.warning }]}>
-                    {daysToBalanceDeadline} days
-                  </Text>
-                </View>
-              </View>
-            </View>
-            
-            {/* Payment Information */}
-            <View style={styles.detailRow}>
-              <View style={styles.detailItem}>
-                <Text style={styles.detailLabel}>Initial Paid</Text>
-                <Text style={[styles.detailValue, { color: Colors.success }]}>
-                  KSh {initialAmount.toLocaleString()}
-                </Text>
-              </View>
-              <View style={styles.detailItem}>
-                <Text style={styles.detailLabel}>Balance Due</Text>
-                <Text style={[styles.detailValue, { color: isUrgent ? Colors.error : Colors.warning }]}>
-                  KSh {balanceAmount.toLocaleString()}
-                </Text>
-              </View>
-            </View>
-            
-            <View style={styles.totalPaymentRow}>
-              <Text style={styles.totalLabel}>Total Annual Premium</Text>
-              <Text style={styles.totalAmount}>KSh {totalAnnualPremium.toLocaleString()}</Text>
-            </View>
-            
-            {/* Transaction & Underwriter Details */}
-            {(item.transactionId || item.transaction_id || item.underwriterName || item.underwriter_name) && (
-              <View style={styles.transactionSection}>
-                {(item.underwriterName || item.underwriter_name) && (
-                  <View style={styles.detailRow}>
-                    <View style={styles.detailItem}>
-                      <Text style={styles.detailLabel}>Insurer</Text>
-                      <Text style={styles.detailValue}>
-                        {item.underwriterName || item.underwriter_name}
-                      </Text>
-                    </View>
-                  </View>
-                )}
-                {(item.transactionId || item.transaction_id) && (
-                  <View style={styles.detailRow}>
-                    <View style={styles.detailItem}>
-                      <Text style={styles.detailLabel}>Transaction ID</Text>
-                      <Text style={[styles.detailValue, { fontSize: 11 }]}>
-                        {item.transactionId || item.transaction_id}
-                      </Text>
-                    </View>
-                    {(item.paidAmount || item.paid_amount) && (
-                      <View style={styles.detailItem}>
-                        <Text style={styles.detailLabel}>Paid</Text>
-                        <Text style={[styles.detailValue, { color: Colors.success }]}>
-                          KSh {(item.paidAmount || item.paid_amount).toLocaleString()}
-                        </Text>
-                      </View>
-                    )}
-                  </View>
-                )}
-              </View>
-            )}
-            
-            {/* Extension Info */}
-            <View style={[styles.extensionInfo, isUrgent && styles.extensionInfoUrgent]}>
-              <Text style={styles.infoIcon}>{isUrgent ? '⚠️' : 'ℹ️'}</Text>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.infoText}>
-                  {daysToInitialEnd > 0 
-                    ? `Initial coverage active. Balance payment extends coverage for the full year.`
-                    : `Initial period ended. Pay balance within ${daysToBalanceDeadline} days to complete annual coverage.`
-                  }
-                </Text>
-                {isUrgent && (
-                  <Text style={[styles.infoText, { color: Colors.error, marginTop: 4 }]}>
-                    Urgent: Balance deadline approaching!
-                  </Text>
-                )}
-              </View>
-            </View>
-            
-            {/* Action Button */}
-            <ActionButton
-              title={`Pay Balance (KSh ${Math.round(balanceAmount).toLocaleString()})`}
-              icon="💰"
-              size="medium"
-              variant={isUrgent ? 'primary' : 'secondary'}
-              onPress={() => {
-                // Navigate to extension payment screen
-                navigation.navigate('ExtensionPayment', {
-                  policyId: item.id,
-                  policyNumber: item.policyNo || item.policy_number,
-                  balanceAmount,
-                  lateFeePercentage: 0,
-                  totalAmount: Math.round(balanceAmount),
-                  vehicleReg: item.vehicleReg || item.vehicle_reg,
-                  productName: item.productName || item.product_name,
-                  extensionDays: item.grace_total_days,
-                  coverEndDate: item.cover_end,
-                  isActiveExtension: true,
-                });
-              }}
-              style={styles.actionButton}
-            />
-          </View>
-        )}
       </EnhancedCard>
     );
   };
 
-  const renderClaimCard = ({ item }) => (
-    <EnhancedCard style={styles.itemCard}>
-      <View style={styles.cardHeader}>
-        <View style={styles.cardInfo}>
-          <Text style={styles.policyNo}>{item.category}</Text>
-          <Text style={styles.vehicleReg}>Policy: {item.policyNo}</Text>
-        </View>
-        <StatusBadge status={item.status} />
-      </View>
-      
-      <View style={styles.cardDetails}>
-        <View style={styles.detailRow}>
-          <View style={styles.detailItem}>
-            <Text style={styles.detailLabel}>Claim Date</Text>
-            <Text style={styles.detailValue}>{new Date(item.claimDate).toLocaleDateString()}</Text>
-          </View>
-          <View style={styles.detailItem}>
-            <Text style={styles.detailLabel}>Amount</Text>
-            <Text style={[styles.detailValue, { color: Colors.success }]}>{item.amount}</Text>
-          </View>
-        </View>
-        
-        <ActionButton
-          title={item.status === 'Pending' ? 'View & Track' : 'View Details'}
-          icon="👁️"
-          variant={item.status === 'Pending' ? 'primary' : 'secondary'}
-          size="small"
-          onPress={() => {
-            console.log('Viewing details for claim:', item.claimNo);
-            navigation.navigate('ClaimDetails', { claim: item });
-          }}
-          style={styles.actionButton}
-        />
-      </View>
-    </EnhancedCard>
-  );
-
   const renderCard = ({ item }) => {
-    if (activeTab === 'Claims') {
-      return renderClaimCard({ item });
-    }
     if (activeTab === 'Extensions') {
       return renderExtensionCard({ item });
     }
@@ -487,9 +328,7 @@ export default function UpcomingScreen({ navigation }) {
 
   const renderEmptyState = () => (
     <View style={styles.emptyState}>
-      <Text style={styles.emptyIcon}>
-        {activeTab === 'Renewals' ? '📅' : activeTab === 'Claims' ? '📋' : '📄'}
-      </Text>
+      <Text style={styles.emptyIcon}>{activeTab === 'Renewals' ? '📅' : '📄'}</Text>
       <Text style={styles.emptyTitle}>
         {searchQuery ? 'No Results Found' : `No Upcoming ${activeTab}`}
       </Text>
@@ -502,14 +341,31 @@ export default function UpcomingScreen({ navigation }) {
     </View>
   );
 
+  const extensionSections = useMemo(() => {
+    if (activeTab !== 'Extensions') {
+      return { overdue: [], upcoming: [] };
+    }
+    const overdue = [];
+    const upcoming = [];
+    for (const item of filteredData) {
+      const daysToBalanceDeadline = Number(item.daysToBalanceDeadline ?? item.days_to_balance_deadline);
+      if (!Number.isNaN(daysToBalanceDeadline) && daysToBalanceDeadline < 0) {
+        overdue.push(item);
+      } else {
+        upcoming.push(item);
+      }
+    }
+    return { overdue, upcoming };
+  }, [activeTab, filteredData]);
+
   return (
     <SafeScreen disableTopPadding>
       <StatusBar style="light" />
       
       {/* Compact Curved Header */}
       <CompactCurvedHeader 
-        title="Upcoming & Claims"
-        subtitle="Manage renewals and track claims"
+        title="Upcoming"
+        subtitle="Manage renewals and extensions"
       />
       
       <ScrollView 
@@ -546,18 +402,6 @@ export default function UpcomingScreen({ navigation }) {
               <View style={styles.statItem}>
                 <Text style={styles.statNumber}>{extensions.length}</Text>
                 <Text style={styles.statLabel}>Extensions</Text>
-              </View>
-              <View style={styles.statDivider} />
-              <View style={styles.statItem}>
-                <Text style={styles.statNumber}>{claims.length}</Text>
-                <Text style={styles.statLabel}>Claims</Text>
-              </View>
-              <View style={styles.statDivider} />
-              <View style={styles.statItem}>
-                <Text style={[styles.statNumber, { color: Colors.warning }]}>
-                  {claims.filter(c => (c.status || '').toUpperCase() === 'PENDING').length}
-                </Text>
-                <Text style={styles.statLabel}>Pending</Text>
               </View>
             </View>
           </EnhancedCard>
@@ -606,24 +450,65 @@ export default function UpcomingScreen({ navigation }) {
           ))}
         </View>
 
-        {/* Submit New Claim Button - Only show when Claims tab is active */}
-        {activeTab === 'Claims' && (
-          <View style={styles.submitClaimSection}>
-            <ActionButton
-              title="Submit New Claim"
-              icon="📝"
-              onPress={() => navigation.navigate('ClaimsSubmission')}
-              style={styles.submitClaimButton}
-            />
-          </View>
-        )}
-
         {/* Content */}
         {isLoading ? (
           <View>
             <SkeletonCard />
             <SkeletonCard />
             <SkeletonCard />
+          </View>
+        ) : activeTab === 'Extensions' ? (
+          <View>
+            <Text style={styles.sectionHeader}>Overdue ({extensionSections.overdue.length})</Text>
+            {extensionSections.overdue.length > 0 ? (
+              <FlatList
+                data={extensionSections.overdue}
+                renderItem={renderCard}
+                keyExtractor={(item) => `Extensions-overdue-${item.id || item.policyNo || item.policy_number}`}
+                showsVerticalScrollIndicator={false}
+                scrollEnabled={false}
+              />
+            ) : null}
+
+            <Text style={[styles.sectionHeader, { marginTop: Spacing.md }]}>Upcoming ({extensionSections.upcoming.length})</Text>
+            {extensionSections.upcoming.length > 0 ? (
+              <FlatList
+                data={extensionSections.upcoming}
+                renderItem={renderCard}
+                keyExtractor={(item) => `Extensions-upcoming-${item.id || item.policyNo || item.policy_number}`}
+                showsVerticalScrollIndicator={false}
+                scrollEnabled={false}
+              />
+            ) : (
+              renderEmptyState()
+            )}
+          </View>
+        ) : activeTab === 'Renewals' ? (
+          <View>
+            <Text style={styles.sectionHeader}>Expired ({renewalSections.expired.length})</Text>
+            {renewalSections.expired.length > 0 ? (
+              <FlatList
+                data={renewalSections.expired}
+                renderItem={renderCard}
+                keyExtractor={(item) => `Renewals-expired-${item.id || item.policyNo || item.policy_number}`}
+                showsVerticalScrollIndicator={false}
+                scrollEnabled={false}
+              />
+            ) : null}
+
+            <Text style={[styles.sectionHeader, { marginTop: Spacing.md }]}>Upcoming ({renewalSections.upcoming.length})</Text>
+            {renewalSections.upcoming.length > 0 ? (
+              <FlatList
+                data={renewalSections.upcoming}
+                renderItem={renderCard}
+                keyExtractor={(item) => `Renewals-upcoming-${item.id || item.policyNo || item.policy_number}`}
+                showsVerticalScrollIndicator={false}
+                scrollEnabled={false}
+              />
+            ) : (
+                // Only show empty state if BOTH sections are empty
+                renewalSections.expired.length === 0 ? renderEmptyState() : null
+            )}
           </View>
         ) : filteredData.length > 0 ? (
           <FlatList
@@ -1075,11 +960,116 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: Typography.lineHeight.md,
   },
-  submitClaimSection: {
+  sectionHeader: {
+    fontSize: Typography.fontSize.sm,
+    fontFamily: Typography.fontFamily.semiBold,
+    color: Colors.textSecondary,
+    marginTop: Spacing.sm,
+    marginBottom: Spacing.sm,
+  },
+
+  extensionTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: Spacing.sm,
+  },
+  extensionReg: {
+    fontSize: Typography.fontSize.md,
+    fontFamily: Typography.fontFamily.semiBold,
+    color: Colors.textPrimary,
+  },
+  extensionPolicyType: {
+    fontSize: Typography.fontSize.sm,
+    fontFamily: Typography.fontFamily.regular,
+    color: Colors.textSecondary,
+    marginTop: 2,
+  },
+  daysPill: {
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 999,
+  },
+  daysPillText: {
+    fontSize: 12,
+    fontFamily: Typography.fontFamily.semiBold,
+    color: Colors.white,
+  },
+  extensionDetails: {
+    marginTop: 2,
     marginBottom: Spacing.md,
   },
-  submitClaimButton: {
-    marginHorizontal: 0,
+  extensionDetailLine: {
+    fontSize: Typography.fontSize.sm,
+    fontFamily: Typography.fontFamily.regular,
+    color: Colors.textSecondary,
+    marginBottom: 6,
+  },
+  
+  // Modern Card Styles
+  modernCardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: Spacing.md,
+  },
+  iconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: Colors.backgroundLight,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: Spacing.sm,
+  },
+  headerContent: {
+    flex: 1,
+  },
+  vehicleTitle: {
+    fontSize: Typography.fontSize.lg,
+    fontFamily: Typography.fontFamily.bold,
+    color: Colors.textPrimary,
+  },
+  policyTypeLabel: {
+    fontSize: Typography.fontSize.sm,
+    fontFamily: Typography.fontFamily.regular,
+    color: Colors.textSecondary,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: Colors.divider,
+    marginVertical: Spacing.sm,
+  },
+  dataRows: {
+    marginTop: Spacing.sm,
+    marginBottom: Spacing.md,
+  },
+  dataRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: Spacing.xs,
+  },
+  dataLabel: {
+    fontSize: Typography.fontSize.md,
+    color: Colors.textSecondary,
+    fontFamily: Typography.fontFamily.regular,
+  },
+  dataValue: {
+    fontSize: Typography.fontSize.md,
+    color: Colors.textPrimary,
+    fontFamily: Typography.fontFamily.medium,
+  },
+  renewButtonOutline: {
+    borderWidth: 1,
+    borderColor: Colors.primary,
+    borderRadius: 8,
+    paddingVertical: 12,
+    alignItems: 'center',
+    marginTop: Spacing.sm,
+  },
+  renewButtonText: {
+    fontSize: Typography.fontSize.md,
+    fontFamily: Typography.fontFamily.semiBold,
+    color: Colors.primary,
   },
 });
 

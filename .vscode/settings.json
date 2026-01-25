@@ -1,21 +1,46 @@
 {
-    "python-envs.pythonProjects": [
-        {
-            "path": "",
-            "envManager": "ms-python.python:venv",
-            "packageManager": "ms-python.python:pip"
-        }
-    ],
-    "mcp.servers": {
-        "adb-android": {
-            "command": "node",
-            "args": [
-                "c:\\Users\\USER\\Desktop\\PATABIMA01\\LocalPilotMCP\\full-server.mjs"
-            ],
-            "env": {
-                "NODE_ENV": "production"
-            }
-        }
-    },
-    "postman.settings.dotenv-detection-notification-visibility": false
+  "python-envs.pythonProjects": [
+    {
+      "path": "",
+      "envManager": "ms-python.python:venv",
+      "packageManager": "ms-python.python:pip"
+    }
+  ],
+
+// "mcp.servers": {
+//   "adb-android": {
+//     "command": "node",
+//     "args": [
+//       "c:\\Users\\USER\\Desktop\\PATABIMA01\\LocalPilotMCP\\full-server.mjs"
+//     ],
+//     "env": {
+//       "NODE_ENV": "production"
+//     }
+//   }
+// },
+// Additional VS Code settings below
+
+  "postman.settings.dotenv-detection-notification-visibility": false,
+
+  "files.watcherExclude": {
+    "**/node_modules/**": true,
+    "**/dist/**": true,
+    "**/build/**": true,
+    "**/.next/**": true
+  },
+
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/dist": true,
+    "**/build": true,
+    "**/.next": true
+  },
+
+  "git.autorefresh": false,
+  "chat.tools.terminal.autoApprove": {
+    "/^pwsh -NoProfile -File \"c:\\\\Users\\\\USER\\\\Desktop\\\\PATABIMA01\\\\deployment\\\\vscode-tasks\\\\run_django\\.ps1\" -Action test-commissions$/": {
+      "approve": true,
+      "matchCommandLine": true
+    }
+  }
 }

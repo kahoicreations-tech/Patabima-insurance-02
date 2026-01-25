@@ -1,7 +1,8 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { View, Text, TextInput, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { VEHICLE_MAKES, getModelsForMake } from '../../../../../constants/vehicleCatalog';
 import { useMotorInsurance } from '@contexts/MotorInsuranceContext';
+import StableTextInput from '../../../../../components/common/StableTextInput';
 
 const DEBUG = false; // Toggle verbose console logs for this form
 
@@ -40,15 +41,26 @@ export default function EnhancedClientForm({
   const [fieldErrors, setFieldErrors] = useState({});
   const { actions } = useMotorInsurance();
   
+  // ✅ Use refs to store latest values without causing re-renders
+  const valuesRef = useRef(values);
+  const fieldErrorsRef = useRef(fieldErrors);
+  const onChangeRef = useRef(onChange);
+  
+  // Keep refs in sync
+  valuesRef.current = values;
+  fieldErrorsRef.current = fieldErrors;
+  onChangeRef.current = onChange;
+  
   // Track if fields were manually edited (to clear DMVIC cache)
   const manuallyEditedRef = useRef(new Set());
   
-  const update = (k, v) => {
+  // ✅ Make update function stable with useCallback
+  const update = useCallback((k, v) => {
     if (DEBUG) {
       try { console.log('EnhancedClientForm update called:', k, '=', v); } catch {}
     }
     // Avoid emitting changes when value hasn't changed
-    const prev = values ? values[k] : undefined;
+    const prev = valuesRef.current ? valuesRef.current[k] : undefined;
     if (prev === v) return;
     
     // Special handling for registration number (PRIMARY KEY)
@@ -67,15 +79,30 @@ export default function EnhancedClientForm({
     }
     
     // Clear field error when user starts typing
-    if (fieldErrors[k]) {
+    if (fieldErrorsRef.current[k]) {
       setFieldErrors(prev => ({ ...prev, [k]: null }));
     }
     
-    const newValues = { ...(values || {}), [k]: v };
-    onChange?.(newValues);
-  };
+    const newValues = { ...(valuesRef.current || {}), [k]: v };
+    onChangeRef.current?.(newValues);
+  }, [actions]); // Only depend on actions, not values/fieldErrors/onChange
   
-  const validateField = (key, value) => {
+  // ✅ Memoize field handlers to prevent TextInput re-renders
+  const fieldHandlers = useMemo(() => ({
+    first_name: (v) => update('first_name', v),
+    last_name: (v) => update('last_name', v),
+    kra_pin: (v) => update('kra_pin', (v || '').toUpperCase()),
+    id_number: (v) => update('id_number', v),
+    email: (v) => update('email', v),
+    phone: (v) => update('phone', v),
+    vehicle_registration: (v) => update('vehicle_registration', (v || '').toUpperCase()),
+    chassis_number: (v) => update('chassis_number', (v || '').toUpperCase()),
+    vehicle_make: (v) => update('vehicle_make', v),
+    vehicle_model: (v) => update('vehicle_model', v),
+    vehicle_year: (v) => update('vehicle_year', v),
+  }), [update]);
+  
+  const validateField = useCallback((key, value) => {
     const val = (value || '').toString().trim();
     
     switch (key) {
@@ -106,14 +133,14 @@ export default function EnhancedClientForm({
       default:
         return null;
     }
-  };
+  }, []);
   
-  const handleBlur = (key) => {
-    const error = validateField(key, values[key]);
+  const handleBlur = useCallback((key) => {
+    const error = validateField(key, valuesRef.current[key]);
     if (error) {
       setFieldErrors(prev => ({ ...prev, [key]: error }));
     }
-  };
+  }, [validateField]);
   
   const hasAppliedExtractedData = useRef(false);
 
@@ -316,7 +343,7 @@ export default function EnhancedClientForm({
       <Field 
         label="First Name" 
         value={values.first_name} 
-        onChangeText={(v) => update('first_name', v)}
+        onChangeText={fieldHandlers.first_name}
         onBlur={() => handleBlur('first_name')}
         placeholder="Auto-filled from documents"
         status={getFieldStatus('first_name', 'owner_name')}
@@ -325,7 +352,7 @@ export default function EnhancedClientForm({
       <Field 
         label="Last Name" 
         value={values.last_name} 
-        onChangeText={(v) => update('last_name', v)}
+        onChangeText={fieldHandlers.last_name}
         onBlur={() => handleBlur('last_name')}
         placeholder="Auto-filled from documents"
         status={getFieldStatus('last_name', 'owner_name')}
@@ -334,7 +361,7 @@ export default function EnhancedClientForm({
       <Field 
         label="KRA PIN" 
         value={values.kra_pin} 
-        onChangeText={(v) => update('kra_pin', (v || '').toUpperCase())}
+        onChangeText={fieldHandlers.kra_pin}
         onBlur={() => handleBlur('kra_pin')}
         autoCapitalize="characters" 
         placeholder="Auto-filled from KRA PIN doc"
@@ -344,7 +371,7 @@ export default function EnhancedClientForm({
       <Field 
         label="ID Number" 
         value={values.id_number} 
-        onChangeText={(v) => update('id_number', v)}
+        onChangeText={fieldHandlers.id_number}
         onBlur={() => handleBlur('id_number')}
         placeholder="Auto-filled from ID document" 
         keyboardType="numeric"
@@ -356,7 +383,7 @@ export default function EnhancedClientForm({
       <Field 
         label="Email" 
         value={values.email} 
-        onChangeText={(v) => update('email', v)}
+        onChangeText={fieldHandlers.email}
         onBlur={() => handleBlur('email')}
         placeholder="Enter client email"
         keyboardType="email-address"
@@ -367,7 +394,7 @@ export default function EnhancedClientForm({
       <Field 
         label="Phone" 
         value={values.phone} 
-        onChangeText={(v) => update('phone', v)}
+        onChangeText={fieldHandlers.phone}
         onBlur={() => handleBlur('phone')}
         placeholder="Enter client phone"
         keyboardType="phone-pad"
@@ -379,7 +406,7 @@ export default function EnhancedClientForm({
       <Field 
         label="Car Registration Number" 
         value={values.vehicle_registration} 
-        onChangeText={(v) => update('vehicle_registration', (v || '').toUpperCase())} 
+        onChangeText={fieldHandlers.vehicle_registration} 
         autoCapitalize="characters" 
         placeholder="Auto-filled from logbook"
         status={getFieldStatus('vehicle_registration', 'registration_number')}
@@ -387,7 +414,7 @@ export default function EnhancedClientForm({
       <Field 
         label="Chassis No" 
         value={values.chassis_number} 
-        onChangeText={(v) => update('chassis_number', (v || '').toUpperCase())} 
+        onChangeText={fieldHandlers.chassis_number} 
         autoCapitalize="characters" 
         placeholder="Auto-filled from logbook"
         status={getFieldStatus('chassis_number', 'chassis_number')}
@@ -397,7 +424,7 @@ export default function EnhancedClientForm({
       <Field
         label="Make"
         value={values.vehicle_make}
-        onChangeText={(v) => update('vehicle_make', v)}
+        onChangeText={fieldHandlers.vehicle_make}
         placeholder="Auto-filled from logbook/DMVIC"
         status={getFieldStatus('vehicle_make', 'make')}
         autoCapitalize="characters"
@@ -407,7 +434,7 @@ export default function EnhancedClientForm({
       <Field
         label="Model"
         value={values.vehicle_model}
-        onChangeText={(v) => update('vehicle_model', v)}
+        onChangeText={fieldHandlers.vehicle_model}
         placeholder="Auto-filled from logbook/DMVIC"
         status={getFieldStatus('vehicle_model', 'model')}
         autoCapitalize="characters"
@@ -556,11 +583,12 @@ function Field({ label, error, style, status, ...inputProps }) {
   return (
     <View style={{ gap: 6 }}>
       <Text style={styles.label}>{label}</Text>
-      <TextInput 
+      <StableTextInput 
         style={[styles.input, getStatusStyle(), style]} 
         {...inputProps} 
         blurOnSubmit={false}
         returnKeyType="next"
+        debounceMs={300}
       />
       {/* Show error first, then status message */}
       {error ? (

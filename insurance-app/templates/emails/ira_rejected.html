@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IRA Number - Action Required - PataBima</title>
+    <style>
+        body {
+            font-family: 'Poppins', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .email-container {
+            background-color: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            background-color: #EF4444;
+            color: #ffffff;
+            padding: 30px 20px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 600;
+        }
+        .content {
+            padding: 30px 20px;
+        }
+        .warning-icon {
+            text-align: center;
+            font-size: 60px;
+            margin: 20px 0;
+        }
+        .greeting {
+            font-size: 18px;
+            margin-bottom: 20px;
+            color: #333;
+        }
+        .ira-details {
+            background-color: #fef2f2;
+            border-left: 4px solid #EF4444;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .ira-details h2 {
+            color: #EF4444;
+            margin-top: 0;
+            font-size: 20px;
+        }
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .detail-label {
+            font-weight: 600;
+            color: #6b7280;
+        }
+        .detail-value {
+            color: #111827;
+            font-weight: 500;
+        }
+        .reason-box {
+            background-color: #fff7ed;
+            border: 1px solid #fb923c;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .reason-box h3 {
+            color: #ea580c;
+            margin-top: 0;
+            font-size: 16px;
+        }
+        .cta-button {
+            display: inline-block;
+            background-color: #D5222B;
+            color: #ffffff;
+            padding: 12px 30px;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 20px 0;
+            font-weight: 600;
+        }
+        .footer {
+            background-color: #f8f9fa;
+            padding: 20px;
+            text-align: center;
+            font-size: 14px;
+            color: #6b7280;
+        }
+        .footer p {
+            margin: 5px 0;
+        }
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: #ffffff;
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <!-- Header -->
+        <div class="header">
+            <div class="logo">PataBima</div>
+            <h1>IRA Number - Action Required</h1>
+        </div>
+
+        <!-- Content -->
+        <div class="content">
+            <div class="warning-icon">⚠️</div>
+            
+            <p class="greeting">Dear {{ agent_name }},</p>
+
+            <p>We have reviewed your Insurance Regulatory Authority (IRA) registration number and require additional verification.</p>
+
+            <!-- IRA Details -->
+            <div class="ira-details">
+                <h2>Submitted IRA Details</h2>
+                <div class="detail-row">
+                    <span class="detail-label">Agent Code:</span>
+                    <span class="detail-value">{{ agent_code }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">IRA Number:</span>
+                    <span class="detail-value">{{ ira_number }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Review Date:</span>
+                    <span class="detail-value">{{ review_date }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Status:</span>
+                    <span class="detail-value" style="color: #EF4444; font-weight: bold;">⚠ REQUIRES VERIFICATION</span>
+                </div>
+            </div>
+
+            {% if reason %}
+            <div class="reason-box">
+                <h3>Reason for Review:</h3>
+                <p>{{ reason }}</p>
+            </div>
+            {% endif %}
+
+            <p><strong>Next Steps:</strong></p>
+            <ul>
+                <li>Verify your IRA registration number is correct</li>
+                <li>Ensure your IRA registration is active and up-to-date</li>
+                <li>Contact our support team with the correct information</li>
+                <li>Provide any supporting documentation if requested</li>
+            </ul>
+
+            <p><strong>How to Update Your IRA Number:</strong></p>
+            <ol>
+                <li>Contact PataBima support via email or phone</li>
+                <li>Provide your agent code: <strong>{{ agent_code }}</strong></li>
+                <li>Submit your verified IRA registration number</li>
+                <li>Our team will review and update your account</li>
+            </ol>
+
+            <center>
+                <a href="mailto:support@patabima.co.ke?subject=IRA Number Update - {{ agent_code }}" class="cta-button">Contact Support</a>
+            </center>
+
+            <p>If you believe this is an error or have questions, please reach out to our support team immediately.</p>
+
+            <p><strong>We're here to help you get verified!</strong></p>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p><strong>PataBima Insurance Services</strong></p>
+            <p>Email: support@patabima.co.ke | Phone: +254 700 000 000</p>
+            <p>© {{ current_year }} PataBima. All rights reserved.</p>
+            <p style="font-size: 12px; color: #9ca3af; margin-top: 15px;">
+                This is an automated email. Please do not reply to this message.
+            </p>
+        </div>
+    </div>
+</body>
+</html>

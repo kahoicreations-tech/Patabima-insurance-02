@@ -106,8 +106,22 @@ export const PDFService = {
 
 export const PaymentService = {
   async initiatePayment(amount, meta) {
-    console.warn('PaymentService.initiatePayment stub called.', amount, meta);
-    return { status: 'pending' };
+    const djangoAPI = require('../../services/DjangoAPIService').default;
+    const phone = meta?.phone || meta?.phoneNumber;
+    const account_reference = meta?.account_reference || meta?.accountReference;
+    const policy_reference = meta?.policy_reference || meta?.policyReference;
+    return await djangoAPI.initiatePayment({
+      amount,
+      method: meta?.method || 'MPESA',
+      phone,
+      account_reference,
+      policy_reference,
+    });
+  },
+
+  async getStatus(reference) {
+    const djangoAPI = require('../../services/DjangoAPIService').default;
+    return await djangoAPI.getPaymentStatus(reference);
   },
 };
 

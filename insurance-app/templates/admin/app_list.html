@@ -1,0 +1,220 @@
+{% load i18n %}
+
+{% if app_list %}
+  {% for app in app_list %}
+    {% if app.app_label == 'app' %}
+      <div class="app-{{ app.app_label }} module">
+        <h2 title="Manage agents, customers, and administrators">User Management</h2>
+        <table>
+          <tbody>
+            {% for model in app.models %}
+              {% if model.object_name == 'User' %}
+                <tr><th scope="row"><a href="{{ model.admin_url }}">Users</a></th><td class="actionlist">{% if model.add_url %}<a href="{{ model.add_url }}" class="addlink">{% trans 'Add' %}</a>{% endif %}</td></tr>
+              {% endif %}
+              {% if model.object_name == 'AgentCommission' %}
+                <tr><th scope="row"><a href="{{ model.admin_url }}">Agent Commissions</a></th><td class="actionlist">{% if model.add_url %}<a href="{{ model.add_url }}" class="addlink">{% trans 'Add' %}</a>{% endif %}</td></tr>
+              {% endif %}
+              {% if model.object_name == 'AgentPerformance' %}
+                <tr><th scope="row"><a href="{{ model.admin_url }}">Agent Performance Records</a></th><td class="actionlist">{% if model.add_url %}<a href="{{ model.add_url }}" class="addlink">{% trans 'Add' %}</a>{% endif %}</td></tr>
+              {% endif %}
+              {% if model.object_name == 'MonthlyAgentBonus' %}
+                <tr><th scope="row"><a href="{{ model.admin_url }}">Monthly Agent Bonuses</a></th><td class="actionlist">{% if model.add_url %}<a href="{{ model.add_url }}" class="addlink">{% trans 'Add' %}</a>{% endif %}</td></tr>
+              {% endif %}
+              {% if model.object_name == 'CommissionSettings' %}
+                <tr><th scope="row"><a href="{{ model.admin_url }}">Commission Settings</a></th><td class="actionlist">{% if model.add_url %}<a href="{{ model.add_url }}" class="addlink">{% trans 'Add' %}</a>{% endif %}</td></tr>
+              {% endif %}
+              {% if model.object_name == 'CommissionRule' %}
+                <tr><th scope="row"><a href="{{ model.admin_url }}">Commission Rules</a></th><td class="actionlist">{% if model.add_url %}<a href="{{ model.add_url }}" class="addlink">{% trans 'Add' %}</a>{% endif %}</td></tr>
+              {% endif %}
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <div class="app-{{ app.app_label }} module">
+        <h2 title="Motor insurance quotations, pricing, and configuration">Motor Insurance</h2>
+        <table>
+          <tbody>
+            {% for model in app.models %}
+              {% if model.object_name == 'InsuranceQuotation' %}
+                <tr><th scope="row"><a href="{{ model.admin_url }}">Insurance quotations <span id="badge-quotations" class="pb-badge" style="display:none"></span></a></th><td class="actionlist">{% if model.add_url %}<a href="{{ model.add_url }}" class="addlink">{% trans 'Add' %}</a>{% endif %}</td></tr>
+              {% endif %}
+              {% if model.object_name == 'MotorInsuranceDetails' %}
+                <tr><th scope="row"><a href="{{ model.admin_url }}">Motor insurance details</a></th><td class="actionlist">{% if model.add_url %}<a href="{{ model.add_url }}" class="addlink">{% trans 'Add' %}</a>{% endif %}</td></tr>
+              {% endif %}
+              {% if model.object_name == 'MotorPolicy' %}
+                <tr><th scope="row"><a href="{{ model.admin_url }}">Motor policies</a></th><td class="actionlist">{% if model.add_url %}<a href="{{ model.add_url }}" class="addlink">{% trans 'Add' %}</a>{% endif %}</td></tr>
+              {% endif %}
+              {% if model.object_name == 'MotorCategory' %}
+                <tr><th scope="row"><a href="{{ model.admin_url }}">Motor Categories</a></th><td class="actionlist">{% if model.add_url %}<a href="{{ model.add_url }}" class="addlink">{% trans 'Add' %}</a>{% endif %}</td></tr>
+              {% endif %}
+              {% if model.object_name == 'MotorSubcategory' %}
+                <tr><th scope="row"><a href="{{ model.admin_url }}">Motor Subcategories</a></th><td class="actionlist">{% if model.add_url %}<a href="{{ model.add_url }}" class="addlink">{% trans 'Add' %}</a>{% endif %}</td></tr>
+              {% endif %}
+              {% if model.object_name == 'MotorPricing' %}
+                <tr><th scope="row"><a href="{{ model.admin_url }}">Motor pricings</a></th><td class="actionlist">{% if model.add_url %}<a href="{{ model.add_url }}" class="addlink">{% trans 'Add' %}</a>{% endif %}</td></tr>
+              {% endif %}
+              {% if model.object_name == 'CommercialTonnagePricing' %}
+                <tr><th scope="row"><a href="{{ model.admin_url }}">Commercial tonnage pricings</a></th><td class="actionlist">{% if model.add_url %}<a href="{{ model.add_url }}" class="addlink">{% trans 'Add' %}</a>{% endif %}</td></tr>
+              {% endif %}
+              {% if model.object_name == 'PSVPLLPricing' %}
+                <tr><th scope="row"><a href="{{ model.admin_url }}">PSV PLL prices</a></th><td class="actionlist">{% if model.add_url %}<a href="{{ model.add_url }}" class="addlink">{% trans 'Add' %}</a>{% endif %}</td></tr>
+              {% endif %}
+              {% if model.object_name == 'AdditionalFieldPricing' %}
+                <tr><th scope="row"><a href="{{ model.admin_url }}">Additional field pricing</a></th><td class="actionlist">{% if model.add_url %}<a href="{{ model.add_url }}" class="addlink">{% trans 'Add' %}</a>{% endif %}</td></tr>
+              {% endif %}
+              {% if model.object_name == 'VehicleAdjustmentFactor' %}
+                <tr><th scope="row"><a href="{{ model.admin_url }}">Vehicle adjustment factors</a></th><td class="actionlist">{% if model.add_url %}<a href="{{ model.add_url }}" class="addlink">{% trans 'Add' %}</a>{% endif %}</td></tr>
+              {% endif %}
+              {% if model.object_name == 'ExtendiblePricing' %}
+                <tr><th scope="row"><a href="{{ model.admin_url }}">Extendible pricing</a></th><td class="actionlist">{% if model.add_url %}<a href="{{ model.add_url }}" class="addlink">{% trans 'Add' %}</a>{% endif %}</td></tr>
+              {% endif %}
+              {% if model.object_name == 'PolicyExtension' %}
+                <tr><th scope="row"><a href="{{ model.admin_url }}">Policy extensions <span id="badge-extensions" class="pb-badge" style="display:none"></span></a></th><td class="actionlist">{% if model.add_url %}<a href="{{ model.add_url }}" class="addlink">{% trans 'Add' %}</a>{% endif %}</td></tr>
+              {% endif %}
+              {% if model.object_name == 'ExtensionReminder' %}
+                <tr><th scope="row"><a href="{{ model.admin_url }}">Extension reminders</a></th><td class="actionlist">{% if model.add_url %}<a href="{{ model.add_url }}" class="addlink">{% trans 'Add' %}</a>{% endif %}</td></tr>
+              {% endif %}
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <div class="app-{{ app.app_label }} module">
+        <h2 title="Non-motor insurance lines: Medical, Travel, WIBA, etc.">Non‑Motor Insurance</h2>
+        <table>
+          <tbody>
+            {% for model in app.models %}
+              {% if model.object_name == 'ManualQuote' %}
+                <tr><th scope="row"><a href="{{ model.admin_url }}">Manual quotes <span id="badge-manual-quotes" class="pb-badge" style="display:none"></span></a></th><td class="actionlist">{% if model.add_url %}<a href="{{ model.add_url }}" class="addlink">{% trans 'Add' %}</a>{% endif %}</td></tr>
+              {% endif %}
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <div class="app-{{ app.app_label }} module">
+        <h2 title="Insurance providers/underwriters">Insurance Providers</h2>
+        <table>
+          <tbody>
+            {% for model in app.models %}
+              {% if model.object_name == 'InsuranceProvider' %}
+                <tr><th scope="row"><a href="{{ model.admin_url }}">Insurance providers</a></th><td class="actionlist">{% if model.add_url %}<a href="{{ model.add_url }}" class="addlink">{% trans 'Add' %}</a>{% endif %}</td></tr>
+              {% endif %}
+              {% if model.object_name == 'Underwriter' %}
+                <tr><th scope="row"><a href="{{ model.admin_url }}">Underwriters</a></th><td class="actionlist">{% if model.add_url %}<a href="{{ model.add_url }}" class="addlink">{% trans 'Add' %}</a>{% endif %}</td></tr>
+              {% endif %}
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <div class="app-{{ app.app_label }} module">
+        <h2 title="Uploaded documents and service execution logs">Documents &amp; Logs</h2>
+        <table>
+          <tbody>
+            {% for model in app.models %}
+              {% if model.object_name == 'DocumentUpload' %}
+                <tr><th scope="row"><a href="{{ model.admin_url }}">Document uploads <span id="badge-documents" class="pb-badge" style="display:none"></span></a></th><td class="actionlist">{% if model.add_url %}<a href="{{ model.add_url }}" class="addlink">{% trans 'Add' %}</a>{% endif %}</td></tr>
+              {% endif %}
+              {% if model.object_name == 'ServiceProcessingLog' %}
+                <tr><th scope="row"><a href="{{ model.admin_url }}">Service processing logs</a></th><td class="actionlist">{% if model.add_url %}<a href="{{ model.add_url }}" class="addlink">{% trans 'Add' %}</a>{% endif %}</td></tr>
+              {% endif %}
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <div class="app-{{ app.app_label }} module">
+        <h2 title="Campaigns, schedules and interactions">Campaigns</h2>
+        <table>
+          <tbody>
+            {% for model in app.models %}
+              {% if model.object_name == 'Campaign' %}
+                <tr><th scope="row"><a href="{{ model.admin_url }}">Campaigns</a></th><td class="actionlist">{% if model.add_url %}<a href="{{ model.add_url }}" class="addlink">{% trans 'Add' %}</a>{% endif %}</td></tr>
+              {% endif %}
+              {% if model.object_name == 'CampaignInteraction' %}
+                <tr><th scope="row"><a href="{{ model.admin_url }}">Campaign interactions</a></th><td class="actionlist">{% if model.add_url %}<a href="{{ model.add_url }}" class="addlink">{% trans 'Add' %}</a>{% endif %}</td></tr>
+              {% endif %}
+              {% if model.object_name == 'CampaignSchedule' %}
+                <tr><th scope="row"><a href="{{ model.admin_url }}">Campaign schedules</a></th><td class="actionlist">{% if model.add_url %}<a href="{{ model.add_url }}" class="addlink">{% trans 'Add' %}</a>{% endif %}</td></tr>
+              {% endif %}
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+    {% else %}
+      <div class="app-{{ app.app_label }} module">
+        <table>
+          <caption><a href="{{ app.app_url }}">{{ app.name }}</a></caption>
+          <tbody>
+          {% for model in app.models %}
+            <tr>
+              <th scope="row"><a href="{{ model.admin_url }}">{{ model.name }}</a></th>
+              <td class="actionlist">{% if model.add_url %}<a href="{{ model.add_url }}" class="addlink">{% trans 'Add' %}</a>{% endif %}</td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% endif %}
+  {% endfor %}
+{% else %}
+  <p>{% trans "You don’t have permission to view or edit anything." %}</p>
+{% endif %}
+
+<style>
+  .pb-badge {
+    display: inline-block;
+    min-width: 18px;
+    padding: 1px 6px;
+    font-size: 11px;
+    line-height: 16px;
+    color: #fff;
+    background: #d5222b;
+    border-radius: 10px;
+    margin-left: 6px;
+    vertical-align: middle;
+  }
+</style>
+
+<script>
+  (function() {
+    function setBadge(id, value) {
+      var el = document.getElementById(id);
+      if (!el) return;
+      var v = parseInt(value || 0, 10);
+      if (v > 0) {
+        if (v > 99) { el.textContent = '99+'; } else { el.textContent = String(v); }
+        el.style.display = 'inline-block';
+      } else {
+        el.style.display = 'none';
+      }
+    }
+
+    function fetchBadges() {
+  var url = '{% url "admin-badges-api" %}';
+      fetch(url, { credentials: 'same-origin' })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          try {
+            setBadge('badge-manual-quotes', data.manual_quotes && data.manual_quotes.total_pending);
+            setBadge('badge-quotations', data.quotations && data.quotations.pending);
+            setBadge('badge-documents', data.documents && data.documents.pending);
+            setBadge('badge-extensions', (data.extensions && (data.extensions.pending + data.extensions.grace_period)) || 0);
+          } catch (e) { /* swallow */ }
+        })
+        .catch(function() { /* ignore network errors */ });
+    }
+
+    if (window.addEventListener) {
+      window.addEventListener('load', function() {
+        fetchBadges();
+        // Polling disabled to reduce server load during development
+        // Uncomment below for production if you want real-time badge updates:
+        // setInterval(fetchBadges, 300000); // 5 minutes instead of 45 seconds
+      });
+    }
+  })();
+  </script>

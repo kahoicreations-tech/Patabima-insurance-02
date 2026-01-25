@@ -32,6 +32,8 @@ class S3DocumentService {
       const presignBody = JSON.stringify({
         filename: name,
         fileType: type,
+        mimeType: type,
+        sizeBytes: size,
         docType: docType,
       });
 
@@ -61,6 +63,7 @@ class S3DocumentService {
       // New docs API returns: uploadUrl, objectKey, supportsExtraction
       const uploadUrl = presignedResponse?.uploadUrl || presignedResponse?.data?.uploadUrl;
       const objectKey = presignedResponse?.objectKey || presignedResponse?.data?.objectKey;
+      const presignedHeaders = presignedResponse?.headers || presignedResponse?.data?.headers;
       const supportsExtraction = (
         presignedResponse?.supportsExtraction !== undefined
           ? presignedResponse.supportsExtraction
@@ -75,11 +78,35 @@ class S3DocumentService {
 
       console.log('[S3DocumentService] Presigned URL obtained:', { objectKey, supportsExtraction });
 
+      // Debug helper: log the presigned URL without leaking the signature.
+      // S3 will return 403 for signature mismatch / wrong region / missing signed headers.
+      try {
+        const u = new URL(uploadUrl);
+        const signedHeaders = u.searchParams.get('X-Amz-SignedHeaders');
+        console.log('[S3DocumentService] Presign debug:', {
+          host: u.host,
+          path: u.pathname,
+          signedHeaders,
+        });
+      } catch (_) {
+        // ignore
+      }
+
       // Phase 2: Read file as base64
       onProgress?.('uploading', 20);
 
       // Phase 3: Upload to S3 using presigned URL
       onProgress?.('uploading', 40);
+
+      const uploadHeaders = {
+        ...(presignedHeaders && typeof presignedHeaders === 'object' ? presignedHeaders : null),
+        'Content-Type': type || presignedHeaders?.['Content-Type'] || presignedHeaders?.['content-type'] || 'application/octet-stream',
+      };
+      // Remove undefined/null header values to avoid native/network issues
+      Object.keys(uploadHeaders).forEach((k) => {
+        const v = uploadHeaders[k];
+        if (v === undefined || v === null || v === '') delete uploadHeaders[k];
+      });
 
       // Use Expo FileSystem.uploadAsync to avoid base64/Blob issues in React Native
       // Upload as raw binary content with PUT
@@ -88,23 +115,38 @@ class S3DocumentService {
         uri,
         {
           httpMethod: 'PUT',
-          headers: {
-            'Content-Type': type || 'application/octet-stream',
-          },
+          headers: uploadHeaders,
           uploadType: FileSystem.FileSystemUploadType.BINARY_CONTENT,
+          // On Android, uploadAsync may set its own content-type unless mimeType is provided.
+          // If the backend signed ContentType into the presigned URL, this MUST match.
+          mimeType: uploadHeaders['Content-Type'],
         }
       );
 
       const status = Number(uploadResult?.status) || 0;
       if (status < 200 || status >= 300) {
-        throw new Error(`S3 upload failed: ${status}`);
+        const bodyPreview = typeof uploadResult?.body === 'string'
+          ? uploadResult.body.slice(0, 600)
+          : null;
+        console.error('[S3DocumentService] S3 upload non-2xx:', {
+          status,
+          bodyPreview,
+          responseHeaders: uploadResult?.headers || null,
+          sentHeaders: uploadHeaders,
+        });
+        throw new Error(`S3 upload failed: ${status}${bodyPreview ? `\n${bodyPreview}` : ''}`);
       }
 
       console.log('[S3DocumentService] S3 upload successful');
       onProgress?.('processing', 70);
 
       // Phase 4: Submit extraction for extractable docs (logbook). Non-extractable returns uploaded status.
-      const submitBody = JSON.stringify({ objectKey, docType });
+      const submitBody = JSON.stringify({
+        objectKey,
+        docType,
+        mimeType: type,
+        sizeBytes: size,
+      });
       const submitCandidates = [
         '/api/v1/public_app/docs/submit',
         '/api/v1/public_app/docs/submit/',
@@ -127,6 +169,17 @@ class S3DocumentService {
         submitResponse = { status: 'uploaded', supportsExtraction: false };
       }
 
+      // Backend may not return supportsExtraction in older variants; infer based on docType.
+      const inferredSupportsExtraction = (() => {
+        const dt = String(docType || '').toLowerCase();
+        return ['logbook', 'national_id', 'kra_pin'].includes(dt);
+      })();
+      const finalSupportsExtraction = (
+        submitResponse?.supportsExtraction !== undefined
+          ? !!submitResponse.supportsExtraction
+          : inferredSupportsExtraction
+      );
+
       onProgress?.('finishing', 95);
 
       console.log('[S3DocumentService] Upload completed successfully');
@@ -140,7 +193,7 @@ class S3DocumentService {
         file_type: type,
         file_size: size,
         doc_type: docType,
-        supports_extraction: !!submitResponse?.supportsExtraction,
+        supports_extraction: finalSupportsExtraction,
         status: submitResponse?.status || 'uploaded',
         job_id: submitResponse?.jobId || null,
       };

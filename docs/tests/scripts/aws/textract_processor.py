@@ -12,6 +12,7 @@ import json
 import hmac
 import hashlib
 import boto3
+import botocore
 import urllib.request
 
 s3 = boto3.client('s3')
@@ -93,12 +94,43 @@ def handler(event, context):
                 Document={'S3Object': {'Bucket': bucket, 'Name': key}},
                 FeatureTypes=[f.strip().upper() for f in features if f.strip()],
             )
-            # store raw
+
+            # Store raw Textract response
             s3.put_object(Bucket=bucket, Key=f"results/{job_id}.json", Body=json.dumps(resp))
 
             normalized = normalize(resp, doc_type)
             if callback_url:
                 _post_callback(callback_url, { 'jobId': job_id, 'result': normalized }, cb_secret)
-        except Exception as e:
-            # Let Lambda retry based on DLQ policy by raising
+        except botocore.exceptions.ClientError as e:
+            code = (e.response.get('Error') or {}).get('Code')
+            msg_text = (e.response.get('Error') or {}).get('Message') or str(e)
+
+            permanent = code in {
+                'UnsupportedDocumentException',
+                'BadDocumentException',
+                'InvalidS3ObjectException',
+                'DocumentTooLargeException',
+            }
+
+            # Always write a result marker so Django polling can stop.
+            err_payload = {
+                'error': {
+                    'code': code or 'TextractClientError',
+                    'message': msg_text,
+                },
+                'jobId': job_id,
+                'objectKey': key,
+                'docType': doc_type,
+            }
+            s3.put_object(Bucket=bucket, Key=f"results/{job_id}.json", Body=json.dumps(err_payload))
+
+            if callback_url:
+                try:
+                    _post_callback(callback_url, { 'jobId': job_id, 'result': { 'error': err_payload['error'] } }, cb_secret)
+                except Exception:
+                    pass
+
+            if permanent:
+                # Do not raise: avoids useless retries/DLQ spam for permanent document issues.
+                continue
             raise

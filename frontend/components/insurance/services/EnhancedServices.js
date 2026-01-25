@@ -9,30 +9,29 @@ import djangoAPI from '../../../services/DjangoAPIService';
 
 class EnhancedServices {
   constructor() {
-    this.useSimulation = false; // Try Django first, fallback to simulation
+    this.useSimulation = false;
+    this.initialized = false;
     this.initializeServices();
   }
 
   async initializeServices() {
     try {
       await djangoAPI.initialize();
-      // Force Django backend usage if we have a token
-      this.useSimulation = !djangoAPI.isAuthenticated();
-      console.log(`Services initialized - Using ${this.useSimulation ? 'simulation' : 'Django backend'}`);
+      this.initialized = true;
+      console.log('Services initialized - Using Django backend');
       console.log(`Authentication status: ${djangoAPI.isAuthenticated() ? 'authenticated' : 'not authenticated'}`);
       console.log(`Token available: ${!!djangoAPI.token ? 'YES' : 'NO'}`);
     } catch (error) {
-      console.error('Failed to initialize services, falling back to simulation:', error);
-      this.useSimulation = true;
+      this.initialized = false;
+      console.error('Failed to initialize services:', error);
     }
   }
 
   // Premium Calculation Service Integration
   UnderwriterService = {
     calculatePremium: async (formData) => {
-      const usingSim = this.useSimulation || !djangoAPI.isAuthenticated();
-      if (usingSim) {
-        return this.simulatePremiumCalculation(formData);
+      if (!djangoAPI.isAuthenticated()) {
+        return { success: false, error: 'Not authenticated', source: 'django_pricing' };
       }
 
       const providerToCode = (name) => {
@@ -97,15 +96,14 @@ class EnhancedServices {
           source: 'django_pricing',
         };
       } catch (error) {
-        console.error('Django TOR premium failed, using simulation:', error?.message || error);
-        return this.simulatePremiumCalculation(formData);
+        console.error('Django TOR premium failed:', error?.message || error);
+        return { success: false, error: error?.message || 'Pricing failed', source: 'django_pricing' };
       }
     },
 
     getUnderwriters: async (insuranceType) => {
-      const usingSim = this.useSimulation || !djangoAPI.isAuthenticated();
-      if (usingSim) {
-        return this.simulateUnderwritersList(insuranceType);
+      if (!djangoAPI.isAuthenticated()) {
+        return { success: false, error: 'Not authenticated', source: 'django_underwriters', underwriters: [] };
       }
 
       try {
@@ -123,30 +121,22 @@ class EnhancedServices {
           source: 'django_underwriters',
         };
       } catch (error) {
-        console.error('Django underwriters failed, using simulation:', error?.message || error);
-        return this.simulateUnderwritersList(insuranceType);
+        console.error('Django underwriters failed:', error?.message || error);
+        return { success: false, error: error?.message || 'Underwriters fetch failed', source: 'django_underwriters', underwriters: [] };
       }
     },
   };
 
   // Motor Insurance Form Submission
   async submitMotorInsuranceForm(formData, serviceData = {}) {
-    // Always use simulation mode for React Native app
-    console.log('Submitting to simulation mode:', formData);
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    return {
-      success: true,
-      quotationId: `SIM${Date.now()}`,
-      message: 'Form submitted successfully (simulation)',
-      source: 'simulation',
-    };
+    throw new Error('submitMotorInsuranceForm is not supported in strict mode. Use the main quotation flow APIs.');
   }
 
   // DMVIC Service Integration
   DMVICService = {
     checkExistingPolicy: async (vehicleRegistration) => {
-      if (this.useSimulation) {
-        return this.simulateDMVICPolicyCheck(vehicleRegistration);
+      if (!djangoAPI.isAuthenticated()) {
+        return { success: false, error: 'Not authenticated', hasExisting: false, policy: null, source: 'django_dmvic' };
       }
 
       try {
@@ -163,14 +153,14 @@ class EnhancedServices {
           processingTime: response.processing_time || 1200,
         };
       } catch (error) {
-        console.error('Django DMVIC check failed, using simulation:', error);
-        return this.simulateDMVICPolicyCheck(vehicleRegistration);
+        console.error('Django DMVIC check failed:', error);
+        return { success: false, error: error?.message || 'DMVIC check failed', hasExisting: false, policy: null, source: 'django_dmvic' };
       }
     },
 
     getVehicleDetails: async (vehicleRegistration) => {
-      if (this.useSimulation) {
-        return this.simulateDMVICVehicleDetails(vehicleRegistration);
+      if (!djangoAPI.isAuthenticated()) {
+        return { success: false, error: 'Not authenticated', data: null, source: 'django_dmvic' };
       }
 
       try {
@@ -189,8 +179,8 @@ class EnhancedServices {
           source: 'django_dmvic',
         };
       } catch (error) {
-        console.error('Django vehicle details check failed, using simulation:', error);
-        return this.simulateDMVICVehicleDetails(vehicleRegistration);
+        console.error('Django vehicle details check failed:', error);
+        return { success: false, error: error?.message || 'Vehicle details check failed', data: null, source: 'django_dmvic' };
       }
     },
   };
@@ -198,8 +188,8 @@ class EnhancedServices {
   // Textract Service Integration
   TextractService = {
     extractDocumentData: async (file, documentType) => {
-      if (this.useSimulation) {
-        return this.simulateTextractExtraction(file, documentType);
+      if (!djangoAPI.isAuthenticated()) {
+        return { success: false, error: 'Not authenticated', data: {}, source: 'django_textract' };
       }
 
       try {
@@ -218,181 +208,46 @@ class EnhancedServices {
           source: 'django_textract',
         };
       } catch (error) {
-        console.error('Django Textract processing failed, using simulation:', error);
-        return this.simulateTextractExtraction(file, documentType);
+        console.error('Django Textract processing failed:', error);
+        return { success: false, error: error?.message || 'Extraction failed', data: {}, source: 'django_textract' };
       }
     },
 
     validateExtractedData: async (extractedData, formData) => {
-      if (this.useSimulation) {
-        return this.simulateTextractValidation(extractedData, formData);
+      // No backend validate endpoint currently exists; do lightweight client-side checks.
+      const issues = [];
+      const suggestions = [];
+
+      const extractedOwner = extractedData?.owner_name || extractedData?.ownerName || extractedData?.name;
+      const formOwner = formData?.owner_name || formData?.ownerName || formData?.name;
+      if (extractedOwner && formOwner && String(extractedOwner).trim().toLowerCase() !== String(formOwner).trim().toLowerCase()) {
+        issues.push('Owner name mismatch between document and form');
+        suggestions.push('Confirm the owner name spelling matches the document');
       }
 
-      try {
-        const response = await djangoAPI.makeRequest('/api/v1/services/textract/validate/', {
-          method: 'POST',
-          body: JSON.stringify({
-            extracted_data: extractedData,
-            form_data: formData,
-            validation_rules: {
-              name_similarity_threshold: 85,
-              required_fields: ['owner_name', 'vehicle_registration'],
-            },
-          }),
-        });
-
-        return {
-          valid: response.is_valid,
-          confidence: response.validation_confidence,
-          issues: response.validation_issues || [],
-          suggestions: response.suggestions || [],
-          source: 'django_validation',
-        };
-      } catch (error) {
-        console.error('Django validation failed, using simulation:', error);
-        return this.simulateTextractValidation(extractedData, formData);
+      const extractedReg = extractedData?.vehicle_registration || extractedData?.registration_number || extractedData?.registrationNumber;
+      const formReg = formData?.vehicle_registration || formData?.registration_number || formData?.registrationNumber;
+      if (extractedReg && formReg && String(extractedReg).replace(/\s+/g, '').toLowerCase() !== String(formReg).replace(/\s+/g, '').toLowerCase()) {
+        issues.push('Vehicle registration mismatch between document and form');
+        suggestions.push('Confirm the vehicle registration matches the logbook');
       }
+
+      return {
+        valid: issues.length === 0,
+        confidence: issues.length === 0 ? 95 : 70,
+        issues,
+        suggestions,
+        source: 'client_validation',
+      };
     },
   };
 
-  // (Removed duplicate UnderwriterService definition by merging into the version above)
-
-  // Simulation methods (fallback when Django API is not available)
-  simulateDMVICPolicyCheck = async (vehicleRegistration) => {
-    await new Promise(resolve => setTimeout(resolve, 1200));
-    
-    const hasExisting = Math.random() > 0.7;
-    return {
-      success: true,
-      hasExisting,
-      policy: hasExisting ? {
-        policyNumber: `POL${Math.random().toString(36).substr(2, 9).toUpperCase()}`,
-        insurer: ['APA Insurance', 'Jubilee Insurance', 'ICEA LION'][Math.floor(Math.random() * 3)],
-        expiryDate: '2025-12-15',
-        status: 'active',
-      } : null,
-      processingTime: 1200,
-      source: 'simulation',
-    };
-  };
-
-  simulateDMVICVehicleDetails = async (vehicleRegistration) => {
-    await new Promise(resolve => setTimeout(resolve, 800));
-    
-    const makes = ['Toyota', 'Nissan', 'Mitsubishi', 'Isuzu', 'Mazda'];
-    const models = ['Hilux', 'Hardbody', 'Canter', 'Demio', 'Probox'];
-    
-    return {
-      success: true,
-      data: {
-        registration: vehicleRegistration,
-        make: makes[Math.floor(Math.random() * makes.length)],
-        model: models[Math.floor(Math.random() * models.length)],
-        year: 2015 + Math.floor(Math.random() * 9),
-        ownerName: 'John Doe',
-        chassisNumber: `CH${Math.random().toString(36).substr(2, 9).toUpperCase()}`,
-      },
-      confidence: 95,
-      source: 'simulation',
-    };
-  };
-
-  simulateTextractExtraction = async (file, documentType) => {
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    const extractedData = {
-      logbook: {
-        owner_name: 'John Doe',
-        vehicle_registration: 'KCA 123A',
-        vehicle_make: 'Toyota',
-        vehicle_model: 'Hilux',
-        chassis_number: 'CH123456789',
-      },
-      nationalId: {
-        name: 'John Doe',
-        id_number: '12345678',
-        date_of_birth: '1990-01-01',
-      },
-      kraPin: {
-        name: 'John Doe',
-        kra_pin: 'A123456789P',
-      },
-    };
-
-    return {
-      success: true,
-      data: extractedData[documentType] || {},
-      confidence: 88,
-      processingTime: 2000,
-      source: 'simulation',
-    };
-  };
-
-  simulateTextractValidation = async (extractedData, formData) => {
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    const issues = [];
-    if (extractedData.owner_name !== formData.owner_name) {
-      issues.push('Name mismatch between document and form');
-    }
-    
-    return {
-      valid: issues.length === 0,
-      confidence: 92,
-      issues,
-      suggestions: issues.length > 0 ? ['Please verify the name spelling'] : [],
-      source: 'simulation',
-    };
-  };
-
-  simulatePremiumCalculation = async (formData) => {
-    await new Promise(resolve => setTimeout(resolve, 800));
-    
-    const basePremium = 3000 + Math.floor(Math.random() * 2000);
-    const trainingLevy = Math.floor(basePremium * 0.002);
-    const pcfLevy = Math.floor(basePremium * 0.002);
-    const stampDuty = 40;
-    const totalPremium = basePremium + trainingLevy + pcfLevy + stampDuty;
-
-    return {
-      success: true,
-      data: {
-        basePremium,
-        trainingLevy,
-        pcfLevy,
-        stampDuty,
-        totalPremium,
-        breakdown: [
-          { label: 'Base Premium', amount: basePremium },
-          { label: 'Training Levy', amount: trainingLevy },
-          { label: 'PCF Levy', amount: pcfLevy },
-          { label: 'Stamp Duty', amount: stampDuty },
-        ],
-        underwriter: 'APA Insurance',
-      },
-      confidence: 95,
-      source: 'simulation',
-    };
-  };
-
-  simulateUnderwritersList = async (insuranceType) => {
-    await new Promise(resolve => setTimeout(resolve, 600));
-    
-    return {
-      success: true,
-      underwriters: [
-        { id: 1, name: 'APA Insurance', basePremium: 3500, rating: 4.5, features: ['Fast Claims', '24/7 Support'] },
-        { id: 2, name: 'Jubilee Insurance', basePremium: 3200, rating: 4.3, features: ['Roadside Assistance'] },
-        { id: 3, name: 'ICEA LION', basePremium: 3800, rating: 4.7, features: ['Premium Service', 'Mobile Claims'] },
-      ],
-      source: 'simulation',
-    };
-  };
+  // (Removed simulation fallback methods; this service is backend-only.)
 
   // Switch between Django and simulation modes
   setSimulationMode(useSimulation) {
-    this.useSimulation = useSimulation;
-    console.log(`Services switched to ${useSimulation ? 'simulation' : 'Django backend'} mode`);
+    this.useSimulation = !!useSimulation;
+    console.warn(`EnhancedServices.setSimulationMode called (${this.useSimulation}). Simulation is not used by default.`);
   }
 
   isUsingDjango() {

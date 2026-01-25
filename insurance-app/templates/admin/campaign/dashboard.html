@@ -1,0 +1,17 @@
+{% extends "admin/base_site.html" %}
+{% block content %}
+<h1>Campaign Performance Dashboard</h1>
+{% if metrics %}
+<ul>
+	<li>Total impressions: {{ metrics.total_impressions }}</li>
+</ul>
+{% endif %}
+<h3>Recent Campaigns</h3>
+<ul>
+	{% for c in campaigns %}
+		<li>{{ c.name }} — {{ c.status }} (imp: {{ c.total_impressions }}, clicks: {{ c.total_clicks }}, conv: {{ c.total_conversions }})</li>
+	{% empty %}
+		<li>No campaigns.</li>
+	{% endfor %}
+</ul>
+{% endblock %}

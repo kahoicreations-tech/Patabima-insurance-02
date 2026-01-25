@@ -1,0 +1,28 @@
+{% extends "admin/base_site.html" %}
+{% block content %}
+<h1>Quotation Analytics</h1>
+<h3>Status</h3>
+<ul>
+	{% for row in status_counts %}
+		<li>{{ row.status }}: {{ row.count }}</li>
+	{% empty %}
+		<li>No data.</li>
+	{% endfor %}
+</ul>
+<h3>Top Agents</h3>
+<ul>
+	{% for row in agent_performance %}
+		<li>{{ row.agent__phonenumber }}: {{ row.total_quotations }} quotes, total premium {{ row.total_premium }}</li>
+	{% empty %}
+		<li>No agents.</li>
+	{% endfor %}
+</ul>
+<h3>By Insurance Type</h3>
+<ul>
+	{% for row in insurance_type_dist %}
+		<li>{{ row.insurance_type }}: {{ row.count }} quotes, total premium {{ row.total_premium }}</li>
+	{% empty %}
+		<li>No distribution.</li>
+	{% endfor %}
+</ul>
+{% endblock %}

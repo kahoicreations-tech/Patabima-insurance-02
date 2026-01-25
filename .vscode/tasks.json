@@ -31,8 +31,10 @@
 			"command": "pwsh",
 			"args": [
 				"-NoProfile",
-				"-Command",
-				"$env:PYTHONUNBUFFERED=1; $env:DJANGO_SETTINGS_MODULE='insurance-app.settings'; python -m pip show django > $null; if ($LASTEXITCODE -ne 0) { Write-Host 'Python env not ready. Please run the backend venv and install dependencies.'; exit 1 }; python insurance-app/manage.py migrate --noinput"
+				"-File",
+				"deployment/vscode-tasks/run_django.ps1",
+				"-Action",
+				"migrate"
 			],
 			"problemMatcher": [
 				"$eslint-stylish"
@@ -45,8 +47,10 @@
 			"command": "pwsh",
 			"args": [
 				"-NoProfile",
-				"-Command",
-				"$env:PYTHONUNBUFFERED=1; $env:DJANGO_SETTINGS_MODULE='insurance-app.settings'; python -m pip show django > $null; if ($LASTEXITCODE -ne 0) { Write-Host 'Python env not ready. Please run the backend venv and install dependencies.'; exit 1 }; python insurance-app/manage.py test app.tests.test_commissions_api -v 2"
+				"-File",
+				"deployment/vscode-tasks/run_django.ps1",
+				"-Action",
+				"test-commissions"
 			],
 			"problemMatcher": [
 				"$eslint-stylish"
@@ -59,8 +63,10 @@
 			"command": "pwsh",
 			"args": [
 				"-NoProfile",
-				"-Command",
-				"$env:PYTHONUNBUFFERED=1; $env:DJANGO_SETTINGS_MODULE='insurance-app.settings'; python -m pip show django > $null; if ($LASTEXITCODE -ne 0) { Write-Host 'Python env not ready. Please run the backend venv and install dependencies.'; exit 1 }; python insurance-app/manage.py test app.tests.test_commissions_api -v 2"
+				"-File",
+				"deployment/vscode-tasks/run_django.ps1",
+				"-Action",
+				"test-commissions"
 			],
 			"problemMatcher": [
 				"$eslint-stylish"
@@ -73,8 +79,10 @@
 			"command": "pwsh",
 			"args": [
 				"-NoProfile",
-				"-Command",
-				"$env:PYTHONUNBUFFERED=1; $env:DJANGO_SETTINGS_MODULE='insurance-app.settings'; python -m pip show django > $null; if ($LASTEXITCODE -ne 0) { Write-Host 'Python env not ready. Please run the backend venv and install dependencies.'; exit 1 }; python insurance-app/manage.py migrate --noinput"
+				"-File",
+				"deployment/vscode-tasks/run_django.ps1",
+				"-Action",
+				"migrate"
 			],
 			"group": "build"
 		},
@@ -94,8 +102,10 @@
 			"command": "pwsh",
 			"args": [
 				"-NoProfile",
-				"-Command",
-				"$env:PYTHONUNBUFFERED=1; $env:DJANGO_SETTINGS_MODULE='insurance-app.settings'; python -m pip show django > $null; if ($LASTEXITCODE -ne 0) { Write-Host 'Python env not ready. Please run the backend venv and install dependencies.'; exit 1 }; python insurance-app/manage.py check --deploy"
+				"-File",
+				"deployment/vscode-tasks/run_django.ps1",
+				"-Action",
+				"check-deploy"
 			]
 		},
 		{
@@ -104,8 +114,10 @@
 			"command": "pwsh",
 			"args": [
 				"-NoProfile",
-				"-Command",
-				"$env:PYTHONUNBUFFERED=1; $env:DJANGO_SETTINGS_MODULE='insurance-app.settings'; python -m pip show django > $null; if ($LASTEXITCODE -ne 0) { Write-Host 'Python env not ready. Please run the backend venv and install dependencies.'; exit 1 }; python insurance-app/manage.py check"
+				"-File",
+				"deployment/vscode-tasks/run_django.ps1",
+				"-Action",
+				"check"
 			]
 		}
 	]

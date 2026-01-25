@@ -1,0 +1,251 @@
+/* PataBima Admin Custom Styling */
+
+/* Login Page Styling */
+#login {
+    background: linear-gradient(135deg, #D5222B 0%, #B01E26 100%);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#login .form-row {
+    margin-bottom: 15px;
+}
+
+#login label {
+    display: block;
+    color: #333;
+    font-weight: 500;
+    margin-bottom: 5px;
+    font-size: 14px;
+}
+
+#login input[type="text"],
+#login input[type="password"] {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1px solid #E0E0E0;
+    border-radius: 8px;
+    font-size: 14px;
+    transition: all 0.3s ease;
+    box-sizing: border-box;
+}
+
+#login input[type="text"]:focus,
+#login input[type="password"]:focus {
+    outline: none;
+    border-color: #D5222B;
+    box-shadow: 0 0 0 3px rgba(213, 34, 43, 0.1);
+}
+
+#login .submit-row {
+    margin-top: 20px;
+    padding: 0;
+}
+
+#login input[type="submit"] {
+    width: 100%;
+    background: #D5222B;
+    color: white;
+    border: none;
+    padding: 14px;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+#login input[type="submit"]:hover {
+    background: #B01E26;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(213, 34, 43, 0.3);
+}
+
+#login #content {
+    background: white;
+    padding: 40px;
+    border-radius: 16px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+    max-width: 420px;
+    width: 100%;
+}
+
+#login #header {
+    background: transparent;
+    padding: 0;
+    margin-bottom: 30px;
+}
+
+#login #header h1 {
+    margin: 0;
+    padding: 0;
+}
+
+#login #header h1 a {
+    color: #D5222B;
+    font-size: 28px;
+    font-weight: 700;
+    text-decoration: none;
+    display: block;
+    text-align: center;
+}
+
+/* Admin Header Styling */
+#header {
+    background: #D5222B;
+    color: white;
+}
+
+#branding h1,
+#branding h1 a:link,
+#branding h1 a:visited {
+    color: white;
+    font-weight: 600;
+}
+
+/* Navigation */
+#header a:link,
+#header a:visited {
+    color: white;
+}
+
+#header a:hover,
+#header a:active {
+    color: #F8E6E7;
+}
+
+/* Buttons */
+.button,
+input[type="submit"],
+input[type="button"],
+.submit-row input,
+a.button {
+    background: #D5222B;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 6px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.button:hover,
+input[type="submit"]:hover,
+input[type="button"]:hover,
+.submit-row input:hover,
+a.button:hover {
+    background: #B01E26;
+}
+
+/* Links */
+a:link,
+a:visited {
+    color: #D5222B;
+}
+
+a:hover,
+a:active {
+    color: #B01E26;
+}
+
+/* Selected items */
+.selected {
+    background-color: #F8E6E7;
+}
+
+/* Module headers */
+.module h2,
+.module caption,
+.inline-group h2 {
+    background: #646767;
+}
+
+/* Breadcrumbs */
+div.breadcrumbs {
+    background: #646767;
+    color: white;
+}
+
+div.breadcrumbs a {
+    color: white;
+}
+
+div.breadcrumbs a:hover {
+    color: #F8E6E7;
+}
+
+/* Form styling */
+.form-row {
+    padding: 12px;
+}
+
+input[type="text"],
+input[type="password"],
+input[type="email"],
+input[type="number"],
+textarea,
+select {
+    border: 1px solid #E0E0E0;
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-size: 14px;
+}
+
+input[type="text"]:focus,
+input[type="password"]:focus,
+input[type="email"]:focus,
+input[type="number"]:focus,
+textarea:focus,
+select:focus {
+    border-color: #D5222B;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(213, 34, 43, 0.1);
+}
+
+/* Tables */
+#changelist-form .results {
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+#result_list thead th {
+    background: #646767;
+    color: white;
+}
+
+#result_list tbody tr:hover {
+    background: #F8E6E7;
+}
+
+/* Messages */
+.messagelist li.success {
+    background-color: #28A745;
+}
+
+.messagelist li.warning {
+    background-color: #FFC107;
+}
+
+.messagelist li.error {
+    background-color: #DC3545;
+}
+
+/* Dashboard */
+#content-main .module {
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+    #login #content {
+        padding: 30px 20px;
+        margin: 20px;
+    }
+    
+    #login #header h1 a {
+        font-size: 24px;
+    }
+}

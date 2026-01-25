@@ -1,7 +1,20 @@
 // HybridTextractService - helpers around Django doc status/result endpoints
 import DjangoAPIService from './DjangoAPIService';
 
-const ENABLE_LIVE = (typeof process !== 'undefined' && process.env && process.env.EXPO_PUBLIC_ENABLE_AWS_DOCS === 'true');
+import Constants from 'expo-constants';
+
+function asBool(v) {
+  if (v === true) return true;
+  if (typeof v === 'string') return ['1', 'true', 'yes', 'on'].includes(v.toLowerCase());
+  return false;
+}
+
+const ENABLE_LIVE = (() => {
+  const env = (typeof process !== 'undefined' && process.env) ? process.env : {};
+  if (asBool(env.EXPO_PUBLIC_ENABLE_AWS_DOCS)) return true;
+  const extra = Constants?.expoConfig?.extra || {};
+  return asBool(extra.docsPipelineEnabled);
+})();
 
 async function ensureInit() { try { await DjangoAPIService.initialize(); } catch {} }
 

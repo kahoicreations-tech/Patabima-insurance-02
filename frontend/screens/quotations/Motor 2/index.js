@@ -14,4 +14,3 @@ export { default as DocumentsUpload } from './MotorInsuranceFlow/DocumentsUpload
 export { default as EnhancedClientForm } from './MotorInsuranceFlow/ClientDetails/EnhancedClientForm';
 export { default as MotorInsuranceProgress } from './MotorInsuranceFlow/Navigation/MotorInsuranceProgress';
 export { default as MotorInsuranceNavigation } from './MotorInsuranceFlow/Navigation/MotorInsuranceNavigation';
-export { default as TORProductForm } from './TORProductForm';

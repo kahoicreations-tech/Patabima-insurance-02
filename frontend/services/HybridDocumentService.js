@@ -108,13 +108,28 @@ export const HybridDocumentService = {
 
     // 1) presign
     notify('preparing', 5);
-    const { data: presign } = await presignUpload({ filename, fileType: mimeType, sizeBytes, docType, agentId: options.agentId, quoteId: options.quoteId });
+    const { data: presign } = await presignUpload({
+      filename,
+      fileType: mimeType,
+      mimeType,
+      sizeBytes,
+      docType,
+      agentId: options.agentId,
+      quoteId: options.quoteId,
+    });
     // 2) PUT to S3
     notify('uploading', 20);
     await putToS3(presign.uploadUrl, presign.headers, { ...file, type: mimeType, size: sizeBytes });
     // 3) submit extraction
     notify('submitting', 50);
-    const { data: submit } = await submitExtraction({ objectKey: presign.objectKey, docType, correlationId: options.correlationId, quoteId: options.quoteId });
+    const { data: submit } = await submitExtraction({
+      objectKey: presign.objectKey,
+      docType,
+      correlationId: options.correlationId,
+      quoteId: options.quoteId,
+      mimeType,
+      sizeBytes,
+    });
     const jobId = submit.jobId;
     // 4) poll status -> DONE
     const started = Date.now();

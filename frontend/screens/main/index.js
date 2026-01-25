@@ -9,3 +9,4 @@ export { default as ClaimDetailsScreen } from './ClaimDetailsScreen';
 export { default as ExtensionScreen } from './ExtensionScreen';
 export { default as ExtensionPaymentScreen } from './ExtensionPaymentScreen';
 export { default as ClaimsSubmissionScreen } from './ClaimsSubmissionScreen';
+export { default as NotificationsScreen } from './NotificationsScreen';

@@ -1,0 +1,30 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block content %}
+<h1>PataBima Insurance Administration</h1>
+
+{% if show_dashboard_widgets %}
+<div class="dashboard-widgets">
+  <div class="widget-row">
+    <div class="dashboard-widget users">
+      <div class="widget-content">
+        <h3>Welcome</h3>
+        <p>Quick overview widgets appear here.</p>
+      </div>
+    </div>
+  </div>
+  <div class="quick-actions">
+    <div class="action-buttons">
+      <a class="btn btn-primary" href="/admin/">Open Default Admin</a>
+  <a class="btn btn-info" href="/admin/dashboard/">PataBima Dashboard</a>
+    </div>
+  </div>
+{% endif %}
+
+<div class="admin-content">
+  {{ block.super }}
+  {% for app in available_apps %}{% endfor %}
+  <p>Use navigation to access reports and analytics.</p>
+</div>
+{% endblock %}

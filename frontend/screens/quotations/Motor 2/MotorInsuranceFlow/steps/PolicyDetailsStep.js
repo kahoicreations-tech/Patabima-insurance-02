@@ -1,46 +1,107 @@
-import React, { useState, useCallback, useEffect, useRef } from 'react';
+import React, { useState, useCallback, useEffect, useRef, useMemo } from 'react';
 import { View, StyleSheet, KeyboardAvoidingView, Platform, TouchableWithoutFeedback, Keyboard } from 'react-native';
 import DynamicVehicleForm from '../VehicleDetails/DynamicVehicleForm';
 import { useMotorInsurance } from '@contexts/MotorInsuranceContext';
 import djangoAPI from '@services/DjangoAPIService';
 import { debounce } from '@utils/index';
+// StateDebugger removed from production UI
+
+// ✅ FIX: Move field classification OUTSIDE component to prevent recreation on every render
+const SHARED_FIELDS = new Set([
+  'registrationNumber', 'identificationType', 'cover_start_date', 'financialInterest',
+  'logbookNumber', 'chassisNumber', 'engineNumber', 'make', 'make_other', 'model', 'model_other',
+  'year', 'color', 'bodyType', 'purpose'
+]);
+
+const PRICING_FIELDS = new Set([
+  'sum_insured', 'tonnage', 'is_prime_mover', 'is_over_limit',
+  'capacity', 'passengerCapacity', 'is_commercial_institutional', 'passenger_type'
+]);
 
 export default function PolicyDetailsStep({ onDMVICCheckRef }) {
-  const { state, actions } = useMotorInsurance();
+  const context = useMotorInsurance();
+  
+  // ✅ Phase 2: Null safety - check if context exists
+  if (!context || !context.state || !context.actions) {
+    console.error('❌ [PolicyDetailsStep] Context not available');
+    return null;
+  }
+  
+  const { state, actions } = context;
+  
+  // ✅ Phase 2: Access separated state structure with null safety
+  const subcategoryCode = state.selectedSubcategory?.subcategory_code;
+  const pricingModel = state.selectedSubcategory?.pricing_model;
+  const currentPricingData = (state.pricingData && subcategoryCode) ? (state.pricingData[subcategoryCode] || {}) : {};
+  
+  console.log('🔷 [PolicyDetailsStep] Render - subcategory:', subcategoryCode);
+  console.log('🔷 [PolicyDetailsStep] sharedVehicleData:', state.sharedVehicleData);
+  console.log('🔷 [PolicyDetailsStep] currentPricingData:', currentPricingData);
+  console.log('🔷 [PolicyDetailsStep] selectedUnderwriter:', state.selectedUnderwriter?.name);
   
   // Local state for DMVIC check
   const [dmvicLoading, setDMVICLoading] = useState(false);
   const [dmvicError, setDMVICError] = useState(null);
   
-  // Use ref to hold latest callback without causing re-renders
-  const updateRef = useRef(actions.updateVehicleDetails);
-  updateRef.current = actions.updateVehicleDetails;
+  // ✅ FIX: Stable initialData - only recreate when switching subcategories
+  // Form manages its own state, so we only need to pass initial snapshot on mount
+  const initialData = useMemo(() => {
+    const merged = {
+      ...state.sharedVehicleData,
+      ...currentPricingData,
+    };
+    console.log('🔶 [PolicyDetailsStep] initialData MEMOIZED (subcategory change only):', state.selectedSubcategory?.subcategory_code);
+    return merged;
+  }, [
+    // ONLY recreate when switching between products (e.g., Third Party → Comprehensive)
+    state.selectedSubcategory?.subcategory_code,
+  ]);
   
-  // Keep an initial snapshot of vehicle details stable while typing to avoid child re-mounts
-  const initialDataRef = useRef(state.vehicleDetails);
-  // Refresh the snapshot only when the selected product changes (new flow context)
-  useEffect(() => {
-    initialDataRef.current = state.vehicleDetails;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [state.selectedSubcategory?.id, state.selectedSubcategory?.subcategory_code]);
-  
-  // Stable callback that won't cause re-renders
+  // ✅ Phase 2: Separated data handler - routes fields to correct context actions
   const handleDataChange = useCallback((data) => {
-    updateRef.current(data);
-  }, []);
+    console.log('📥 [PolicyDetailsStep] handleDataChange received data:', Object.keys(data));
+    
+    // Separate fields by classification
+    const sharedUpdates = {};
+    const pricingUpdates = {};
+    const otherFields = {};
+    
+    Object.keys(data).forEach(key => {
+      if (SHARED_FIELDS.has(key)) {
+        sharedUpdates[key] = data[key];
+      } else if (PRICING_FIELDS.has(key)) {
+        pricingUpdates[key] = data[key];
+      } else if (key !== 'underwriter' && key !== 'selectedUnderwriter') {
+        // Metadata fields or unknown (treat as shared for safety)
+        otherFields[key] = data[key];
+      }
+    });
+    
+    // Update separated state
+    if (Object.keys(sharedUpdates).length > 0) {
+      console.log('📤 [PolicyDetailsStep] Updating sharedVehicleData:', sharedUpdates);
+      actions.updateSharedVehicleData(sharedUpdates);
+    }
+    
+    if (Object.keys(pricingUpdates).length > 0) {
+      console.log('📤 [PolicyDetailsStep] Updating pricingData:', pricingUpdates);
+      actions.updatePricingData(pricingUpdates);
+    }
+    
+    // ✅ Phase 3: Removed dual-write to updateVehicleDetails
+    // Context compatibility shim handles merging sharedVehicleData + pricingData into vehicleDetails
+    // Other components can still read state.vehicleDetails (computed property)
+  }, [actions, SHARED_FIELDS, PRICING_FIELDS]);
 
-  // Ensure underwriter selection persists as a full object in context
+  // ✅ Phase 3: Underwriter selection (Context handles full object with subcategory link)
   const handleUnderwriterSelection = useCallback((underwriter) => {
     if (!underwriter) return;
     console.log('[PolicyDetailsStep] Underwriter selected:', underwriter?.name || underwriter?.underwriter_name);
+    
     // Persist full object for downstream steps (Payment, Submission)
+    // Context SET_SELECTED_UNDERWRITER action links with subcategory_code automatically
+    // Context compatibility shim ensures state.vehicleDetails.underwriter is populated
     actions.setSelectedUnderwriter?.(underwriter);
-    // Also dual-write into vehicleDetails to keep legacy readers working
-    const uwName = underwriter?.name || underwriter?.underwriter_name || underwriter?.company_name || underwriter?.company;
-    actions.updateVehicleDetails?.({
-      underwriter: uwName,
-      selectedUnderwriter: underwriter,
-    });
   }, [actions]);
 
   // Process DMVIC result (Phase 1.1)
@@ -83,9 +144,10 @@ export default function PolicyDetailsStep({ onDMVICCheckRef }) {
         autoFilledData.color = vehicle.color;
       }
       
-      // Update vehicle details with auto-filled data
+      // ✅ Phase 3: Update shared vehicle data (make, model, year, etc. are universal)
+      // Context compatibility shim ensures state.vehicleDetails reflects these changes
       if (Object.keys(autoFilledData).length > 0) {
-        actions.updateVehicleDetails(autoFilledData);
+        actions.updateSharedVehicleData(autoFilledData);
         const make = autoFilledData.make || 'N/A';
         const model = autoFilledData.model || 'N/A';
         const year = autoFilledData.year || 'N/A';
@@ -195,6 +257,7 @@ export default function PolicyDetailsStep({ onDMVICCheckRef }) {
         method: 'POST',
         body: JSON.stringify(payload),
         _suppressErrorLog: true,
+        timeoutMs: 60000, // 60 seconds for DMVIC external API call
       });
 
       console.log('[DMVIC] ✅ Response received for:', regNumber);
@@ -244,10 +307,12 @@ export default function PolicyDetailsStep({ onDMVICCheckRef }) {
     >
       <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
         <View style={styles.container}>
+          {/* StateDebugger removed: avoid extra renders and visual noise */}
+          
           <DynamicVehicleForm 
             selectedProduct={state.selectedSubcategory}
             productType={state.productType}
-            initialData={initialDataRef.current}
+            initialData={initialData}
             onDataChange={handleDataChange}
             onUnderwriterSelection={handleUnderwriterSelection}
             minCoverStartDate={state.minCoverStartDate}

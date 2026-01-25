@@ -1,16 +1,17 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, FlatList, Alert, Image, Linking, Animated, ActivityIndicator, RefreshControl, Dimensions } from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, FlatList, Image, Linking, Animated, ActivityIndicator, RefreshControl, Dimensions } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { Button as PaperButton, Dialog, Portal, Snackbar } from 'react-native-paper';
 import { Colors, Spacing, Typography } from '../../constants';
 import { SafeScreen, EnhancedCard, StatCard, StatusBadge, CompactCurvedHeader, LoadingSpinner, SkeletonLoader } from '../../components';
 import { useAuth } from '../../contexts/AuthContext';
 import { useAppData } from '../../contexts/AppDataContext';
 import { campaignsAPI } from '../../services/campaigns';
-// Legacy shared/data removed. Define local fallbacks and helpers.
+import DjangoAPIService from '../../services/DjangoAPIService';
+
 const CATEGORY_STATUS = {
   ACTIVE: 'ACTIVE',
   COMING_SOON: 'COMING_SOON',
@@ -31,17 +32,13 @@ const getCategoryStatusMessage = (item) => {
   }
 };
 
-const getActiveCategories = (categories) =>
-  (categories || []).filter((c) => c.status === CATEGORY_STATUS.ACTIVE);
-
-// Minimal, app-ready fallback list. Dynamically merged with backend lines when available.
 const STATIC_INSURANCE_CATEGORIES = [
   {
     id: 1,
     name: 'Motor Insurance',
     icon: 'car-sport',
     color: '#D5222B',
-    screen: 'Motor2Flow', // Updated to use Motor 2 (Phase 2)
+    screen: 'Motor3Container',
     status: CATEGORY_STATUS.ACTIVE,
   },
   {
@@ -101,35 +98,16 @@ const STATIC_INSURANCE_CATEGORIES = [
     status: CATEGORY_STATUS.ACTIVE,
   },
 ];
-const FEATURED_INSURANCE_CATEGORIES = [];
-const CAMPAIGNS = [];
-// import { fetchProductLines, mapLineToHomeCategory } from '../../services/catalogService';
 
 export default function HomeScreen() {
-  // Dynamic lines disabled - using only static categories
-  // const [dynamicLines, setDynamicLines] = useState([]);
-  // useEffect(() => {
-  //   let aborted = false;
-  //   const controller = new AbortController();
-  //   (async () => {
-  //     try {
-  //       const lines = await fetchProductLines(controller.signal);
-  //       if (!aborted) setDynamicLines(lines || []);
-  //     } catch (_) {}
-  //   })();
-  //   return () => { aborted = true; controller.abort(); };
-  // }, []);
-  // Use only static categories for now - dynamic backend integration disabled for non-motor
-  const MERGED_CATEGORIES = useMemo(() => {
-    return STATIC_INSURANCE_CATEGORIES;
-  }, []);
   const [currentCampaign, setCurrentCampaign] = useState(0);
   const [currentCategory, setCurrentCategory] = useState(0);
-  const [agentData, setAgentData] = useState(null);
   const [campaigns, setCampaigns] = useState([]);
   const [campaignsLoading, setCampaignsLoading] = useState(true);
-  const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
+  const [dialog, setDialog] = useState({ visible: false, title: '', message: '', actions: [] });
+  const [snackbar, setSnackbar] = useState({ visible: false, message: '', action: undefined });
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
   const categoriesRef = useRef(null);
@@ -161,34 +139,41 @@ export default function HomeScreen() {
     fetchClaims
   } = useAppData();
 
-  // Load agent data and dashboard statistics (gate UI until profile ready)
+  // Create stable agent data from context
+  const agentData = useMemo(() => {
+    if (!appUser) return null;
+    return {
+      agentCode: appUser.agent_code || 'N/A',
+      fullName: appUser.full_names || 'User',
+      // Dynamic stats replaced with actual data where possible or removed if not supported
+      nextPayout: appUser.next_commission_date || 'Not Available',
+      lastLogin: appUser.last_login || null,
+    };
+  }, [appUser]);
+
+  // Ensure data is loaded
   useEffect(() => {
-    loadDashboardData();
-  }, [appUser]); // React to appUser changes instead of calling API directly
+    if (!appUser && !dataLoading) {
+      fetchUser();
+    }
+  }, [appUser, dataLoading, fetchUser]);
 
   // Fetch campaigns only after authentication is confirmed
   useEffect(() => {
-    // Don't fetch campaigns until user is authenticated
-    if (!isAuthenticated) {
-      console.log('[HomeScreen] Waiting for authentication before fetching campaigns');
-      return;
-    }
+    if (!isAuthenticated) return;
 
     let cancelled = false;
     
     const fetchCampaigns = async () => {
       try {
         setCampaignsLoading(true);
-        console.log('[HomeScreen] Fetching campaigns for authenticated user');
         const activeCampaigns = await campaignsAPI.getActiveCampaigns();
         if (!cancelled) {
           setCampaigns(activeCampaigns);
-          console.log(`[HomeScreen] Successfully loaded ${activeCampaigns.length} campaigns`);
         }
       } catch (error) {
         if (!cancelled) {
-          console.error('[HomeScreen] Campaigns fetch error:', error?.message || error);
-          // Silent fail - don't show alerts for campaigns
+          console.warn('[HomeScreen] Campaigns fetch error:', error?.message);
         }
       } finally {
         if (!cancelled) {
@@ -198,113 +183,27 @@ export default function HomeScreen() {
     };
 
     fetchCampaigns();
-
-    // Auto-refresh campaigns every 5 minutes
     const interval = setInterval(fetchCampaigns, 5 * 60 * 1000);
 
     return () => {
       cancelled = true;
       clearInterval(interval);
     };
-  }, [isAuthenticated]); // Re-fetch when authentication state changes
+  }, [isAuthenticated]); 
 
-  // Refresh extensions data when Home tab becomes focused (e.g., after completing payment on another tab)
+  // Refresh extensions data when Home tab becomes focused
   useFocusEffect(
     useCallback(() => {
       if (isAuthenticated) {
-        console.log('[HomeScreen] Tab focused, refreshing extensions data');
-        fetchExtensions(true); // Force fresh fetch, bypassing cache
+        fetchExtensions(true); 
       }
     }, [isAuthenticated, fetchExtensions])
   );
 
-  const loadDashboardData = async (opts = {}) => {
-    try {
-      if (!opts.silent) setLoading(true);
-      
-      console.log('[HomeScreen] Loading dashboard data from AppDataContext...');
-      
-      // If appUser is not available, try to fetch it
-      let profile = appUser;
-      if (!profile) {
-        console.log('[HomeScreen] No user in context, fetching...');
-        profile = await fetchUser(true);
-      }
-      
-      if (profile) {
-        console.log('[HomeScreen] Profile data received:', profile?.agent_code);
-        
-        // Store agent data in AsyncStorage for DjangoAPIService
-        await AsyncStorage.setItem('agent_data', JSON.stringify(profile));
-        
-        // Transform Django user data to expected format
-        const transformedProfile = {
-          agentCode: profile.agent_code || 'N/A',
-          fullName: profile.full_names || 'User',
-          commission: 0, // TODO: Get from CommissionModel when implemented
-          sales: 0,      // TODO: Get from SalesModel when implemented
-          production: 0, // TODO: Get from ProductionModel when implemented
-          nextPayout: profile.next_commission_date || 'Not Available',
-          phoneNumber: profile.phonenumber || '', 
-          email: profile.email || '',
-          role: profile.role || 'AGENT',
-          lastLogin: profile.last_login || null
-        };
-        
-        setAgentData(transformedProfile);
-        console.log('[HomeScreen] Dashboard data loaded successfully');
-      } else {
-        console.log('[HomeScreen] No profile available - user may need to login');
-      }
-    } catch (error) {
-      console.error('[HomeScreen] Error loading dashboard data:', error.message);
-      
-      // Check if it's an authentication error
-      const isAuthError = error?.message?.includes('Session expired') || 
-                         error?.message?.includes('401') ||
-                         error?.message?.includes('Unauthorized');
-      
-      const isNetworkError = error?.message?.includes('Network') ||
-                            error?.message?.includes('timeout') ||
-                            error?.message?.includes('connection');
-      
-      // Only show alerts if not in silent mode
-      if (!opts.silent) {
-        if (isAuthError) {
-          console.log('[HomeScreen] Authentication required - user needs to log in');
-          // Don't show alert for auth errors - let the auth system handle it
-        } else if (isNetworkError) {
-          // Show user-friendly network error with retry option
-          Alert.alert(
-            'Connection Issue', 
-            'Unable to connect to the server. Please check your internet connection.',
-            [
-              { text: 'Retry', onPress: () => loadDashboardData(opts) },
-              { text: 'Cancel', style: 'cancel' }
-            ]
-          );
-        } else {
-          // Generic error - provide retry option
-          Alert.alert(
-            'Error Loading Data', 
-            'Something went wrong. Please try again.',
-            [
-              { text: 'Retry', onPress: () => loadDashboardData(opts) },
-              { text: 'Cancel', style: 'cancel' }
-            ]
-          );
-        }
-      }
-    } finally {
-      if (!opts.silent) setLoading(false);
-    }
-  };
-
-  // Pull-to-refresh handler - simplified like MyAccountScreen
+  // Pull-to-refresh handler 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     try {
-      // Refresh data silently using AppDataContext
       await Promise.all([
         fetchUser(true),
         fetchRenewals(true),
@@ -312,26 +211,30 @@ export default function HomeScreen() {
         fetchClaims(true)
       ]);
       
-      // Only fetch campaigns if authenticated
       if (isAuthenticated) {
         try {
           const activeCampaigns = await campaignsAPI.getActiveCampaigns();
           setCampaigns(activeCampaigns);
         } catch (error) {
-          console.error('[HomeScreen] Campaign refresh error:', error?.message || error);
+          console.warn('[HomeScreen] Campaign refresh error:', error);
+        }
+        
+        try {
+          const api = DjangoAPIService.getInstance();
+          const res = await api.getNotifications();
+          setUnreadNotifications(res?.unread_count || 0);
+        } catch (e) {
+          console.warn('[HomeScreen] Failed to load notifications count:', e);
         }
       }
-      
-      // Update local agent data (silent mode)
-      await loadDashboardData({ silent: true });
     } catch (error) {
       console.error('[HomeScreen] Refresh error:', error);
     } finally {
       setRefreshing(false);
     }
-  }, [isAuthenticated, fetchUser, fetchRenewals, fetchExtensions, fetchClaims, loadDashboardData]);
+  }, [isAuthenticated, fetchUser, fetchRenewals, fetchExtensions, fetchClaims]);
 
-  // Get time-based greeting
+  // Get time-based greeting using server time if available, else local
   const getGreeting = () => {
     const hour = new Date().getHours();
     if (hour < 12) return 'Good Morning';
@@ -345,6 +248,9 @@ export default function HomeScreen() {
     
     const now = new Date();
     const loginDate = new Date(lastLoginDate);
+    // Ensure valid date
+    if (isNaN(loginDate.getTime())) return 'N/A';
+
     const diffMs = now - loginDate;
     const diffMins = Math.floor(diffMs / 60000);
     const diffHours = Math.floor(diffMs / 3600000);
@@ -355,7 +261,6 @@ export default function HomeScreen() {
     if (diffHours < 24) return `${diffHours}h ago`;
     if (diffDays < 7) return `${diffDays}d ago`;
     
-    // Format as "Jan 15, 2025"
     return loginDate.toLocaleDateString('en-US', { 
       month: 'short', 
       day: 'numeric',
@@ -368,18 +273,12 @@ export default function HomeScreen() {
     if (!dateString || dateString === 'Not Available') return 'Not Available';
     
     const date = new Date(dateString);
-    const now = new Date();
-    const diffDays = Math.ceil((date - now) / 86400000);
-    
-    // Format as "Jan 15" or "15th Jan"
+    if (isNaN(date.getTime())) return 'N/A';
+
     const formatted = date.toLocaleDateString('en-US', { 
       month: 'short', 
       day: 'numeric'
     });
-    
-    if (diffDays === 0) return 'Today';
-    if (diffDays === 1) return 'Tomorrow';
-    if (diffDays > 0 && diffDays <= 7) return `in ${diffDays} days (${formatted})`;
     
     return formatted;
   };
@@ -390,17 +289,17 @@ export default function HomeScreen() {
     return fullName.split(' ')[0];
   };
 
-  // Get insurance categories from centralized data (dynamic merge aware)
+  // Get insurance categories
   const insuranceCategories = useMemo(() => 
-    MERGED_CATEGORIES.map(category => ({
+    STATIC_INSURANCE_CATEGORIES.map(category => ({
       id: category.id,
       name: category.name,
       icon: category.icon,
       color: category.color,
       screen: category.screen,
-      lineCode: category.lineCode,
+      // No dynamic line code merging needed for now
       status: category.status
-    })), [MERGED_CATEGORIES]);
+    })), []);
 
   // Debug: Log all categories (runs only once since MERGED_CATEGORIES is memoized)
   useEffect(() => {
@@ -578,21 +477,16 @@ export default function HomeScreen() {
 
   // WhatsApp chat handler
   const handleWhatsAppPress = () => {
-    Alert.alert(
-      'WhatsApp Support',
-      'Coming Soon! We\'re working on integrating WhatsApp support for instant customer assistance.',
-      [
-        {
-          text: 'OK',
-          style: 'default'
-        }
-      ]
-    );
+    setSnackbar({
+      visible: true,
+      message: "WhatsApp support is coming soon.",
+      action: undefined,
+    });
   };
 
   // Gate: if we are still loading or have no agent profile, render a lightweight skeleton
   // Also consider dataLoading from AppDataContext for more responsive UI
-  if (loading || !agentData || (dataLoading && !appUser)) {
+  if (!agentData) {
     return (
       <SafeScreen backgroundColor="transparent">
         <StatusBar style="light" />
@@ -604,19 +498,66 @@ export default function HomeScreen() {
   return (
     <SafeScreen backgroundColor="transparent" disableTopPadding>
       <StatusBar style="light" />
+
+      <Portal>
+        <Dialog
+          visible={!!dialog.visible}
+          onDismiss={() => setDialog((d) => ({ ...d, visible: false }))}
+        >
+          {!!dialog.title && <Dialog.Title>{dialog.title}</Dialog.Title>}
+          <Dialog.Content>
+            <Text style={{ color: '#334155', fontSize: 14, lineHeight: 20 }}>{dialog.message}</Text>
+          </Dialog.Content>
+          <Dialog.Actions>
+            {(dialog.actions || []).map((a, idx) => (
+              <PaperButton
+                key={`${a.label}-${idx}`}
+                mode={a.mode || 'text'}
+                onPress={a.onPress}
+                style={a.mode === 'contained' ? { marginLeft: 8 } : undefined}
+              >
+                {a.label}
+              </PaperButton>
+            ))}
+          </Dialog.Actions>
+        </Dialog>
+      </Portal>
       
       {/* Compact Curved Header */}
       <CompactCurvedHeader 
-        title="Pata Bima Agency"
+        title="PATA BIMA AGENCY"
         subtitle="Insurance for protection"
         showLogo={true}
         logoSource={require('../../assets/PataLogo.png')}
+        notificationComponent={
+          <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel="Open notifications"
+            style={styles.headerIconButton}
+            onPress={() => {
+              try {
+                navigation.navigate('Notifications');
+              } catch (e) {
+                console.warn('[HomeScreen] Failed to navigate to Notifications:', e);
+              }
+            }}
+          >
+            <Ionicons name="notifications-outline" size={22} color={Colors.white} />
+            {unreadNotifications > 0 && (
+              <View style={styles.notificationBadge}>
+                <Text style={styles.notificationBadgeText}>
+                  {unreadNotifications > 99 ? '99+' : unreadNotifications}
+                </Text>
+              </View>
+            )}
+          </TouchableOpacity>
+        }
       />
       
       <ScrollView 
         style={styles.scrollView} 
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 100 }]}
+        contentContainerStyle={[styles.scrollContent, { paddingBottom: insets.bottom + 120 }]}
         bounces={false}
         alwaysBounceVertical={false}
         overScrollMode="never"
@@ -688,7 +629,9 @@ export default function HomeScreen() {
 
         {/* Insurance Categories - Horizontal Slider */}
         <View style={styles.sectionContainer}>
-          <Text style={styles.sectionTitle}>Insurance Categories</Text>
+          <View style={styles.sectionHeaderRow}>
+            <Text style={styles.sectionTitle}>Insurance Categories</Text>
+          </View>
           <FlatList
             ref={categoriesRef}
             data={insuranceCategories}
@@ -720,23 +663,26 @@ export default function HomeScreen() {
                           : item.status === CATEGORY_STATUS.COMING_SOON
                             ? 'Coming Soon'
                             : 'Unavailable';
-                        Alert.alert(
-                          alertTitle,
-                          statusMessage,
-                          [
-                            { text: 'OK', style: 'default' },
+                        setDialog({
+                          visible: true,
+                          title: alertTitle,
+                          message: statusMessage,
+                          actions: [
+                            { label: 'OK', mode: 'text', onPress: () => setDialog((d) => ({ ...d, visible: false })) },
                             {
-                              text: 'Get Notified',
+                              label: 'Get notified',
+                              mode: 'contained',
                               onPress: () => {
-                                Alert.alert(
-                                  'Notification Set',
-                                  `You will be notified when ${item.name} insurance is available.`,
-                                  [{ text: 'OK' }]
-                                );
-                              }
-                            }
-                          ]
-                        );
+                                setDialog((d) => ({ ...d, visible: false }));
+                                setSnackbar({
+                                  visible: true,
+                                  message: `We will notify you when ${item.name} is available.`,
+                                  action: undefined,
+                                });
+                              },
+                            },
+                          ],
+                        });
                       }
                     }}
                   >
@@ -1015,6 +961,15 @@ export default function HomeScreen() {
         </View>
       </ScrollView>
 
+      <Snackbar
+        visible={!!snackbar.visible}
+        onDismiss={() => setSnackbar((s) => ({ ...s, visible: false }))}
+        duration={2500}
+        action={snackbar.action}
+      >
+        {snackbar.message}
+      </Snackbar>
+
       {/* Floating WhatsApp Chat Button */}
       <TouchableOpacity
         style={styles.whatsappButton}
@@ -1041,6 +996,35 @@ const styles = StyleSheet.create({
   },
   headerSpacing: {
     height: Spacing.lg,
+  },
+  headerIconButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: Colors.white + '33',
+    position: 'relative',
+  },
+  notificationBadge: {
+    position: 'absolute',
+    top: 2,
+    right: 2,
+    backgroundColor: Colors.error,
+    borderRadius: 10,
+    minWidth: 18,
+    height: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 4,
+    borderWidth: 2,
+    borderColor: Colors.primary,
+  },
+  notificationBadgeText: {
+    color: Colors.white,
+    fontSize: 10,
+    fontFamily: Typography.fontFamily.bold,
+    lineHeight: 12,
   },
   welcomeCard: {
     marginBottom: Spacing.lg,
@@ -1193,6 +1177,12 @@ const styles = StyleSheet.create({
     color: Colors.textPrimary,
     marginBottom: Spacing.md,
     lineHeight: Typography.lineHeight.lg,
+  },
+  sectionHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: Spacing.md,
   },
   categoriesSlider: {
     paddingHorizontal: Spacing.sm,
@@ -1537,7 +1527,7 @@ const styles = StyleSheet.create({
   },
   whatsappButton: {
     position: 'absolute',
-    bottom: 25, // Positioned right above the bottom navigation
+    bottom: 40, // Increased from 25 for better spacing above navigation
     right: 20,
     width: 60,
     height: 60,
@@ -1557,7 +1547,7 @@ const styles = StyleSheet.create({
   },
   djangoTestButton: {
     position: 'absolute',
-    bottom: 25, // Same height as WhatsApp button
+    bottom: 40, // Increased from 25 for better spacing above navigation
     right: 90, // To the left of WhatsApp button
     width: 50,
     height: 50,

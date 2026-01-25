@@ -18,6 +18,14 @@ export const Typography = {
     semiBold: SYSTEM_FONT_SEMIBOLD,
     bold: SYSTEM_FONT_BOLD,
   },
+
+  // Legacy alias (used by some Motor3 step screens)
+  families: {
+    regular: SYSTEM_FONT_REGULAR,
+    medium: SYSTEM_FONT_MEDIUM,
+    semiBold: SYSTEM_FONT_SEMIBOLD,
+    bold: SYSTEM_FONT_BOLD,
+  },
   
   // Font weights
   fontWeight: {
@@ -37,6 +45,17 @@ export const Typography = {
     xxl: FONT_SIZES.h1,
     xxxl: 28,
     xxxxl: 32,
+  },
+
+  // Legacy alias (used by some screens)
+  sizes: {
+    h1: FONT_SIZES.h1,
+    h2: FONT_SIZES.h2,
+    h3: FONT_SIZES.h3,
+    bodyLarge: FONT_SIZES.bodyLarge,
+    body: FONT_SIZES.body,
+    bodySmall: FONT_SIZES.bodySmall,
+    caption: FONT_SIZES.bodySmall,
   },
   
   // Font sizes - using full names for compatibility (DEPRECATED)
@@ -193,4 +212,9 @@ export const Typography = {
       color: '#D5222B',
     },
   },
+
+  // Legacy top-level presets (some components spread Typography.h3)
+  h1: { ...TEXT_PRESETS.h1 },
+  h2: { ...TEXT_PRESETS.h2 },
+  h3: { ...TEXT_PRESETS.h3 },
 };

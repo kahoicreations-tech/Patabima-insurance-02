@@ -1,0 +1,1070 @@
+[
+{
+  "model": "app.motorpricing",
+  "pk": "0376aa83-fe46-4659-a368-e55ae382f626",
+  "fields": {
+    "date_created": "2025-09-28T14:13:09.199Z",
+    "date_updated": "2025-09-28T15:14:46.784Z",
+    "subcategory": "e5fda96b-fdda-4fe9-a53c-3cd8d5500ada",
+    "underwriter": "771c566f-292a-49f1-97a9-19c2b967335e",
+    "base_premium": "5200.00",
+    "minimum_premium": null,
+    "maximum_premium": null,
+    "bracket_pricing": null,
+    "pricing_factors": {
+      "pricing_type": "fixed"
+    },
+    "effective_from": "2025-09-28",
+    "effective_to": null,
+    "is_active": true
+  }
+},
+{
+  "model": "app.motorpricing",
+  "pk": "07ba83b8-32cf-4e68-87cd-f2a92fba8e1d",
+  "fields": {
+    "date_created": "2025-09-23T15:22:45.217Z",
+    "date_updated": "2025-09-23T15:22:45.217Z",
+    "subcategory": "562464a1-ba36-4db8-95f2-d2c6d7792781",
+    "underwriter": "14900c1c-4327-4366-a1e9-585699b1a495",
+    "base_premium": "0.00",
+    "minimum_premium": "20000.00",
+    "maximum_premium": null,
+    "bracket_pricing": null,
+    "pricing_factors": {},
+    "effective_from": "2025-09-23",
+    "effective_to": null,
+    "is_active": true
+  }
+},
+{
+  "model": "app.motorpricing",
+  "pk": "0cbbcc3e-8ce5-487f-a6cb-0c163dbe7cfe",
+  "fields": {
+    "date_created": "2025-09-23T15:22:44.923Z",
+    "date_updated": "2025-09-23T15:22:44.923Z",
+    "subcategory": "d83ac6d4-9151-417f-b11e-4f2a3277ac82",
+    "underwriter": "acff5e40-a95b-4dd1-bc06-8e210e1e95bc",
+    "base_premium": "800.00",
+    "minimum_premium": null,
+    "maximum_premium": null,
+    "bracket_pricing": null,
+    "pricing_factors": {},
+    "effective_from": "2025-09-23",
+    "effective_to": null,
+    "is_active": true
+  }
+},
+{
+  "model": "app.motorpricing",
+  "pk": "0d6b88ed-5adb-4f8c-bdcb-247f196b1a3e",
+  "fields": {
+    "date_created": "2025-09-23T15:24:26.321Z",
+    "date_updated": "2025-09-23T15:24:26.321Z",
+    "subcategory": "792f2b97-9bd0-480d-a5cf-6d213196591c",
+    "underwriter": "14900c1c-4327-4366-a1e9-585699b1a495",
+    "base_premium": "0.00",
+    "minimum_premium": "20000.00",
+    "maximum_premium": null,
+    "bracket_pricing": null,
+    "pricing_factors": {},
+    "effective_from": "2025-09-23",
+    "effective_to": null,
+    "is_active": true
+  }
+},
+{
+  "model": "app.motorpricing",
+  "pk": "0f0e2b50-caba-4428-9e94-767267cdfa2a",
+  "fields": {
+    "date_created": "2025-09-23T15:24:26.171Z",
+    "date_updated": "2025-09-23T15:24:26.171Z",
+    "subcategory": "c3d87a28-c87a-4b21-951f-1b0586a9d908",
+    "underwriter": "acff5e40-a95b-4dd1-bc06-8e210e1e95bc",
+    "base_premium": "0.00",
+    "minimum_premium": "20000.00",
+    "maximum_premium": null,
+    "bracket_pricing": null,
+    "pricing_factors": {},
+    "effective_from": "2025-09-23",
+    "effective_to": null,
+    "is_active": true
+  }
+},
+{
+  "model": "app.motorpricing",
+  "pk": "10a2d701-0fb7-4b1b-8ac8-9549032b8889",
+  "fields": {
+    "date_created": "2025-09-23T19:17:32.853Z",
+    "date_updated": "2025-09-23T19:17:32.853Z",
+    "subcategory": "e5fda96b-fdda-4fe9-a53c-3cd8d5500ada",
+    "underwriter": "155e4474-a112-4231-b2b4-29e7f0a675e4",
+    "base_premium": "3600.00",
+    "minimum_premium": null,
+    "maximum_premium": null,
+    "bracket_pricing": null,
+    "pricing_factors": {},
+    "effective_from": "2025-09-23",
+    "effective_to": null,
+    "is_active": true
+  }
+},
+{
+  "model": "app.motorpricing",
+  "pk": "166bc61f-8a28-486e-98ba-2b999bd146aa",
+  "fields": {
+    "date_created": "2025-09-23T15:24:26.095Z",
+    "date_updated": "2025-09-23T15:24:26.095Z",
+    "subcategory": "55ec10f8-901f-4684-9601-d01944a85987",
+    "underwriter": "14900c1c-4327-4366-a1e9-585699b1a495",
+    "base_premium": "5500.00",
+    "minimum_premium": null,
+    "maximum_premium": null,
+    "bracket_pricing": null,
+    "pricing_factors": {},
+    "effective_from": "2025-09-23",
+    "effective_to": null,
+    "is_active": true
+  }
+},
+{
+  "model": "app.motorpricing",
+  "pk": "23e10604-2f37-4b1a-89e7-3adf0a406565",
+  "fields": {
+    "date_created": "2025-09-23T15:22:44.973Z",
+    "date_updated": "2025-09-23T15:22:44.973Z",
+    "subcategory": "ce88273c-85b0-4d72-a815-d9e9fef0b66a",
+    "underwriter": "acff5e40-a95b-4dd1-bc06-8e210e1e95bc",
+    "base_premium": "5500.00",
+    "minimum_premium": null,
+    "maximum_premium": null,
+    "bracket_pricing": null,
+    "pricing_factors": {},
+    "effective_from": "2025-09-23",
+    "effective_to": null,
+    "is_active": true
+  }
+},
+{
+  "model": "app.motorpricing",
+  "pk": "27508ea2-39b9-4ce9-a1df-aa35f34129b5",
+  "fields": {
+    "date_created": "2025-09-23T15:24:26.221Z",
+    "date_updated": "2025-09-23T15:24:26.221Z",
+    "subcategory": "792f2b97-9bd0-480d-a5cf-6d213196591c",
+    "underwriter": "acff5e40-a95b-4dd1-bc06-8e210e1e95bc",
+    "base_premium": "0.00",
+    "minimum_premium": "20000.00",
+    "maximum_premium": null,
+    "bracket_pricing": null,
+    "pricing_factors": {},
+    "effective_from": "2025-09-23",
+    "effective_to": null,
+    "is_active": true
+  }
+},
+{
+  "model": "app.motorpricing",
+  "pk": "2b7583f3-fb13-4128-82ed-72ae0e99b40f",
+  "fields": {
+    "date_created": "2025-09-23T15:22:44.950Z",
+    "date_updated": "2025-09-23T15:22:44.950Z",
+    "subcategory": "d85a3baa-dc18-4773-9dd4-d5556c66f24c",
+    "underwriter": "acff5e40-a95b-4dd1-bc06-8e210e1e95bc",
+    "base_premium": "5500.00",
+    "minimum_premium": null,
+    "maximum_premium": null,
+    "bracket_pricing": null,
+    "pricing_factors": {},
+    "effective_from": "2025-09-23",
+    "effective_to": null,
+    "is_active": true
+  }
+},
+{
+  "model": "app.motorpricing",
+  "pk": "3054cc79-b56c-49e6-8961-80eb55b035d6",
+  "fields": {
+    "date_created": "2025-09-23T15:22:45.075Z",
+    "date_updated": "2025-09-23T15:22:45.075Z",
+    "subcategory": "9dbc9eb0-8694-41a5-adb2-f7ecdfa00530",
+    "underwriter": "14900c1c-4327-4366-a1e9-585699b1a495",
+    "base_premium": "5500.00",
+    "minimum_premium": null,
+    "maximum_premium": null,
+    "bracket_pricing": null,
+    "pricing_factors": {},
+    "effective_from": "2025-09-23",
+    "effective_to": null,
+    "is_active": true
+  }
+},
+{
+  "model": "app.motorpricing",
+  "pk": "39a81878-d4fd-4999-b4bd-2781e413cc0f",
+  "fields": {
+    "date_created": "2025-09-23T15:24:26.211Z",
+    "date_updated": "2025-09-23T15:24:26.211Z",
+    "subcategory": "a3e56280-79a5-4f31-945f-f15b99f2cb9b",
+    "underwriter": "acff5e40-a95b-4dd1-bc06-8e210e1e95bc",
+    "base_premium": "0.00",
+    "minimum_premium": "20000.00",
+    "maximum_premium": null,
+    "bracket_pricing": null,
+    "pricing_factors": {},
+    "effective_from": "2025-09-23",
+    "effective_to": null,
+    "is_active": true
+  }
+},
+{
+  "model": "app.motorpricing",
+  "pk": "4943cce5-2d1b-4aa6-857f-9a3843af464e",
+  "fields": {
+    "date_created": "2025-09-23T15:24:26.087Z",
+    "date_updated": "2025-09-23T15:24:26.087Z",
+    "subcategory": "47363ab5-bb14-4a5d-bec4-37f5cd8159b3",
+    "underwriter": "14900c1c-4327-4366-a1e9-585699b1a495",
+    "base_premium": "5500.00",
+    "minimum_premium": null,
+    "maximum_premium": null,
+    "bracket_pricing": null,
+    "pricing_factors": {},
+    "effective_from": "2025-09-23",
+    "effective_to": null,
+    "is_active": true
+  }
+},
+{
+  "model": "app.motorpricing",
+  "pk": "50829cff-bb3b-4307-9de4-16e182e2bbe9",
+  "fields": {
+    "date_created": "2025-09-23T15:22:44.981Z",
+    "date_updated": "2025-09-23T15:22:44.981Z",
+    "subcategory": "9dbc9eb0-8694-41a5-adb2-f7ecdfa00530",
+    "underwriter": "acff5e40-a95b-4dd1-bc06-8e210e1e95bc",
+    "base_premium": "5500.00",
+    "minimum_premium": null,
+    "maximum_premium": null,
+    "bracket_pricing": null,
+    "pricing_factors": {},
+    "effective_from": "2025-09-23",
+    "effective_to": null,
+    "is_active": true
+  }
+},
+{
+  "model": "app.motorpricing",
+  "pk": "540996d5-5cf3-4237-9446-0136df80c382",
+  "fields": {
+    "date_created": "2025-09-23T15:22:45.052Z",
+    "date_updated": "2025-09-23T15:22:45.052Z",
+    "subcategory": "accb806c-d4ba-4aa0-9ff0-bb7505fd78d2",
+    "underwriter": "14900c1c-4327-4366-a1e9-585699b1a495",
+    "base_premium": "5500.00",
+    "minimum_premium": null,
+    "maximum_premium": null,
+    "bracket_pricing": null,
+    "pricing_factors": {},
+    "effective_from": "2025-09-23",
+    "effective_to": null,
+    "is_active": true
+  }
+},
+{
+  "model": "app.motorpricing",
+  "pk": "56b08730-57d6-4872-a485-7551f1bab3c1",
+  "fields": {
+    "date_created": "2025-09-23T15:24:26.184Z",
+    "date_updated": "2025-09-23T15:24:26.184Z",
+    "subcategory": "cf9966b7-4e06-4341-a4ca-992f218926d1",
+    "underwriter": "acff5e40-a95b-4dd1-bc06-8e210e1e95bc",
+    "base_premium": "0.00",
+    "minimum_premium": "20000.00",
+    "maximum_premium": null,
+    "bracket_pricing": null,
+    "pricing_factors": {},
+    "effective_from": "2025-09-23",
+    "effective_to": null,
+    "is_active": true
+  }
+},
+{
+  "model": "app.motorpricing",
+  "pk": "5f72b6e1-3f7e-403b-afdf-3e9f9e7844e4",
+  "fields": {
+    "date_created": "2025-09-23T15:24:26.177Z",
+    "date_updated": "2025-09-23T15:24:26.177Z",
+    "subcategory": "d850b486-5ea8-40b1-940d-5c29927fb6c6",
+    "underwriter": "acff5e40-a95b-4dd1-bc06-8e210e1e95bc",
+    "base_premium": "0.00",
+    "minimum_premium": "20000.00",
+    "maximum_premium": null,
+    "bracket_pricing": null,
+    "pricing_factors": {},
+    "effective_from": "2025-09-23",
+    "effective_to": null,
+    "is_active": true
+  }
+},
+{
+  "model": "app.motorpricing",
+  "pk": "60147446-1dd3-4e5b-af2b-093fbec840b2",
+  "fields": {
+    "date_created": "2025-09-23T15:24:26.284Z",
+    "date_updated": "2025-09-23T15:24:26.284Z",
+    "subcategory": "d850b486-5ea8-40b1-940d-5c29927fb6c6",
+    "underwriter": "14900c1c-4327-4366-a1e9-585699b1a495",
+    "base_premium": "0.00",
+    "minimum_premium": "20000.00",
+    "maximum_premium": null,
+    "bracket_pricing": null,
+    "pricing_factors": {},
+    "effective_from": "2025-09-23",
+    "effective_to": null,
+    "is_active": true
+  }
+},
+{
+  "model": "app.motorpricing",
+  "pk": "673b4939-34c4-4a29-add9-c9cf397ae7df",
+  "fields": {
+    "date_created": "2025-09-23T15:24:26.032Z",
+    "date_updated": "2025-09-23T15:24:26.032Z",
+    "subcategory": "0e9334f1-a127-48e0-8a41-623fc00825e3",
+    "underwriter": "acff5e40-a95b-4dd1-bc06-8e210e1e95bc",
+    "base_premium": "5500.00",
+    "minimum_premium": null,
+    "maximum_premium": null,
+    "bracket_pricing": null,
+    "pricing_factors": {},
+    "effective_from": "2025-09-23",
+    "effective_to": null,
+    "is_active": true
+  }
+},
+{
+  "model": "app.motorpricing",
+  "pk": "743609b5-886f-4ea1-9f29-c63dbd9d8564",
+  "fields": {
+    "date_created": "2025-09-28T15:14:46.789Z",
+    "date_updated": "2025-09-28T20:10:44.583Z",
+    "subcategory": "d83ac6d4-9151-417f-b11e-4f2a3277ac82",
+    "underwriter": "771c566f-292a-49f1-97a9-19c2b967335e",
+    "base_premium": "600.00",
+    "minimum_premium": null,
+    "maximum_premium": null,
+    "bracket_pricing": null,
+    "pricing_factors": {
+      "pricing_type": "fixed"
+    },
+    "effective_from": "2025-09-28",
+    "effective_to": null,
+    "is_active": true
+  }
+},
+{
+  "model": "app.motorpricing",
+  "pk": "74e3cb5e-e3c1-4d4c-a37c-9ff380883ed0",
+  "fields": {
+    "date_created": "2025-09-23T15:22:44.999Z",
+    "date_updated": "2025-09-23T15:22:44.999Z",
+    "subcategory": "d83ac6d4-9151-417f-b11e-4f2a3277ac82",
+    "underwriter": "14900c1c-4327-4366-a1e9-585699b1a495",
+    "base_premium": "800.00",
+    "minimum_premium": null,
+    "maximum_premium": null,
+    "bracket_pricing": null,
+    "pricing_factors": {},
+    "effective_from": "2025-09-23",
+    "effective_to": null,
+    "is_active": true
+  }
+},
+{
+  "model": "app.motorpricing",
+  "pk": "7974deb2-1a0f-4340-81d6-449f58a0de6e",
+  "fields": {
+    "date_created": "2025-09-23T15:24:25.981Z",
+    "date_updated": "2025-09-23T15:24:25.981Z",
+    "subcategory": "e5fda96b-fdda-4fe9-a53c-3cd8d5500ada",
+    "underwriter": "acff5e40-a95b-4dd1-bc06-8e210e1e95bc",
+    "base_premium": "5500.00",
+    "minimum_premium": null,
+    "maximum_premium": null,
+    "bracket_pricing": null,
+    "pricing_factors": {},
+    "effective_from": "2025-09-23",
+    "effective_to": null,
+    "is_active": true
+  }
+},
+{
+  "model": "app.motorpricing",
+  "pk": "80f07e91-400e-4e51-a453-1d0d47d96049",
+  "fields": {
+    "date_created": "2025-09-23T15:22:45.107Z",
+    "date_updated": "2025-09-23T15:22:45.107Z",
+    "subcategory": "562464a1-ba36-4db8-95f2-d2c6d7792781",
+    "underwriter": "acff5e40-a95b-4dd1-bc06-8e210e1e95bc",
+    "base_premium": "0.00",
+    "minimum_premium": "20000.00",
+    "maximum_premium": null,
+    "bracket_pricing": null,
+    "pricing_factors": {},
+    "effective_from": "2025-09-23",
+    "effective_to": null,
+    "is_active": true
+  }
+},
+{
+  "model": "app.motorpricing",
+  "pk": "840bd48a-ebf2-431b-a2cf-29bd0ff62475",
+  "fields": {
+    "date_created": "2025-09-23T15:22:45.038Z",
+    "date_updated": "2025-09-23T15:22:45.038Z",
+    "subcategory": "d85a3baa-dc18-4773-9dd4-d5556c66f24c",
+    "underwriter": "14900c1c-4327-4366-a1e9-585699b1a495",
+    "base_premium": "5500.00",
+    "minimum_premium": null,
+    "maximum_premium": null,
+    "bracket_pricing": null,
+    "pricing_factors": {},
+    "effective_from": "2025-09-23",
+    "effective_to": null,
+    "is_active": true
+  }
+},
+{
+  "model": "app.motorpricing",
+  "pk": "88445284-3776-4303-85c7-cd9da750bd00",
+  "fields": {
+    "date_created": "2025-09-28T15:57:16.460Z",
+    "date_updated": "2025-09-28T20:10:44.579Z",
+    "subcategory": "cf9966b7-4e06-4341-a4ca-992f218926d1",
+    "underwriter": "aa85d49e-06a2-40ec-9a22-e09b453f8066",
+    "base_premium": "8000.00",
+    "minimum_premium": "8000.00",
+    "maximum_premium": null,
+    "bracket_pricing": null,
+    "pricing_factors": {
+      "rate": 0.025,
+      "pricing_type": "percentage"
+    },
+    "effective_from": "2025-09-28",
+    "effective_to": null,
+    "is_active": true
+  }
+},
+{
+  "model": "app.motorpricing",
+  "pk": "8bf014db-66b8-480f-8e40-9e414a29b0d6",
+  "fields": {
+    "date_created": "2025-09-23T15:24:26.021Z",
+    "date_updated": "2025-09-23T15:24:26.021Z",
+    "subcategory": "8da7297d-5b17-4969-9b1b-e78bb6d5d40f",
+    "underwriter": "acff5e40-a95b-4dd1-bc06-8e210e1e95bc",
+    "base_premium": "5500.00",
+    "minimum_premium": null,
+    "maximum_premium": null,
+    "bracket_pricing": null,
+    "pricing_factors": {},
+    "effective_from": "2025-09-23",
+    "effective_to": null,
+    "is_active": true
+  }
+},
+{
+  "model": "app.motorpricing",
+  "pk": "8c2e6b9c-7af6-44dd-a6b0-76562dedff72",
+  "fields": {
+    "date_created": "2025-09-23T15:22:44.959Z",
+    "date_updated": "2025-09-23T15:22:44.959Z",
+    "subcategory": "8a6b2335-aa56-4658-a15d-9c0db0062b2c",
+    "underwriter": "acff5e40-a95b-4dd1-bc06-8e210e1e95bc",
+    "base_premium": "5500.00",
+    "minimum_premium": null,
+    "maximum_premium": null,
+    "bracket_pricing": null,
+    "pricing_factors": {},
+    "effective_from": "2025-09-23",
+    "effective_to": null,
+    "is_active": true
+  }
+},
+{
+  "model": "app.motorpricing",
+  "pk": "8cf44948-5eb3-4830-9b2e-a5e92894bb56",
+  "fields": {
+    "date_created": "2025-09-23T15:24:26.270Z",
+    "date_updated": "2025-09-23T15:24:26.270Z",
+    "subcategory": "0b13511b-8e76-4616-934b-a847650f43fa",
+    "underwriter": "14900c1c-4327-4366-a1e9-585699b1a495",
+    "base_premium": "0.00",
+    "minimum_premium": "20000.00",
+    "maximum_premium": null,
+    "bracket_pricing": null,
+    "pricing_factors": {},
+    "effective_from": "2025-09-23",
+    "effective_to": null,
+    "is_active": true
+  }
+},
+{
+  "model": "app.motorpricing",
+  "pk": "8f9625e0-6bea-4acc-aee6-740106248cd5",
+  "fields": {
+    "date_created": "2025-09-23T14:54:14.763Z",
+    "date_updated": "2025-09-23T16:22:13.874Z",
+    "subcategory": "5d6abafb-0ab9-418e-b37e-99d2447c137f",
+    "underwriter": "acff5e40-a95b-4dd1-bc06-8e210e1e95bc",
+    "base_premium": "850.00",
+    "minimum_premium": null,
+    "maximum_premium": null,
+    "bracket_pricing": null,
+    "pricing_factors": {},
+    "effective_from": "2025-09-23",
+    "effective_to": null,
+    "is_active": true
+  }
+},
+{
+  "model": "app.motorpricing",
+  "pk": "93653ca7-651d-4edc-aac0-0254bab9a255",
+  "fields": {
+    "date_created": "2025-09-23T15:24:26.277Z",
+    "date_updated": "2025-09-23T15:24:26.277Z",
+    "subcategory": "c3d87a28-c87a-4b21-951f-1b0586a9d908",
+    "underwriter": "14900c1c-4327-4366-a1e9-585699b1a495",
+    "base_premium": "0.00",
+    "minimum_premium": "20000.00",
+    "maximum_premium": null,
+    "bracket_pricing": null,
+    "pricing_factors": {},
+    "effective_from": "2025-09-23",
+    "effective_to": null,
+    "is_active": true
+  }
+},
+{
+  "model": "app.motorpricing",
+  "pk": "939d71ee-59ed-4f52-aa21-afcdcac0da8c",
+  "fields": {
+    "date_created": "2025-09-28T14:13:09.210Z",
+    "date_updated": "2025-09-28T15:11:22.725Z",
+    "subcategory": "f74414bf-1e4f-4965-a953-dc4f46c3e265",
+    "underwriter": "771c566f-292a-49f1-97a9-19c2b967335e",
+    "base_premium": "3500.00",
+    "minimum_premium": null,
+    "maximum_premium": null,
+    "bracket_pricing": null,
+    "pricing_factors": {
+      "pricing_type": "fixed"
+    },
+    "effective_from": "2025-09-27",
+    "effective_to": null,
+    "is_active": true
+  }
+},
+{
+  "model": "app.motorpricing",
+  "pk": "93e48481-d1e9-4e9b-8891-9d6a91d5062f",
+  "fields": {
+    "date_created": "2025-09-28T15:03:49.381Z",
+    "date_updated": "2025-09-28T20:10:44.570Z",
+    "subcategory": "d83ac6d4-9151-417f-b11e-4f2a3277ac82",
+    "underwriter": "aa85d49e-06a2-40ec-9a22-e09b453f8066",
+    "base_premium": "400.00",
+    "minimum_premium": null,
+    "maximum_premium": null,
+    "bracket_pricing": null,
+    "pricing_factors": {
+      "pricing_type": "fixed"
+    },
+    "effective_from": "2025-09-28",
+    "effective_to": null,
+    "is_active": true
+  }
+},
+{
+  "model": "app.motorpricing",
+  "pk": "a162cd6f-e3df-426d-b318-02ad5210ecc8",
+  "fields": {
+    "date_created": "2025-09-23T15:24:26.085Z",
+    "date_updated": "2025-09-23T15:24:26.085Z",
+    "subcategory": "f1b4d2b9-5654-4146-a799-5a66e44fd01e",
+    "underwriter": "14900c1c-4327-4366-a1e9-585699b1a495",
+    "base_premium": "5500.00",
+    "minimum_premium": null,
+    "maximum_premium": null,
+    "bracket_pricing": null,
+    "pricing_factors": {},
+    "effective_from": "2025-09-23",
+    "effective_to": null,
+    "is_active": true
+  }
+},
+{
+  "model": "app.motorpricing",
+  "pk": "ae881db2-d597-4e1c-9b19-eaa3579e25fc",
+  "fields": {
+    "date_created": "2025-09-28T15:03:49.393Z",
+    "date_updated": "2025-09-28T16:28:56.567Z",
+    "subcategory": "87862519-800b-4655-b480-790228534766",
+    "underwriter": "aa85d49e-06a2-40ec-9a22-e09b453f8066",
+    "base_premium": "3500.00",
+    "minimum_premium": null,
+    "maximum_premium": null,
+    "bracket_pricing": null,
+    "pricing_factors": {
+      "pricing_type": "fixed"
+    },
+    "effective_from": "2025-09-28",
+    "effective_to": null,
+    "is_active": true
+  }
+},
+{
+  "model": "app.motorpricing",
+  "pk": "af11e3e7-414f-45ee-af9f-edc6ae6c4426",
+  "fields": {
+    "date_created": "2025-09-23T15:24:26.099Z",
+    "date_updated": "2025-09-23T15:24:26.099Z",
+    "subcategory": "87862519-800b-4655-b480-790228534766",
+    "underwriter": "14900c1c-4327-4366-a1e9-585699b1a495",
+    "base_premium": "5500.00",
+    "minimum_premium": null,
+    "maximum_premium": null,
+    "bracket_pricing": null,
+    "pricing_factors": {},
+    "effective_from": "2025-09-23",
+    "effective_to": null,
+    "is_active": true
+  }
+},
+{
+  "model": "app.motorpricing",
+  "pk": "b44b86a0-6277-468a-942b-ca5b3d824576",
+  "fields": {
+    "date_created": "2025-09-28T15:03:49.396Z",
+    "date_updated": "2025-09-28T16:28:56.570Z",
+    "subcategory": "c3d87a28-c87a-4b21-951f-1b0586a9d908",
+    "underwriter": "aa85d49e-06a2-40ec-9a22-e09b453f8066",
+    "base_premium": "0.00",
+    "minimum_premium": "15000.00",
+    "maximum_premium": null,
+    "bracket_pricing": null,
+    "pricing_factors": {
+      "rate": 0.03,
+      "pricing_type": "percentage"
+    },
+    "effective_from": "2025-09-28",
+    "effective_to": null,
+    "is_active": true
+  }
+},
+{
+  "model": "app.motorpricing",
+  "pk": "b4e926b8-4bbf-4243-8537-24cdd3c3a5fc",
+  "fields": {
+    "date_created": "2025-09-23T15:24:26.017Z",
+    "date_updated": "2025-09-23T15:24:26.017Z",
+    "subcategory": "87862519-800b-4655-b480-790228534766",
+    "underwriter": "acff5e40-a95b-4dd1-bc06-8e210e1e95bc",
+    "base_premium": "5500.00",
+    "minimum_premium": null,
+    "maximum_premium": null,
+    "bracket_pricing": null,
+    "pricing_factors": {},
+    "effective_from": "2025-09-23",
+    "effective_to": null,
+    "is_active": true
+  }
+},
+{
+  "model": "app.motorpricing",
+  "pk": "b6a79310-6f6e-4ad2-8c21-af5d19d60837",
+  "fields": {
+    "date_created": "2025-09-23T15:24:26.002Z",
+    "date_updated": "2025-09-23T15:24:26.002Z",
+    "subcategory": "47363ab5-bb14-4a5d-bec4-37f5cd8159b3",
+    "underwriter": "acff5e40-a95b-4dd1-bc06-8e210e1e95bc",
+    "base_premium": "5500.00",
+    "minimum_premium": null,
+    "maximum_premium": null,
+    "bracket_pricing": null,
+    "pricing_factors": {},
+    "effective_from": "2025-09-23",
+    "effective_to": null,
+    "is_active": true
+  }
+},
+{
+  "model": "app.motorpricing",
+  "pk": "b885ee7b-ebbe-42c2-a7e4-b189913e0c2e",
+  "fields": {
+    "date_created": "2025-09-23T15:24:26.000Z",
+    "date_updated": "2025-09-23T15:24:26.000Z",
+    "subcategory": "f1b4d2b9-5654-4146-a799-5a66e44fd01e",
+    "underwriter": "acff5e40-a95b-4dd1-bc06-8e210e1e95bc",
+    "base_premium": "5500.00",
+    "minimum_premium": null,
+    "maximum_premium": null,
+    "bracket_pricing": null,
+    "pricing_factors": {},
+    "effective_from": "2025-09-23",
+    "effective_to": null,
+    "is_active": true
+  }
+},
+{
+  "model": "app.motorpricing",
+  "pk": "ba233acd-d75d-41a9-a0a3-ccc38a0d423e",
+  "fields": {
+    "date_created": "2025-09-23T15:24:26.329Z",
+    "date_updated": "2025-09-23T15:24:26.329Z",
+    "subcategory": "d4426841-f3d0-42bf-931e-7662f12405a5",
+    "underwriter": "14900c1c-4327-4366-a1e9-585699b1a495",
+    "base_premium": "0.00",
+    "minimum_premium": "20000.00",
+    "maximum_premium": null,
+    "bracket_pricing": null,
+    "pricing_factors": {},
+    "effective_from": "2025-09-23",
+    "effective_to": null,
+    "is_active": true
+  }
+},
+{
+  "model": "app.motorpricing",
+  "pk": "bd088bc3-30d3-41c5-8291-d12332db3119",
+  "fields": {
+    "date_created": "2025-09-23T15:24:26.068Z",
+    "date_updated": "2025-09-23T15:24:26.068Z",
+    "subcategory": "e5fda96b-fdda-4fe9-a53c-3cd8d5500ada",
+    "underwriter": "14900c1c-4327-4366-a1e9-585699b1a495",
+    "base_premium": "5500.00",
+    "minimum_premium": null,
+    "maximum_premium": null,
+    "bracket_pricing": null,
+    "pricing_factors": {},
+    "effective_from": "2025-09-23",
+    "effective_to": null,
+    "is_active": true
+  }
+},
+{
+  "model": "app.motorpricing",
+  "pk": "bd9f4698-ca3d-437a-9552-5477a497e4af",
+  "fields": {
+    "date_created": "2025-09-23T15:22:44.962Z",
+    "date_updated": "2025-09-23T15:22:44.962Z",
+    "subcategory": "accb806c-d4ba-4aa0-9ff0-bb7505fd78d2",
+    "underwriter": "acff5e40-a95b-4dd1-bc06-8e210e1e95bc",
+    "base_premium": "5500.00",
+    "minimum_premium": null,
+    "maximum_premium": null,
+    "bracket_pricing": null,
+    "pricing_factors": {},
+    "effective_from": "2025-09-23",
+    "effective_to": null,
+    "is_active": true
+  }
+},
+{
+  "model": "app.motorpricing",
+  "pk": "c245c32d-f79f-47bc-ac5c-7a4b7d5d6186",
+  "fields": {
+    "date_created": "2025-09-23T15:24:26.313Z",
+    "date_updated": "2025-09-23T15:24:26.313Z",
+    "subcategory": "a3e56280-79a5-4f31-945f-f15b99f2cb9b",
+    "underwriter": "14900c1c-4327-4366-a1e9-585699b1a495",
+    "base_premium": "0.00",
+    "minimum_premium": "20000.00",
+    "maximum_premium": null,
+    "bracket_pricing": null,
+    "pricing_factors": {},
+    "effective_from": "2025-09-23",
+    "effective_to": null,
+    "is_active": true
+  }
+},
+{
+  "model": "app.motorpricing",
+  "pk": "c3593c84-3b98-4183-89ab-b74ac19c3e96",
+  "fields": {
+    "date_created": "2025-09-23T15:22:45.049Z",
+    "date_updated": "2025-09-23T15:22:45.049Z",
+    "subcategory": "8a6b2335-aa56-4658-a15d-9c0db0062b2c",
+    "underwriter": "14900c1c-4327-4366-a1e9-585699b1a495",
+    "base_premium": "5500.00",
+    "minimum_premium": null,
+    "maximum_premium": null,
+    "bracket_pricing": null,
+    "pricing_factors": {},
+    "effective_from": "2025-09-23",
+    "effective_to": null,
+    "is_active": true
+  }
+},
+{
+  "model": "app.motorpricing",
+  "pk": "c52300a0-592b-4c10-b7af-bfeefd1acb6c",
+  "fields": {
+    "date_created": "2025-09-23T15:24:26.010Z",
+    "date_updated": "2025-09-23T15:24:26.010Z",
+    "subcategory": "55ec10f8-901f-4684-9601-d01944a85987",
+    "underwriter": "acff5e40-a95b-4dd1-bc06-8e210e1e95bc",
+    "base_premium": "5500.00",
+    "minimum_premium": null,
+    "maximum_premium": null,
+    "bracket_pricing": null,
+    "pricing_factors": {},
+    "effective_from": "2025-09-23",
+    "effective_to": null,
+    "is_active": true
+  }
+},
+{
+  "model": "app.motorpricing",
+  "pk": "d17f802a-9743-4809-a860-d57f10e03039",
+  "fields": {
+    "date_created": "2025-09-23T15:22:45.035Z",
+    "date_updated": "2025-09-23T15:22:45.035Z",
+    "subcategory": "f74414bf-1e4f-4965-a953-dc4f46c3e265",
+    "underwriter": "14900c1c-4327-4366-a1e9-585699b1a495",
+    "base_premium": "5500.00",
+    "minimum_premium": null,
+    "maximum_premium": null,
+    "bracket_pricing": null,
+    "pricing_factors": {},
+    "effective_from": "2025-09-23",
+    "effective_to": null,
+    "is_active": true
+  }
+},
+{
+  "model": "app.motorpricing",
+  "pk": "d4942002-3ab7-4717-b648-d5e82a4b0130",
+  "fields": {
+    "date_created": "2025-09-23T15:22:44.948Z",
+    "date_updated": "2025-09-23T15:22:44.948Z",
+    "subcategory": "f74414bf-1e4f-4965-a953-dc4f46c3e265",
+    "underwriter": "acff5e40-a95b-4dd1-bc06-8e210e1e95bc",
+    "base_premium": "5500.00",
+    "minimum_premium": null,
+    "maximum_premium": null,
+    "bracket_pricing": null,
+    "pricing_factors": {},
+    "effective_from": "2025-09-23",
+    "effective_to": null,
+    "is_active": true
+  }
+},
+{
+  "model": "app.motorpricing",
+  "pk": "db186486-700b-4e6d-aa41-282e6eb6de7c",
+  "fields": {
+    "date_created": "2025-09-23T15:22:44.846Z",
+    "date_updated": "2025-09-23T16:22:13.890Z",
+    "subcategory": "5d6abafb-0ab9-418e-b37e-99d2447c137f",
+    "underwriter": "14900c1c-4327-4366-a1e9-585699b1a495",
+    "base_premium": "900.00",
+    "minimum_premium": null,
+    "maximum_premium": null,
+    "bracket_pricing": null,
+    "pricing_factors": {},
+    "effective_from": "2025-09-23",
+    "effective_to": null,
+    "is_active": true
+  }
+},
+{
+  "model": "app.motorpricing",
+  "pk": "dc0bb539-e0b0-42de-8889-8948f0b2fc8d",
+  "fields": {
+    "date_created": "2025-09-23T15:24:26.165Z",
+    "date_updated": "2025-09-23T15:24:26.165Z",
+    "subcategory": "0b13511b-8e76-4616-934b-a847650f43fa",
+    "underwriter": "acff5e40-a95b-4dd1-bc06-8e210e1e95bc",
+    "base_premium": "0.00",
+    "minimum_premium": "20000.00",
+    "maximum_premium": null,
+    "bracket_pricing": null,
+    "pricing_factors": {},
+    "effective_from": "2025-09-23",
+    "effective_to": null,
+    "is_active": true
+  }
+},
+{
+  "model": "app.motorpricing",
+  "pk": "e0ff6265-8ced-4452-9987-3813222ee8a5",
+  "fields": {
+    "date_created": "2025-09-23T15:24:26.292Z",
+    "date_updated": "2025-09-23T15:24:26.292Z",
+    "subcategory": "cf9966b7-4e06-4341-a4ca-992f218926d1",
+    "underwriter": "14900c1c-4327-4366-a1e9-585699b1a495",
+    "base_premium": "0.00",
+    "minimum_premium": "20000.00",
+    "maximum_premium": null,
+    "bracket_pricing": null,
+    "pricing_factors": {},
+    "effective_from": "2025-09-23",
+    "effective_to": null,
+    "is_active": true
+  }
+},
+{
+  "model": "app.motorpricing",
+  "pk": "e1bce172-1d1e-46c3-bbd8-b8a167a5b3f4",
+  "fields": {
+    "date_created": "2025-09-23T15:24:26.233Z",
+    "date_updated": "2025-09-23T15:24:26.233Z",
+    "subcategory": "d4426841-f3d0-42bf-931e-7662f12405a5",
+    "underwriter": "acff5e40-a95b-4dd1-bc06-8e210e1e95bc",
+    "base_premium": "0.00",
+    "minimum_premium": "20000.00",
+    "maximum_premium": null,
+    "bracket_pricing": null,
+    "pricing_factors": {},
+    "effective_from": "2025-09-23",
+    "effective_to": null,
+    "is_active": true
+  }
+},
+{
+  "model": "app.motorpricing",
+  "pk": "ef9d64bf-fab1-4bb4-8d7b-f2ace11fdf6f",
+  "fields": {
+    "date_created": "2025-09-28T15:03:49.389Z",
+    "date_updated": "2025-09-28T16:28:56.562Z",
+    "subcategory": "ce88273c-85b0-4d72-a815-d9e9fef0b66a",
+    "underwriter": "aa85d49e-06a2-40ec-9a22-e09b453f8066",
+    "base_premium": "3500.00",
+    "minimum_premium": null,
+    "maximum_premium": null,
+    "bracket_pricing": null,
+    "pricing_factors": {
+      "pricing_type": "fixed"
+    },
+    "effective_from": "2025-09-28",
+    "effective_to": null,
+    "is_active": true
+  }
+},
+{
+  "model": "app.motorpricing",
+  "pk": "f3a5c2b7-b907-49b6-9200-d0f934f47cb7",
+  "fields": {
+    "date_created": "2025-09-28T14:13:09.214Z",
+    "date_updated": "2025-09-28T15:14:46.792Z",
+    "subcategory": "c3d87a28-c87a-4b21-951f-1b0586a9d908",
+    "underwriter": "771c566f-292a-49f1-97a9-19c2b967335e",
+    "base_premium": "0.00",
+    "minimum_premium": "20000.00",
+    "maximum_premium": null,
+    "bracket_pricing": [
+      {
+        "to": 1500000,
+        "min": 20000,
+        "from": 0,
+        "rate": 0.035
+      },
+      {
+        "to": 3000000,
+        "min": 20000,
+        "from": 1500000,
+        "rate": 0.03
+      },
+      {
+        "to": null,
+        "min": 30000,
+        "from": 3000000,
+        "rate": 0.025
+      }
+    ],
+    "pricing_factors": {
+      "rate": 0.003,
+      "pricing_type": "percentage"
+    },
+    "effective_from": "2025-09-28",
+    "effective_to": null,
+    "is_active": true
+  }
+},
+{
+  "model": "app.motorpricing",
+  "pk": "f3b61a3c-fd58-4f63-a60e-d9ddf6fc6637",
+  "fields": {
+    "date_created": "2025-09-23T15:22:45.066Z",
+    "date_updated": "2025-09-23T15:22:45.066Z",
+    "subcategory": "ce88273c-85b0-4d72-a815-d9e9fef0b66a",
+    "underwriter": "14900c1c-4327-4366-a1e9-585699b1a495",
+    "base_premium": "5500.00",
+    "minimum_premium": null,
+    "maximum_premium": null,
+    "bracket_pricing": null,
+    "pricing_factors": {},
+    "effective_from": "2025-09-23",
+    "effective_to": null,
+    "is_active": true
+  }
+},
+{
+  "model": "app.motorpricing",
+  "pk": "f7bc9c08-45eb-4a91-ae33-5c5bd90e0ff3",
+  "fields": {
+    "date_created": "2025-09-23T15:24:26.104Z",
+    "date_updated": "2025-09-23T15:24:26.104Z",
+    "subcategory": "8da7297d-5b17-4969-9b1b-e78bb6d5d40f",
+    "underwriter": "14900c1c-4327-4366-a1e9-585699b1a495",
+    "base_premium": "5500.00",
+    "minimum_premium": null,
+    "maximum_premium": null,
+    "bracket_pricing": null,
+    "pricing_factors": {},
+    "effective_from": "2025-09-23",
+    "effective_to": null,
+    "is_active": true
+  }
+},
+{
+  "model": "app.motorpricing",
+  "pk": "fbd8b97b-c4bb-429a-9e5a-52745463b375",
+  "fields": {
+    "date_created": "2025-09-28T15:57:16.436Z",
+    "date_updated": "2025-09-28T20:38:56.595Z",
+    "subcategory": "e5fda96b-fdda-4fe9-a53c-3cd8d5500ada",
+    "underwriter": "aa85d49e-06a2-40ec-9a22-e09b453f8066",
+    "base_premium": "100.00",
+    "minimum_premium": null,
+    "maximum_premium": null,
+    "bracket_pricing": null,
+    "pricing_factors": {
+      "pricing_type": "fixed"
+    },
+    "effective_from": "2025-09-28",
+    "effective_to": null,
+    "is_active": true
+  }
+},
+{
+  "model": "app.motorpricing",
+  "pk": "fc8212aa-b1f8-4f46-a7cb-30d98903c0c1",
+  "fields": {
+    "date_created": "2025-09-23T15:24:26.117Z",
+    "date_updated": "2025-09-23T15:24:26.117Z",
+    "subcategory": "0e9334f1-a127-48e0-8a41-623fc00825e3",
+    "underwriter": "14900c1c-4327-4366-a1e9-585699b1a495",
+    "base_premium": "5500.00",
+    "minimum_premium": null,
+    "maximum_premium": null,
+    "bracket_pricing": null,
+    "pricing_factors": {},
+    "effective_from": "2025-09-23",
+    "effective_to": null,
+    "is_active": true
+  }
+}
+]

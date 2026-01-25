@@ -22,9 +22,9 @@ export default function MainTabNavigator() {
           backgroundColor: '#FFFFFF',
           borderTopWidth: 1,
           borderTopColor: '#E5E5E5',
-          height: 60 + insets.bottom,
-          paddingBottom: 8 + insets.bottom,
-          paddingTop: 8,
+          height: 70 + insets.bottom, // Increased from 60 to 70
+          paddingBottom: 12 + insets.bottom, // Increased from 8 to 12
+          paddingTop: 12, // Increased from 8 to 12
           elevation: 8,
           shadowColor: '#000',
           shadowOffset: {
@@ -39,7 +39,7 @@ export default function MainTabNavigator() {
         tabBarLabelStyle: {
           fontFamily: 'Poppins_400Regular',
           fontSize: 12,
-          marginBottom: insets.bottom > 0 ? -6 : 0,
+          marginBottom: insets.bottom > 0 ? 4 : 0, // Changed from -6 to 4 for better spacing
         },
       }}
     >

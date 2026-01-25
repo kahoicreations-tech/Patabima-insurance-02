@@ -299,49 +299,57 @@ export default function DomesticPackageQuotationScreen({ navigation }) {
 
         <View style={styles.fieldBlock}>
           <Subtitle2 style={styles.label}>Owner Name</Subtitle2>
-          <TextInput
-            placeholder="Full name of property owner"
-            placeholderTextColor={UI.textSecondary}
-            style={styles.input}
-            value={ownerName}
-            onChangeText={setOwnerName}
-          />
+          <View style={styles.cardInputContainer}>
+            <TextInput
+              placeholder="Full name of property owner"
+              placeholderTextColor={UI.textSecondary}
+              style={styles.input}
+              value={ownerName}
+              onChangeText={setOwnerName}
+            />
+          </View>
         </View>
 
         <View style={styles.fieldBlock}>
           <Subtitle2 style={styles.label}>ID/Passport Number</Subtitle2>
-          <TextInput
-            placeholder="Owner's ID or passport number"
-            placeholderTextColor={UI.textSecondary}
-            style={styles.input}
-            value={idNumber}
-            onChangeText={setIdNumber}
-          />
+          <View style={styles.cardInputContainer}>
+            <TextInput
+              placeholder="Owner's ID or passport number"
+              placeholderTextColor={UI.textSecondary}
+              style={styles.input}
+              value={idNumber}
+              onChangeText={setIdNumber}
+            />
+          </View>
         </View>
 
         <View style={styles.fieldBlock}>
           <Subtitle2 style={styles.label}>Phone Number</Subtitle2>
-          <TextInput
-            placeholder="e.g., +254712345678"
-            placeholderTextColor={UI.textSecondary}
-            style={styles.input}
-            value={phoneNumber}
-            onChangeText={setPhoneNumber}
-            keyboardType="phone-pad"
-          />
+          <View style={styles.cardInputContainer}>
+            <TextInput
+              placeholder="e.g., +254712345678"
+              placeholderTextColor={UI.textSecondary}
+              style={styles.input}
+              value={phoneNumber}
+              onChangeText={setPhoneNumber}
+              keyboardType="phone-pad"
+            />
+          </View>
         </View>
 
         <View style={styles.fieldBlock}>
           <Subtitle2 style={styles.label}>Email Address</Subtitle2>
-          <TextInput
-            placeholder="owner@example.com"
-            placeholderTextColor={UI.textSecondary}
-            style={styles.input}
-            value={emailAddress}
-            onChangeText={setEmailAddress}
-            keyboardType="email-address"
-            autoCapitalize="none"
-          />
+          <View style={styles.cardInputContainer}>
+            <TextInput
+              placeholder="owner@example.com"
+              placeholderTextColor={UI.textSecondary}
+              style={styles.input}
+              value={emailAddress}
+              onChangeText={setEmailAddress}
+              keyboardType="email-address"
+              autoCapitalize="none"
+            />
+          </View>
         </View>
 
         {/* Section 2: Property Details */}
@@ -352,14 +360,16 @@ export default function DomesticPackageQuotationScreen({ navigation }) {
 
         <View style={styles.fieldBlock}>
           <Subtitle2 style={styles.label}>Property Address</Subtitle2>
-          <TextInput
-            placeholder="Full property address including city"
-            placeholderTextColor={UI.textSecondary}
-            style={styles.input}
-            value={propertyAddress}
-            onChangeText={setPropertyAddress}
-            multiline
-          />
+          <View style={styles.cardInputContainer}>
+            <TextInput
+              placeholder="Full property address including city"
+              placeholderTextColor={UI.textSecondary}
+              style={styles.input}
+              value={propertyAddress}
+              onChangeText={setPropertyAddress}
+              multiline
+            />
+          </View>
         </View>
 
         <View style={styles.fieldBlock}>
@@ -466,26 +476,30 @@ export default function DomesticPackageQuotationScreen({ navigation }) {
 
         <View style={styles.fieldBlock}>
           <Subtitle2 style={styles.label}>Year Built</Subtitle2>
-          <TextInput
-            placeholder="e.g., 2015"
-            placeholderTextColor={UI.textSecondary}
-            style={styles.input}
-            value={yearBuilt}
-            onChangeText={setYearBuilt}
-            keyboardType="number-pad"
-          />
+          <View style={styles.cardInputContainer}>
+            <TextInput
+              placeholder="e.g., 2015"
+              placeholderTextColor={UI.textSecondary}
+              style={styles.input}
+              value={yearBuilt}
+              onChangeText={setYearBuilt}
+              keyboardType="number-pad"
+            />
+          </View>
         </View>
 
         <View style={styles.fieldBlock}>
           <Subtitle2 style={styles.label}>Number of Rooms (Optional)</Subtitle2>
-          <TextInput
-            placeholder="Total number of rooms"
-            placeholderTextColor={UI.textSecondary}
-            style={styles.input}
-            value={numberOfRooms}
-            onChangeText={setNumberOfRooms}
-            keyboardType="number-pad"
-          />
+          <View style={styles.cardInputContainer}>
+            <TextInput
+              placeholder="Total number of rooms"
+              placeholderTextColor={UI.textSecondary}
+              style={styles.input}
+              value={numberOfRooms}
+              onChangeText={setNumberOfRooms}
+              keyboardType="number-pad"
+            />
+          </View>
         </View>
 
         <View style={styles.fieldBlock}>
@@ -511,27 +525,31 @@ export default function DomesticPackageQuotationScreen({ navigation }) {
         <View style={styles.fieldBlock}>
           <Subtitle2 style={styles.label}>Building Value (KES)</Subtitle2>
           <Body2 style={styles.helper}>Estimated rebuild cost of the building structure</Body2>
-          <TextInput
-            placeholder="e.g., 5000000"
-            placeholderTextColor={UI.textSecondary}
-            style={styles.input}
-            value={buildingValue}
-            onChangeText={setBuildingValue}
-            keyboardType="number-pad"
-          />
+          <View style={styles.cardInputContainer}>
+            <TextInput
+              placeholder="e.g., 5000000"
+              placeholderTextColor={UI.textSecondary}
+              style={styles.input}
+              value={buildingValue}
+              onChangeText={setBuildingValue}
+              keyboardType="number-pad"
+            />
+          </View>
         </View>
 
         <View style={styles.fieldBlock}>
           <Subtitle2 style={styles.label}>Contents Value (KES)</Subtitle2>
           <Body2 style={styles.helper}>Total value of household contents and belongings</Body2>
-          <TextInput
-            placeholder="e.g., 1000000"
-            placeholderTextColor={UI.textSecondary}
-            style={styles.input}
-            value={contentsValue}
-            onChangeText={setContentsValue}
-            keyboardType="number-pad"
-          />
+          <View style={styles.cardInputContainer}>
+            <TextInput
+              placeholder="e.g., 1000000"
+              placeholderTextColor={UI.textSecondary}
+              style={styles.input}
+              value={contentsValue}
+              onChangeText={setContentsValue}
+              keyboardType="number-pad"
+            />
+          </View>
         </View>
 
         <View style={styles.fieldBlock}>
@@ -671,17 +689,28 @@ const styles = StyleSheet.create({
     marginRight: SPACING.md
   },
   stepCircleText: { color: '#fff', fontWeight: '600' },
-  stepTitle: { color: BRAND.primary },
+  stepTitle: { color: BRAND.primary, fontWeight: '600' },
   fieldBlock: { marginBottom: SPACING.xl },
-  label: { marginBottom: SPACING.sm },
+  label: { marginBottom: SPACING.sm, fontWeight: '500' },
   helper: { color: UI.textSecondary, marginBottom: SPACING.sm },
-  input: {
-    borderRadius: BORDER_RADIUS.md,
-    backgroundColor: UI.backgroundGray,
+  cardInputContainer: {
+    backgroundColor: '#fff',
+    borderRadius: BORDER_RADIUS.lg,
     paddingHorizontal: SPACING.lg,
-    paddingVertical: SPACING.md,
+    paddingVertical: SPACING.sm,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  input: {
+    width: '100%',
+    backgroundColor: 'transparent',
+    paddingHorizontal: 0,
+    paddingVertical: 8,
     fontSize: FONT_SIZES.input,
-    color: UI.textPrimary
+    color: UI.textPrimary,
   },
   dropdown: {
     marginTop: SPACING.md,

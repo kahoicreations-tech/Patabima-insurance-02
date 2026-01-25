@@ -191,42 +191,53 @@ export default function TravelQuotationScreen({ navigation }) {
       </View>
 
       <ScrollView contentContainerStyle={[styles.scroll, { paddingBottom: insets.bottom + 100 }]} showsVerticalScrollIndicator={false}>
+        {/* Section: Travel Details */}
+        <View style={styles.stepHeader}>
+          <View style={styles.stepCircle}><Body1 style={styles.stepCircleText}>1</Body1></View>
+          <Subtitle2 style={styles.stepTitle}>Travel Details</Subtitle2>
+        </View>
 
   {/* Client Name */}
         <View style={styles.fieldBlock}>
           <Subtitle2 style={styles.label}>Client Name</Subtitle2>
-          <TextInput
-            value={clientName}
-            onChangeText={setClientName}
-            placeholder="Enter client name"
-            style={styles.input}
-            placeholderTextColor={UI.textSecondary}
-          />
+          <View style={styles.cardInputContainer}>
+            <TextInput
+              value={clientName}
+              onChangeText={setClientName}
+              placeholder="Enter client name"
+              style={styles.input}
+              placeholderTextColor={UI.textSecondary}
+            />
+          </View>
         </View>
 
   {/* Traveler's Age */}
         <View style={styles.fieldBlock}>
           <Subtitle2 style={styles.label}>Traveler's Age</Subtitle2>
-          <TextInput
-            value={travelersAge}
-            onChangeText={setTravelersAge}
-            placeholder="Enter age"
-            keyboardType="number-pad"
-            style={styles.input}
-            placeholderTextColor={UI.textSecondary}
-          />
+          <View style={styles.cardInputContainer}>
+            <TextInput
+              value={travelersAge}
+              onChangeText={setTravelersAge}
+              placeholder="Enter age"
+              keyboardType="number-pad"
+              style={styles.input}
+              placeholderTextColor={UI.textSecondary}
+            />
+          </View>
         </View>
 
   {/* Destination */}
         <View style={styles.fieldBlock}>
           <Subtitle2 style={styles.label}>Destination</Subtitle2>
-          <TextInput
-            value={destination}
-            onChangeText={setDestination}
-            placeholder="Enter destination country/city"
-            style={styles.input}
-            placeholderTextColor={UI.textSecondary}
-          />
+          <View style={styles.cardInputContainer}>
+            <TextInput
+              value={destination}
+              onChangeText={setDestination}
+              placeholder="Enter destination country/city"
+              style={styles.input}
+              placeholderTextColor={UI.textSecondary}
+            />
+          </View>
         </View>
 
   {/* Purpose of Travel */}
@@ -291,6 +302,12 @@ export default function TravelQuotationScreen({ navigation }) {
           )}
         </View>
 
+        {/* Section: Preferred Underwriters */}
+        <View style={styles.stepHeader}>
+          <View style={styles.stepCircle}><Body1 style={styles.stepCircleText}>2</Body1></View>
+          <Subtitle2 style={styles.stepTitle}>Preferred Underwriters</Subtitle2>
+        </View>
+
   {/* Preferred Underwriters */}
         <View style={styles.fieldBlock}>
           <Subtitle2 style={styles.label}>Preferred Underwriters</Subtitle2>
@@ -350,13 +367,36 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   scroll: { padding: SPACING.lg },
+  stepHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: SPACING.lg, marginTop: SPACING.xl },
+  stepCircle: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: BRAND.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: SPACING.md
+  },
+  stepCircleText: { color: '#fff', fontWeight: '600' },
+  stepTitle: { color: BRAND.primary, fontWeight: '600' },
   fieldBlock: { marginBottom: SPACING.xxl },
-  label: { marginBottom: SPACING.sm },
-  input: {
-    borderRadius: BORDER_RADIUS.md,
-    backgroundColor: UI.backgroundGray,
+  label: { marginBottom: SPACING.sm, fontWeight: '500' },
+  cardInputContainer: {
+    backgroundColor: '#fff',
+    borderRadius: BORDER_RADIUS.lg,
     paddingHorizontal: SPACING.lg,
-    paddingVertical: SPACING.md,
+    paddingVertical: SPACING.sm,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  input: {
+    width: '100%',
+    backgroundColor: 'transparent',
+    paddingHorizontal: 0,
+    paddingVertical: 8,
     fontSize: FONT_SIZES.input,
     color: UI.textPrimary,
   },

@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>PataBima DMVIC Type A Certificate Issuance Implementation (Motor3)</title>
+  <style>
+    body { font-family: Segoe UI, Arial, sans-serif; color: #222; }
+    h1 { color: #D5222B; }
+    h2 { color: #D5222B; }
+    code { background: #f5f5f5; padding: 2px 4px; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { border: 1px solid #ccc; padding: 6px 8px; text-align: left; }
+    th { background: #f0f0f0; }
+    .ok { color: #1a7f37; font-weight: bold; }
+    .warn { color: #a15c00; font-weight: bold; }
+    .err { color: #b91c1c; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h1>PataBima DMVIC Type A Certificate Issuance Implementation</h1>
+  <p><strong>Version:</strong> Motor3 — Backend v4.2 (Django), DMVIC v1.8.1 alignment</p>
+  <p><strong>Date:</strong> 31 Dec 2025</p>
+
+  <h2>Overview</h2>
+  <p>This document describes how PataBima issues DMVIC Type A certificates for Motor3 policies and details our compliance with the DMVIC API Specification (Section 4.4.1, v1.8.1). It also highlights pragmatic fallbacks used in UAT/local environments to ensure end-to-end activation when DMVIC endpoints are unreachable.</p>
+
+  <h2>Key Components</h2>
+  <ul>
+    <li><strong>DMVIC Service:</strong> <em>insurance-app/app/services/dmvic_service.py</em></li>
+    <li><strong>Field Mapper:</strong> <em>insurance-app/app/services/dmvic_field_mapper.py</em></li>
+    <li><strong>Certificate Manager:</strong> <em>insurance-app/app/services/dmvic_certificate_manager.py</em></li>
+    <li><strong>Policy Activation View:</strong> <em>insurance-app/app/views/policy_management.py</em></li>
+    <li><strong>PDF Generator:</strong> <em>insurance-app/app/services/pdf_generator.py</em></li>
+    <li><strong>Settings:</strong> <em>insurance-app/insurance/settings.py</em> and <em>insurance-app/.env</em></li>
+  </ul>
+
+  <h2>Authentication & Headers</h2>
+  <p>We perform DMVIC login with X509 client certificate attached on every request, then send authenticated requests with required headers:</p>
+  <ul>
+    <li><strong>Authorization:</strong> Bearer &lt;token from login&gt;</li>
+    <li><strong>ClientID:</strong> value from DMVIC credentials (duplicate header <code>ClientId</code> included for casing tolerance)</li>
+    <li><strong>Ocp-Apim-Subscription-Key:</strong> optional header used when DMVIC gateway requires APIM keys</li>
+  </ul>
+
+  <h2>Endpoint (Type A)</h2>
+  <p>Issuance candidates (tried in order to accommodate UAT variations):</p>
+  <ul>
+    <li class="ok">/api/v6/Integration/IssuanceTypeACertificate</li>
+    <li>/api/v6/Integration/IssueTypeACertificate</li>
+    <li>/api/v5/Integration/IssuanceTypeACertificate</li>
+    <li>/api/v5/Integration/IssueTypeACertificate</li>
+    <li>/api/v4/Integration/IssuanceTypeACertificate</li>
+    <li>/api/v4/Integration/IssueTypeACertificate</li>
+  </ul>
+  <p>Preview (UAT/local-only fallback):</p>
+  <ul>
+    <li>/api/v5/Integration/PreviewTypeACertificate (plus legacy variants)</li>
+  </ul>
+
+  <h2>Request Body (Type A)</h2>
+  <p>Our <strong>Type A</strong> payload is produced by the Field Mapper from Motor3 policy data. It satisfies the DMVIC request body per v1.8.1, including new fields and validation requirements.</p>
+  <table>
+    <thead>
+      <tr><th>Field</th><th>Source / Format</th><th>Status</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>TypeOfCertificate</td><td>7 (Type A)</td><td class="ok">Compliant</td></tr>
+      <tr><td>IntermediaryIRANumber</td><td>Optional via <em>settings.DMVIC_IRA_NUMBER</em></td><td class="ok">Supported</td></tr>
+      <tr><td>Typeofcover</td><td>100=COMP, 200=TPO, 300=TPTF (mapper detects coverage)</td><td class="ok">Compliant (v1.8.x)</td></tr>
+      <tr><td>Policyholder</td><td>"PATABIMA"</td><td class="ok">Compliant</td></tr>
+      <tr><td>policynumber</td><td>PataBima policy number (e.g., POL-2025-XXXXXX)</td><td class="ok">Compliant</td></tr>
+      <tr><td>Commencingdate</td><td>DD/MM/YYYY</td><td class="ok">Compliant</td></tr>
+      <tr><td>Expiringdate</td><td>DD/MM/YYYY</td><td class="ok">Compliant</td></tr>
+      <tr><td>Registrationnumber</td><td>Uppercase, spaces removed (optional but included)</td><td class="ok">Compliant</td></tr>
+      <tr><td>Chassisnumber</td><td>Alphanumeric sanitized (length 4–20)</td><td class="ok">Compliant</td></tr>
+      <tr><td>Phonenumber</td><td>Last 9 digits (Kenyan): 999999999</td><td class="ok">Compliant</td></tr>
+      <tr><td>Bodytype</td><td>Code (e.g., SD) from vehicle body</td><td class="ok">Compliant</td></tr>
+      <tr><td>Licensedtocarry</td><td>Tonnage or passenger capacity (int)</td><td class="ok">Compliant</td></tr>
+      <tr><td>Vehiclemake</td><td>Uppercase vehicle make</td><td class="ok">Compliant</td></tr>
+      <tr><td>Vehiclemodel</td><td>Uppercase vehicle model</td><td class="ok">Compliant</td></tr>
+      <tr><td>Enginenumber</td><td>Alphanumeric sanitized (optional)</td><td class="ok">Compliant</td></tr>
+      <tr><td>Email</td><td>Client email</td><td class="ok">Compliant</td></tr>
+      <tr><td>SumInsured</td><td>Included when COMP/TPTF; omitted for TPO</td><td class="ok">Conditional</td></tr>
+      <tr><td>InsuredPIN</td><td>Uppercase (max length 11)</td><td class="ok">Compliant</td></tr>
+      <tr><td>Yearofregistration</td><td>YYYY (mapped from policy vehicle year)</td><td class="ok">Compliant</td></tr>
+      <tr><td>Yearofmanufacture</td><td>New (YYYY) — also provided for compatibility</td><td class="ok">Compliant</td></tr>
+      <tr><td>HudumaNumber</td><td>Optional (if available)</td><td class="ok">Supported</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Response Handling</h2>
+  <p>On success, we extract certificate details from DMVIC’s v5/v6-style envelope. On errors (ER001–ER007), we log and retry issuance (3 attempts: 5s, 15s, 30s). If issuance is blocked in UAT/local:</p>
+  <ul>
+    <li><strong>Preview Fallback:</strong> Attempt Type A preview (configurable: <em>DMVIC_PREVIEW_FALLBACK</em>).</li>
+    <li><strong>Mock Certificate:</strong> Generate a mock DMVIC certificate PDF to proceed with activation; clearly marked as “MOCK”.</li>
+  </ul>
+
+  <h2>Frontend Integration (Motor3)</h2>
+  <p>Motor3 submission calls create then activate:</p>
+  <ul>
+    <li>Create: <code>/api/v1/policies/motor/create/</code></li>
+    <li>Activate: <code>/api/v1/policies/motor/{policyNumber}/activate/</code></li>
+  </ul>
+  <p>Activation blocks until DMVIC certificate issuance completes or a permitted fallback (preview/mock) attaches a certificate URL. The UI shows “Policy Activated!” and surfaces document links.</p>
+
+  <h2>Security</h2>
+  <ul>
+    <li><strong>X509 Client Certificate:</strong> PKCS#12 (.pfx) loaded and attached to every DMVIC request.</li>
+    <li><strong>Bearer Token:</strong> DMVIC login token managed and refreshed automatically on 401.</li>
+    <li><strong>APIM Key:</strong> Optional header when required by DMVIC gateway.</li>
+  </ul>
+
+  <h2>Compliance Summary</h2>
+  <ul>
+    <li class="ok">Headers: Authorization + ClientID attached on all calls; client certificate used for every request.</li>
+    <li class="ok">Endpoint: v6 Issuance endpoint supported; v4/v5 variants retained for UAT compatibility.</li>
+    <li class="ok">Body: All mandatory fields present for Type A; casing aligned (Vehiclemake/Vehiclemodel); Yearofregistration and Yearofmanufacture provided.</li>
+    <li class="ok">Validation: Phone 9-digit; chassis alphanumeric length; dates DD/MM/YYYY.</li>
+    <li class="warn">Typeofcover: We use 100/200/300 per v1.8.x (COMP/TPO/TPTF). If DMVIC enforces 1/2/3, mapper can be extended to translate; current example in spec also uses 100.</li>
+  </ul>
+
+  <h2>Operational Notes</h2>
+  <ul>
+    <li>Document uploads use AWS S3; URLs returned to frontend.</li>
+    <li>Preview/mock fallback are explicitly marked; production should rely on real issuance.</li>
+    <li>Logs surface DMVIС errors (ER001–ER007) and next actions, including admin alerts on repeated failures.</li>
+  </ul>
+
+  <h2>Appendix: Configuration</h2>
+  <ul>
+    <li><strong>.env:</strong> DMVIC_ENABLED, DMVIC_BASE_URL, DMVIC_USERNAME, DMVIC_PASSWORD, DMVIC_CLIENT_ID, DMVIC_PFX_PATH, DMVIC_PASSPHRASE, DMVIC_PREVIEW_FALLBACK, DMVIC_APIM_SUBSCRIPTION_KEY</li>
+    <li><strong>settings.py:</strong> loads the above and exposes to services.</li>
+  </ul>
+
+</body>
+</html>

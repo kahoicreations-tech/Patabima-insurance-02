@@ -9,42 +9,141 @@ import { validatePricingInputs, isFormValid } from '../utils/motorInsuranceValid
 
 const MotorInsuranceContext = createContext(null);
 
+// ✅ Phase 1: Pricing model field definitions for separation architecture
+const PRICING_MODEL_FIELDS = {
+  FIXED: {
+    fields: [],
+    description: 'Fixed premium regardless of vehicle value (Third Party, TOR)',
+  },
+  BRACKET: {
+    fields: ['sum_insured'],
+    description: 'Premium based on sum insured bracket ranges (Comprehensive)',
+  },
+  TONNAGE: {
+    fields: ['tonnage', 'is_prime_mover', 'is_over_limit'],
+    description: 'Premium based on vehicle tonnage capacity (Commercial)',
+  },
+  PASSENGER: {
+    fields: ['capacity', 'is_commercial_institutional', 'passenger_type'],
+    description: 'Premium based on passenger seating capacity (PSV, TukTuk)',
+  },
+};
+
+// Helper: Extract pricing fields for a given model from current state
+function extractPricingFieldsForModel(state, pricingModel) {
+  const fields = PRICING_MODEL_FIELDS[pricingModel]?.fields || [];
+  const extracted = {};
+  
+  // Try vehicleDetails first, then pricingInputs (legacy support)
+  fields.forEach(field => {
+    extracted[field] = state.vehicleDetails?.[field] ||
+                      state.pricingInputs?.[field] ||
+                      null;
+  });
+  
+  // Always include addons if present
+  if (state.pricingInputs?.addons || state.vehicleDetails?.addons) {
+    extracted.addons = state.pricingInputs?.addons || state.vehicleDetails?.addons || {};
+  }
+  
+  return extracted;
+}
+
+// Helper: Get default pricing structure for a model
+function getDefaultPricingForModel(pricingModel) {
+  const fields = PRICING_MODEL_FIELDS[pricingModel]?.fields || [];
+  const defaults = {};
+  
+  fields.forEach(field => {
+    defaults[field] = null;
+  });
+  
+  defaults.addons = {};
+  return defaults;
+}
+
+// Helper: Sanitize pricing updates (whitelist enforcement)
+function sanitizePricingUpdates(pricingModel, updates) {
+  const allowed = new Set(
+    (PRICING_MODEL_FIELDS[pricingModel]?.fields || []).concat(['addons'])
+  );
+  const clean = {};
+  
+  Object.keys(updates || {}).forEach((k) => {
+    if (allowed.has(k)) {
+      clean[k] = updates[k];
+    }
+  });
+  
+  return clean;
+}
+
 const initialState = {
   selectedCategory: null,
   selectedSubcategory: null,
   productType: null,
+  
+  // ✅ Phase 1: NEW - Shared vehicle data (persists across all subcategories)
+  sharedVehicleData: {
+    registrationNumber: '',
+    identificationType: '',
+    cover_start_date: '',
+    financialInterest: '',
+    logbookNumber: '',
+    chasisNumber: '',
+    engineNumber: '',
+    make: '',
+    model: '',
+    year: '',
+    color: '',
+    bodyType: '',
+    purpose: '',
+  },
+  
+  // ✅ Phase 1: NEW - Pricing data isolated per subcategory
+  // Structure: { [subcategory_code]: { pricing_fields, addons } }
+  pricingData: {},
+  
+  // ⚠️ DEPRECATED: Keep for backward compatibility during migration
   vehicleDetails: {},
   pricingInputs: {},
-  // Store form data per subcategory to prevent bleeding across subcategories
-  subcategoryFormData: {}, // { subcategory_code: { vehicleDetails: {}, pricingInputs: {} } }
+  subcategoryFormData: {}, // Will be replaced by pricingData
+  
   clientDetails: {},
-  extractedDocuments: {}, // Store extracted document data
-  uploadedDocuments: {}, // Store uploaded document metadata (S3 URLs, document IDs, etc.)
-  clientDataSource: 'logbook', // 'logbook' | 'national_id' - determines which document to use for client details
-  availableSubcategories: [], // Store loaded subcategories for selected category
+  extractedDocuments: {},
+  uploadedDocuments: {},
+  clientDataSource: 'logbook',
+  availableSubcategories: [],
   availableUnderwriters: [],
-  selectedUnderwriter: null,
+  
+  // ✅ Phase 1: Enhanced underwriter state
+  selectedUnderwriter: null, // Full object with subcategory_code link
   pricingComparison: [],
   calculatedPremium: null,
+  
   currentStep: 0,
   isLoading: false,
   errors: {},
   formValidation: {},
-  // Add-ons state management
+  
+  // ⚠️ DEPRECATED: Move add-ons into pricingData[code].addons
   selectedAddons: [],
   addonsPremium: 0,
   addonsBreakdown: [],
-  // DMVIC state management (Phase 3.2)
-  dmvicCache: {}, // { regNumber: { result, timestamp } }
-  dmvicCacheTTL: 30 * 60 * 1000, // 30 minutes
-  minCoverStartDate: null, // ISO string or null - minimum date enforced by DMVIC existing cover
-  existingCoverData: null, // { hasExistingCover, expiryDate, policyNumber, underwriter }
-  showVerificationScreen: false, // Controls VehicleVerificationScreen modal visibility
-  // History State for undo/redo
+  
+  // DMVIC state management
+  dmvicCache: {},
+  dmvicCacheTTL: 30 * 60 * 1000,
+  minCoverStartDate: null,
+  existingCoverData: null,
+  showVerificationScreen: false,
+  
+  // History State
   past: [],
   future: [],
-  // DMVIC processed registrations (persist across remounts to avoid repeated API calls)
-  dmvicProcessedRegMap: {}, // { 'KAC040R': true }
+  
+  // DMVIC processed registrations
+  dmvicProcessedRegMap: {},
 };
 
 function saveForHistory(state, newState) {
@@ -63,20 +162,48 @@ function saveForHistory(state, newState) {
 function reducer(state, action) {
   switch (action.type) {
     case 'SET_CATEGORY_SELECTION':
+      // ✅ Defensive check: handle null/undefined payload gracefully
+      if (!action.payload) {
+        console.warn('[MotorInsuranceContext] SET_CATEGORY_SELECTION called with null payload, resetting selection');
+        return {
+          ...state,
+          selectedCategory: null,
+          selectedSubcategory: null,
+          productType: null,
+        };
+      }
+      
       // Save current form data for the previous subcategory
       const currentSubcategoryCode = state.selectedSubcategory?.subcategory_code;
       let updatedSubcategoryFormData = { ...state.subcategoryFormData };
+      
+      // ✅ Phase 1: Save current pricing data before switching
+      let updatedPricingData = { ...state.pricingData };
       
       if (currentSubcategoryCode) {
         updatedSubcategoryFormData[currentSubcategoryCode] = {
           vehicleDetails: state.vehicleDetails,
           pricingInputs: state.pricingInputs
         };
+        
+        // Extract and save pricing-specific fields for current model
+        const currentPricingModel = state.selectedSubcategory?.pricing_model;
+        const currentPricingFields = extractPricingFieldsForModel(state, currentPricingModel);
+        updatedPricingData[currentSubcategoryCode] = currentPricingFields;
+        
+        console.log(`[Context] Saved pricing data for ${currentSubcategoryCode}:`, currentPricingFields);
       }
       
       // Get form data for the new subcategory (if any)
       const newSubcategoryCode = action.payload.subcategory?.subcategory_code;
       const savedFormData = newSubcategoryCode ? updatedSubcategoryFormData[newSubcategoryCode] : null;
+      
+      // ✅ Phase 1: Load saved pricing data for new subcategory or use defaults
+      const newPricingModel = action.payload.subcategory?.pricing_model;
+      const restoredPricingData = updatedPricingData[newSubcategoryCode] ||
+                                   getDefaultPricingForModel(newPricingModel);
+      
+      console.log(`[Context] Switching to ${newSubcategoryCode}, restored pricing:`, restoredPricingData);
       
       return saveForHistory(state, { 
         ...state, 
@@ -84,14 +211,23 @@ function reducer(state, action) {
         selectedSubcategory: action.payload.subcategory, 
         productType: action.payload.productType || state.productType,
         subcategoryFormData: updatedSubcategoryFormData,
-        // Reset form data for new subcategory or restore saved data
+        
+        // ✅ Phase 1: Update pricingData storage
+        pricingData: {
+          ...updatedPricingData,
+          [newSubcategoryCode]: restoredPricingData
+        },
+        
+        // Reset form data for new subcategory or restore saved data (legacy)
         vehicleDetails: savedFormData?.vehicleDetails || {},
         pricingInputs: savedFormData?.pricingInputs || {},
-        // Clear pricing comparison when subcategory changes
+        
+        // ✅ Phase 1: CRITICAL - Fully reset underwriter state (force re-selection for new product)
         pricingComparison: [],
         selectedUnderwriter: null,
         calculatedPremium: null,
-        // ✅ Clear DMVIC state when switching categories (Phase 1.3 fix)
+        
+        // ✅ Clear DMVIC state when switching categories
         existingCoverData: {},
         minCoverStartDate: null,
         showVerificationScreen: false
@@ -151,6 +287,16 @@ function reducer(state, action) {
         selectedUnderwriter: newSelectedUnderwriter,
         subcategoryFormData: vehicleSubcategoryFormData
       });
+    
+    // ✅ Phase 1: NEW - Update shared vehicle data (persists across subcategories)
+    case 'UPDATE_SHARED_VEHICLE_DATA':
+      return saveForHistory(state, {
+        ...state,
+        sharedVehicleData: {
+          ...state.sharedVehicleData,
+          ...action.payload
+        }
+      });
     case 'UPDATE_PRICING_INPUTS': {
       // Deep-merge clientDetails to avoid losing nested fields on updates
       const incomingClientDetails = action.payload?.clientDetails;
@@ -201,6 +347,33 @@ function reducer(state, action) {
         subcategoryFormData: pricingSubcategoryFormData
       });
     }
+    
+    // ✅ Phase 1: NEW - Update pricing data with whitelist enforcement (isolated per subcategory)
+    case 'UPDATE_PRICING_DATA': {
+      const code = state.selectedSubcategory?.subcategory_code;
+      
+      if (!code) {
+        console.warn('[Context] UPDATE_PRICING_DATA: No subcategory selected');
+        return state;
+      }
+      
+      const model = state.selectedSubcategory?.pricing_model;
+      const current = state.pricingData[code] || {};
+      
+      // Whitelist: only allow fields valid for current pricing model
+      const safeUpdates = sanitizePricingUpdates(model, action.payload);
+      
+      console.log(`[Context] UPDATE_PRICING_DATA for ${code} (${model}):`, safeUpdates);
+      
+      return saveForHistory(state, {
+        ...state,
+        pricingData: {
+          ...state.pricingData,
+          [code]: { ...current, ...safeUpdates },
+        },
+      });
+    }
+    
     case 'UPDATE_CLIENT_DETAILS':
       return saveForHistory(state, { ...state, clientDetails: { ...state.clientDetails, ...action.payload } });
     case 'UPDATE_EXTRACTED_DOCUMENTS':
@@ -226,6 +399,13 @@ function reducer(state, action) {
       try {
         const incoming = action.payload || null;
         const existing = state.selectedUnderwriter;
+        
+        // ✅ Phase 1: Validate incoming underwriter object
+        if (incoming && typeof incoming !== 'object') {
+          console.error('[Context] Underwriter must be object, received:', typeof incoming);
+          return state;
+        }
+        
         if (existing && incoming) {
           const norm = (uw) => ({
             code: uw.code || uw.underwriter_code || uw.company_code || uw.id || null,
@@ -258,7 +438,18 @@ function reducer(state, action) {
         // Non-fatal – fall through to update
         console.warn('[MotorInsuranceContext] Underwriter dedupe check failed:', e?.message || e);
       }
-      return { ...state, selectedUnderwriter: action.payload || null };
+      
+      // ✅ Phase 1: Store full underwriter object with subcategory link
+      const enhancedUnderwriter = action.payload ? {
+        ...action.payload,
+        subcategory_code: state.selectedSubcategory?.subcategory_code,
+        selected_at: Date.now()
+      } : null;
+      
+      return { 
+        ...state, 
+        selectedUnderwriter: enhancedUnderwriter
+      };
     case 'SET_CALCULATED_PREMIUM':
       return { ...state, calculatedPremium: action.payload };
     case 'SET_PRICING_COMPARISON':
@@ -468,6 +659,16 @@ export function MotorInsuranceProvider({ children }) {
 
     updateVehicleDetails: (updates) => {
       dispatch({ type: 'UPDATE_VEHICLE_DETAILS', payload: updates });
+    },
+    
+    // ✅ Phase 1: NEW - Update shared vehicle data (persists across subcategories)
+    updateSharedVehicleData: (updates) => {
+      dispatch({ type: 'UPDATE_SHARED_VEHICLE_DATA', payload: updates });
+    },
+    
+    // ✅ Phase 1: NEW - Update pricing data (isolated per subcategory, whitelisted)
+    updatePricingData: (updates) => {
+      dispatch({ type: 'UPDATE_PRICING_DATA', payload: updates });
     },
 
     updatePricingInputs: (updates) => {
@@ -810,8 +1011,39 @@ export function MotorInsuranceProvider({ children }) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }), [state.productType, state.vehicleDetails, state.pricingInputs]);
 
-  const value = useMemo(() => ({ state, dispatch, actions }), [state, actions]);
-  return <MotorInsuranceContext.Provider value={value}>{children}</MotorInsuranceContext.Provider>;
+  // ✅ Phase 1: Backward compatibility shim - merge new structure into legacy fields
+  const compatibilityValue = useMemo(() => {
+    const subcategoryCode = state.selectedSubcategory?.subcategory_code;
+    const currentPricingData = (state.pricingData && subcategoryCode) ? (state.pricingData[subcategoryCode] || {}) : {};
+    
+    // Augment state with backward compatibility shims
+    const augmentedState = {
+      ...state,
+      
+      // ⚠️ DEPRECATED: Compatibility shims (remove in Phase 3)
+      // Merge sharedVehicleData + currentPricingData into legacy vehicleDetails
+      vehicleDetails: {
+        ...(state.sharedVehicleData || {}),
+        ...currentPricingData,
+        ...(state.vehicleDetails || {}), // Preserve any existing legacy data during migration
+        // Underwriter as string for components still expecting it
+        underwriter: state.selectedUnderwriter?.name || state.selectedUnderwriter?.underwriter_name || '',
+      },
+      
+      // Mirror pricing data into legacy pricingInputs
+      pricingInputs: {
+        ...currentPricingData,
+        ...(state.pricingInputs || {}), // Preserve any existing legacy data during migration
+      },
+    };
+    
+    return {
+      state: augmentedState,
+      actions,
+    };
+  }, [state, actions]);
+
+  return <MotorInsuranceContext.Provider value={compatibilityValue}>{children}</MotorInsuranceContext.Provider>;
 }
 
 export function useMotorInsurance() {

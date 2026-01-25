@@ -8,12 +8,21 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { NativeModules, Platform } from 'react-native';
 import Constants from 'expo-constants';
 import SecureTokenStorage from './SecureTokenStorage';
+import * as FileSystem from 'expo-file-system';
+import * as Sharing from 'expo-sharing';
 
-// Django backend configuration - Updated to match actual backend
+// Django backend configuration - Reads from environment variable
 const API_CONFIG = {
-  // PRODUCTION BACKEND - HTTPS with SSL
-  // Use custom domain with Let's Encrypt SSL certificate
-  BASE_URL: 'https://api.hugo-shopping.com',
+  // BASE_URL is read from EXPO_PUBLIC_API_BASE_URL environment variable
+  // This allows easy switching between local, EC2, and production backends
+  // In dev, falling back to production is dangerous (can point at the wrong AWS account/bucket).
+  // Use emulator/simulator-safe local defaults when the env var is missing (usually Metro cache).
+  BASE_URL: (
+    process.env.EXPO_PUBLIC_API_BASE_URL ||
+    (__DEV__
+      ? (Platform.OS === 'android' ? 'http://10.0.2.2:8000' : 'http://localhost:8000')
+      : 'https://api.hugo-shopping.com')
+  ),
   API_VERSION: 'api/v1',
   ENDPOINTS: {
     AUTH: {
@@ -108,7 +117,7 @@ const API_CONFIG = {
       ADMIN_DETAIL: (reference) => `/api/v1/public_app/admin/manual_quotes/${reference}`,
       ADMIN_UPDATE: (reference) => `/api/v1/public_app/admin/manual_quotes/${reference}`
     },
-    // DMVIC Integration endpoints
+    // DMVIC Integration endpoints (Legacy - Member Company endpoints)
     DMVIC: {
       SEARCH_VEHICLE: '/api/insurance/dmvic/search-vehicle/',
       VALIDATE_DOUBLE_INSURANCE: '/api/insurance/dmvic/validate-double-insurance/',
@@ -116,6 +125,12 @@ const API_CONFIG = {
       ISSUE_CERTIFICATE: '/api/insurance/dmvic/issue-certificate/',
       CONFIRM_ISSUANCE: '/api/insurance/dmvic/confirm-issuance/',
       GET_CERTIFICATE_PDF: '/api/insurance/dmvic/get-certificate-pdf/',
+    },
+    // DMVIC Certificate Management (NEW - Intermediary Integration per policy)
+    CERTIFICATE: {
+      PREVIEW: (policyNumber) => `/api/v1/policies/motor/${policyNumber}/certificate/preview/`,
+      ISSUE: (policyNumber) => `/api/v1/policies/motor/${policyNumber}/certificate/issue/`,
+      STATUS: (policyNumber) => `/api/v1/policies/motor/${policyNumber}/certificate/status/`,
     }
   }
 };
@@ -146,6 +161,12 @@ class DjangoAPIService {
     this._supportsGenericQuotes = !!(Constants && Constants.expoConfig && Constants.expoConfig.extra && Constants.expoConfig.extra.ENABLE_GENERIC_QUOTES);
     // Lightweight in-memory cache to reduce repeated network calls (TTL-based)
     this._cache = new Map();
+  }
+
+  // Backward compatibility: some callers expect DjangoAPIService.getInstance().
+  // This file default-exports a singleton instance, so return `this`.
+  getInstance() {
+    return this;
   }
 
   // Debug controls
@@ -179,6 +200,94 @@ class DjangoAPIService {
     this.clearCache('motor_cat_');
     this.clearCache('motor_subcat_');
     if (this._debug) console.log('[DjangoAPIService] Motor2 cache cleared');
+  }
+
+  // =========================
+  // Motor policy document downloads (proxy)
+  // =========================
+
+  _motorPolicyDocumentProxyEndpoint(policyNumber, docType) {
+    const byType = {
+      policy: `/${API_CONFIG.API_VERSION}/policies/motor/${policyNumber}/documents/policy-pdf/`,
+      receipt: `/${API_CONFIG.API_VERSION}/policies/motor/${policyNumber}/documents/receipt-pdf/`,
+      dmvic: `/${API_CONFIG.API_VERSION}/policies/motor/${policyNumber}/documents/dmvic-certificate-pdf/`,
+    };
+
+    return byType[docType] || null;
+  }
+
+  async fetchMotorPolicyDocumentPdfBase64(policyNumber, docType, options = {}) {
+    const endpoint = this._motorPolicyDocumentProxyEndpoint(policyNumber, docType);
+    if (!endpoint) {
+      throw new Error('Unknown document type');
+    }
+
+    const timeoutMs = options.timeoutMs ?? 60000;
+    return this.makeRequest(endpoint, {
+      method: 'GET',
+      timeoutMs,
+      _suppressErrorLog: true,
+    });
+  }
+
+  async saveBase64PdfAndShare({ pdf_data, filename, mimeType, dialogTitle }) {
+    if (!pdf_data) {
+      throw new Error('Missing PDF data');
+    }
+
+    const safeName = filename || `document_${Date.now()}.pdf`;
+    const fileUri = `${FileSystem.documentDirectory}${safeName}`;
+
+    await FileSystem.writeAsStringAsync(fileUri, pdf_data, {
+      encoding: FileSystem.EncodingType.Base64,
+    });
+
+    const canShare = await Sharing.isAvailableAsync();
+    if (canShare) {
+      await Sharing.shareAsync(fileUri, {
+        mimeType: mimeType || 'application/pdf',
+        dialogTitle: dialogTitle || 'Document',
+        UTI: 'com.adobe.pdf',
+      });
+    }
+
+    return { fileUri, filename: safeName, shared: canShare };
+  }
+
+  async downloadAndShareMotorPolicyDocument(policyNumber, docType, options = {}) {
+    const res = await this.fetchMotorPolicyDocumentPdfBase64(policyNumber, docType, options);
+    if (!res?.success || !res?.pdf_data) {
+      throw new Error(res?.user_message || res?.message || res?.error || 'Document not available');
+    }
+    return this.saveBase64PdfAndShare({
+      pdf_data: res.pdf_data,
+      filename: res.filename,
+      mimeType: res.mimeType,
+      dialogTitle: options.dialogTitle,
+    });
+  }
+
+  async fetchMotor3QuotationPdfBase64(quotationId, options = {}) {
+    const timeoutMs = options.timeoutMs || 60000;
+    const endpoint = `/api/motor3/quotations/${encodeURIComponent(String(quotationId))}/pdf/`;
+    return this.makeRequest(endpoint, {
+      method: 'GET',
+      timeoutMs,
+      _suppressErrorLog: true,
+    });
+  }
+
+  async downloadAndShareMotor3QuotationPdf(quotationId, options = {}) {
+    const res = await this.fetchMotor3QuotationPdfBase64(quotationId, options);
+    if (!res?.success || !res?.pdf_data) {
+      throw new Error(res?.user_message || res?.message || res?.error || 'Document not available');
+    }
+    return this.saveBase64PdfAndShare({
+      pdf_data: res.pdf_data,
+      filename: res.filename,
+      mimeType: res.mimeType,
+      dialogTitle: options.dialogTitle || 'Quotation PDF',
+    });
   }
 
   // Session monitoring controls
@@ -546,7 +655,9 @@ class DjangoAPIService {
         
         // Create descriptive error message
         let errorMessage = `HTTP ${response.status}`;
-        if (responseData?.message) errorMessage += `: ${responseData.message}`;
+        if (responseData?.user_message) errorMessage += `: ${responseData.user_message}`;
+        else if (responseData?.message) errorMessage += `: ${responseData.message}`;
+        else if (responseData?.error) errorMessage += `: ${responseData.error}`;
         if (responseData?.errors) errorMessage += `\nValidation errors: ${JSON.stringify(responseData.errors)}`;
         if (responseData?.detail) errorMessage += `\nDetail: ${responseData.detail}`;
         // Attach richer context to error for callers (status + raw payload)
@@ -1494,6 +1605,7 @@ class DjangoAPIService {
       const response = await this.makeRequest(API_CONFIG.ENDPOINTS.DMVIC.VALIDATE_DOUBLE_INSURANCE, {
         method: 'POST',
         body: JSON.stringify(payload),
+        timeoutMs: 60000, // 60 seconds for DMVIC external API call
       });
 
       console.log('[DjangoAPIService] Double-insurance validation result:', response);
@@ -1566,6 +1678,7 @@ class DjangoAPIService {
       const response = await this.makeRequest(API_CONFIG.ENDPOINTS.DMVIC.GET_CERTIFICATE_PDF, {
         method: 'POST',
         body: JSON.stringify(payload),
+        timeoutMs: 60000, // 60 seconds for DMVIC external API call
       });
 
       console.log('[DjangoAPIService] Certificate PDF fetched:', response.success);
@@ -1590,6 +1703,7 @@ class DjangoAPIService {
       const response = await this.makeRequest(API_CONFIG.ENDPOINTS.DMVIC.PREVIEW_CERTIFICATE, {
         method: 'POST',
         body: JSON.stringify(certificateData),
+        timeoutMs: 60000, // 60 seconds for DMVIC external API call
       });
 
       return response;
@@ -1613,6 +1727,7 @@ class DjangoAPIService {
       const response = await this.makeRequest(API_CONFIG.ENDPOINTS.DMVIC.ISSUE_CERTIFICATE, {
         method: 'POST',
         body: JSON.stringify(certificateData),
+        timeoutMs: 60000, // 60 seconds for DMVIC external API call
       });
 
       console.log('[DjangoAPIService] Certificate issued:', response.success);
@@ -1643,6 +1758,7 @@ class DjangoAPIService {
       const response = await this.makeRequest(API_CONFIG.ENDPOINTS.DMVIC.CONFIRM_ISSUANCE, {
         method: 'POST',
         body: JSON.stringify(payload),
+        timeoutMs: 60000, // 60 seconds for DMVIC external API call
       });
 
       console.log('[DjangoAPIService] Certificate issuance confirmed:', response.success);
@@ -1653,24 +1769,163 @@ class DjangoAPIService {
     }
   }
 
-  // Documents: upload (returns OCR in backend mock)
-  async uploadDocument(payload) {
+  // Documents: upload (supports S3 presign + Textract extraction pipeline)
+  async uploadDocument(fileOrPayload, documentType = 'generic', options = {}) {
+    // Support both legacy JSON payload uploads and the newer S3-presign upload flow.
+    const isFileLike = !!(
+      fileOrPayload &&
+      typeof fileOrPayload === 'object' &&
+      typeof fileOrPayload.uri === 'string' &&
+      fileOrPayload.uri.length > 0
+    );
+
+    if (!isFileLike) {
+      // Legacy behavior (kept for compatibility): JSON body to documents/upload.
+      // Note: backend may not expose this endpoint anymore; prefer file upload mode.
+      try {
+        return await this.makeRequest(API_CONFIG.ENDPOINTS.DOCUMENTS.UPLOAD, {
+          method: 'POST',
+          body: JSON.stringify(fileOrPayload || {}),
+        });
+      } catch (error) {
+        console.error('Document upload (legacy) failed:', error);
+        throw error;
+      }
+    }
+
+    // New behavior: presign + direct PUT to S3 + submit extraction.
+    const file = fileOrPayload;
+    const uri = file.uri;
+    const filename = file.name || file.fileName || `document_${Date.now()}`;
+    const mimeType = file.mimeType || file.type || 'application/octet-stream';
+
+    let sizeBytes = Number(file.size || 0);
+    if (!sizeBytes) {
+      try {
+        const info = await FileSystem.getInfoAsync(uri, { size: true });
+        sizeBytes = Number(info?.size || 0);
+      } catch {
+        sizeBytes = 0;
+      }
+    }
+
     try {
-      return await this.makeRequest(API_CONFIG.ENDPOINTS.DOCUMENTS.UPLOAD, {
-        method: 'POST',
-        body: JSON.stringify(payload),
+      const { data: presign } = await this.makeAuthenticatedRequest(
+        '/api/v1/public_app/docs/presign',
+        'POST',
+        {
+          filename,
+          mimeType,
+          sizeBytes,
+          docType: documentType,
+          quoteId: options?.quoteId,
+        }
+      );
+
+      const uploadUrl = presign?.uploadUrl;
+      const objectKey = presign?.objectKey;
+      const headers = presign?.headers || { 'Content-Type': mimeType };
+
+      if (!uploadUrl || !objectKey) {
+        throw new Error('Presign response missing uploadUrl/objectKey');
+      }
+
+      const uploadResult = await FileSystem.uploadAsync(uploadUrl, uri, {
+        httpMethod: 'PUT',
+        headers,
+        uploadType: FileSystem.FileSystemUploadType.BINARY_CONTENT,
       });
+
+      const statusCode = Number(uploadResult?.status || 0);
+      if (statusCode < 200 || statusCode >= 300) {
+        throw new Error(`S3 upload failed (status ${statusCode})`);
+      }
+
+      const { data: submit } = await this.makeAuthenticatedRequest(
+        '/api/v1/public_app/docs/submit',
+        'POST',
+        {
+          objectKey,
+          docType: documentType,
+          quoteId: options?.quoteId,
+        }
+      );
+
+      const jobId = submit?.jobId;
+      if (!jobId) {
+        throw new Error('Submit response missing jobId');
+      }
+
+      // Match older callers that expect upload_id.
+      return {
+        upload_id: jobId,
+        jobId,
+        objectKey,
+        state: submit?.state || 'PROCESSING',
+        supportsExtraction: submit?.supportsExtraction,
+      };
     } catch (error) {
       console.error('Document upload failed:', error);
       throw error;
     }
   }
 
+  // Documents: process extraction job (poll status/result)
+  async processDocument(jobId, options = {}) {
+    const timeoutMs = Number(options?.timeoutMs || 60000);
+    const pollIntervalMs = Number(options?.pollIntervalMs || 2000);
+    const startedAt = Date.now();
+
+    if (!jobId) {
+      throw new Error('processDocument requires jobId');
+    }
+
+    while (Date.now() - startedAt < timeoutMs) {
+      const { data: st } = await this.makeAuthenticatedRequest(
+        `/api/v1/public_app/docs/status/${jobId}`,
+        'GET'
+      );
+
+      const state = st?.state || 'PROCESSING';
+      if (state === 'DONE' || state === 'FAILED') {
+        const { data: result } = await this.makeAuthenticatedRequest(
+          `/api/v1/public_app/docs/result/${jobId}`,
+          'GET'
+        );
+
+        return {
+          success: state === 'DONE',
+          extracted_data: result?.fields || {},
+          raw_fields: result?.rawFields || {},
+          diagnostics: result?.diagnostics || null,
+          confidence: result?.confidenceScores || null,
+          processing_time: Date.now() - startedAt,
+          extraction_id: jobId,
+          state,
+        };
+      }
+
+      await new Promise((r) => setTimeout(r, pollIntervalMs));
+    }
+
+    return {
+      success: false,
+      extracted_data: {},
+      confidence: null,
+      processing_time: Date.now() - startedAt,
+      extraction_id: jobId,
+      state: 'PROCESSING',
+      error: 'Timed out waiting for extraction',
+    };
+  }
+
   // Payments: initiate and status
-  async initiatePayment({ amount, method = 'MPESA', phone }) {
+  async initiatePayment({ amount, method = 'MPESA', phone, policy_reference, account_reference }) {
     try {
       const body = { amount, method };
       if (phone) body.phone = phone;
+      if (policy_reference) body.policy_reference = policy_reference;
+      if (account_reference) body.account_reference = account_reference;
       return await this.makeRequest(API_CONFIG.ENDPOINTS.PAYMENTS.INITIATE, {
         method: 'POST',
         body: JSON.stringify(body),
@@ -1882,22 +2137,6 @@ class DjangoAPIService {
    * @param {string} policyNumber - Policy number to renew
    * @returns {Promise<Object>} Renewal confirmation details
    */
-  async renewMotorPolicy(policyNumber) {
-    try {
-      const url = `${API_CONFIG.ENDPOINTS.POLICIES.RENEW_MOTOR_POLICY}/${policyNumber}/renew/`;
-  const { data } = await this.makeAuthenticatedRequest(url, 'POST');
-      
-      // Backend returns { success, policyNumber, message }
-      if (data?.success) {
-        return data;
-      }
-      
-      throw new Error(data?.message || 'Failed to renew policy');
-    } catch (error) {
-      console.error('Failed to renew motor policy:', error);
-      throw error;
-    }
-  }
 
   // Motor 2 Extension Methods
 

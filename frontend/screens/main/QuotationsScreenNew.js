@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, FlatList, TouchableOpacity, TextInput, Alert, Share } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
+import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { Colors, Spacing, Typography } from '../../constants';
@@ -26,31 +27,30 @@ export default function QuotationsScreenNew({ route }) {
   const abortRef = useRef(null);
   const deletedRef = useRef(new Set()); // in-memory cache of tombstones
   const DELETED_KEY = 'quotation_deleted_tombstones_v1';
-  const { legacyQuotes, manualQuotes, motorPolicies, fetchLegacyQuotes, fetchManualQuotes, fetchMotorPolicies } = useAppData();
+  const {
+    legacyQuotes,
+    motor3Quotations,
+    manualQuotes,
+    motorPolicies,
+    fetchLegacyQuotes,
+    fetchMotor3Quotations,
+    fetchManualQuotes,
+    fetchMotorPolicies,
+  } = useAppData();
 
-  const filters = ['All', 'Draft', 'Active', 'Paid', 'Motor', 'Medical', 'WIBA', 'Last Expense', 'Travel', 'Personal Accident'];
+  // Option A (simplified): All / Applied / Unapplied
+  const filters = ['All', 'Applied', 'Unapplied'];
 
   // Derived list: apply active filter + search + default sort (newest first)
   const filteredQuotes = useMemo(() => {
     let list = Array.isArray(quotes) ? quotes.slice() : [];
 
-    // Filter by active filter (category or status)
-    if (activeFilter && activeFilter !== 'All') {
-      const f = String(activeFilter).toLowerCase();
-      if (['motor','medical','wiba','last expense','travel','personal accident'].includes(f)) {
-        list = list.filter((q) => {
-          if (f === 'motor') return q?.isMotor || q?.category === 'MOTOR';
-          if (f === 'medical') return q?.isMedical || q?.category === 'MEDICAL';
-          if (f === 'wiba') return q?.category === 'WIBA';
-          if (f === 'travel') return q?.category === 'TRAVEL';
-          if (f === 'last expense') return q?.category === 'LAST_EXPENSE';
-          if (f === 'personal accident') return q?.category === 'PERSONAL_ACCIDENT';
-          return true;
-        });
-      } else {
-        // Status based
-        list = list.filter((q) => q?.status === f);
-      }
+    // Filter by applied/unapplied
+    if (activeFilter === 'Applied') {
+      list = list.filter((q) => !!q?.isApplied);
+    }
+    if (activeFilter === 'Unapplied') {
+      list = list.filter((q) => !q?.isApplied);
     }
 
     // Search filter
@@ -84,6 +84,7 @@ export default function QuotationsScreenNew({ route }) {
     
     // Map various backend statuses to UI filter categories
     if (s === 'ISSUED' || s === 'ACTIVE') return 'active';
+    if (s === 'CONVERTED') return 'active';
     if (s === 'PAID' || s === 'SUCCESS' || s === 'CONFIRMED') return 'paid';
     if (s === 'SUBMITTED' || s === 'APPLIED') return 'paid'; // Treat submitted as paid
     if (s === 'DRAFT' || s === 'PENDING' || s === 'PENDING_PAYMENT') return 'draft';
@@ -122,7 +123,7 @@ export default function QuotationsScreenNew({ route }) {
     const id = pick(
       q?.id, q?.quotation_id, q?.quote_id, q?.uuid, q?.reference, q?.ref, q?._id, q?.code,
       q?.policy_number // Motor 2 policy number
-    ) || Math.floor(Math.random() * 1e6);
+    ) || `MISSING_ID_${Math.floor(Math.random() * 1e6)}`;
 
     const createdAt = pick(
       q?.date_created, q?.created_at, q?.created, q?.createdDate, q?.submitted_at,
@@ -307,20 +308,8 @@ export default function QuotationsScreenNew({ route }) {
 
     // Fallback: compute on client using backend's formula when pricing missing
     const computeFallbackPremium = () => {
-      const currentYear = new Date().getFullYear();
-      const y = parseInt(year, 10);
-      if (!y || y < 1950 || y > currentYear + 1) return null;
-      let base = 3000;
-      const age = currentYear - y;
-      if (age > 10) base += 500; else if (age > 5) base += 200;
-      const isComprehensive = String(coverTypeRaw).toUpperCase().includes('COMPREHENSIVE');
-      if (isComprehensive) base = base * 1.5;
-      const itlLevy = Math.round(base * 0.0025 * 100) / 100; // ITL 0.25%
-      const pcfLevy = Math.round(base * 0.0025 * 100) / 100; // PCF 0.25%
-      const sd = 40;
-      const tx = itlLevy + pcfLevy + sd;
-      const tt = base + tx;
-      return { base, itl: itlLevy, pcf: pcfLevy, sd, tx, tt };
+      // Mockup calculation removed to ensure strict backend data
+      return null;
     };
 
     if ((basic === 0 && total === 0) || (!Number.isFinite(total) || total <= 0)) {
@@ -364,6 +353,13 @@ export default function QuotationsScreenNew({ route }) {
     // Add policy number if available (Motor 2)
     const policyNumber = pick(q?.policy_number, q?.policyNumber) || null;
 
+    const rawStatus = (q?.status || '').toString().toUpperCase();
+    const isApplied =
+      !!policyNumber ||
+      rawStatus.includes('APPLIED') ||
+      rawStatus.includes('ISSUED') ||
+      rawStatus.includes('ACTIVE');
+
     // Detect medical quotes (saved manual pricing) by line/product naming
     // Reuse earlier rawLineName; compute rawProductName for detection
   const rawProductName = (q?.product_name || q?.product || q?.product_config_name || '').toString().toLowerCase();
@@ -371,13 +367,15 @@ export default function QuotationsScreenNew({ route }) {
   // Robust Motor detection: include Motor 2 structures (policy_number, category_code) and common category hints
   const motorHints = [
     q?.__source, q?.policy_number, q?.category_code, q?.category, q?.category_name, q?.categoryCode,
-    q?.subcategory_code, q?.subcategory, q?.subcategory_name, q?.cover_type
+    q?.subcategory_code, q?.subcategory, q?.subcategory_name, q?.cover_type, q?.coverage_type,
+    q?.quote_number
   ].filter(Boolean).map(v => String(v).toLowerCase()).join(' ');
   const motorKeywords = ['motor','vehicle','psv','tuktuk','motorcycle','private','commercial','special'];
   // Only classify as motor if not already medical
   const isMotor = !isMedical && (
-    ['motor2'].includes(q?.__source) ||
+    ['motor2', 'motor3'].includes(q?.__source) ||
     !!q?.policy_number ||
+    String(q?.quote_number || '').startsWith('M3Q-') ||
     motorKeywords.some(k => rawLineName.includes(k)) ||
     motorKeywords.some(k => motorHints.includes(k))
   );
@@ -443,7 +441,10 @@ export default function QuotationsScreenNew({ route }) {
     return {
       id,
       originalQuoteNumber: q?.quote_number || null,
+      __source: q?.__source || null,
       policyNumber, // Include policy number for Motor 2 policies
+      rawStatus,
+      isApplied,
       status: mapStatus(q?.status),
       createdAt,
       category,
@@ -494,6 +495,8 @@ export default function QuotationsScreenNew({ route }) {
     const isLastExpense = lineKey === 'LAST_EXPENSE';
     const isWiba = lineKey === 'WIBA';
     const isPersonalAccident = lineKey === 'PERSONAL_ACCIDENT';
+    const isDomesticPackage = lineKey === 'DOMESTIC_PACKAGE';
+    const isProfessionalIndemnity = lineKey === 'PROFESSIONAL_INDEMNITY';
     
     // Determine category and product name based on line_key
     let category, productName;
@@ -512,10 +515,31 @@ export default function QuotationsScreenNew({ route }) {
     } else if (isPersonalAccident) {
       category = 'PERSONAL_ACCIDENT';
       productName = 'Personal Accident Insurance';
+    } else if (isDomesticPackage) {
+      category = 'DOMESTIC_PACKAGE';
+      productName = 'Domestic Package Insurance';
+    } else if (isProfessionalIndemnity) {
+      category = 'PROFESSIONAL_INDEMNITY';
+      productName = 'Professional Indemnity Insurance';
     } else {
       category = 'OTHER';
       productName = 'Insurance';
     }
+
+    // Extract client info from payload - use correct field names
+    const payload = manualQuote.payload || {};
+    const clientName = payload.full_name || payload.fullName || payload.client_name || 
+                       payload.clientName || payload.owner_name || payload.ownerName || 'N/A';
+    const clientEmail = payload.email_address || payload.emailAddress || payload.email || 
+                        payload.clientEmail || '';
+    const clientPhone = payload.phone_number || payload.phoneNumber || payload.phone || 
+                        payload.clientPhone || '';
+
+    // Calculate cover dates - default to 12 months from creation
+    const coverStart = manualQuote.created_at || new Date().toISOString();
+    const coverEndDate = new Date(coverStart);
+    coverEndDate.setMonth(coverEndDate.getMonth() + 12);
+    const coverEnd = coverEndDate.toISOString();
 
     return {
       id: `manual-${manualQuote.reference}`,
@@ -529,6 +553,8 @@ export default function QuotationsScreenNew({ route }) {
       isLastExpense,
       isTravel,
       isPersonalAccident,
+      isDomesticPackage,
+      isProfessionalIndemnity,
       category,
       productName,
       manualMedicalStatus: mapManualQuoteStatus(manualQuote.status),
@@ -543,17 +569,19 @@ export default function QuotationsScreenNew({ route }) {
         totalLevies: Object.values(manualQuote.levies_breakdown || {}).reduce((sum, val) => sum + (parseFloat(val) || 0), 0),
       } : null,
       clientInfo: {
-        name: manualQuote.payload?.client_name || manualQuote.payload?.fullName || manualQuote.payload?.clientName || 'N/A',
-        email: manualQuote.payload?.email || manualQuote.payload?.clientEmail || '',
-        phone: manualQuote.payload?.phone || manualQuote.payload?.phoneNumber || '',
+        name: clientName,
+        email: clientEmail,
+        phone: clientPhone,
       },
-      medicalSummary: isMedical && manualQuote.payload ? {
-        inpatientLimit: manualQuote.payload.inpatientLimit,
-        outpatientCover: manualQuote.payload.outpatientCover,
-        maternityCover: manualQuote.payload.maternityCover,
-        age: manualQuote.payload.age,
-        spouseAge: manualQuote.payload.spouseAge,
-        numberOfChildren: manualQuote.payload.numberOfChildren,
+      coverStart,
+      coverEnd,
+      medicalSummary: isMedical && payload ? {
+        inpatientLimit: payload.inpatientLimit,
+        outpatientCover: payload.outpatientCover,
+        maternityCover: payload.maternityCover,
+        age: payload.age,
+        spouseAge: payload.spouseAge,
+        numberOfChildren: payload.numberOfChildren,
       } : null,
       coverageDetails: {
         type: productName,
@@ -666,7 +694,7 @@ export default function QuotationsScreenNew({ route }) {
     }
     if (forceRefresh) {
       // Trigger remote refetch then clear flag to avoid loops
-      fetchRemoteQuotes({ silentOnError: true }).finally(() => {
+      fetchRemoteQuotes({ silentOnError: true, force: true }).finally(() => {
         try {
           navigation.setParams({ ...route.params, forceRefresh: false });
         } catch {}
@@ -675,7 +703,7 @@ export default function QuotationsScreenNew({ route }) {
   }, [route?.params]);
 
   // Remote fetch with AbortController and 8s timeout
-  const fetchRemoteQuotes = async ({ silentOnError = false } = {}) => {
+  const fetchRemoteQuotes = async ({ silentOnError = false, force = false } = {}) => {
     // Don't fetch if user is not authenticated
     if (!djangoAPI.isAuthenticated()) {
       console.log('⚠️ Skipping remote fetch - user not authenticated');
@@ -694,17 +722,19 @@ export default function QuotationsScreenNew({ route }) {
 
     try {
       // Centralized fetch via context (caches + TTLs)
-      const [legacy, manual, motor] = await Promise.all([
-        fetchLegacyQuotes(),
-        fetchManualQuotes(),
-        fetchMotorPolicies(),
+      const [legacy, motor3, manual, motor] = await Promise.all([
+        fetchLegacyQuotes(force),
+        fetchMotor3Quotations(force),
+        fetchManualQuotes(force),
+        fetchMotorPolicies(force),
       ]);
       // Map and merge
       let allQuotes = [];
       const legacyMapped = (legacy || []).map(mapBackendQuoteToUI);
+      const motor3Mapped = (motor3 || []).map(mapBackendQuoteToUI);
       const manualMapped = (manual || []).map(mapManualQuoteToUI);
       const motorMapped = (motor || []).map(mapBackendQuoteToUI);
-      allQuotes = [...legacyMapped, ...motorMapped, ...manualMapped];
+      allQuotes = [...legacyMapped, ...motor3Mapped, ...motorMapped, ...manualMapped];
 
       // Deduplicate quotes by reference/id
       const seen = new Set();
@@ -759,8 +789,13 @@ export default function QuotationsScreenNew({ route }) {
         setPrefilledFromStorage(false);
         
         // If current filter has no items but quotes exist, switch to 'All'
+        // Option A filters are based on `isApplied`, not `status`.
         if (activeFilter !== 'All') {
-          const hasInFilter = allQuotes.some(q => q.status === activeFilter.toLowerCase());
+          const hasInFilter = (() => {
+            if (activeFilter === 'Applied') return allQuotes.some(q => !!q?.isApplied);
+            if (activeFilter === 'Unapplied') return allQuotes.some(q => !q?.isApplied);
+            return true;
+          })();
           if (!hasInFilter) setActiveFilter('All');
         }
       } else if (!prefilledFromStorage) {
@@ -913,6 +948,29 @@ export default function QuotationsScreenNew({ route }) {
     }
   };
 
+  const getQuoteIconName = (quote) => {
+    if (quote?.isMotor) return 'car-sport';
+    if (quote?.isMedical) return 'medkit-outline';
+
+    // Fallback to category labels
+    const cat = String(quote?.category || '').toUpperCase();
+    if (cat === 'TRAVEL') return 'airplane-outline';
+    if (cat === 'WIBA') return 'briefcase-outline';
+    if (cat === 'LAST_EXPENSE') return 'heart-outline';
+    if (cat === 'PERSONAL_ACCIDENT') return 'accessibility-outline';
+
+    return 'document-text-outline';
+  };
+
+  const handleViewQuotation = (quote) => {
+    try {
+      navigation.navigate('QuotationActions', { quote });
+    } catch (e) {
+      console.warn('[Quotations] View quotation navigation failed', e?.message);
+      Alert.alert('Navigation Error', 'Unable to open this quotation');
+    }
+  };
+
   const handleCreateNewQuote = () => {
     Alert.alert(
       'Under Maintenance',
@@ -935,277 +993,105 @@ export default function QuotationsScreenNew({ route }) {
       style={styles.quoteCard}
       onPress={() => setExpandedQuote(expandedQuote === quote.id ? null : quote.id)}
     >
-      {/* Top row: ID/Policy on left, status badges on right */}
-      <View style={styles.topRow}>
-        <Text style={quote.policyNumber ? styles.policyNumber : styles.quoteId}>
-          {quote.policyNumber ? `Policy: ${quote.policyNumber}` : `Quote #${quote.id.toString().slice(-6)}`}
-        </Text>
-        <View style={styles.badgeRow}>
-          <StatusBadge status={quote.status} />
-          {quote.isMedical && (
-            <View
-              style={[
-                styles.medicalDot,
-                quote.manualMedicalStatus === 'processed'
-                  ? styles.medicalDotProcessed
-                  : styles.medicalDotPending,
-              ]}
-            />
-          )}
-        </View>
-      </View>
+      {(() => {
+        const registration = (quote?.vehicleDetails?.registrationNumber || '').toUpperCase();
+        const title = registration || quote?.productName || `Quote #${quote?.id?.toString?.().slice?.(-6) || ''}`;
+        const policyType = quote?.coverageDetails?.type || quote?.productName || '—';
+        const totalPremium = quote?.calculatedPremium?.totalPremium || 0;
+        const amountText = quote?.showPricing ? PricingService.formatCurrency(totalPremium) : '—';
+        const appliedLabel = quote?.isApplied ? 'Applied' : 'Unapplied';
+        const iconName = getQuoteIconName(quote);
 
-      {/* Title block: product/vehicle + secondary line */}
-      <View style={styles.titleBlock}>
-        {quote.isMedical ? (
+        return (
           <>
-            <Text style={styles.productName}>
-              {quote.productName || 'Medical Quote'}
-            </Text>
-            <Text style={[styles.medicalStatusLine, getManualQuoteStatusStyle(quote)]}>
-              {getManualQuoteStatusText(quote)}
-            </Text>
-          </>
-        ) : quote.isMotor ? (
-          <>
-            <Text style={styles.vehicleInfo}>
-              {quote.vehicleDetails?.make} {quote.vehicleDetails?.model}
-            </Text>
-            {!!(quote.vehicleDetails?.registrationNumber) && (
-              <View style={styles.registrationPill}>
-                <Text style={styles.registrationPillText}>
-                  {(quote.vehicleDetails?.registrationNumber || '').toUpperCase()}
-                </Text>
+            <View style={styles.simpleHeaderRow}>
+              <View style={styles.simpleLeftRow}>
+                <View style={styles.quoteAvatar}>
+                  <Ionicons name={iconName} size={16} color={Colors.primary} />
+                </View>
+                <View style={styles.simpleTitleCol}>
+                  <Text style={styles.simpleTitle} numberOfLines={1}>
+                    {title}
+                  </Text>
+                </View>
               </View>
-            )}
-          </>
-        ) : (
-          <Text style={styles.productName}>{quote.productName || quote.category}</Text>
-        )}
-      </View>
 
-      {/* Insurance Provider - Show prominently for Motor quotes */}
-      {quote.isMotor && quote.underwriterName && (
-        <View style={styles.insuranceProviderRow}>
-          <Text style={styles.insuranceProviderLabel}>Insurance Provider:</Text>
-          <Text style={styles.insuranceProviderValue}>{quote.underwriterName}</Text>
-        </View>
-      )}
+              <View style={styles.simpleRightCol}>
+                <View
+                  style={[
+                    styles.applicationPill,
+                    quote?.isApplied ? styles.applicationPillApplied : styles.applicationPillUnapplied,
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.applicationPillText,
+                      quote?.isApplied
+                        ? styles.applicationPillTextApplied
+                        : styles.applicationPillTextUnapplied,
+                    ]}
+                  >
+                    {appliedLabel}
+                  </Text>
+                </View>
+                <Text style={styles.chevron}>{expandedQuote === quote.id ? '˄' : '˅'}</Text>
+              </View>
+            </View>
 
-      {/* Key facts row */}
-      <View style={styles.quickInfoRow}>
-        <View style={styles.infoItem}>
-          <Text style={styles.infoLabel}>Created</Text>
-          <Text style={styles.infoValue} numberOfLines={1}>
-            {new Date(quote.createdAt).toLocaleDateString()}
-          </Text>
-        </View>
-        <View style={styles.infoItem}>
-          <Text style={styles.infoLabel}>Cover Period</Text>
-          <Text style={styles.infoValue} numberOfLines={1}>
-            {quote.coverStart && quote.coverEnd 
-              ? `${new Date(quote.coverStart).toLocaleDateString()} - ${new Date(quote.coverEnd).toLocaleDateString()}`
-              : '—'}
-          </Text>
-        </View>
-        <View style={styles.infoItem}>
-          <Text style={styles.infoLabel}>Type</Text>
-          <Text style={styles.infoValue} numberOfLines={1}>
-            {quote.coverageDetails?.type || (quote.isMotor ? (quote.productName || 'Motor') : (quote.productName || '—'))}
-          </Text>
-        </View>
-      </View>
-      
-      {/* Secondary info row */}
-      <View style={styles.quickInfoRow}>
-        {quote.isMedical ? (
-          <View style={styles.infoItem}>
-            <Text style={styles.infoLabel}>Status</Text>
-            <Text style={[styles.infoValue, getManualQuoteStatusStyle(quote)]} numberOfLines={1}>
-              {quote.manualQuoteData
-                ? (quote.manualQuoteData.status?.replace(/_/g, ' ') || 'Pending')
-                : 'Pending'}
+            <Text style={styles.simpleMeta} numberOfLines={1}>
+              Policy Type: {policyType}
             </Text>
-          </View>
-        ) : (
-          <View style={styles.infoItem}>
-            <Text style={styles.infoLabel}>Client</Text>
-            <Text style={styles.infoValue} numberOfLines={1}>
-              {quote.clientInfo?.name || '—'}
+
+            <Text style={styles.simpleAmount}>
+              {amountText} {quote?.showPricing ? '(gross)' : ''}
             </Text>
-          </View>
-        )}
-      </View>
 
-      {/* Premium row */}
-      <View style={styles.premiumRow}>
-        <Text style={styles.premiumLabel}>Total Premium</Text>
-        {quote.showPricing ? (
-          <Text style={styles.premiumAmount}>
-            {PricingService.formatCurrency(quote.calculatedPremium?.totalPremium || 0)}
-          </Text>
-        ) : (
-          <Text style={styles.noPricingPlaceholder}>—</Text>
-        )}
-      </View>
+            {expandedQuote === quote.id && (
+              <View style={styles.simpleExpanded}>
+                <View style={styles.divider} />
+                <View style={styles.simpleDetails}>
+                  {!!quote?.underwriterName && (
+                    <View style={styles.simpleDetailRow}>
+                      <Text style={styles.simpleDetailLabel}>Insurance Provider:</Text>
+                      <Text style={styles.simpleDetailValue} numberOfLines={1}>
+                        {quote.underwriterName}
+                      </Text>
+                    </View>
+                  )}
 
-      {/* Apply Policy button for Draft (when not expanded) */}
-      {quote.status === 'draft' && expandedQuote !== quote.id && (
-        <TouchableOpacity 
-          style={styles.applyPolicyButton}
-          onPress={() => handleApplyPolicy(quote)}
-        >
-          <Text style={styles.applyPolicyButtonText}>Apply Policy →</Text>
-        </TouchableOpacity>
-      )}
-
-      {expandedQuote === quote.id && (
-        <View style={styles.expandedContent}>
-          <View style={styles.divider} />
-          
-          <View style={styles.detailsGrid}>
-            {quote.policyNumber && (
-              <View style={[styles.detailItem, styles.fullWidth]}>
-                <Text style={styles.detailLabel}>Policy Number</Text>
-                <Text style={[styles.detailValue, styles.policyNumberValue]}>
-                  {quote.policyNumber}
-                </Text>
-              </View>
-            )}
-            <View style={styles.detailItem}>
-              <Text style={styles.detailLabel}>Created</Text>
-              <Text style={styles.detailValue}>
-                {new Date(quote.createdAt).toLocaleDateString()}
-              </Text>
-            </View>
-            <View style={[styles.detailItem, styles.fullWidth]}>
-              <Text style={styles.detailLabel}>Cover Period</Text>
-              <Text style={styles.detailValue}>
-                {quote.coverStart && quote.coverEnd 
-                  ? `${new Date(quote.coverStart).toLocaleDateString()} - ${new Date(quote.coverEnd).toLocaleDateString()}`
-                  : '—'}
-              </Text>
-            </View>
-            {quote.isMotor && (
-              <View style={styles.detailItem}>
-                <Text style={styles.detailLabel}>Year</Text>
-                <Text style={styles.detailValue}>
-                  {quote.vehicleDetails?.year || 'N/A'}
-                </Text>
-              </View>
-            )}
-            <View style={styles.detailItem}>
-              <Text style={styles.detailLabel}>Coverage</Text>
-              <Text style={styles.detailValue}>
-                {quote.coverageDetails?.type || 'Standard'}
-              </Text>
-            </View>
-            <View style={styles.detailItem}>
-              <Text style={styles.detailLabel}>Period</Text>
-              <Text style={styles.detailValue}>
-                {quote.coverageDetails?.period || '12 months'}
-              </Text>
-            </View>
-            <View style={styles.detailItem}>
-              <Text style={styles.detailLabel}>Client</Text>
-              <Text style={styles.detailValue}>
-                {quote.clientInfo?.name || 'N/A'}
-              </Text>
-            </View>
-            <View style={styles.detailItem}>
-              <Text style={styles.detailLabel}>{quote.isMedical ? 'Status' : 'Phone'}</Text>
-              <Text style={styles.detailValue}>
-                {quote.isMedical ? (quote.manualMedicalStatus === 'processed' ? 'Processed' : 'Pending Manual') : (quote.clientInfo?.phone || 'N/A')}
-              </Text>
-            </View>
-            {quote.isMedical && quote.medicalSummary && (
-              <View style={[styles.detailItem, styles.fullWidth]}>
-                <Text style={styles.detailLabel}>Medical Summary</Text>
-                <Text style={styles.detailValue}>
-                  {(quote.medicalSummary.inpatientLimit ? `Inpatient: ${quote.medicalSummary.inpatientLimit}` : '')
-                    + (quote.medicalSummary.outpatientCover ? '  • Outpatient' : '')
-                    + (quote.medicalSummary.maternityCover ? '  • Maternity' : '')
-                    + (quote.medicalSummary.age ? `  • Age: ${quote.medicalSummary.age}` : '')
-                  }
-                </Text>
-              </View>
-            )}
-            {quote.showPricing && (
-              <>
-                {quote.underwriterName && (
-                  <View style={[styles.detailItem, styles.fullWidth]}>
-                    <Text style={styles.detailLabel}>Insurance Provider</Text>
-                    <Text style={styles.detailValue}>
-                      {quote.underwriterName}
+                  <View style={styles.simpleDetailRow}>
+                    <Text style={styles.simpleDetailLabel}>Total Premium:</Text>
+                    <Text style={styles.simpleDetailValue}>
+                      {PricingService.formatCurrency(totalPremium)} {quote?.showPricing ? '(gross)' : ''}
                     </Text>
                   </View>
-                )}
-                <View style={styles.detailItem}>
-                  <Text style={styles.detailLabel}>Basic Premium</Text>
-                  <Text style={styles.detailValue}>
-                    {PricingService.formatCurrency(quote.calculatedPremium?.basicPremium || 0)}
-                  </Text>
-                </View>
-                <View style={styles.detailItem}>
-                  <Text style={styles.detailLabel}>Training Levy (ITL)</Text>
-                  <Text style={styles.detailValue}>
-                    {PricingService.formatCurrency(quote.calculatedPremium?.trainingLevy || 0)}
-                  </Text>
-                </View>
-                <View style={styles.detailItem}>
-                  <Text style={styles.detailLabel}>PCF Levy</Text>
-                  <Text style={styles.detailValue}>
-                    {PricingService.formatCurrency(quote.calculatedPremium?.pcfLevy || 0)}
-                  </Text>
-                </View>
-                <View style={styles.detailItem}>
-                  <Text style={styles.detailLabel}>Stamp Duty</Text>
-                  <Text style={styles.detailValue}>
-                    {PricingService.formatCurrency(quote.calculatedPremium?.stampDuty || 0)}
-                  </Text>
-                </View>
-                <View style={[styles.detailItem, styles.totalRow]}>
-                  <Text style={[styles.detailLabel, styles.totalLabel]}>Total Premium</Text>
-                  <Text style={[styles.detailValue, styles.totalValue]}>
-                    {PricingService.formatCurrency(quote.calculatedPremium?.totalPremium || 0)}
-                  </Text>
-                </View>
-              </>
-            )}
-          </View>
 
-          <View style={styles.actionButtons}>
-            {/* Apply Policy button for Draft quotations */}
-            {quote.status === 'draft' && (
-              <ActionButton
-                title="Apply Policy"
-                variant="primary"
-                size="small"
-                onPress={() => handleApplyPolicy(quote)}
-                style={styles.actionButtonSmall}
-              />
+                  {!!registration && (
+                    <View style={styles.simpleDetailRow}>
+                      <Text style={styles.simpleDetailLabel}>Vehicle Registration:</Text>
+                      <Text style={styles.simpleDetailValue}>{registration}</Text>
+                    </View>
+                  )}
+
+                  <View style={styles.simpleDetailRow}>
+                    <Text style={styles.simpleDetailLabel}>Date Created:</Text>
+                    <Text style={styles.simpleDetailValue}>
+                      {quote?.createdAt ? new Date(quote.createdAt).toLocaleDateString() : '—'}
+                    </Text>
+                  </View>
+                </View>
+
+                <TouchableOpacity
+                  style={styles.viewQuotationButton}
+                  onPress={() => handleViewQuotation(quote)}
+                >
+                  <Text style={styles.viewQuotationButtonText}>View Quotation</Text>
+                </TouchableOpacity>
+              </View>
             )}
-            {quote.isMedical && quote.manualQuoteData && quote.manualQuoteData.status !== 'COMPLETED' && (
-              <ActionButton
-                title="💰 Price"
-                variant="primary"
-                size="small"
-                onPress={() => navigation.navigate('AdminManualQuotePricing', { quoteReference: quote.originalQuoteNumber })}
-                style={styles.actionButtonSmall}
-              />
-            )}
-            <ActionButton
-              title="Support"
-              icon="?"
-              variant="secondary"
-              size="small"
-              onPress={() => handleQuoteSupport(quote)}
-              style={styles.actionButtonSmall}
-            />
-            {/* Edit and Delete buttons removed per user request */}
-          </View>
-        </View>
-      )}
+          </>
+        );
+      })()}
     </EnhancedCard>
   );
 
@@ -1214,10 +1100,9 @@ export default function QuotationsScreenNew({ route }) {
       <Text style={styles.emptyIcon}>□</Text>
       <Text style={styles.emptyTitle}>No quotes found</Text>
       <Text style={styles.emptySubtitle}>
-        {activeFilter === 'All' 
-          ? 'Quotation system is under maintenance'
-          : `No ${activeFilter.toLowerCase()} quotes available`
-        }
+        {activeFilter === 'All'
+          ? 'No quotations available'
+          : `No ${activeFilter.toLowerCase()} quotations available`}
       </Text>
     </View>
   );
@@ -1225,16 +1110,9 @@ export default function QuotationsScreenNew({ route }) {
   const renderFilterTab = (filter) => {
     const count = (() => {
       if (filter === 'All') return quotes.length;
-      const f = filter.toLowerCase();
-      if (['motor','medical','wiba','last expense','travel','personal accident'].includes(f)) {
-        return quotes.filter(q => {
-          if (f === 'last expense') return q.category === 'LAST_EXPENSE';
-          if (f === 'personal accident') return q.category === 'PERSONAL_ACCIDENT';
-          return q.category === f.toUpperCase();
-        }).length;
-      }
-      // status based
-      return quotes.filter(q => q.status === f).length;
+      if (filter === 'Applied') return quotes.filter((q) => !!q?.isApplied).length;
+      if (filter === 'Unapplied') return quotes.filter((q) => !q?.isApplied).length;
+      return 0;
     })();
     
     const isEmpty = filter !== 'All' && count === 0;
@@ -1341,7 +1219,7 @@ export default function QuotationsScreenNew({ route }) {
           </View>
           <View style={styles.statCard}>
             <Text style={[styles.statValue, { color: Colors.primary }]}>
-              {quotes.filter(q => q.status === 'paid').length}
+              {quotes.filter(q => !!q?.isApplied).length}
             </Text>
             <Text style={styles.statLabel}>Paid</Text>
           </View>
@@ -1542,6 +1420,130 @@ const styles = StyleSheet.create({
   },
   quoteCard: {
     marginBottom: Spacing.md,
+  },
+  simpleHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: Spacing.xs,
+  },
+  simpleLeftRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+    minWidth: 0,
+  },
+  quoteAvatar: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: Colors.backgroundSecondary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: Spacing.sm,
+  },
+  quoteAvatarText: {
+    fontSize: 14,
+    color: Colors.primary,
+    fontFamily: Typography.fontFamily.bold,
+  },
+  simpleTitleCol: {
+    flex: 1,
+    minWidth: 0,
+    paddingRight: Spacing.sm,
+  },
+  simpleRightCol: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.xs,
+  },
+  simpleTitle: {
+    fontSize: Typography.fontSize.md,
+    fontFamily: Typography.fontFamily.semiBold,
+    color: Colors.textPrimary,
+    lineHeight: Typography.lineHeight.md,
+  },
+  simpleMeta: {
+    fontSize: Typography.fontSize.xs,
+    fontFamily: Typography.fontFamily.regular,
+    color: Colors.textSecondary,
+    lineHeight: Typography.lineHeight.xs,
+    marginBottom: 2,
+  },
+  simpleAmount: {
+    fontSize: Typography.fontSize.lg,
+    fontFamily: Typography.fontFamily.bold,
+    color: Colors.textPrimary,
+    lineHeight: Typography.lineHeight.lg,
+    marginTop: Spacing.xs,
+  },
+  applicationPill: {
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 4,
+    borderRadius: 999,
+    borderWidth: 1,
+    backgroundColor: Colors.backgroundSecondary,
+  },
+  applicationPillApplied: {
+    borderColor: Colors.success,
+  },
+  applicationPillUnapplied: {
+    borderColor: Colors.primary,
+  },
+  applicationPillText: {
+    fontSize: Typography.fontSize.xs,
+    fontFamily: Typography.fontFamily.semiBold,
+    lineHeight: Typography.lineHeight.xs,
+  },
+  applicationPillTextApplied: {
+    color: Colors.success,
+  },
+  applicationPillTextUnapplied: {
+    color: Colors.primary,
+  },
+  chevron: {
+    fontSize: 16,
+    color: Colors.textSecondary,
+    marginLeft: 2,
+  },
+  simpleExpanded: {
+    marginTop: Spacing.md,
+  },
+  simpleDetails: {
+    gap: Spacing.sm,
+    marginBottom: Spacing.md,
+  },
+  simpleDetailRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: Spacing.sm,
+  },
+  simpleDetailLabel: {
+    flex: 1,
+    fontSize: Typography.fontSize.sm,
+    fontFamily: Typography.fontFamily.medium,
+    color: Colors.textSecondary,
+  },
+  simpleDetailValue: {
+    flex: 1,
+    textAlign: 'right',
+    fontSize: Typography.fontSize.sm,
+    fontFamily: Typography.fontFamily.semiBold,
+    color: Colors.textPrimary,
+  },
+  viewQuotationButton: {
+    borderWidth: 1,
+    borderColor: Colors.primary,
+    backgroundColor: Colors.backgroundCard,
+    borderRadius: 10,
+    paddingVertical: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  viewQuotationButtonText: {
+    color: Colors.primary,
+    fontFamily: Typography.fontFamily.semiBold,
+    fontSize: Typography.fontSize.md,
   },
   gridRow: {
     justifyContent: 'space-between',

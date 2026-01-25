@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, ScrollView, Text, TextInput, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import motorPricingService from '../../../../../services/MotorInsurancePricingService';
+import StableTextInput from '../../../../../components/common/StableTextInput';
 
 const DynamicPricingForm = ({ 
   fields = [], 
@@ -164,11 +165,12 @@ const DynamicPricingForm = ({
           <Text style={styles.label}>
             {f.label} {f.required && <Text style={styles.required}>*</Text>}
           </Text>
-          <TextInput
+          <StableTextInput
             style={styles.input}
             value={pricingInputs[f.key] || today}
             placeholder="YYYY-MM-DD"
             onChangeText={(text) => update(f.key, text)}
+            debounceMs={300}
           />
         </View>
       );
@@ -181,38 +183,42 @@ const DynamicPricingForm = ({
       <View key={f.key} style={styles.fieldContainer}>
         <Text style={styles.label}>{f.label}</Text>
         {f.type === 'sum_insured' && (
-          <TextInput 
+          <StableTextInput 
             style={styles.input} 
             keyboardType="numeric" 
             value={pricingInputs[f.key] || ''} 
             onChangeText={(v) => update(f.key, v)} 
             placeholder={f.placeholder || 'Enter amount'} 
+            debounceMs={300}
           />
         )}
         {f.type === 'tonnage' && (
-          <TextInput 
+          <StableTextInput 
             style={styles.input} 
             keyboardType="numeric" 
             value={pricingInputs[f.key] || ''} 
             onChangeText={(v) => update(f.key, v)} 
             placeholder="Select tonnage" 
+            debounceMs={300}
           />
         )}
         {f.type === 'passengers' && (
-          <TextInput 
+          <StableTextInput 
             style={styles.input} 
             keyboardType="numeric" 
             value={pricingInputs[f.key] || ''} 
             onChangeText={(v) => update(f.key, v)} 
             placeholder="Number of passengers" 
+            debounceMs={300}
           />
         )}
         {!['sum_insured', 'tonnage', 'passengers', 'select'].includes(f.type) && (
-          <TextInput 
+          <StableTextInput 
             style={styles.input} 
             value={pricingInputs[f.key] || ''} 
             onChangeText={(v) => update(f.key, v)} 
             placeholder={f.placeholder || ''} 
+            debounceMs={300}
           />
         )}
         {f.help && <Text style={styles.help}>{f.help}</Text>}

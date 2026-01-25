@@ -1,0 +1,22 @@
+{% extends "admin/base_site.html" %}
+
+{% block content %}
+<h1>PataBima Dashboard</h1>
+<h2>Key Metrics</h2>
+<ul>
+  <li>Users: {{ total_users }} (Agents: {{ total_agents }}, Customers: {{ total_customers }}), New (30d): {{ new_users_30d }}</li>
+  <li>Quotations: {{ total_quotations }} (Pending: {{ pending_quotations }}, Approved: {{ approved_quotations }}, Converted: {{ converted_quotations }})</li>
+  <li>Pricing: Rules {{ total_pricing_rules }}, Underwriters {{ active_underwriters }}, Categories {{ total_categories }}, Subcategories {{ total_subcategories }}, Extendible {{ extendible_products }}</li>
+  <li>Extensions: Pending {{ pending_extensions }}, Grace Period {{ grace_period_policies }}</li>
+  <li>Campaigns: Active {{ active_campaigns }}, Scheduled {{ scheduled_campaigns }}, Impressions {{ total_campaign_impressions }}, Clicks {{ total_campaign_clicks }}</li>
+  <li>Total Premium Amount: {{ total_premium_amount }}</li>
+</ul>
+
+<h2>Quick Links</h2>
+<ul>
+  <li><a href="/admin/pricing-analytics/">Pricing Analytics</a></li>
+  <li><a href="/admin/quotation-analytics/">Quotation Analytics</a></li>
+  <li><a href="/admin/system-health/">System Health</a></li>
+</ul>
+{% endblock %}
+

@@ -16,142 +16,17 @@ export const DMVICService = {
       'KDN 423A': {
         hasExistingPolicy: true,
         currentPolicy: {
-          policyNumber: 'CH343/2023',
-          issuer: 'CIC Insurance',
-          expiryDate: '2026-04-13',
-          coverType: 'Comprehensive',
-          status: 'Active'
-        },
-        recommendation: {
-          suggestedStartDate: '2026-04-14',
-          message: 'Vehicle has existing cover. New policy will start after current expiry.'
-        }
-      },
-      'KCA 234H': {
-        hasExistingPolicy: false,
-        recommendation: {
-          suggestedStartDate: new Date().toISOString().split('T')[0],
-          message: 'No existing policy found. Cover can start immediately.'
-        }
-      },
-      'KBZ 789X': {
-        hasExistingPolicy: true,
-        currentPolicy: {
-          policyNumber: 'APA/2024/0012',
-          issuer: 'APA Insurance',
-          expiryDate: '2025-12-15',
-          coverType: 'Third Party',
-          status: 'Active'
-        },
-        recommendation: {
-          suggestedStartDate: '2025-12-16',
-          message: 'Existing Third Party cover found. Consider upgrading to Comprehensive.'
-        }
-      }
-    };
+          /**
+           * Compatibility shim: SimulationServices has been retired.
+           *
+           * The app now uses real backend integrations via EnhancedServices.
+           * This export is kept only to avoid breaking legacy imports.
+           */
 
-    const result = mockPolicies[vehicleRegistration.toUpperCase()] || {
-      hasExistingPolicy: false,
-      recommendation: {
-        suggestedStartDate: new Date().toISOString().split('T')[0],
-        message: 'No existing policy found. Cover can start immediately.'
-      }
-    };
+          import EnhancedServices from './EnhancedServices';
 
-    console.log('DMVIC Check Result:', result);
-    return result;
-  },
+          export const SimulationServices = EnhancedServices;
 
-  // Simulate getting vehicle details from registration
-  getVehicleDetails: async (vehicleRegistration) => {
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    const mockVehicleData = {
-      'KDN 423A': {
-        make: 'Toyota',
-        model: 'Corolla',
-        year: 2019,
-        engineSize: '1500cc',
-        color: 'White',
-        ownerName: 'John Doe',
-        chassisNumber: 'NCXSK-000950'
-      },
-      'KCA 234H': {
-        make: 'Nissan',
-        model: 'X-Trail',
-        year: 2020,
-        engineSize: '2000cc',
-        color: 'Silver',
-        ownerName: 'Jane Smith',
-        chassisNumber: 'NISSAN-XTR2020'
-      }
-    };
-
-    return mockVehicleData[vehicleRegistration.toUpperCase()] || null;
-  }
-};
-
-// AWS Textract Service Simulation
-export const TextractService = {
-  // Simulate extracting data from uploaded documents
-  extractDocumentData: async (documentType, imageBase64) => {
-    // Simulate processing delay
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    console.log('Processing document:', documentType);
-    
-    // Mock extracted data based on document type
-    const mockExtractions = {
-      logbook: {
-        confidence: 95.8,
-        extractedData: {
-          vehicleRegistration: 'KDN 423A',
-          make: 'TOYOTA',
-          model: 'COROLLA',
-          year: '2019',
-          engineNumber: 'TOY-ENG-2019-001',
-          chassisNumber: 'NCXSK-000950',
-          ownerName: 'JOHN DOE',
-          ownerIdNumber: 'A09900030003',
-          dateOfFirstRegistration: '2019-03-15'
-        },
-        extractedFields: [
-          { field: 'vehicleRegistration', value: 'KDN 423A', confidence: 98.2 },
-          { field: 'make', value: 'TOYOTA', confidence: 97.5 },
-          { field: 'model', value: 'COROLLA', confidence: 96.8 },
-          { field: 'ownerName', value: 'JOHN DOE', confidence: 94.3 }
-        ]
-      },
-      nationalId: {
-        confidence: 97.2,
-        extractedData: {
-          idNumber: 'A09900030003',
-          firstName: 'JOHN',
-          lastName: 'DOE',
-          dateOfBirth: '1990-05-15',
-          placeOfBirth: 'NAIROBI',
-          dateOfIssue: '2020-01-10'
-        },
-        extractedFields: [
-          { field: 'idNumber', value: 'A09900030003', confidence: 99.1 },
-          { field: 'firstName', value: 'JOHN', confidence: 96.8 },
-          { field: 'lastName', value: 'DOE', confidence: 96.5 }
-        ]
-      },
-      kraPin: {
-        confidence: 92.5,
-        extractedData: {
-          pinNumber: 'A009900030003',
-          taxpayerName: 'JOHN DOE',
-          registrationDate: '2018-06-20',
-          status: 'ACTIVE'
-        }
-      }
-    };
-
-    const result = mockExtractions[documentType] || {
-      confidence: 0,
-      error: 'Document type not supported or extraction failed'
     };
 
     console.log('Textract Extraction Result:', result);

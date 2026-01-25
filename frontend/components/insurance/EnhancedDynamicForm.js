@@ -17,7 +17,7 @@ import {
 import FormField from './FormField';
 import ProgressBar from './ProgressBar';
 import ServiceComponents from './ServiceComponents';
-import { SimulationServices } from './services/SimulationServices';
+import EnhancedServices from './services/EnhancedServices';
 
 const EnhancedDynamicForm = ({ 
   config, 
@@ -53,8 +53,8 @@ const EnhancedDynamicForm = ({
     try {
       setProcessingStatus(prev => ({ ...prev, dmvic: 'checking' }));
       
-      const policyCheck = await SimulationServices.DMVICService.checkExistingPolicy(vehicleRegistration);
-      const vehicleDetails = await SimulationServices.DMVICService.getVehicleDetails(vehicleRegistration);
+      const policyCheck = await EnhancedServices.DMVICService.checkExistingPolicy(vehicleRegistration);
+      const vehicleDetails = await EnhancedServices.DMVICService.getVehicleDetails(vehicleRegistration);
       
       const results = { policyCheck, vehicleDetails };
       setDmvicResults(results);
@@ -100,13 +100,13 @@ const EnhancedDynamicForm = ({
         textract: { ...prev.textract, [extractionType]: 'processing' }
       }));
       
-      const extractResult = await SimulationServices.TextractService.extractDocumentData(
+      const extractResult = await EnhancedServices.TextractService.extractDocumentData(
         file, 
         extractionType
       );
       
       if (extractResult.success) {
-        const validationResult = await SimulationServices.TextractService.validateExtractedData(
+        const validationResult = await EnhancedServices.TextractService.validateExtractedData(
           extractResult.data,
           formData
         );
@@ -154,7 +154,7 @@ const EnhancedDynamicForm = ({
     try {
       setProcessingStatus(prev => ({ ...prev, pricing: 'calculating' }));
       
-      const pricingResult = await SimulationServices.UnderwriterService.calculatePremium(formData);
+      const pricingResult = await EnhancedServices.UnderwriterService.calculatePremium(formData);
       
       if (pricingResult.success) {
         setLivePrice(pricingResult.data);

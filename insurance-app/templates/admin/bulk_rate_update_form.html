@@ -1,0 +1,27 @@
+{% extends "admin/base_site.html" %}
+{% block content %}
+<h1>Bulk Update Pricing</h1>
+<form method="post">{% csrf_token %}
+  <div>
+    <label for="id_pricing_field">Field</label>
+    {{ form.pricing_field }}
+  </div>
+  <div>
+    <label for="id_percentage_change">% Change</label>
+    {{ form.percentage_change }}
+  </div>
+  <fieldset>
+    <legend>Optional Filters</legend>
+    <div>
+      <label>Categories</label>
+      {{ form.categories }}
+    </div>
+    <div>
+      <label>Subcategories</label>
+      {{ form.subcategories }}
+    </div>
+  </fieldset>
+  <input type="hidden" name="apply" value="1" />
+  <button type="submit" class="default">Apply</button>
+</form>
+{% endblock %}

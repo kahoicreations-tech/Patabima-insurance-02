@@ -65,6 +65,28 @@ export function transformPricingRequest(productType, inputs) {
     // Still include vehicle_year if available as it might be used for age restrictions
     if (inputs.vehicle_year) base.vehicle_year = parseInt(inputs.vehicle_year);
   }
+
+  // Category-specific pricing inputs must be sent for non-comprehensive products too.
+  // TONNAGE models (Commercial / Tractor / etc.)
+  const tonnageRaw = inputs.tonnage ?? inputs.vehicle_tonnage;
+  if (tonnageRaw != null && tonnageRaw !== '') base.tonnage = Number(tonnageRaw);
+
+  // PASSENGER models (PSV / TukTuk / Institutional / etc.)
+  const capacityRaw = inputs.capacity ?? inputs.passengerCapacity ?? inputs.passenger_capacity ?? inputs.passenger_count ?? inputs.passengers;
+  if (capacityRaw != null && capacityRaw !== '') base.passenger_count = Number(capacityRaw);
+
+  // ENGINE_CC models (Motorcycle)
+  const engineCcRaw = inputs.engine_cc ?? inputs.engineCc ?? inputs.engine_capacity ?? inputs.engineCapacity;
+  if (engineCcRaw != null && engineCcRaw !== '') base.engine_cc = Number(engineCcRaw);
+
+  // Passenger type / institutional flags (when applicable)
+  if (inputs.passenger_type) base.passenger_type = inputs.passenger_type;
+  if (typeof inputs.is_commercial_institutional === 'boolean') {
+    base.is_commercial_institutional = inputs.is_commercial_institutional;
+  }
+
+  // Prime mover flag (commercial tonnage)
+  if (typeof inputs.is_prime_mover === 'boolean') base.is_prime_mover = inputs.is_prime_mover;
   
   // Map form field names to backend expected field names
   
@@ -146,14 +168,39 @@ export function normalizePricingResponse(resp) {
     ? Number(resp.total_premium)
     : (derivedFromComponents != null ? derivedFromComponents : Number(resp.premium || resp.base_premium || 0));
 
-  const basePremium = Number(resp.base_premium || 0);
+  const respBreakdown = resp.premium_breakdown || resp.breakdown || {};
+  const stampDutyRaw = resp.stamp_duty ?? respBreakdown.stamp_duty ?? respBreakdown.stampDuty ?? LEVY_RATES.STAMP_DUTY;
+  const stampDuty = Number.isFinite(Number(stampDutyRaw)) ? Number(stampDutyRaw) : LEVY_RATES.STAMP_DUTY;
 
-  const breakdown = resp.premium_breakdown || resp.breakdown || (hasAllComponents ? {
-    base_premium: Number(resp.base_premium),
-    training_levy: Number(resp.training_levy),
-    pcf_levy: Number(resp.pcf_levy),
-    stamp_duty: Number(resp.stamp_duty),
-  } : {});
+  const backendBase = resp.base_premium ?? respBreakdown.base_premium;
+  let basePremium = Number(backendBase || 0);
+
+  // If backend gave only total (common for FIXED/TOR responses), derive base + levies.
+  if (!basePremium && Number(totalPremiumRaw) > 0 && Number(totalPremiumRaw) > stampDuty) {
+    const levyRate = Number(LEVY_RATES.ITL) + Number(LEVY_RATES.PCF);
+    const derivedBase = (Number(totalPremiumRaw) - stampDuty) / (1 + levyRate);
+    basePremium = toMoney(derivedBase);
+  }
+
+  // Prefer backend levy components, otherwise derive from basePremium.
+  const trainingLevy = Number(
+    resp.training_levy ?? respBreakdown.training_levy ?? respBreakdown.itl ?? (basePremium * LEVY_RATES.ITL) ?? 0
+  );
+  const pcfLevy = Number(
+    resp.pcf_levy ?? respBreakdown.pcf_levy ?? respBreakdown.pcf ?? (basePremium * LEVY_RATES.PCF) ?? 0
+  );
+
+  const breakdown = {
+    ...(respBreakdown || {}),
+    // Canonical keys used by the app
+    base_premium: toMoney(basePremium),
+    training_levy: toMoney(trainingLevy),
+    pcf_levy: toMoney(pcfLevy),
+    stamp_duty: toMoney(stampDuty),
+    // Friendly aliases for UI components that expect these keys
+    itl: toMoney(trainingLevy),
+    pcf: toMoney(pcfLevy),
+  };
 
   const meta = resp.meta || {};
 
@@ -165,10 +212,10 @@ export function normalizePricingResponse(resp) {
     totalPremium: toMoney(totalPremiumRaw),
     breakdown,
     meta,
-    base_premium: basePremium,
-    training_levy: Number(resp.training_levy || 0),
-    pcf_levy: Number(resp.pcf_levy || 0),
-    stamp_duty: Number(resp.stamp_duty || 0),
+    base_premium: toMoney(basePremium),
+    training_levy: toMoney(trainingLevy),
+    pcf_levy: toMoney(pcfLevy),
+    stamp_duty: toMoney(stampDuty),
     ...(extendibleConfig && { extendible_config: extendibleConfig }),
     ...(resp.subcategory_code && { subcategory_code: resp.subcategory_code }),
     ...(resp.is_extendible !== undefined && { is_extendible: resp.is_extendible })

@@ -1,545 +1,64 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import React, { useMemo, useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors, Spacing, Typography } from '../../constants';
-import { SafeScreen, EnhancedCard, StatusBadge, CompactCurvedHeader } from '../../components';
-import { djangoAPI } from '../../services/DjangoAPIService';
+import { SafeScreen, EnhancedCard, CompactCurvedHeader } from '../../components';
+import ControlledRadioGroup from '../../components/forms/ControlledRadioGroup';
+import ControlledSelect from '../../components/forms/ControlledSelect';
 
 export default function ExtensionScreen({ navigation, route }) {
   const insets = useSafeAreaInsets();
-  const [currentStep, setCurrentStep] = useState(1);
-  const [policyDetails, setPolicyDetails] = useState(route.params?.policy || null);
-  const [extensionData, setExtensionData] = useState(null);
-  const [eligibilityData, setEligibilityData] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [selectedPeriod, setSelectedPeriod] = useState('3 months');
-  const [selectedReason, setSelectedReason] = useState('');
-  const [error, setError] = useState('');
-  
-  // Extension period options
-  const extensionPeriods = [
-    { value: '1 month', label: '1 Month', days: 30 },
-    { value: '3 months', label: '3 Months', days: 90 },
-    { value: '6 months', label: '6 Months', days: 180 }
-  ];
-  
-  // Extension reason options
-  const extensionReasons = [
-    'Awaiting vehicle inspection',
-    'Pending documentation',
-    'Temporary financial constraints',
-    'Waiting for claim settlement',
-    'Other'
-  ];
-  
-  // Check extension eligibility when policy is loaded
-  useEffect(() => {
-    if (!policyDetails) {
-      Alert.alert('Error', 'No policy information provided');
-      navigation.goBack();
-      return;
-    }
-    
-    checkExtensionEligibility();
-  }, [policyDetails]);
+  const policyDetails = route.params?.policy || null;
 
-  // Check eligibility when period changes
-  useEffect(() => {
-    if (eligibilityData?.eligible && selectedPeriod) {
-      calculateExtensionPremium();
-    }
-  }, [selectedPeriod, eligibilityData]);
+  const vehicleReg = policyDetails?.vehicleReg || policyDetails?.vehicle_reg || policyDetails?.vehicle_registration;
+  const policyNumber = policyDetails?.policyNo || policyDetails?.policy_number;
+  const coverEnd = policyDetails?.cover_end || policyDetails?.dueDate || policyDetails?.expires_at;
 
-  const checkExtensionEligibility = async () => {
+  const defaultCoverStart = useMemo(() => {
     try {
-      setLoading(true);
-      setError('');
-      
-      const response = await djangoAPI.checkExtensionEligibility(policyDetails.id);
-      setEligibilityData(response);
-      
-      if (!response.eligible) {
-        setError(response.reason || 'Policy is not eligible for extension');
-      }
-    } catch (error) {
-      console.error('Extension eligibility check failed:', error);
-      setError('Failed to check extension eligibility. Please try again.');
-    } finally {
-      setLoading(false);
+      if (!coverEnd) return '';
+      const d = new Date(coverEnd);
+      d.setDate(d.getDate() + 1);
+      return d.toLocaleDateString();
+    } catch (e) {
+      return '';
     }
+  }, [coverEnd]);
+
+  const [financialInterest, setFinancialInterest] = useState('No');
+  const [durationMonths, setDurationMonths] = useState(1);
+
+  const durationOptions = useMemo(() => ([
+    { label: '1 Month', value: 1 },
+    { label: '3 Months', value: 3 },
+    { label: '6 Months', value: 6 },
+    { label: '12 Months', value: 12 },
+  ]), []);
+
+  const handleNext = () => {
+    if (!policyNumber) return;
+    navigation.navigate('ExtensionPayment', {
+      policyId: policyDetails?.id,
+      policyNumber,
+      vehicleReg,
+      productName: policyDetails?.productName || policyDetails?.product_name || policyDetails?.coverType,
+      extensionDays: durationMonths * 30,
+      balanceAmount: Number(policyDetails?.balanceAmount || policyDetails?.balance_amount || 0),
+      totalAmount: Math.round(Number(policyDetails?.balanceAmount || policyDetails?.balance_amount || 0)),
+      lateFeePercentage: Number(policyDetails?.lateFeePercentage || policyDetails?.late_fee_percentage || 0),
+      coverEndDate: coverEnd,
+      financialInterest,
+    });
   };
 
-  const calculateExtensionPremium = async () => {
-    try {
-      setLoading(true);
-      const selectedPeriodDays = extensionPeriods.find(p => p.value === selectedPeriod)?.days || 90;
-      
-      // Use the backend's prorated calculation logic
-      const currentExpiryDate = policyDetails.dueDate || policyDetails.expires_at;
-      const newExpiryDate = new Date(new Date(currentExpiryDate).getTime() + (selectedPeriodDays * 24 * 60 * 60 * 1000));
-      
-      // Calculate based on policy's base premium and coverage
-      const basePremium = parseFloat(policyDetails.premium || 0);
-      const daysInYear = 365;
-      const proRatedPremium = Math.ceil((basePremium / daysInYear) * selectedPeriodDays);
-      
-      // Calculate mandatory levies
-      const itlLevy = Math.ceil(proRatedPremium * 0.0025); // 0.25%
-      const pcfLevy = Math.ceil(proRatedPremium * 0.0025); // 0.25%
-      const stampDuty = 40; // Fixed KES 40
-      
-      const calculatedExtensionData = {
-        currentExpiryDate: currentExpiryDate,
-        extensionPeriod: selectedPeriod,
-        newExpiryDate: newExpiryDate.toISOString().split('T')[0],
-        proRatedPremium: proRatedPremium,
-        itlLevy: itlLevy,
-        pcfLevy: pcfLevy,
-        stampDuty: stampDuty,
-        totalPremium: proRatedPremium + itlLevy + pcfLevy + stampDuty
-      };
-      
-      setExtensionData(calculatedExtensionData);
-    } catch (error) {
-      console.error('Extension calculation failed:', error);
-      setError('Failed to calculate extension premium. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
-  
-  const handleNextStep = () => {
-    // Check eligibility first
-    if (!eligibilityData?.eligible) {
-      Alert.alert('Extension Not Available', eligibilityData?.reason || 'This policy is not eligible for extension');
-      return;
-    }
-
-    if (currentStep === 1 && !selectedReason) {
-      Alert.alert('Required', 'Please select a reason for extension');
-      return;
-    }
-    
-    if (currentStep < 3) {
-      setCurrentStep(currentStep + 1);
-    } else {
-      // Final step - complete extension
-      handleCompleteExtension();
-    }
-  };
-  
-  const handlePreviousStep = () => {
-    if (currentStep > 1) {
-      setCurrentStep(currentStep - 1);
-    } else {
-      navigation.goBack();
-    }
-  };
-  
-  const handleCompleteExtension = async () => {
-    try {
-      setLoading(true);
-      
-      const extensionRequest = {
-        policy_id: policyDetails.id,
-        extension_period: selectedPeriod,
-        reason: selectedReason,
-        new_expiry_date: extensionData.newExpiryDate,
-        premium_amount: extensionData.totalPremium
-      };
-      
-      const response = await djangoAPI.extendMotorPolicy(extensionRequest);
-      
-      setLoading(false);
-      Alert.alert(
-        'Extension Successful',
-        `Your policy ${policyDetails.policyNo || policyDetails.policy_number} has been extended until ${new Date(extensionData.newExpiryDate).toLocaleDateString()}.`,
-        [
-          {
-            text: 'View Policy',
-            onPress: () => {
-              navigation.navigate('Home');
-            }
-          },
-          {
-            text: 'Back to Home',
-            onPress: () => navigation.navigate('Home')
-          }
-        ]
-      );
-    } catch (error) {
-      setLoading(false);
-      console.error('Extension failed:', error);
-      Alert.alert(
-        'Extension Failed',
-        error.message || 'Failed to complete policy extension. Please try again.',
-        [{ text: 'OK' }]
-      );
-    }
-  };
-  
-  const renderStepIndicator = () => {
-    return (
-      <View style={styles.stepIndicatorContainer}>
-        {[1, 2, 3].map(step => (
-          <View key={step} style={styles.stepRow}>
-            <View style={[
-              styles.stepCircle,
-              currentStep === step && styles.activeStepCircle,
-              currentStep > step && styles.completedStepCircle
-            ]}>
-              {currentStep > step ? (
-                <Text style={styles.stepCheckmark}>✓</Text>
-              ) : (
-                <Text style={[
-                  styles.stepNumber,
-                  currentStep === step && styles.activeStepNumber
-                ]}>{step}</Text>
-              )}
-            </View>
-            <Text style={[
-              styles.stepLabel,
-              currentStep === step && styles.activeStepLabel
-            ]}>
-              {step === 1 ? 'Extension Details' : 
-               step === 2 ? 'Premium & Period' :
-               'Payment'}
-            </Text>
-          </View>
-        ))}
-      </View>
-    );
-  };
-  
-  const renderExtensionDetails = () => {
-    return (
-      <View style={styles.stepContainer}>
-        <Text style={styles.stepTitle}>Extension Details</Text>
-        <Text style={styles.stepDescription}>
-          Configure your policy extension before proceeding
-        </Text>
-        
-        {/* Extension Eligibility Status */}
-        {eligibilityData && (
-          <EnhancedCard style={[
-            styles.eligibilityCard,
-            eligibilityData.eligible ? styles.eligibleCard : styles.ineligibleCard
-          ]}>
-            <View style={styles.eligibilityHeader}>
-              <View style={styles.eligibilityIcon}>
-                <Text style={styles.eligibilityIconText}>
-                  {eligibilityData.eligible ? '✅' : '❌'}
-                </Text>
-              </View>
-              <View style={styles.eligibilityInfo}>
-                <Text style={styles.eligibilityTitle}>
-                  {eligibilityData.eligible ? 'Extension Available' : 'Extension Not Available'}
-                </Text>
-                <Text style={styles.eligibilitySubtitle}>
-                  {eligibilityData.eligible ? 'This policy can be extended' : eligibilityData.reason}
-                </Text>
-              </View>
-            </View>
-            
-            {eligibilityData.eligible && (
-              <View style={styles.eligibilityDetails}>
-                <Text style={styles.eligibilityText}>
-                  ✓ Policy Type: {eligibilityData.policy_type || 'Extendible'}
-                </Text>
-                <Text style={styles.eligibilityText}>
-                  ✓ Current Status: {eligibilityData.current_status || 'Active'}
-                </Text>
-                <Text style={styles.eligibilityText}>
-                  ✓ Extensions Used: {eligibilityData.extension_count || 0}/{eligibilityData.max_extensions || 3}
-                </Text>
-              </View>
-            )}
-          </EnhancedCard>
-        )}
-
-        {error && !loading && (
-          <View style={styles.errorCard}>
-            <Text style={styles.errorText}>⚠️ {error}</Text>
-          </View>
-        )}
-        
-        <EnhancedCard style={styles.policyCard}>
-          <View style={styles.policyHeader}>
-            <Text style={styles.policyHeaderText}>Current Policy</Text>
-            <StatusBadge status={policyDetails.status} size="small" />
-          </View>
-          
-          <View style={styles.policyDetail}>
-            <Text style={styles.policyDetailLabel}>Policy Number</Text>
-            <Text style={styles.policyDetailValue}>{policyDetails.policyNo || policyDetails.policy_number}</Text>
-          </View>
-          
-          <View style={styles.policyDetail}>
-            <Text style={styles.policyDetailLabel}>Vehicle</Text>
-            <Text style={styles.policyDetailValue}>{policyDetails.vehicleReg || policyDetails.vehicle_registration}</Text>
-          </View>
-          
-          <View style={styles.policyDetail}>
-            <Text style={styles.policyDetailLabel}>Current Expiry</Text>
-            <Text style={styles.policyDetailValue}>
-              {new Date(policyDetails.dueDate || policyDetails.expires_at).toLocaleDateString()}
-            </Text>
-          </View>
-        </EnhancedCard>
-        
-        {/* Extension Period Selection - Only show if eligible */}
-        {eligibilityData?.eligible && (
-          <>
-            <Text style={styles.sectionTitle}>Extension Period</Text>
-            <View style={styles.periodContainer}>
-              {extensionPeriods.map((period) => (
-                <TouchableOpacity
-                  key={period.value}
-                  style={[
-                    styles.periodOption,
-                    selectedPeriod === period.value && styles.selectedPeriodOption
-                  ]}
-                  onPress={() => setSelectedPeriod(period.value)}
-                >
-                  <Text style={[
-                    styles.periodText,
-                    selectedPeriod === period.value && styles.selectedPeriodText
-                  ]}>
-                    {period.label}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-            
-            {/* Extension Reason Selection */}
-            <Text style={styles.sectionTitle}>Reason for Extension</Text>
-            <View style={styles.reasonContainer}>
-              {extensionReasons.map((reason) => (
-                <TouchableOpacity
-                  key={reason}
-                  style={[
-                    styles.reasonOption,
-                    selectedReason === reason && styles.selectedReasonOption
-                  ]}
-                  onPress={() => setSelectedReason(reason)}
-                >
-                  <Text style={[
-                    styles.reasonText,
-                    selectedReason === reason && styles.selectedReasonText
-                  ]}>
-                    {reason}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          </>
-        )}
-      </View>
-    );
-  };
-  
-  const renderPremiumDetails = () => {
-    if (!extensionData) {
-      return (
-        <View style={styles.loadingContainer}>
-          <Text style={styles.loadingText}>Calculating extension premium...</Text>
-        </View>
-      );
-    }
-    
-    return (
-      <View style={styles.stepContainer}>
-        <Text style={styles.stepTitle}>Premium & Period</Text>
-        <Text style={styles.stepDescription}>
-          Review your extension premium and new coverage period
-        </Text>
-        
-        <EnhancedCard style={styles.extensionSummaryCard}>
-          <View style={styles.extensionSummaryHeader}>
-            <View style={styles.extensionIcon}>
-              <Text style={styles.extensionIconText}>⏱️</Text>
-            </View>
-            <View style={styles.extensionHeaderInfo}>
-              <Text style={styles.extensionSummaryTitle}>Extension Summary</Text>
-              <Text style={styles.extensionSummarySubtitle}>Policy extension details</Text>
-            </View>
-          </View>
-          
-          <View style={styles.dateContainer}>
-            <View style={styles.dateItemContainer}>
-              <View style={styles.dateItem}>
-                <View style={styles.dateIconContainer}>
-                  <Text style={styles.dateIconText}>📅</Text>
-                </View>
-                <View style={styles.dateInfo}>
-                  <Text style={styles.dateLabel}>Current Expiry</Text>
-                  <Text style={styles.dateValue}>
-                    {new Date(extensionData.currentExpiryDate).toLocaleDateString()}
-                  </Text>
-                </View>
-              </View>
-            </View>
-            
-            <View style={styles.dateArrow}>
-              <View style={styles.arrowContainer}>
-                <Text style={styles.arrowText}>→</Text>
-              </View>
-            </View>
-            
-            <View style={styles.dateItemContainer}>
-              <View style={styles.dateItem}>
-                <View style={styles.dateIconContainer}>
-                  <Text style={styles.dateIconText}>📅</Text>
-                </View>
-                <View style={styles.dateInfo}>
-                  <Text style={styles.dateLabel}>New Expiry</Text>
-                  <Text style={styles.dateValue}>
-                    {new Date(extensionData.newExpiryDate).toLocaleDateString()}
-                  </Text>
-                </View>
-              </View>
-            </View>
-          </View>
-          
-          <View style={styles.periodInfoContainer}>
-            <View style={styles.periodInfoItem}>
-              <View style={styles.periodInfoIcon}>
-                <Text style={styles.periodInfoIconText}>🗓️</Text>
-              </View>
-              <View style={styles.periodInfoDetails}>
-                <Text style={styles.periodInfoLabel}>Extension Period</Text>
-                <Text style={styles.periodInfoValue}>{selectedPeriod}</Text>
-              </View>
-            </View>
-            
-            <View style={styles.periodInfoItem}>
-              <View style={styles.periodInfoIcon}>
-                <Text style={styles.periodInfoIconText}>📝</Text>
-              </View>
-              <View style={styles.periodInfoDetails}>
-                <Text style={styles.periodInfoLabel}>Reason</Text>
-                <Text style={styles.reasonInfoValue}>{selectedReason}</Text>
-              </View>
-            </View>
-          </View>
-        </EnhancedCard>
-        
-        <EnhancedCard style={styles.premiumCard}>
-          <Text style={styles.premiumHeaderText}>Premium Breakdown</Text>
-          
-          <View style={styles.premiumDetail}>
-            <Text style={styles.premiumDetailLabel}>Pro-rated Premium</Text>
-            <Text style={styles.premiumDetailValue}>KES {extensionData.proRatedPremium.toLocaleString()}</Text>
-          </View>
-          
-          <View style={styles.premiumDetail}>
-            <Text style={styles.premiumDetailLabel}>ITL Levy (0.25%)</Text>
-            <Text style={styles.premiumDetailValue}>KES {extensionData.itlLevy.toLocaleString()}</Text>
-          </View>
-          
-          <View style={styles.premiumDetail}>
-            <Text style={styles.premiumDetailLabel}>PCF Levy (0.25%)</Text>
-            <Text style={styles.premiumDetailValue}>KES {extensionData.pcfLevy.toLocaleString()}</Text>
-          </View>
-          
-          <View style={styles.premiumDetail}>
-            <Text style={styles.premiumDetailLabel}>Stamp Duty</Text>
-            <Text style={styles.premiumDetailValue}>KES {extensionData.stampDuty.toLocaleString()}</Text>
-          </View>
-          
-          <View style={styles.divider} />
-          
-          <View style={styles.totalPremiumContainer}>
-            <Text style={styles.totalPremiumLabel}>Total Extension Premium</Text>
-            <Text style={styles.totalPremiumValue}>KES {extensionData.totalPremium.toLocaleString()}</Text>
-          </View>
-        </EnhancedCard>
-        
-        <View style={styles.warningCard}>
-          <Text style={styles.warningText}>
-            ⚠️ This is a temporary extension. You will still need to complete full renewal before the new expiry date.
-          </Text>
-        </View>
-      </View>
-    );
-  };
-  
-  const renderPayment = () => {
-    return (
-      <View style={styles.stepContainer}>
-        <Text style={styles.stepTitle}>Payment</Text>
-        <Text style={styles.stepDescription}>
-          Choose your payment method to complete extension
-        </Text>
-        
-        <EnhancedCard style={styles.paymentSummaryCard}>
-          <Text style={styles.paymentHeaderText}>Payment Summary</Text>
-          
-          <View style={styles.paymentDetail}>
-            <Text style={styles.paymentDetailLabel}>Policy Number</Text>
-            <Text style={styles.paymentDetailValue}>{policyDetails.policyNo || policyDetails.policy_number}</Text>
-          </View>
-          
-          <View style={styles.paymentDetail}>
-            <Text style={styles.paymentDetailLabel}>Vehicle</Text>
-            <Text style={styles.paymentDetailValue}>{policyDetails.vehicleReg || policyDetails.vehicle_registration}</Text>
-          </View>
-          
-          <View style={styles.paymentDetail}>
-            <Text style={styles.paymentDetailLabel}>Extension Period</Text>
-            <Text style={styles.paymentDetailValue}>{selectedPeriod}</Text>
-          </View>
-          
-          <View style={styles.paymentDetail}>
-            <Text style={styles.paymentDetailLabel}>New Expiry Date</Text>
-            <Text style={styles.paymentDetailValue}>
-              {extensionData ? new Date(extensionData.newExpiryDate).toLocaleDateString() : ''}
-            </Text>
-          </View>
-          
-          <View style={styles.divider} />
-          
-          <View style={styles.totalPaymentContainer}>
-            <Text style={styles.totalPaymentLabel}>Total Amount</Text>
-            <Text style={styles.totalPaymentValue}>KES {extensionData ? extensionData.totalPremium.toLocaleString() : '0'}</Text>
-          </View>
-        </EnhancedCard>
-        
-        <Text style={styles.paymentMethodsTitle}>Payment Method</Text>
-        
-        <TouchableOpacity 
-          style={styles.paymentMethodCard}
-          onPress={handleCompleteExtension}
-        >
-          <View style={styles.paymentMethodIcon}>
-            <Text style={styles.paymentMethodIconText}>💰</Text>
-          </View>
-          <View style={styles.paymentMethodDetails}>
-            <Text style={styles.paymentMethodName}>M-PESA</Text>
-            <Text style={styles.paymentMethodDescription}>Pay via M-PESA mobile money</Text>
-          </View>
-          <Text style={styles.paymentMethodArrow}>→</Text>
-        </TouchableOpacity>
-      </View>
-    );
-  };
-  
-  const renderCurrentStep = () => {
-    switch(currentStep) {
-      case 1:
-        return renderExtensionDetails();
-      case 2:
-        return renderPremiumDetails();
-      case 3:
-        return renderPayment();
-      default:
-        return renderExtensionDetails();
-    }
-  };
-  
   if (!policyDetails) {
-    return null; // Will redirect via useEffect
+    return (
+      <SafeScreen>
+        <StatusBar style="light" />
+        <CompactCurvedHeader title="Extend Policy" subtitle="" showBackButton onBackPress={() => navigation.goBack()} />
+      </SafeScreen>
+    );
   }
   
   return (
@@ -547,197 +66,142 @@ export default function ExtensionScreen({ navigation, route }) {
       <StatusBar style="light" />
       
       <CompactCurvedHeader 
-        title="Policy Extension"
-        subtitle={policyDetails.policyNo}
+        title={`Extend Policy - ${vehicleReg || 'Policy'}`}
+        subtitle=""
         showBackButton
-        onBackPress={handlePreviousStep}
+        onBackPress={() => navigation.goBack()}
       />
-      
-      <ScrollView 
-        style={styles.scrollView}
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={[
-          styles.scrollContent, 
-          { paddingBottom: insets.bottom + 100 }
-        ]}
-      >
-        <View style={styles.headerSpacing} />
-        
-        {renderStepIndicator()}
-        
-        {loading ? (
-          <View style={styles.loadingContainer}>
-            <Text style={styles.loadingText}>
-              {currentStep === 3 ? 'Processing extension...' : 'Loading...'}
-            </Text>
+
+      <View style={[styles.body, { paddingBottom: insets.bottom + 16 }]}>
+        <View style={styles.stepHeader}>
+          <View style={styles.stepCircle}>
+            <Text style={styles.stepCircleText}>1</Text>
           </View>
-        ) : (
-          renderCurrentStep()
-        )}
-      </ScrollView>
-      
-      {!loading && eligibilityData?.eligible && (
-        <View style={[styles.footer, { paddingBottom: insets.bottom + 16 }]}>
-          <TouchableOpacity 
-            style={styles.backButton} 
-            onPress={handlePreviousStep}
-          >
-            <Text style={styles.backButtonText}>
-              {currentStep === 1 ? 'Cancel' : 'Back'}
-            </Text>
-          </TouchableOpacity>
-          
-          <TouchableOpacity 
-            style={[
-              styles.nextButton,
-              (!selectedReason && currentStep === 1) && styles.disabledButton
-            ]} 
-            onPress={handleNextStep}
-            disabled={!selectedReason && currentStep === 1}
-          >
-            <Text style={[
-              styles.nextButtonText,
-              (!selectedReason && currentStep === 1) && styles.disabledButtonText
-            ]}>
-              {currentStep === 3 ? 'Complete Extension' : 'Next'}
-            </Text>
-          </TouchableOpacity>
+          <Text style={styles.stepLabel}>Policy Holder</Text>
+          <View style={styles.stepLine} />
         </View>
-      )}
+
+        <EnhancedCard style={styles.card}>
+          <Text style={styles.cardTitle}>Policy Details</Text>
+
+          <ControlledRadioGroup
+            label="Financial Interest"
+            options={['Yes', 'No']}
+            value={financialInterest}
+            onChange={setFinancialInterest}
+          />
+
+          <Text style={styles.fieldLabel}>Cover Start Date</Text>
+          <View style={styles.readonlyField}>
+            <Text style={styles.readonlyText}>{defaultCoverStart || '—'}</Text>
+          </View>
+
+          <ControlledSelect
+            label="Duration"
+            value={durationMonths}
+            onSelect={setDurationMonths}
+            options={durationOptions}
+            placeholder="Select duration"
+          />
+        </EnhancedCard>
+
+        <TouchableOpacity
+          style={[styles.nextCta, { marginBottom: 0 }]}
+          onPress={handleNext}
+          activeOpacity={0.85}
+        >
+          <Text style={styles.nextCtaText}>Next</Text>
+        </TouchableOpacity>
+      </View>
     </SafeScreen>
   );
 }
 
 const styles = StyleSheet.create({
-  scrollView: {
+  body: {
     flex: 1,
-  },
-  scrollContent: {
     paddingHorizontal: Spacing.md,
+    paddingTop: Spacing.md,
   },
-  headerSpacing: {
-    height: Spacing.lg,
-  },
-  stepIndicatorContainer: {
+
+  stepHeader: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: Spacing.lg,
-  },
-  stepRow: {
     alignItems: 'center',
-    flex: 1,
+    marginBottom: Spacing.md,
   },
   stepCircle: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: Colors.backgroundCard,
-    borderWidth: 1,
-    borderColor: Colors.border,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: Colors.success,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: Spacing.xs,
+    marginRight: Spacing.sm,
   },
-  activeStepCircle: {
-    backgroundColor: Colors.warning, // Use warning color (amber/orange) for extensions
-    borderColor: Colors.warning,
-  },
-  completedStepCircle: {
-    backgroundColor: Colors.success,
-    borderColor: Colors.success,
-  },
-  stepNumber: {
-    fontSize: Typography.fontSize.md,
-    fontFamily: Typography.fontFamily.medium,
-    color: Colors.textSecondary,
-  },
-  activeStepNumber: {
+  stepCircleText: {
     color: Colors.white,
-  },
-  stepCheckmark: {
-    fontSize: Typography.fontSize.md,
-    color: Colors.white,
-    fontFamily: Typography.fontFamily.bold,
+    fontFamily: Typography.fontFamily.semiBold,
+    fontSize: 14,
   },
   stepLabel: {
-    fontSize: Typography.fontSize.xs,
-    fontFamily: Typography.fontFamily.regular,
-    color: Colors.textSecondary,
-    textAlign: 'center',
-  },
-  activeStepLabel: {
-    color: Colors.textPrimary,
-    fontFamily: Typography.fontFamily.medium,
-  },
-  eligibilityCard: {
-    marginBottom: Spacing.md,
-    borderWidth: 1.5,
-    borderRadius: 12,
-  },
-  eligibleCard: {
-    backgroundColor: Colors.success + '08',
-    borderColor: Colors.success + '40',
-  },
-  ineligibleCard: {
-    backgroundColor: Colors.error + '08',
-    borderColor: Colors.error + '40',
-  },
-  eligibilityHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: Spacing.sm,
-  },
-  eligibilityIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: Colors.backgroundSecondary,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: Spacing.md,
-  },
-  eligibilityIconText: {
-    fontSize: 20,
-  },
-  eligibilityInfo: {
-    flex: 1,
-  },
-  eligibilityTitle: {
-    fontSize: Typography.fontSize.md,
     fontFamily: Typography.fontFamily.semiBold,
-    color: Colors.textPrimary,
-    marginBottom: Spacing.xs / 2,
-  },
-  eligibilitySubtitle: {
     fontSize: Typography.fontSize.sm,
-    fontFamily: Typography.fontFamily.regular,
-    color: Colors.textSecondary,
-  },
-  eligibilityDetails: {
-    backgroundColor: Colors.white,
-    borderRadius: 8,
-    padding: Spacing.sm,
-    borderWidth: 1,
-    borderColor: Colors.border,
-  },
-  eligibilityText: {
-    fontSize: Typography.fontSize.sm,
-    fontFamily: Typography.fontFamily.medium,
     color: Colors.success,
-    marginBottom: Spacing.xs / 2,
   },
-  errorCard: {
-    backgroundColor: Colors.error + '10',
-    borderColor: Colors.error + '30',
-    borderWidth: 1,
-    borderRadius: 8,
+  stepLine: {
+    flex: 1,
+    height: 2,
+    backgroundColor: Colors.success,
+    marginLeft: Spacing.sm,
+    borderRadius: 2,
+    opacity: 0.25,
+  },
+
+  card: {
     padding: Spacing.md,
     marginBottom: Spacing.md,
   },
-  errorText: {
+  cardTitle: {
+    fontFamily: Typography.fontFamily.semiBold,
+    fontSize: Typography.fontSize.md,
+    color: Colors.textPrimary,
+    marginBottom: Spacing.sm,
+  },
+
+  fieldLabel: {
+    fontFamily: Typography.fontFamily.semiBold,
     fontSize: Typography.fontSize.sm,
-    fontFamily: Typography.fontFamily.medium,
-    color: Colors.error,
+    color: Colors.textSecondary,
+    marginTop: Spacing.sm,
+    marginBottom: 6,
+  },
+  readonlyField: {
+    backgroundColor: Colors.backgroundSecondary,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    marginBottom: Spacing.sm,
+  },
+  readonlyText: {
+    fontFamily: Typography.fontFamily.regular,
+    fontSize: Typography.fontSize.md,
+    color: Colors.textSecondary,
+  },
+
+  nextCta: {
+    height: 52,
+    borderRadius: 8,
+    backgroundColor: Colors.success,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 'auto',
+  },
+  nextCtaText: {
+    fontFamily: Typography.fontFamily.semiBold,
+    fontSize: Typography.fontSize.md,
+    color: Colors.white,
     textAlign: 'center',
   },
   stepContainer: {

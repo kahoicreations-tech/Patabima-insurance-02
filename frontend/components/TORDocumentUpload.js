@@ -34,53 +34,12 @@ const TORDocumentUpload = ({
   formData = {},
   onDocumentProcessed
 }) => {
-  const [showDocumentTypeModal, setShowDocumentTypeModal] = useState(false);
-  const [uploadingDocuments, setUploadingDocuments] = useState({});
-  const [processingDocuments, setProcessingDocuments] = useState({});
-
-  // Calculate upload progress
-  const getUploadProgress = () => {
-    const requiredDocs = TOR_REQUIRED_DOCUMENTS.filter(doc => doc.required);
-    const uploadedRequired = requiredDocs.filter(req => 
-      documents.some(doc => doc.type === req.id && doc.status === TOR_DOCUMENT_STATUS.COMPLETED)
-    );
-    
-    return {
-      uploaded: uploadedRequired.length,
-      total: requiredDocs.length,
-      percentage: (uploadedRequired.length / requiredDocs.length) * 100,
-      isComplete: uploadedRequired.length === requiredDocs.length
-    };
-  };
-
-  const progress = getUploadProgress();
-
-  // Validate document based on TOR requirements
-  const validateDocument = (docType, extractedData) => {
-    const docConfig = TOR_REQUIRED_DOCUMENTS.find(doc => doc.id === docType.id);
-    if (!docConfig || !docConfig.validationRules) return { isValid: true, errors: [] };
-
-    const errors = [];
-    const rules = docConfig.validationRules;
-
-    // Check pattern validations
-    Object.keys(rules).forEach(field => {
-      if (field === 'mustMatch') return; // Handle separately
-      
-      const rule = rules[field];
-      const value = extractedData[field];
-
-      if (rule instanceof RegExp && value && !rule.test(value)) {
-        errors.push(`Invalid ${field} format in document`);
-      } else if (rule === 'future' && value) {
-        const date = new Date(value);
-        if (date <= new Date()) {
-          errors.push(`${field} must be a future date`);
-        }
-      } else if (rule === 'recent' && value) {
-        const date = new Date(value);
-        const sixMonthsAgo = new Date();
-        sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+      // OCR extraction is not supported here in strict mode.
+      // The app's active flows use the backend docs pipeline instead.
+      return {
+        success: false,
+        error: 'OCR processing is not available in this flow',
+      };
         if (date < sixMonthsAgo) {
           errors.push(`${field} must be from within the last 6 months`);
         }
@@ -109,58 +68,10 @@ const TORDocumentUpload = ({
     setProcessingDocuments(prev => ({ ...prev, [docType.id]: true }));
 
     try {
-      // Simulate OCR processing (replace with actual OCR service)
-      await new Promise(resolve => setTimeout(resolve, 2000 + Math.random() * 2000));
-      
-      // Mock OCR results based on document type
-      let mockExtractedData = {};
-      
-      switch (docType.id) {
-        case 'national_id':
-          mockExtractedData = {
-            fullName: formData.ownerName || 'JOHN KAMAU MWANGI',
-            idNumber: formData.ownerIdNumber || '12345678',
-            dateOfBirth: '1985-06-15'
-          };
-          break;
-        case 'driving_license':
-          mockExtractedData = {
-            fullName: formData.ownerName || 'JOHN KAMAU MWANGI',
-            licenseNumber: 'DL12345ABC',
-            expiryDate: '2026-12-31'
-          };
-          break;
-        case 'logbook':
-          mockExtractedData = {
-            registrationNumber: formData.vehicleRegistrationNumber || 'KCA123A',
-            makeModel: formData.makeModel || 'TOYOTA COROLLA',
-            yearOfManufacture: formData.yearOfManufacture || '2020',
-            engineCapacity: formData.vehicleEngineCapacity || '1500',
-            chassisNumber: 'JT123456789'
-          };
-          break;
-        case 'kra_pin':
-          mockExtractedData = {
-            fullName: formData.ownerName || 'JOHN KAMAU MWANGI',
-            pinNumber: 'A123456789K'
-          };
-          break;
-      }
-
-      // Validate extracted data
-      const validation = validateDocument(docType, mockExtractedData);
-      
-      return {
-        success: true,
-        data: mockExtractedData,
-        confidence: 0.85 + Math.random() * 0.15, // 85-100%
-        validation
-      };
-    } catch (error) {
       return {
         success: false,
-        error: error.message,
-        data: null
+        error: 'OCR processing is not available in this flow',
+        data: null,
       };
     } finally {
       setProcessingDocuments(prev => {

@@ -1,0 +1,18 @@
+{% extends "admin/base.html" %}
+{% load static %}
+
+{% block title %}{{ title }} | PataBima Insurance Admin{% endblock %}
+
+{% block extrastyle %}
+<link rel="stylesheet" type="text/css" href="{% static 'admin/css/patabima-admin.css' %}">
+{% endblock %}
+
+{% block branding %}
+<h1 id="site-name">
+  <a href="{% url 'admin:index' %}">PataBima Insurance Administration</a>
+</h1>
+{% endblock %}
+
+{% block nav-global %}
+{{ block.super %}
+{% endblock %}

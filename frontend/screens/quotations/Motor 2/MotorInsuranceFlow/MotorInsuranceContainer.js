@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useCallback, useEffect, useRef } from 'react';
-import { View, StyleSheet, Text, TouchableOpacity, SafeAreaView, StatusBar, ActivityIndicator, Modal, Pressable, Alert } from 'react-native';
+import { View, StyleSheet, Text, TouchableOpacity, SafeAreaView, StatusBar, ActivityIndicator, Modal, Pressable } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useMotorInsurance } from '@contexts/MotorInsuranceContext';
 import { Ionicons } from '@expo/vector-icons';
@@ -7,6 +7,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import djangoAPI from '@services/DjangoAPIService';
 import { Colors } from '@constants/Colors';
 import { Typography } from '@constants/Typography';
+import { Appbar, Button as PaperButton, Dialog, Portal } from 'react-native-paper';
 
 import CategorySelectionStep from './steps/CategorySelectionStep';
 import PolicyDetailsStep from './steps/PolicyDetailsStep';
@@ -39,6 +40,11 @@ export default function MotorInsuranceContainer({ route, navigation }) {
 
   // Local step state (we keep it local to the container for now)
   const [currentStep, setCurrentStep] = useState(0);
+  const [dialog, setDialog] = useState({ visible: false, title: '', message: '', actions: [] });
+
+  const showDialog = useCallback((title, message, actions = []) => {
+    setDialog({ visible: true, title, message, actions });
+  }, []);
 
   // Phase 1.3: Removed local DMVIC state - now managed in MotorInsuranceContext
   // - verificationStatus (removed - inline indicators in Step 3 instead)
@@ -165,18 +171,26 @@ export default function MotorInsuranceContainer({ route, navigation }) {
         const hasReg = !!str(registration);
         const hasIdType = !!str(identificationType);
         const hasCover = !!str(coverStart);
-        // CRITICAL: Require underwriter selection for ALL products (Third Party AND Comprehensive)
-        const hasUnderwriter = !!selectedUnderwriter;
+        
+        // CRITICAL FIX: For Comprehensive, underwriter is selected on NEXT step
+        // Only require underwriter selection here for Third Party/TOR products
+        const hasUnderwriter = isComprehensive ? true : !!selectedUnderwriter;
         
         // Check premium from selected underwriter object (not state.calculatedPremium which doesn't exist)
-        const hasPremium = !!(selectedUnderwriter?.total_premium > 0 || selectedUnderwriter?.totalPremium > 0);
+        // For Comprehensive, skip premium check as it will be calculated on Underwriters step
+        const hasPremium = isComprehensive ? true : !!(selectedUnderwriter?.total_premium > 0 || selectedUnderwriter?.totalPremium > 0);
         
-        const ok = hasReg && hasIdType && hasCover && hasUnderwriter && hasPremium;
+        // For Comprehensive, require sum_insured (vehicle value)
+        const sumInsured = Number(vehicle.sum_insured || pricingInputs.sum_insured || 0);
+        const hasSumInsured = isComprehensive ? (sumInsured > 0) : true;
+        
+        const ok = hasReg && hasIdType && hasCover && hasUnderwriter && hasPremium && hasSumInsured;
         let msg = '';
         if (!ok) {
           if (!hasReg) msg = 'Enter vehicle registration';
           else if (!hasIdType) msg = 'Select identification type';
           else if (!hasCover) msg = 'Select cover start date';
+          else if (!hasSumInsured) msg = 'Enter sum insured (vehicle value)';
           else if (!hasUnderwriter) msg = 'Select an underwriter from the pricing comparison';
           else if (!hasPremium) msg = 'Premium not calculated - please wait for pricing to load';
         }
@@ -350,17 +364,15 @@ export default function MotorInsuranceContainer({ route, navigation }) {
     // Close verification screen
     actions.setShowVerificationScreen(false);
     
-    // TODO: Navigate to debit note submission screen when built
-    // For now, show alert
-    Alert.alert(
-      'Debit Note Submission',
+    showDialog(
+      'Debit note submission',
       'This feature will allow you to request cancellation of the existing policy. Coming soon!',
-      [{ text: 'OK' }]
+      [{ label: 'OK', mode: 'contained', onPress: () => setDialog((d) => ({ ...d, visible: false })) }]
     );
     
     // Could also proceed to next step or return to vehicle details
     // For now, let's stay on current step
-  }, []);
+  }, [showDialog]);
 
   const stepName = steps[currentStep] || '';
   const isFirstStep = currentStep === 0;
@@ -434,18 +446,20 @@ export default function MotorInsuranceContainer({ route, navigation }) {
         }
 
         if (mismatches.length) {
-          Alert.alert(
-            'Data Mismatch Detected',
+          showDialog(
+            'Data mismatch detected',
             `Logbook vs DMVIC ${mismatches.join(' & ')} differ. Which source should we use?`,
             [
               {
-                text: 'Use DMVIC',
-                style: 'cancel',
+                label: 'Use DMVIC',
+                mode: 'text',
+                onPress: () => setDialog((d) => ({ ...d, visible: false })),
               },
               {
-                text: 'Use Logbook Data',
-                style: 'default',
+                label: 'Use logbook data',
+                mode: 'contained',
                 onPress: () => {
+                  setDialog((d) => ({ ...d, visible: false }));
                   const patch = {};
                   if (fields.registration_number) patch.registrationNumber = fields.registration_number.toUpperCase();
                   if (fields.chassis_number) patch.chassisNumber = fields.chassis_number.toUpperCase();
@@ -462,20 +476,60 @@ export default function MotorInsuranceContainer({ route, navigation }) {
     } catch (e) {
       console.warn('[MotorInsuranceContainer] handleDocumentExtracted error:', e?.message || e);
     }
-  }, [state.extractedDocuments?.all, state.vehicleDetails]);
+  }, [state.extractedDocuments?.all, state.vehicleDetails, showDialog]);
 
   return (
     <View style={styles.screen}>
       <StatusBar barStyle="light-content" backgroundColor="#D5222B" />
+
+      <Portal>
+        <Dialog
+          visible={!!dialog.visible}
+          onDismiss={() => setDialog((d) => ({ ...d, visible: false }))}
+        >
+          {!!dialog.title && <Dialog.Title>{dialog.title}</Dialog.Title>}
+          <Dialog.Content>
+            <Text style={{ color: '#334155', fontSize: 14, lineHeight: 20 }}>{dialog.message}</Text>
+          </Dialog.Content>
+          <Dialog.Actions>
+            {(dialog.actions || []).map((a, idx) => (
+              <PaperButton
+                key={`${a.label}-${idx}`}
+                mode={a.mode || 'text'}
+                onPress={a.onPress}
+                style={a.mode === 'contained' ? { marginLeft: 8 } : undefined}
+              >
+                {a.label}
+              </PaperButton>
+            ))}
+          </Dialog.Actions>
+        </Dialog>
+      </Portal>
       
-      {/* Red Header Bar - Same as other insurance screens */}
-      <View style={[styles.header, { paddingTop: insets.top }]}>
-        <TouchableOpacity onPress={() => navigation?.goBack()} activeOpacity={0.7}>
-          <Ionicons name="chevron-back" size={28} color="#fff" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Motor Vehicle Insurance</Text>
-        <View style={{ width: 28 }} />
-      </View>
+      <Appbar.Header
+        mode="center-aligned"
+        statusBarHeight={insets.top}
+        style={{ backgroundColor: '#D5222B' }}
+      >
+        <Appbar.BackAction
+          color="#fff"
+          onPress={() => {
+            if (currentStep > 0) {
+              setCurrentStep((prev) => prev - 1);
+            } else {
+              actions.setCategorySelection({ category: null, subcategory: null, productType: null });
+              navigation?.goBack();
+            }
+          }}
+        />
+        <Appbar.Content
+          color="#fff"
+          title="Motor Vehicle Insurance"
+          titleStyle={styles.headerTitle}
+          subtitle={state.selectedSubcategory ? (state.selectedSubcategory.subcategory_name || state.selectedSubcategory.name) : undefined}
+          subtitleStyle={styles.headerSubtitle}
+        />
+      </Appbar.Header>
 
       {/* Progress Indicator Below Header */}
       <View style={styles.progressWrapper}>
@@ -507,15 +561,15 @@ export default function MotorInsuranceContainer({ route, navigation }) {
         
         {/* Next Button - Full Width (Hidden on first step and last step/Submission) */}
         {!isFirstStep && !isLastStep && (
-          <TouchableOpacity
-            style={[styles.nextButton, styles.nextButtonFullWidth, !canProceed && styles.nextButtonDisabled]}
+          <PaperButton
+            mode="contained"
             onPress={goNext}
             disabled={!canProceed}
-            activeOpacity={0.75}
+            contentStyle={{ paddingVertical: 6 }}
+            style={{ borderRadius: 8 }}
           >
-            <Text style={styles.nextButtonText}>Next</Text>
-            <Ionicons name="chevron-forward" size={20} color="#fff" />
-          </TouchableOpacity>
+            Next
+          </PaperButton>
         )}
       </View>
 
@@ -578,8 +632,15 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 18,
     fontWeight: '600',
-    flex: 1,
     textAlign: 'center',
+  },
+  headerSubtitle: {
+    color: '#fff',
+    fontSize: 13,
+    fontWeight: '400',
+    textAlign: 'center',
+    marginTop: 2,
+    opacity: 0.9,
   },
   
   // Progress Indicator
