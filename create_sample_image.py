@@ -63,7 +63,7 @@ def create_sample_image(output_path, width=800, height=600):
         # Try to use a nice font, fall back to default if not available
         font_large = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 48)
         font_small = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 24)
-    except:
+    except (IOError, OSError):
         # Use default font if custom fonts aren't available
         font_large = ImageFont.load_default()
         font_small = ImageFont.load_default()
@@ -104,9 +104,13 @@ def create_sample_image(output_path, width=800, height=600):
     return image
 
 if __name__ == "__main__":
-    # Create output directory if it doesn't exist
-    output_dir = "/home/runner/work/Patabima-insurance-02/Patabima-insurance-02/frontend/assets/images"
+    # Create output directory relative to script location
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    output_dir = os.path.join(script_dir, "frontend", "assets", "images")
     output_path = os.path.join(output_dir, "generated-sample.png")
+    
+    # Ensure output directory exists
+    os.makedirs(output_dir, exist_ok=True)
     
     print("Creating sample image...")
     create_sample_image(output_path)

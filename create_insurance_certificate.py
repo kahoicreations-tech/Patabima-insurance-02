@@ -57,7 +57,7 @@ def create_insurance_certificate(output_path, width=1200, height=850):
         font_subtitle = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 32)
         font_body = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 24)
         font_small = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 18)
-    except:
+    except (IOError, OSError):
         font_title = ImageFont.load_default()
         font_subtitle = ImageFont.load_default()
         font_body = ImageFont.load_default()
@@ -155,8 +155,13 @@ def create_insurance_certificate(output_path, width=1200, height=850):
     return image
 
 if __name__ == "__main__":
-    output_dir = "/home/runner/work/Patabima-insurance-02/Patabima-insurance-02/frontend/assets/images"
+    # Create output directory relative to script location
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    output_dir = os.path.join(script_dir, "frontend", "assets", "images")
     output_path = os.path.join(output_dir, "sample-insurance-certificate.png")
+    
+    # Ensure output directory exists
+    os.makedirs(output_dir, exist_ok=True)
     
     print("Creating sample insurance certificate...")
     create_insurance_certificate(output_path)
